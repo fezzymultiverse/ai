@@ -1,0 +1,43 @@
+/* Horizon V1.19.0: ABOUT & UPDATES */
+#hzAbout { padding: 4px 16px 28px; }
+.hza-sec { padding: 14px 0 6px; border-bottom: 1px solid var(--border-color); }
+.hza-h { font-size: 12px; font-weight: 700; letter-spacing: 1.2px; color: var(--text-muted); margin-bottom: 8px; }
+.hza-ver { font-size: 20px; font-weight: 800; margin-bottom: 4px; }
+.hza-p { font-size: 13px; line-height: 1.5; color: var(--text-muted); margin: 6px 0 8px; }
+.hza-btn { width: 100%; margin: 8px 0 10px; padding: 12px; border-radius: 12px; border: 1px solid var(--border-highlight); background: var(--btn-bg); color: var(--btn-fg); font-size: 13.5px; font-weight: 700; cursor: pointer; }
+.hza-btn:disabled { opacity: 0.55; }
+.hza-res { font-size: 13px; font-weight: 600; color: #16a34a; margin: 0 0 10px; }
+.hza-res.flag { color: #ea580c; }
+.hza-log { margin-bottom: 10px; }
+.hza-log ul { margin: 4px 0 0 18px; font-size: 12.5px; color: var(--text-muted); line-height: 1.5; }
+.hza-tog { display: flex; align-items: center; gap: 12px; width: 100%; margin: 10px 0 12px; padding: 12px; text-align: left; border: 1px solid var(--border-color); border-radius: 12px; background: var(--surface); color: var(--text-main); cursor: pointer; }
+.hza-tog-t { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.hza-tog-t b { font-size: 14px; }
+.hza-tog-t small { font-size: 11.5px; color: var(--text-muted); line-height: 1.4; }
+.hza-sw { font-size: 11px; font-weight: 800; letter-spacing: 0.6px; padding: 6px 12px; border-radius: 999px; color: #fff; flex-shrink: 0; }
+.hza-sw.on { background: #16a34a; } .hza-sw.off { background: #dc2626; }
+/* V1.26.0: backup export / import */
+.hza-btn.alt { background: transparent; color: var(--text-main); border-color: var(--border-color); }
+.hza-card { margin: 4px 0 12px; padding: 12px; border: 1px solid var(--border-highlight); border-radius: 12px; background: var(--surface); }
+.hza-card b { font-size: 14px; }
+.hza-two { display: flex; gap: 10px; }
+.hza-two .hza-btn { margin: 4px 0 0; }
+
+/* V1.33.0: About layout: logo, tagline, developer disclosure, red Security and Privacy */
+.hza-hero { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 0 6px; }
+.hza-logo { width: 64px; height: 64px; border-radius: 16px; box-shadow: 0 0 18px var(--accent-cyan-glow, rgba(0,229,255,.4)); }
+.hza-name { font-size: 18px; font-weight: 800; letter-spacing: 3px; }
+.hza-tag { font-size: 12.5px; color: var(--text-muted); }
+.hza-dev { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; margin: 6px 0 2px; border: 1px solid var(--border-color); border-radius: 12px; background: var(--surface); }
+.hza-dev b { font-size: 13.5px; } .hza-dev span { font-size: 11.5px; color: var(--text-muted); line-height: 1.4; }
+.hza-h.red { color: #ff3b30; text-shadow: 0 0 8px rgba(255,59,48,.35); }
+.hza-acc { margin: 2px 0 12px; border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; }
+.hza-acc-h { display: block; padding: 8px 12px; font-size: 10.5px; letter-spacing: 1px; color: var(--text-muted); background: var(--surface); }
+.hza-acc-r { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 7px 12px; font-size: 12px; border-top: 1px solid var(--border-color); }
+.hza-acc-r em { font-style: normal; font-size: 10.5px; font-weight: 800; letter-spacing: .6px; padding: 3px 9px; border-radius: 999px; color: #fff; }
+.hza-acc-r em.on { background: #16a34a; } .hza-acc-r em.off { background: #dc2626; }
+
+/* V1.35.1: SECURITY row and page title in red, under HORIZON VAULT */
+.settings-home .set-row.set-security .set-text h3{color:#ff3b30}
+.set-row.set-security{box-shadow:inset 3px 0 0 #ff3b30}
+#settingsTitle.is-security h2{color:#ff3b30}
