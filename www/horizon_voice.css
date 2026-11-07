@@ -23,7 +23,7 @@
 .rec-cancel .ic { width: 15px; height: 15px; }
 .rec-dot { width: 10px; height: 10px; flex: 0 0 auto; border-radius: 50%; background: #ff3b30; animation: recBlink 1s ease-in-out infinite; }
 @keyframes recBlink { 50% { opacity: .25; } }
-.rec-time { flex: 0 0 auto; min-width: 34px; font-variant-numeric: tabular-nums; font-weight: 700; font-size: 14px; color: var(--text-main); }
+.rec-time { flex: 0 0 auto; min-width: 34px; font-variant-numeric: tabular-nums; font-weight: 700; font-size: 15.5px; color: var(--text-main); }
 .rec-level { flex: 1; min-width: 0; height: 30px; display: flex; align-items: center; justify-content: flex-end; gap: 2px; overflow: hidden; }
 .rec-level i { flex: 1 1 0; max-width: 4px; min-width: 2px; height: 26px; border-radius: 2px; background: var(--text-muted); transform-origin: center; transition: transform .08s linear; }
 .chat-input-area.is-rec textarea, .chat-input-area.is-rec .in-btn.clip, .chat-input-area.is-rec .plus-btn { display: none; }

@@ -43,6 +43,45 @@ import com.getcapacitor.annotation.PermissionCallback;
 )
 public class HorizonPermsPlugin extends Plugin {
 
+    // ---------- V1.44.0: theme backdrop ----------
+    // The window and the WebView sit behind the page. They were always white, so the moment Android hid or
+    // re-showed the page (leaving the app, coming back) a white screen showed through. The page now tells
+    // Android its theme colour, which is saved and painted again on every start, pause and resume.
+
+    public static void paintBackdrop(android.app.Activity act) {
+        if (act == null) return;
+        try {
+            int c = act.getSharedPreferences("horizon_ui", Context.MODE_PRIVATE).getInt("backdrop", 0xFF000000);
+            act.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(c));
+            act.getWindow().getDecorView().setBackgroundColor(c);
+            if (act instanceof com.getcapacitor.BridgeActivity) {
+                com.getcapacitor.Bridge b = ((com.getcapacitor.BridgeActivity) act).getBridge();
+                if (b != null && b.getWebView() != null) b.getWebView().setBackgroundColor(c);
+            }
+        } catch (Exception ignored) {
+            // cosmetic only; the next pause or resume paints it again
+        }
+    }
+
+    @PluginMethod
+    public void setBackdrop(final PluginCall call) {
+        String hex = call.getString("color");
+        int c;
+        try {
+            c = android.graphics.Color.parseColor(hex == null ? "#000000" : hex.trim());
+        } catch (Exception e) {
+            call.reject("Bad colour");
+            return;
+        }
+        final int color = c | 0xFF000000;
+        final android.app.Activity act = getActivity();
+        if (act == null) { call.resolve(); return; }
+        act.getSharedPreferences("horizon_ui", Context.MODE_PRIVATE).edit().putInt("backdrop", color).apply();
+        act.runOnUiThread(new Runnable() {
+            @Override public void run() { paintBackdrop(act); call.resolve(); }
+        });
+    }
+
     // ---------- basics ----------
 
     @PluginMethod

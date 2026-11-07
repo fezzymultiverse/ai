@@ -12,6 +12,32 @@
   <img alt="Capacitor 6" src="https://img.shields.io/badge/Capacitor-6-00e5ff">
 </p>
 
+## What's new in V1.46.0
+
+- **Terminal AI box.** AI button in the Terminal bar opens a half-screen floating box. Commands get COPY and → $ (prompt) buttons; the AI never runs anything. PINNED / MOVE sign locks or drags the box. OUT attaches the last terminal output. New files: horizon_termai.js/css; bridge `window.HorizonAskAI` in index.html.
+- **HTML Preview.** Preview is the big cyan button, apart from Save, with a blob-page fallback if the frame does not load.
+
+## What's new in V1.45.2
+
+- **Bigger text everywhere.** Every font size from 8 to 22 px in the app's styles was raised about 12% (rounded to half pixels). Skipped on purpose: the 5 header buttons (sized by hand in V1.45.1) and the Terminal (its grid is character-based). *Tested:* syntax checks. *Not tested:* on a phone. Some tight rows (chips, tiles, pills) may now clip or wrap, so check the busy panels and tell me which ones.
+
+## What's new in V1.45.1
+
+- **Bigger header buttons.** The 5 buttons are now 41 x 56 px (was 36 x 44) with 20 px icons and 9 px white labels; on narrow phones the HORIZON title shrinks slightly so everything still fits. *Tested:* syntax only. *Not tested:* on a phone, and 360 px wide screens are the ones to check.
+
+## What's new in V1.45.0
+
+- **Three dark themes only:** Dark cyan, Dark green, Dark purple. Light and the old Dark are removed; an old saved Light, Dark or Neon choice becomes Dark cyan. Settings > Theme and the colour dots under the Settings title switch between them. Under the hood the dark base stays `data-theme="neon"` and `data-accent` carries the colour, so older styles keep working. All hard-coded cyan in the CSS now follows `--accent-cyan` / `--accent-rgb` (30 hex colours and 79 rgba colours swapped).
+- **White text.** Main text is pure white, secondary text is a light grey-white (`#d3dce2`), Settings descriptions and hints are `#e6edf1`, placeholders are no longer dim, and the few hard-coded dim greys (terminal, GitHub terminal, Bojack) were lightened. *Not changed:* status colours (red errors, green success) and provider brand colours.
+- **Your message line:** the place tag on the right edge always shows (suburb, city from the phone GPS; "No location" or "Locating..." when there is none) in white, and a green **VPN** chip appears next to it when Android reports a VPN. *Not tested:* on a phone. The place lookup needs the Location permission and internet.
+- *Tested:* syntax checks, plus the theme and VPN logic in a stubbed run. *Not tested:* how every screen looks on a phone; some old panels may still carry colours I did not catch.
+
+## What's new in V1.44.0
+
+- **Kokoro removed.** The Kokoro offline voice is gone from the Voice list and the native plugin (Piper voices stay). A Kokoro download from an older version is deleted on the next Voice settings visit to free about 330 MB. *Tested:* syntax checks only. *Not tested:* the Kotlin change has not been compiled.
+- **FreeTTS.ai voice** (Settings, Voice, Natural: FreeTTS.ai). You paste the endpoint and your key; the voice name is optional. It accepts raw audio, base64 audio inside JSON, or a link to the audio inside JSON. Any failure falls back to the Android voice and says why. Pollinations voice is still there, untouched. *Planned:* lock the endpoint and request shape to FreeTTS.ai's real docs once the key exists. *Not tested:* against FreeTTS.ai (no key, no network here).
+- **No more white flash when leaving the app.** The window and WebView behind the page were always white. They now take the theme colour (Light, Dark, Cyan), saved on the device and repainted on start, pause and resume (HorizonPerms.setBackdrop). *Not tested:* on a phone. The Java change has not been compiled.
+
 ## What's new in V1.43.4
 
 - **Widget date pill is black** (white text, thin light edge so it shows on dark themes). *Not tested:* on a phone.

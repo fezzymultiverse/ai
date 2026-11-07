@@ -35,11 +35,11 @@ html[data-theme="neon"] .hz-sub { text-shadow: 0 0 8px var(--accent-cyan-glow); 
 #settingsHome .set-row:last-child { margin-bottom: 0; }
 
 /* V1.38.2: robot "ready" dot is cyan (red stays for not-ready) */
-#pickBtn .pk-dot.on { background: #00e5ff; box-shadow: 0 0 6px 1px rgba(0, 229, 255, .7); }
+#pickBtn .pk-dot.on { background: var(--accent-cyan); box-shadow: 0 0 6px 1px rgba(var(--accent-rgb), .7); }
 
 /* V1.38.2: APPS tiles. Lens ring cyan, Downloads cyan, Music pink */
-.hz-app[data-addon="lens"] .ic { --hz-lens-dot: #00e5ff; }
-.hz-app[data-addon="downloads"] .ic { color: #00e5ff; }
+.hz-app[data-addon="lens"] .ic { --hz-lens-dot: var(--accent-cyan); }
+.hz-app[data-addon="downloads"] .ic { color: var(--accent-cyan); }
 .hz-app[data-addon="music"] .ic { color: #f472b6; }
 
 /* V1.38.3: the 5 header buttons sit on the Strategy Over Impulse line, on the right, each with a label */
@@ -50,9 +50,25 @@ html[data-theme="neon"] .hz-sub { text-shadow: 0 0 8px var(--accent-cyan-glow); 
 .app-header .header-btn .ic { width: 16px; height: 16px; }
 .app-header .header-btn .hz-robot { width: 20px; height: 20px; }
 .app-header .header-btn.hzb-hbtn svg { width: 17px; height: 17px; }
-.app-header .header-btn.hzb-hbtn::after { color: #00e5ff; }
+.app-header .header-btn.hzb-hbtn::after { color: var(--accent-cyan); }
 .app-header #pickBtn .pk-dot { right: 4px; top: 4px; bottom: auto; width: 8px; height: 8px; }
 .app-header .header-btn .zz { top: 1px; right: 3px; }
 .app-header .hz-sub { font-size: 8px; letter-spacing: .8px; align-self: center; }
 @media (max-width: 350px) { .app-header .header-actions { gap: 3px; } .app-header .header-btn { width: 32px; } .app-header .hz-sub { letter-spacing: .4px; } }
 .app-header .header-btn.hzb-hbtn { display: flex !important; }
+
+/* V1.44.0: theme pill shows three colour dots */
+.hz-theme-pill button .hz-dot { width: 12px; height: 12px; border-radius: 50%; display: block; box-shadow: 0 0 6px rgba(255,255,255,.25); }
+.hz-theme-row .hz-theme-pill button .hz-dot { width: 15px; height: 15px; }
+
+/* V1.45.1: the 5 header buttons are bigger (taller and a little wider), with larger icons and labels */
+.app-header .header-actions { gap: 4px; }
+.app-header .header-btn { width: 41px; height: 56px; border-radius: 13px; gap: 5px; }
+.app-header .header-btn::after { font-size: 9px; letter-spacing: 0; color: #ffffff; }
+.app-header .header-btn .ic { width: 20px; height: 20px; }
+.app-header .header-btn .hz-robot { width: 25px; height: 25px; }
+.app-header .header-btn.hzb-hbtn svg { width: 22px; height: 22px; }
+.app-header .header-btn.hzb-hbtn::after { color: var(--accent-cyan); }
+.app-header .header-btn .zz { top: 3px; right: 4px; }
+@media (max-width: 380px) { .app-header .brand h1 { font-size: 15px; letter-spacing: .4px; } .app-header .logo-area { gap: 8px; } }
+@media (max-width: 350px) { .app-header .header-actions { gap: 3px; } .app-header .header-btn { width: 37px; height: 52px; } .app-header .header-btn::after { font-size: 8.5px; } }

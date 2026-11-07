@@ -7,7 +7,7 @@
   },
   "android": {
     "allowMixedContent": false,
-    "backgroundColor": "#ffffff"
+    "backgroundColor": "#000000"
   },
   "plugins": {
     "CapacitorHttp": {

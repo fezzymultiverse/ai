@@ -1,10 +1,15 @@
 /* Horizon V1.26.0: ABOUT & UPDATES page: version, release check, backup export/import, changelog, privacy awareness + reminder switch. */
 (function () {
     'use strict';
-    var VERSION = 'V1.43.4';
+    var VERSION = 'V1.46.0';
     var LSK = 'horizon_privacy_notice';
     var REPO_API = 'https://api.github.com/repos/fezzymultiverse/ai';
     var LOG = [
+        ['V1.46.0', ['TERMINAL AI BOX: an AI button in the Terminal bar opens a half-screen floating AI box. Every command it gives has COPY and a \u2192 $ button that drops it in your prompt (you press Enter; the AI never runs anything). Tap PINNED / MOVE to lock the box or drag it. OUT sends the last terminal output. HTML PREVIEW: Preview is now the big cyan button, kept apart from Save, with a fallback so the page always shows.']],
+        ['V1.45.2', ['BIGGER TEXT: text across the whole app is about 12% bigger (chat, menus, Settings, hints, small print). The header buttons and the Terminal keep their sizes.']],
+        ['V1.45.1', ['HEADER: the 5 buttons (Snooze, AI, Browser, Menu, Settings) are taller and a little wider, with bigger icons and white labels.']],
+        ['V1.45.0', ['THREE THEMES ONLY: Dark cyan, Dark green and Dark purple. Light and the old Dark are gone, and your old choice becomes Dark cyan. Pick one in Settings (Theme) or with the three colour dots under the Settings title.','WHITE TEXT: text is now white everywhere (titles, Settings descriptions, hints, placeholders, small print) instead of dim grey. Every cyan glow, border and button follows the colour you picked.','YOUR MESSAGES: the place tag on the right edge always shows (suburb and city from your GPS, or No location / Locating if there is none) and a green VPN chip appears beside it when a VPN is on.']],
+        ['V1.44.0', ['KOKORO REMOVED: the Kokoro offline voice is gone. Piper voices stay. If you had Kokoro downloaded, Horizon deletes it to free the space (about 330 MB).','FREETTS.AI VOICE: Settings, Voice, Natural: FreeTTS.ai. Paste the endpoint and your key from your FreeTTS.ai dashboard, tap Save, then Test. If it fails or runs out, Horizon switches to the Android voice and says why.','WHITE FLASH: the white screen that showed for a second when you left the app is fixed. The window behind the page now follows your theme (Light, Dark or Cyan).']],
         ['V1.43.4', ['WEATHER WIDGET: the date pill is black with white text.']],
         ['V1.43.3', ['WEATHER WIDGET: tapping the expand arrow now closes the open Menu tabs above it to make room, so it opens every time. Before, it stayed folded and dimmed until you closed the tabs yourself. Opening a tab later still folds the widget back down when there is no room.']],
         ['V1.43.2', ['YOUR BUBBLE: dark grey again in every theme (V1.42.0 had turned it cyan).','PROVIDER PILL (Gemini, bottom left): the sliding bar and pulsing dot now keep moving while a reply runs. The pill was being rebuilt every quarter second, which restarted them before they could show. Now only the clock text updates.']],

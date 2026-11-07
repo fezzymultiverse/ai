@@ -5,10 +5,10 @@
 .hzs-row.sel { background: var(--surface); }
 .hzs-row:active { background: var(--surface-hover, var(--surface)); }
 .hzs-row.info { cursor: default; }
-.hzs-g { flex: 0 0 auto; width: 30px; height: 30px; display: grid; place-items: center; font-size: 16px; border-radius: 9px; background: var(--surface); border: 1px solid var(--border-color); }
+.hzs-g { flex: 0 0 auto; width: 30px; height: 30px; display: grid; place-items: center; font-size: 18px; border-radius: 9px; background: var(--surface); border: 1px solid var(--border-color); }
 .hzs-t { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-.hzs-t b { font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.hzs-t small { font-size: 11.5px; color: var(--text-muted); line-height: 1.35; }
-.hzs-b { flex: 0 0 auto; font-size: 10.5px; font-weight: 800; letter-spacing: 0.6px; padding: 5px 10px; border-radius: 999px; background: var(--surface); color: var(--text-muted); border: 1px solid var(--border-color); }
+.hzs-t b { font-size: 15.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hzs-t small { font-size: 13px; color: var(--text-muted); line-height: 1.35; }
+.hzs-b { flex: 0 0 auto; font-size: 12px; font-weight: 800; letter-spacing: 0.6px; padding: 5px 10px; border-radius: 999px; background: var(--surface); color: var(--text-muted); border: 1px solid var(--border-color); }
 .hzs-b.on { background: #16a34a; color: #fff; border-color: #16a34a; }
 .hzs-b.off { background: #dc2626; color: #fff; border-color: #dc2626; }

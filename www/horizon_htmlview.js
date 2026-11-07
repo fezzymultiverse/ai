@@ -1,4 +1,4 @@
-/* HORIZON V1.40.0 · HTML preview + Save as for code blocks in chat.
+/* HORIZON V1.46.0 · HTML preview + Save as for code blocks in chat.
    Any code block that is an HTML page (```html, or text starting with <!doctype / <html) or an SVG gets two buttons in its header:
    PREVIEW opens it full screen in a sandboxed frame (scripts run, but it cannot touch Horizon's data); SAVE AS writes the file
    to Documents/Horizon (or downloads it in a browser). Nothing is sent anywhere. */
@@ -104,9 +104,16 @@
     fr.className = 'hv-frame';
     fr.setAttribute('sandbox', 'allow-scripts allow-forms allow-modals');
     fr.setAttribute('title', 'Page preview');
-    fr.srcdoc = docFor(raw, kind);
+    var doc = docFor(raw, kind), loaded = false;
+    fr.addEventListener('load', function () { loaded = true; });
+    fr.srcdoc = doc;
     ov.appendChild(bar); ov.appendChild(fr);
     document.body.appendChild(ov);
+    /* V1.46.0: if this WebView never loads the srcdoc frame, fall back to a blob page so Preview always shows the page. */
+    setTimeout(function () {
+      if (loaded || !ov || fr.parentNode !== ov) return;
+      try { fr.removeAttribute('srcdoc'); fr.src = URL.createObjectURL(new Blob([doc], { type: 'text/html' })); } catch (e) { /* ignore */ }
+    }, 1500);
     try { history.pushState({ hvPrev: true }, ''); } catch (e) { /* ignore */ }
     if (!popBound) { popBound = true; window.addEventListener('popstate', function () { if (ov) closePreview(true); }); }
   }
@@ -120,8 +127,8 @@
     if (!kind) return;
     var copy = head.querySelector('.code-copy');
     var acts = el('div', 'hv-acts');
-    var pv = el('button', 'code-copy hv-pv', 'Preview'); pv.type = 'button';
-    var sv = el('button', 'code-copy hv-sv', 'Save as'); sv.type = 'button';
+    var pv = el('button', 'code-copy hv-pv', '\u25B6 Preview'); pv.type = 'button'; pv.setAttribute('aria-label', 'Preview this page (does not save)');
+    var sv = el('button', 'code-copy hv-sv', 'Save'); sv.type = 'button'; sv.setAttribute('aria-label', 'Save this page as a file');
     pv.addEventListener('click', function (e) { e.stopPropagation(); var r = rawOf(block); if (!r.trim()) { toast('Nothing to preview yet', '', 'bad'); return; } preview(r, kind); });
     sv.addEventListener('click', function (e) { e.stopPropagation(); doSave(rawOf(block), kind); });
     acts.appendChild(pv); acts.appendChild(sv);

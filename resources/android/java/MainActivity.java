@@ -21,6 +21,7 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(HorizonSherpaPlugin.class);
         registerPlugin(HorizonLockPlugin.class);
         super.onCreate(savedInstanceState);
+        HorizonPermsPlugin.paintBackdrop(this);   // V1.44.0: theme colour behind the page, no white flash
 
         // V1.8.0: let the WebView start audio without a fresh tap. Read-aloud with the Piper voice plays
         // seconds after the tap that asked for it, and Android refuses that unless this is false.
@@ -51,6 +52,7 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onPause() {
         HorizonAIPlugin.foreground = false;
+        HorizonPermsPlugin.paintBackdrop(this);   // V1.44.0: repaint before Android hides the page
         super.onPause();
         // Let a reply that is still being fetched finish while the app is in the background.
         try {
@@ -65,6 +67,7 @@ public class MainActivity extends BridgeActivity {
     public void onResume() {
         HorizonAIPlugin.foreground = true;
         super.onResume();
+        HorizonPermsPlugin.paintBackdrop(this);
         if (getBridge() != null && getBridge().getWebView() != null) {
             getBridge().getWebView().post(() -> getBridge().getWebView().evaluateJavascript(
                 "window.dispatchEvent(new Event('horizon-resume'))", null));

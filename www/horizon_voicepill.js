@@ -18,7 +18,7 @@
     }
     function ring(t) {
         var p = (t % 1.4) / 1.4;
-        pill.style.boxShadow = '0 0 0 ' + (p * 7).toFixed(2) + 'px rgba(0,229,255,' + (0.4 * (1 - p)).toFixed(3) + ')';
+        pill.style.boxShadow = '0 0 0 ' + (p * 7).toFixed(2) + 'px rgba(var(--accent-rgb),' + (0.4 * (1 - p)).toFixed(3) + ')';
     }
     function frame(ms) {
         raf = 0;

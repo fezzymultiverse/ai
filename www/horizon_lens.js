@@ -282,7 +282,7 @@
     }
     function buildReport() {
         const L = [];
-        const th = document.documentElement.getAttribute('data-theme') || 'light';
+        const th = document.documentElement.getAttribute('data-accent') || 'cyan';
         const sa = safeArea();
         const body = getComputedStyle(document.body);
         const kb = window.visualViewport && window.visualViewport.height < innerHeight * 0.75;

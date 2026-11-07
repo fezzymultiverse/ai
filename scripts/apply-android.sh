@@ -135,7 +135,7 @@ grep -q 'android:name=".HorizonSpeakService"' "$MANIFEST" || { echo "Speak servi
 grep -q 'org.jetbrains.kotlin.android' android/app/build.gradle || { echo "Kotlin plugin not applied to app/build.gradle" >&2; exit 1; }
 echo "Native plugin sources verified."
 
-# ---- V1.37.0: offline neural voices (sherpa-onnx, Piper + Kokoro) ----
+# ---- V1.37.0: offline neural voices (sherpa-onnx, Piper; Kokoro removed in V1.44.0) ----
 sed "s/__APPID__/${APPID}/" "resources/android/java/HorizonSherpaPlugin.kt" > "$JAVA_DIR/HorizonSherpaPlugin.kt"
 python3 - <<'PY'
 from pathlib import Path
@@ -164,3 +164,8 @@ grep -q "androidx.biometric:biometric" android/app/build.gradle || { echo "biome
 grep -q "registerPlugin(HorizonLockPlugin.class)" "$JAVA_DIR/MainActivity.java" || { echo "MainActivity does not register HorizonLockPlugin" >&2; exit 1; }
 [ -s "$JAVA_DIR/HorizonLockPlugin.kt" ] || { echo "Native source missing after apply: HorizonLockPlugin.kt" >&2; exit 1; }
 echo "App lock (biometric) applied."
+
+# ---- V1.44.0: window + WebView background follows the theme (no white flash when leaving the app) ----
+grep -q "setBackdrop" "$JAVA_DIR/HorizonPermsPlugin.java" || { echo "HorizonPermsPlugin has no setBackdrop" >&2; exit 1; }
+grep -q "paintBackdrop" "$JAVA_DIR/MainActivity.java" || { echo "MainActivity does not paint the backdrop" >&2; exit 1; }
+echo "Theme backdrop applied."

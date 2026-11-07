@@ -1,11 +1,12 @@
-/* Horizon V1.42.1 adds the place tag. V1.42.0: OPERATOR. A name tag on the left of your messages, beside the date and time.
+/* Horizon V1.44.0: the place tag always shows (suburb and city, or why there is none) with a VPN chip beside it.
+   Horizon V1.42.1 adds the place tag. V1.42.0: OPERATOR. A name tag on the left of your messages, beside the date and time.
    Rename it or switch it off under Personalisation. Stored only on this device. It watches the chat, so every way a message
    is drawn (new, reloaded, edited) gets the tag without touching the message code. */
 (function () {
     'use strict';
     var ON = 'horizon_operator_on', NM = 'horizon_operator_name', DEF = 'Operator', MAX = 24;
     var LON = 'horizon_operator_loc_on', LCA = 'horizon_operator_loc_cache', NS = 'http://www.w3.org/2000/svg';
-    var placeName = '', locNote = '', locBusy = false, locAt = 0;
+    var placeName = '', locNote = '', locBusy = false, locAt = 0, vpn = null;
     function rd(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
     function wr(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* storage full or blocked */ } }
     function del(k) { try { localStorage.removeItem(k); } catch (e) { /* storage blocked */ } }
@@ -29,7 +30,8 @@
             if (!tag) { tag = document.createElement('span'); tag.className = 'meta-op'; meta.insertBefore(tag, meta.firstChild); }
             if (tag.textContent !== nm) tag.textContent = nm;
         });
-        var lon = locOn() && placeName;
+        var lon = locOn();
+        var shown = placeName || (locNote ? 'No location' : 'Locating\u2026');
         feed.querySelectorAll('.message.user > .message-meta').forEach(function (meta) {
             var loc = meta.querySelector(':scope > .meta-loc');
             if (!lon) { if (loc) loc.remove(); return; }
@@ -42,8 +44,13 @@
                 meta.appendChild(loc);
             }
             var tx = loc.querySelector('.meta-loc-t');
-            if (tx && tx.textContent !== placeName) tx.textContent = placeName;
-            loc.title = placeName;
+            if (tx && tx.textContent !== shown) tx.textContent = shown;
+            loc.title = (placeName || locNote || 'Finding your place') + (vpn === true ? ' (VPN on)' : '');
+            var vc = loc.querySelector('.meta-vpn');
+            if (vpn === true) {
+                if (!vc) { vc = document.createElement('span'); vc.className = 'meta-vpn'; vc.textContent = 'VPN'; loc.insertBefore(vc, loc.firstChild); }
+            } else if (vc) vc.remove();
+            loc.classList.toggle('none', !placeName);
         });
     }
 
@@ -61,7 +68,21 @@
         var r2 = function (n) { return Math.round(Number(n) * 100) / 100; };
         return fetch('https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=' + r2(lat) + '&longitude=' + r2(lon) + '&localityLanguage=en', ctl ? { signal: ctl.signal } : {})
             .then(function (r) { clearTimeout(to); if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }, function (e) { clearTimeout(to); throw e; })
-            .then(function (j) { return clean(j.locality || j.city || j.principalSubdivision || j.countryName || ''); });
+            .then(function (j) {
+                var a = clean(j.locality || ''), b = clean(j.city || '');
+                if (a && b && a.toLowerCase() !== b.toLowerCase() && (a + ', ' + b).length <= MAX) return a + ', ' + b;
+                return a || b || clean(j.principalSubdivision || j.countryName || '');
+            });
+    }
+    /* VPN: Android's own network state (the same source as the DASH badge). Unknown outside the app, so no chip then. */
+    function readVpn() {
+        try {
+            var p = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.HorizonStats;
+            if (!p || typeof p.snapshot !== 'function') return;
+            Promise.resolve(p.snapshot()).then(function (r) {
+                if (r && typeof r.vpn === 'boolean' && r.vpn !== vpn) { vpn = r.vpn; apply(); paint(); }
+            }, function () { /* leave it as it was */ });
+        } catch (e) { /* no plugin */ }
     }
     function refreshLoc(force) {
         if (!locOn() || locBusy) return;
@@ -82,7 +103,7 @@
         if (input) { input.disabled = !on; if (document.activeElement !== input) input.value = clean(rd(NM)); }
         if (reset) reset.disabled = !on || !clean(rd(NM));
         if (lsw) lsw.setAttribute('aria-checked', String(locOn()));
-        if (lstat) lstat.textContent = locOn() ? (placeName ? 'On. Showing "' + placeName + '" from your phone GPS, VPN or not' : 'On. Waiting for your phone location') + (locNote ? ' \u00b7 ' + locNote : '') : 'Off. No place on your messages';
+        if (lstat) lstat.textContent = locOn() ? (placeName ? 'On. Showing "' + placeName + '" from your phone GPS, VPN or not' + (vpn === true ? ' \u00b7 VPN is on' : vpn === false ? ' \u00b7 no VPN' : '') : 'On. Waiting for your phone location') + (locNote ? ' \u00b7 ' + locNote : '') : 'Off. No place on your messages';
         if (status) status.textContent = (on ? 'On. Your messages show "' + name() + '" beside the date and time' : 'Off. Your messages show only the date and time') + (note ? ' \u00b7 ' + note : '');
     }
 
@@ -97,12 +118,13 @@
         input.addEventListener('blur', function () { paint(); });
     }
     if (lsw) lsw.addEventListener('click', function (e) { e.stopPropagation(); wr(LON, locOn() ? '0' : '1'); apply(); paint(); if (locOn()) refreshLoc(true); });
-    document.addEventListener('visibilitychange', function () { if (!document.hidden) refreshLoc(false); });
+    document.addEventListener('visibilitychange', function () { if (!document.hidden) { refreshLoc(false); readVpn(); } });
+    setInterval(function () { if (!document.hidden) readVpn(); }, 15000);
     if (reset) reset.addEventListener('click', function () { del(NM); if (input) input.value = ''; apply(); paint('reset'); });
 
     if (feed && window.MutationObserver) new MutationObserver(apply).observe(feed, { childList: true, subtree: true });
     window.HzOperator = { enabled: enabled, name: name, apply: apply, place: function () { return placeName; } };
     apply();
     paint();
-    setTimeout(function () { refreshLoc(true); }, 1500);
+    setTimeout(function () { refreshLoc(true); readVpn(); }, 1500);
 })();

@@ -9,7 +9,6 @@ import com.getcapacitor.PluginMethod
 import com.getcapacitor.annotation.CapacitorPlugin
 import com.k2fsa.sherpa.onnx.OfflineTts
 import com.k2fsa.sherpa.onnx.OfflineTtsConfig
-import com.k2fsa.sherpa.onnx.OfflineTtsKokoroModelConfig
 import com.k2fsa.sherpa.onnx.OfflineTtsModelConfig
 import com.k2fsa.sherpa.onnx.OfflineTtsVitsModelConfig
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
@@ -25,7 +24,7 @@ import java.nio.ByteOrder
 import java.util.concurrent.Executors
 
 /**
- * V1.37.0: offline neural voices (Piper and Kokoro) through sherpa-onnx.
+ * V1.37.0: offline neural voices (Piper) through sherpa-onnx. V1.44.0: Kokoro removed.
  * Models download once from the k2-fsa/sherpa-onnx "tts-models" release into app storage, then run fully offline.
  * synthesize() returns a WAV (base64) that the web side plays through its existing audio path.
  */
@@ -38,8 +37,7 @@ class HorizonSherpaPlugin : Plugin() {
         Model("piper-amy-low", "Amy, US female (small, fast)", "vits-piper-en_US-amy-low", "vits", 65, 1),
         Model("piper-lessac-medium", "Lessac, US (clear, natural)", "vits-piper-en_US-lessac-medium", "vits", 80, 1),
         Model("piper-ryan-medium", "Ryan, US male", "vits-piper-en_US-ryan-medium", "vits", 80, 1),
-        Model("piper-alan-medium", "Alan, UK male", "vits-piper-en_GB-alan-medium", "vits", 80, 1),
-        Model("kokoro-en-v0_19", "Kokoro, 11 voices (best quality, large)", "kokoro-en-v0_19", "kokoro", 330, 11)
+        Model("piper-alan-medium", "Alan, UK male", "vits-piper-en_GB-alan-medium", "vits", 80, 1)
     )
 
     private val worker = Executors.newSingleThreadExecutor()
@@ -56,6 +54,8 @@ class HorizonSherpaPlugin : Plugin() {
 
     @PluginMethod
     fun status(call: PluginCall) {
+        // V1.44.0: Kokoro is gone. Remove a copy downloaded by an older version so its space comes back.
+        worker.execute { try { File(root(), "kokoro-en-v0_19").takeIf { it.exists() }?.deleteRecursively() } catch (t: Throwable) { /* next status call tries again */ } }
         val out = JSObject()
         var available = true
         try { Class.forName("com.k2fsa.sherpa.onnx.OfflineTts") } catch (t: Throwable) { available = false }
@@ -158,14 +158,9 @@ class HorizonSherpaPlugin : Plugin() {
         val tokens = File(dir, "tokens.txt").path
         val data = File(dir, "espeak-ng-data").path
         val threads = Runtime.getRuntime().availableProcessors().coerceIn(2, 4)
-        val model = if (m.kind == "kokoro")
-            OfflineTtsModelConfig(
-                kokoro = OfflineTtsKokoroModelConfig(model = onnx.path, voices = File(dir, "voices.bin").path, tokens = tokens, dataDir = data),
-                numThreads = threads, debug = false, provider = "cpu")
-        else
-            OfflineTtsModelConfig(
-                vits = OfflineTtsVitsModelConfig(model = onnx.path, tokens = tokens, dataDir = data),
-                numThreads = threads, debug = false, provider = "cpu")
+        val model = OfflineTtsModelConfig(
+            vits = OfflineTtsVitsModelConfig(model = onnx.path, tokens = tokens, dataDir = data),
+            numThreads = threads, debug = false, provider = "cpu")
         val tts = OfflineTts(config = OfflineTtsConfig(model = model))
         engine = tts; engineId = m.id
         return tts
