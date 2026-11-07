@@ -164,7 +164,7 @@
   var DB_BGS = [['', 'None'], ['00e5ff', 'Cyan'], ['f97316', 'Orange'], ['ffffff', 'White'], ['000000', 'Black']];
 
   function openDiceBear() {
-    openSheet('dicebear', 'DiceBear', 'dice', function (body) {
+    openSheet('dicebear', 'Avatars', 'dice', function (body) {
       var S = load('hzcr.db', { style: 'avataaars', seed: 'Horizon', bg: '', flip: false, radius: 0 });
       if (DB_STYLES.indexOf(S.style) < 0) S.style = 'avataaars';
       var ver = '9.x', triedFallback = false;
@@ -311,7 +311,7 @@
   }
 
   function openMemegen() {
-    openSheet('memegen', 'Memegen', 'meme', function (body) {
+    openSheet('memegen', 'Memes', 'meme', function (body) {
       var S = load('hzcr.mg', { id: 'buzz', ext: 'jpg', width: '600', bg: '', texts: {} });
       var tpls = MG_FALLBACK.map(function (t) { return { id: t[0], name: t[1], lines: t[2], ex: [] }; });
 
@@ -442,7 +442,19 @@
     'Touch sparks':
       'const bits = [];\n\nfunction setup() {\n  createCanvas(360, 360);\n  colorMode(HSB, 360, 100, 100, 255);\n  noStroke();\n}\n\nfunction draw() {\n  background(0, 0, 0, 40);\n  if (mouseIsPressed || frameCount % 5 === 0) {\n    const x = mouseIsPressed ? mouseX : random(width);\n    const y = mouseIsPressed ? mouseY : random(height);\n    for (let i = 0; i < 4; i++) bits.push({ x, y, vx: random(-2, 2), vy: random(-3, 0.5), life: 255, h: random(170, 210) });\n  }\n  for (let i = bits.length - 1; i >= 0; i--) {\n    const b = bits[i];\n    b.x += b.vx;\n    b.y += b.vy;\n    b.vy += 0.05;\n    b.life -= 4;\n    fill(b.h, 80, 100, b.life);\n    circle(b.x, b.y, 4);\n    if (b.life <= 0) bits.splice(i, 1);\n  }\n  fill(0, 0, 100, 160);\n  textSize(12);\n  text("touch to draw", 10, 20);\n}\n',
     'Sine weave':
-      'function setup() {\n  createCanvas(360, 360);\n  noFill();\n  stroke(0, 229, 255, 170);\n}\n\nfunction draw() {\n  background(0);\n  for (let y = 20; y < height; y += 12) {\n    beginShape();\n    for (let x = 0; x <= width; x += 6) {\n      vertex(x, y + sin(x * 0.04 + frameCount * 0.04 + y * 0.05) * 10);\n    }\n    endShape();\n  }\n}\n'
+      'function setup() {\n  createCanvas(360, 360);\n  noFill();\n  stroke(0, 229, 255, 170);\n}\n\nfunction draw() {\n  background(0);\n  for (let y = 20; y < height; y += 12) {\n    beginShape();\n    for (let x = 0; x <= width; x += 6) {\n      vertex(x, y + sin(x * 0.04 + frameCount * 0.04 + y * 0.05) * 10);\n    }\n    endShape();\n  }\n}\n',
+    "Starfield":
+      "let stars = [];\n\nfunction setup() {\n  createCanvas(360, 360);\n  for (let i = 0; i < 160; i++) stars.push({ x: random(-180, 180), y: random(-180, 180), z: random(360) });\n}\n\nfunction draw() {\n  background(8);\n  translate(width / 2, height / 2);\n  noStroke();\n  for (const s of stars) {\n    s.z -= 4;\n    if (s.z < 1) { s.x = random(-180, 180); s.y = random(-180, 180); s.z = 360; }\n    const sx = (s.x / s.z) * 180, sy = (s.y / s.z) * 180;\n    fill(0, 229, 255, map(s.z, 0, 360, 255, 60));\n    circle(sx, sy, map(s.z, 0, 360, 4, 0.5));\n  }\n}",
+    "Spirograph":
+      "let t = 0;\n\nfunction setup() {\n  createCanvas(360, 360);\n  background(8);\n  strokeWeight(2);\n}\n\nfunction draw() {\n  translate(width / 2, height / 2);\n  const R = 120, r = 47, d = 80;\n  stroke(0, 229, 255, 170);\n  for (let i = 0; i < 18; i++) {\n    const a = t + i * 0.01;\n    point((R - r) * cos(a) + d * cos(((R - r) / r) * a), (R - r) * sin(a) - d * sin(((R - r) / r) * a));\n  }\n  t += 0.18;\n  if (t > TWO_PI * 47) { t = 0; background(8); }\n}",
+    "Matrix rain":
+      "let cols, drops = [];\n\nfunction setup() {\n  createCanvas(360, 360);\n  textFont('monospace');\n  textSize(14);\n  cols = floor(width / 14);\n  for (let i = 0; i < cols; i++) drops.push(random(-20, 0));\n  background(0);\n}\n\nfunction draw() {\n  background(0, 0, 0, 40);\n  fill(0, 255, 140);\n  for (let i = 0; i < cols; i++) {\n    text('01ABCDEFGHJKLMNPQRSTUVWXYZ'.charAt(floor(random(26))), i * 14, drops[i] * 14);\n    if (drops[i] * 14 > height && random() > 0.95) drops[i] = 0;\n    drops[i] += 0.6;\n  }\n}",
+    "Bouncing balls":
+      "let balls = [];\n\nfunction setup() {\n  createCanvas(360, 360);\n  colorMode(HSB, 360, 100, 100, 100);\n  noStroke();\n  for (let i = 0; i < 14; i++) {\n    balls.push({ x: random(40, 320), y: random(40, 320), vx: random(-3, 3), vy: random(-3, 3), r: random(10, 22), h: random(360) });\n  }\n}\n\nfunction draw() {\n  background(230, 40, 10, 35);\n  for (const b of balls) {\n    b.x += b.vx; b.y += b.vy;\n    if (b.x < b.r || b.x > width - b.r) b.vx *= -1;\n    if (b.y < b.r || b.y > height - b.r) b.vy *= -1;\n    fill(b.h, 80, 100, 90);\n    circle(b.x, b.y, b.r * 2);\n  }\n}",
+    "Kaleidoscope":
+      "let t = 0;\n\nfunction setup() {\n  createCanvas(360, 360);\n  colorMode(HSB, 360, 100, 100, 100);\n  background(0, 0, 6);\n  noStroke();\n}\n\nfunction draw() {\n  translate(width / 2, height / 2);\n  const r = 40 + 70 * noise(t);\n  const a = t * 2;\n  for (let i = 0; i < 8; i++) {\n    push();\n    rotate((TWO_PI / 8) * i);\n    fill((t * 40) % 360, 80, 100, 35);\n    circle(cos(a) * r, sin(a * 1.3) * r, 10);\n    pop();\n  }\n  t += 0.02;\n  if (frameCount % 900 === 0) background(0, 0, 6);\n}",
+    "Wave lines":
+      "function setup() {\n  createCanvas(360, 360);\n  colorMode(HSB, 360, 100, 100, 100);\n  noFill();\n  strokeWeight(2);\n}\n\nfunction draw() {\n  background(0, 0, 6);\n  for (let y = 20; y < height; y += 16) {\n    beginShape();\n    for (let x = 0; x <= width; x += 8) {\n      vertex(x, y + sin(x * 0.03 + frameCount * 0.04 + y * 0.05) * 10 + sin(x * 0.011 - frameCount * 0.02) * 6);\n    }\n    stroke((y * 1.2 + frameCount) % 360, 70, 100);\n    endShape();\n  }\n}"
   };
 
   async function loadP5(onStatus) {
@@ -481,7 +493,7 @@
   }
 
   function openP5() {
-    openSheet('p5', 'p5.js', 'p5', function (body, onClose) {
+    openSheet('p5', 'Visuals', 'p5', function (body, onClose) {
       var S = load('hzcr.p5', { sample: 'Neon flow field', code: '' });
       if (!S.code || typeof S.code !== 'string') S.code = P5_SAMPLES[S.sample] || P5_SAMPLES['Neon flow field'];
       var frame = null, snapId = 0, snapWait = null;
@@ -576,21 +588,22 @@
 
   // ---------- + menu strip ----------
   var TOOLS = [
-    { id: 'dicebear', label: 'DiceBear', icon: 'dice', aria: 'DiceBear: make an avatar from any seed', open: openDiceBear },
-    { id: 'memegen', label: 'Meme', icon: 'meme', aria: 'Memegen: make a meme from a template', open: openMemegen },
-    { id: 'p5', label: 'p5.js', icon: 'p5', aria: 'p5.js: run a code art sketch', open: openP5 }
+    { id: 'dicebear', label: 'Avatars', icon: 'dice', aria: 'Avatars: make an avatar from any seed', desc: 'Make an avatar from any seed. 30 styles, background colour, corner radius, flip and 6 variations. Powered by DiceBear.', open: openDiceBear },
+    { id: 'memegen', label: 'Memes', icon: 'meme', aria: 'Memes: make a meme from a template', desc: 'Make a meme from a template with your own text. Powered by Memegen.', open: openMemegen },
+    { id: 'p5', label: 'Visuals', icon: 'p5', aria: 'Visuals: run a code art sketch', desc: 'Run a code art sketch: 10 ready-made visuals, or write your own. Powered by p5.js.', open: openP5 }
   ];
   function installStrip() {
     var menu = $('toolMenu');
     if (!menu || menu.querySelector('.hzcr-bar')) return;
     var bar = el('div', 'hzcr-bar');
     bar.setAttribute('role', 'group');
-    bar.setAttribute('aria-label', 'Create: no key needed');
+    bar.setAttribute('aria-label', 'Generators: no key needed');
     TOOLS.forEach(function (t) {
       var b = el('button', 'hzcr-tool'); b.type = 'button'; b.id = 'tm-' + t.id;
       b.setAttribute('aria-label', t.aria);
       var ic = el('span', 'hzcr-tool-ic'); ic.appendChild(svg(t.icon, 'hzcr-bi'));
-      b.append(ic, el('span', 'hzcr-tool-l', t.label));
+      var tx = el('span', 'hzcr-tool-tx'); tx.append(el('span', 'hzcr-tool-l', t.label), el('span', 'hzcr-tool-d', t.desc || ''));   /* V1.54.0: full description under the name */
+      b.append(ic, tx, el('span', 'hzcr-tool-go', '\u203a'));
       b.addEventListener('click', function (e) {
         e.stopPropagation();
         menu.hidden = true;
@@ -599,8 +612,9 @@
       });
       bar.appendChild(b);
     });
+    var lab = el('div', 'tm-grp', 'Generators');   /* V1.53.1: Create is its own group, first in the grouped menu */
     var head = menu.querySelector('.tm-head');
-    if (head && head.nextSibling) menu.insertBefore(bar, head.nextSibling); else menu.appendChild(bar);
+    if (head && head.nextSibling) { menu.insertBefore(lab, head.nextSibling); menu.insertBefore(bar, lab.nextSibling); } else { menu.appendChild(lab); menu.appendChild(bar); }
   }
 
   function init(h) {

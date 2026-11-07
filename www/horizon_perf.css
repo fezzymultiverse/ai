@@ -1,0 +1,43 @@
+/* HORIZON V1.58.2 · keyboard-move pause + lag detector panel. */
+
+/* While the keyboard slides, nothing animates or eases, so the page has less to redraw on every frame. */
+html.hz-kb-moving .chat-messages > .message,
+html.hz-kb-moving .chat-messages > .notice { animation: none !important; }
+html.hz-kb-moving .chat-input-area { transition: none !important; }
+
+.hzp {
+  position: fixed; z-index: 900;
+  left: 8px; right: 8px;
+  top: calc(env(safe-area-inset-top, 0px) + 8px);
+  max-height: 52vh;
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 10px 12px;
+  border-radius: 16px;
+  border: 1px solid var(--accent-cyan, #00e5ff);
+  background: var(--panel-bg, #0a0a12);
+  color: var(--text-main, #fff);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, .5), 0 0 18px var(--accent-cyan-glow, rgba(0, 229, 255, .25));
+  font-size: 13px;
+}
+.hzp[hidden] { display: none; }
+.hzp-head { display: flex; align-items: center; justify-content: space-between; }
+.hzp-head b { color: var(--accent-cyan, #00e5ff); letter-spacing: .08em; font-size: 12px; }
+.hzp-x {
+  width: 32px; height: 32px; border-radius: 50%;
+  border: 1px solid var(--border-color, rgba(255, 255, 255, .2));
+  background: transparent; color: inherit; font-size: 20px; line-height: 1; cursor: pointer;
+}
+.hzp-out {
+  margin: 0; flex: 1 1 auto; min-height: 0; overflow: auto;
+  white-space: pre-wrap; word-break: break-word;
+  font: 11.5px/1.45 var(--mono, ui-monospace, Menlo, Consolas, monospace);
+  color: var(--text-main, #fff);
+}
+.hzp-hint { margin: 0; color: var(--text-muted, #9aa3b2); font-size: 11.5px; line-height: 1.4; }
+.hzp-row { display: flex; gap: 8px; }
+.hzp-b {
+  flex: 1 1 0; min-height: 40px; border-radius: 12px; cursor: pointer; font-weight: 700;
+  border: 1px solid var(--accent-cyan, #00e5ff);
+  background: var(--accent-cyan, #00e5ff); color: var(--btn-fg, #001014);
+}
+.hzp-b.ghost { background: transparent; color: var(--accent-cyan, #00e5ff); }

@@ -48,11 +48,9 @@
             }
             var tx = loc.querySelector('.meta-loc-t');
             if (tx && tx.textContent !== shown) tx.textContent = shown;
-            loc.title = (stamped || placeName || locNote || 'Finding your place') + (isVpn ? ' (VPN on)' : '');
-            var vc = loc.querySelector('.meta-vpn');
-            if (isVpn) {
-                if (!vc) { vc = document.createElement('span'); vc.className = 'meta-vpn'; vc.textContent = 'VPN'; loc.insertBefore(vc, loc.firstChild); }
-            } else if (vc) vc.remove();
+            loc.title = (stamped || placeName || locNote || 'Finding your place');
+            /* V1.52.0: the VPN chip is gone from message bubbles. Clear any left over. */
+            var vc = loc.querySelector('.meta-vpn'); if (vc) vc.remove();
             loc.classList.toggle('none', !isPlace);
         });
     }

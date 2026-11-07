@@ -658,7 +658,9 @@
                     for (var i = 0; i < recs.length; i++) { if (!foot.contains(recs[i].target)) { queueFit(); return; } }
                 }).observe(panel, { childList: true, subtree: true, attributes: true, attributeFilter: ['hidden', 'class', 'style'] });
             } catch (e) { /* no observer */ }
-            window.addEventListener('resize', queueFit);
+            // V1.58.2: not while the keyboard slides; hz-kb-settled refits once afterwards
+            window.addEventListener('resize', function () { if (window.hzKbCheck) window.hzKbCheck(); if (!window.hzKbBusy) queueFit(); });
+            window.addEventListener('hz-kb-settled', queueFit);
             window.addEventListener('orientationchange', queueFit);
             setTimeout(queueFit, 0); setTimeout(queueFit, 600);
         }

@@ -12,6 +12,61 @@
   <img alt="Capacitor 6" src="https://img.shields.io/badge/Capacitor-6-00e5ff">
 </p>
 
+## What's new in V1.58.2
+
+- **Smoother typing.** The message box only re-measures when the text grows or shrinks (before, every key forced a full page re-layout). The link-card check and the draft save wait for a longer pause; the draft is still saved when you leave the box or the app. The music wave and the background sweep rest while you type or the keyboard moves.
+- **Autocorrect.** The message box no longer says `autocomplete="off"` and now asks for autocorrect and spellcheck, so a third-party keyboard can show suggestions. Not confirmed on the phone: it is the most likely reason they were missing.
+- **Keyboard.** The resize mode is pinned in the manifest and in MainActivity. While the keyboard slides, the dashboard re-fit and message animations pause, then re-fit once.
+- **Lag detector.** Type `/lag` in the message box: measured refresh rate, slow keys split into wait / run / paint, long tasks, and a Copy report button. Kept in memory only.
+- **90 Hz.** MainActivity asks Android for a 90 Hz display mode. Android still decides: Battery saver or a fixed 60 Hz setting wins.
+- Not tested on a phone yet. MainActivity.java was not compiled here (no Android SDK); the CI build compiles it.
+
+## What's new in V1.58.1
+
+- **Voice spacing.** The TTS.ai and Pollinations key boxes are full-width fields with space around them, with larger Save key / Remove key buttons; speed and pitch sliders have more room. Checked at 412 px wide in a browser, not yet on the phone.
+
+## What's new in V1.58.0
+
+- **Settings AI.** A pulsing AI button beside Settings opens an assistant limited to Horizon's settings and features: where things are, fixes, ideas. It sees setting names, which provider is active and whether keys exist (never the keys), and the open page's text (never Vault or Security). It cannot change settings. Follows the cyan, green and purple themes.
+- **Terminal AI docked.** The floating box is replaced by a panel inside the terminal. Eye = show or hide the terminal output from the AI (on by default, so the last ~40 lines go to your provider with each message). Arrow = minimize. No drag, pin or resize. (Implemented and syntax-checked; not yet run on a device.)
+
+## What's new in V1.57.0
+
+- **Model descriptions.** Each model in the AI picker has a plain one-line description under its name, with no category labels.
+- **Markdown blocks.** Markdown the AI writes arrives in one block with Copy, Raw | Converted and Save (.md or .html). Fences nest correctly and ~~~ works. (Implemented and syntax-checked; not yet run on a device.)
+
+## What's new in V1.56.1
+
+- **Groq vision.** Groq models can now see pictures, PDF pages and the Lens screenshot of the app (Qwen3.8 27B, Muse Spark, Llama 4). Max 3 pictures per request.
+
+## What's new in V1.56.0
+
+- **New header and Snooze screen.** Robot button removed. A provider pill sits in the middle and opens the AI sheet, which has a Set API key tab. Snooze is a full-screen moon, robot with a 💤, provider logos and the tagline. Tap anywhere to wake.
+
+## What's new in V1.55.0
+
+- **Avatars, Memes, Visuals.** The three generators are renamed; Visuals gains six more built-in sketches (10 total).
+
+## What's new in V1.54.1
+
+- **Generators.** The Create group in the Tools menu is renamed Generators.
+
+## What's new in V1.54.0
+
+- **Descriptions in the grouped Tools menu.** Full description under each tool; DiceBear, Meme and p5.js are rows with a description (`horizon_creator.js`, `horizon_tidy.css`).
+
+## What's new in V1.53.1
+
+- **Create group.** DiceBear, Meme and p5.js sit under a Create heading at the top of the grouped Tools menu (`horizon_creator.js`, `horizon_tidy.css`).
+
+## What's new in V1.53.0
+
+- **Grouped Tools menu.** Four groups: Think and look, Fetch, Make, Remember (`index.html`, `horizon_tidy.css`).
+
+## What's new in V1.52.0
+
+- **VPN chip removed from chat bubbles.** The place name stays; the VPN badge no longer renders (`horizon_operator.js`, `horizon_operator.css`).
+
 ## What's new in V1.51.0
 
 - **Place stamped when you send.** Each message saves the place (and VPN flag) it was sent from, in the chat itself (`place`, `vpn` on the message, set in `pushMessage` through `HzOperator.stamp()`). The tag reads that saved place, so old messages no longer jump to wherever you are now. Messages sent before V1.51.0 show no place tag. A just-sent message with no known place yet shows the live state (Allow location, Location off, Locating) and tapping it retries.

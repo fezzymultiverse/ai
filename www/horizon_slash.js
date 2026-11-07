@@ -56,10 +56,15 @@
         if (!arg) return [{ glyph: '\uD83C\uDFB5', title: '/music <words>', sub: 'Search songs, artists and albums in your player', fill: '/music ' }];
         return [{ glyph: '\uD83C\uDFB5', title: 'Search music: ' + arg, sub: 'Opens the Music Player on your library', run: function () { return host.music(arg); } }];
     }
+    function lagItems() {
+        return [{ glyph: '\u23F1\uFE0F', title: 'Open the lag detector', sub: 'Refresh rate, slow keys, what blocks typing. Copy the report to send it back.',
+            run: function () { return !!(window.HorizonPerf && window.HorizonPerf.open() !== false); } }];
+    }
     var COMMANDS = [
         { names: ['model', 'm', 'ai'], glyph: '\uD83E\uDD16', label: '/model', desc: 'Switch provider or model', items: modelItems },
         { names: ['recon', 'sweep'], glyph: '\uD83D\uDEF0\uFE0F', label: '/recon', desc: 'Web recon sweep on a target', items: reconItems, onSend: true },
-        { names: ['music', 'song', 'find'], glyph: '\uD83C\uDFB5', label: '/music', desc: 'Search your music player', items: musicItems, onSend: true }
+        { names: ['music', 'song', 'find'], glyph: '\uD83C\uDFB5', label: '/music', desc: 'Search your music player', items: musicItems, onSend: true },
+        { names: ['lag', 'perf', 'fps'], glyph: '\u23F1\uFE0F', label: '/lag', desc: 'Lag detector: refresh rate and slow keys', items: lagItems, onSend: true }
     ].concat(TOGGLES.map(function (t) {
         return { names: t.names, glyph: t.glyph, label: t.label, desc: t.desc, toggle: t.id, onSend: true };
     }));

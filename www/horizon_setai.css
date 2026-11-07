@@ -1,0 +1,30 @@
+/* HORIZON V1.58.0 · Settings AI. Everything uses --accent-cyan / --accent-rgb, so cyan, green and purple all match. */
+.hzsa-wrap { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1 1 auto; }
+.hzsa-btn { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 5px; height: 34px; padding: 0 11px; border-radius: 12px; border: 1px solid var(--accent-cyan); background: rgba(var(--accent-rgb), .12); color: var(--accent-cyan); font: 800 13px system-ui, sans-serif; letter-spacing: .5px; cursor: pointer; box-shadow: 0 0 8px 1px rgba(var(--accent-rgb), .45); }
+.hzsa-btn:active { transform: scale(.95); }
+@media (prefers-reduced-motion: no-preference) { .hzsa-btn { animation: hzsaPulse 2s ease-in-out infinite; } .hzsa-btn svg { animation: hzsaSpin 6s linear infinite; transform-origin: 50% 50%; } .hzsa-ov .hzsa-ico { animation: hzsaPulse 2s ease-in-out infinite; } }
+@keyframes hzsaPulse { 0%, 100% { box-shadow: 0 0 5px 0 rgba(var(--accent-rgb), .35), 0 0 0 0 rgba(var(--accent-rgb), .25); } 50% { box-shadow: 0 0 16px 4px rgba(var(--accent-rgb), .85), 0 0 0 5px rgba(var(--accent-rgb), .12); } }
+@keyframes hzsaSpin { 0%, 70%, 100% { transform: rotate(0) scale(1); } 85% { transform: rotate(90deg) scale(1.18); } }
+.hzsa-ov { position: fixed; inset: 0; z-index: 100000; display: flex; align-items: flex-end; justify-content: center; background: rgba(0, 0, 0, .55); }
+.hzsa-ov[hidden] { display: none; }
+.hzsa-sheet { width: 100%; max-width: 560px; height: 82vh; max-height: 82vh; display: flex; flex-direction: column; background: var(--card-bg, #070a0e); color: var(--text-main, #fff); border: 1px solid var(--accent-cyan); border-bottom: none; border-radius: 20px 20px 0 0; box-shadow: 0 -8px 30px rgba(var(--accent-rgb), .22); overflow: hidden; }
+.hzsa-head { display: flex; align-items: center; gap: 10px; padding: 12px 12px 10px; border-bottom: 1px solid var(--border-color, rgba(128,128,128,.25)); flex: 0 0 auto; }
+.hzsa-ico { width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; color: var(--accent-cyan); background: rgba(var(--accent-rgb), .14); border: 1px solid var(--accent-cyan); flex: 0 0 auto; }
+.hzsa-title { flex: 1; min-width: 0; }
+.hzsa-title b { display: block; font-size: 17px; }
+.hzsa-title small { display: block; font-size: 12.5px; color: var(--text-muted, #aab); margin-top: 1px; }
+.hzsa-x { min-width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--border-color, rgba(128,128,128,.35)); background: var(--surface, #10161e); color: var(--text-main, #fff); font-size: 16px; cursor: pointer; flex: 0 0 auto; }
+.hzsa-log { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; padding: 12px; }
+.hzsa-m { margin: 0 0 10px; word-break: break-word; font-size: 15px; line-height: 1.55; }
+.hzsa-u { white-space: pre-wrap; border-left: 2px solid var(--accent-cyan); padding-left: 9px; }
+.hzsa-dim { color: var(--text-muted, #aab); font-size: 13.5px; }
+.hzsa-err { color: #ff7b72; white-space: pre-wrap; }
+.hzsa-b.mv-view { max-height: none; overflow: visible; padding: 10px 12px; border: 1px solid var(--border-color, rgba(128,128,128,.25)); border-radius: 14px; background: var(--surface, #10161e); }
+.hzsa-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+.hzsa-chip { min-height: 36px; padding: 0 13px; border-radius: 18px; border: 1px solid var(--accent-cyan); background: rgba(var(--accent-rgb), .1); color: var(--accent-cyan); font: 700 13.5px system-ui, sans-serif; cursor: pointer; }
+.hzsa-in { display: flex; align-items: flex-end; gap: 8px; padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px)); border-top: 1px solid var(--border-color, rgba(128,128,128,.25)); flex: 0 0 auto; }
+.hzsa-ta { flex: 1; min-width: 0; max-height: 96px; resize: none; border-radius: 12px; border: 1px solid var(--border-color, rgba(128,128,128,.4)); background: var(--surface, #10161e); color: var(--text-main, #fff); font: 16px/1.4 system-ui, sans-serif; padding: 9px 12px; outline: 0; }
+.hzsa-ta:focus { border-color: var(--accent-cyan); }
+.hzsa-go { min-width: 64px; height: 40px; border-radius: 12px; border: 0; background: var(--accent-cyan); color: #000; font: 800 13px system-ui, sans-serif; cursor: pointer; }
+.hzsa-go:disabled { opacity: .5; }
+.hzsa-ov.busy .hzsa-ico { animation-duration: .8s; }

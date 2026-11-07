@@ -200,3 +200,44 @@ html .message.user .bubble code { color: #f2f3f5; background: #373a40; }
 @media (max-width: 340px) { .starter { aspect-ratio: auto; min-height: 104px; } .starter .st-ic { margin-bottom: 0; } }
 html.hz-snoozed .welcome .starter { aspect-ratio: auto; }
 html.hz-snoozed .welcome .starter .st-ic { margin-bottom: 0; }
+
+/* V1.53.0: grouped plus menu */
+.tool-menu .tm-grp { padding: 8px 14px 2px; font-size: 12.5px; font-weight: 600; color: var(--text-muted); }
+.tool-menu .tm-head + .tm-grp { padding-top: 4px; }
+.tool-menu .tm-row + .tm-grp { margin-top: 4px; border-top: 1px solid var(--border-color); padding-top: 9px; }
+.tool-menu .hzcr-bar + .tm-grp { margin-top: 4px; border-top: 1px solid var(--border-color); padding-top: 9px; }
+.tool-menu .tm-head + .tm-grp { padding-top: 6px; }
+
+/* V1.54.0: full descriptions under every tool, Create rows match the tool rows */
+.tool-menu .tm-row { align-items: flex-start; padding: 9px 16px; }
+.tool-menu .tm-row .tm-ic { width: 32px; height: 32px; margin-top: 1px; }
+.tool-menu .tm-row .sw { margin-top: 6px; }
+.tool-menu .tm-text { display: block; }
+.tool-menu .tm-text h4 { white-space: normal; }
+.tool-menu .tm-text p:not(.tm-note) { display: block; font-size: 13px; line-height: 1.38; color: var(--text-muted); margin-top: 1px; }
+.tool-menu .tm-text p.tm-note { margin-top: 3px; }
+.tool-menu .tm-text p.tm-note:empty { display: none; }
+.tool-menu .hzcr-bar { display: block; padding: 0; border-bottom: 0; }
+.tool-menu .hzcr-tool { display: flex; width: 100%; flex: none; height: auto; justify-content: flex-start; align-items: flex-start; gap: 12px; padding: 9px 16px; border: 0; border-radius: 0; background: none; text-align: left; }
+.tool-menu .hzcr-tool:active { background: var(--surface); transform: none; }
+.tool-menu .hzcr-tool-ic { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border-color); background: var(--surface); margin-top: 1px; }
+.tool-menu .hzcr-tool-tx { flex: 1; min-width: 0; display: block; }
+.tool-menu .hzcr-tool-l { display: block; font-size: 15px; font-weight: 600; white-space: normal; overflow: visible; }
+.tool-menu .hzcr-tool-d { display: block; font-size: 13px; line-height: 1.38; color: var(--text-muted); margin-top: 1px; }
+.tool-menu .hzcr-tool-go { flex: none; margin-top: 3px; font-size: 20px; line-height: 1; color: var(--text-muted); }
+
+/* V1.58.1: Voice section spacing. The TTS.ai and Pollinations key boxes were unstyled and sat beside their labels. Now each is a roomy
+   block: label, full-width field, then the buttons, with air between every control. */
+#ttsAiRow, #ttsPollRow { display: flex; flex-direction: column; gap: 10px; margin: 16px 0 6px; }
+#ttsAiRow .field-label, #ttsPollRow .field-label { display: block; margin: 0; }
+#ttsAiRow input, #ttsPollRow input { box-sizing: border-box; width: 100%; min-height: 48px; padding: 11px 14px; border: 1px solid var(--border-color, rgba(0, 229, 255, .18)); border-radius: 12px; background: var(--surface, #07141a); color: var(--text-main, #fff); font-size: 15px; outline: 0; }
+#ttsAiRow input:focus, #ttsPollRow input:focus { border-color: var(--accent-cyan); box-shadow: 0 0 0 1px var(--accent-cyan); }
+#ttsAiRow input::placeholder, #ttsPollRow input::placeholder { color: var(--text-muted, #9fb0b8); opacity: 1; }
+#ttsAiRow .card-actions, #ttsPollRow .card-actions { gap: 12px; margin-top: 2px; }
+#ttsAiRow .use-btn, #ttsPollRow .use-btn { min-height: 44px; padding: 0 18px; border-radius: 12px; }
+#ttsNat { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
+#ttsNat .field-label { margin: 0; }
+#ttsNat .hint { margin: 4px 0 8px; line-height: 1.55; }
+#ttsEngine, #ttsNVoice { margin-bottom: 4px; }
+#ttsRate, #ttsPitch { margin: 8px 0 20px; }
+#ttsRate + *, #ttsPitchWrap { margin-top: 4px; }

@@ -1,6 +1,9 @@
 package __APPID__;
 
+import android.os.Build;
 import android.os.Bundle;
+import android.view.Display;
+import android.view.WindowManager;
 import android.webkit.WebView;
 
 import androidx.activity.OnBackPressedCallback;
@@ -21,6 +24,9 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(HorizonLockPlugin.class);
         super.onCreate(savedInstanceState);
         HorizonPermsPlugin.paintBackdrop(this);   // V1.44.0: theme colour behind the page, no white flash
+        // V1.58.2: pin the keyboard behaviour (the page shrinks above the keyboard) instead of leaving it to the device default.
+        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE | WindowManager.LayoutParams.SOFT_INPUT_STATE_UNCHANGED);
+        requestHighRefresh();
 
         // V1.47.0: Piper is gone. Delete the offline voices an older version downloaded (about 80 MB each).
         new Thread(() -> {
@@ -53,6 +59,38 @@ public class MainActivity extends BridgeActivity {
         });
     }
 
+    // V1.58.2: ask Android for a 90 Hz display mode. A web page cannot force a refresh rate; the window can ask for one.
+    // Android still decides (Battery saver or a fixed 60 Hz setting wins), so this only helps when the screen supports it.
+    @SuppressWarnings("deprecation")
+    private void requestHighRefresh() {
+        try {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return;
+            Display d = getWindowManager().getDefaultDisplay();
+            if (d == null) return;
+            Display.Mode cur = d.getMode();
+            Display.Mode pick = null;
+            for (Display.Mode m : d.getSupportedModes()) {
+                if (m.getPhysicalWidth() != cur.getPhysicalWidth() || m.getPhysicalHeight() != cur.getPhysicalHeight()) continue;
+                float hz = m.getRefreshRate();
+                if (hz < 89.5f) continue;
+                if (pick == null || hz < pick.getRefreshRate()) pick = m;   // the lowest rate that is still 90 or more
+            }
+            if (pick == null) {   // no 90 Hz mode on this screen: take the fastest one there is
+                for (Display.Mode m : d.getSupportedModes()) {
+                    if (m.getPhysicalWidth() != cur.getPhysicalWidth() || m.getPhysicalHeight() != cur.getPhysicalHeight()) continue;
+                    if (pick == null || m.getRefreshRate() > pick.getRefreshRate()) pick = m;
+                }
+            }
+            if (pick == null) return;
+            WindowManager.LayoutParams lp = getWindow().getAttributes();
+            if (lp.preferredDisplayModeId == pick.getModeId()) return;
+            lp.preferredDisplayModeId = pick.getModeId();
+            getWindow().setAttributes(lp);
+        } catch (Throwable ignored) {
+            // no preferred mode: Android keeps its own choice
+        }
+    }
+
     private static void deleteTree(java.io.File f) {
         if (f == null || !f.exists()) return;
         java.io.File[] kids = f.listFiles();
@@ -80,6 +118,7 @@ public class MainActivity extends BridgeActivity {
         HorizonAIPlugin.foreground = true;
         super.onResume();
         HorizonPermsPlugin.paintBackdrop(this);
+        requestHighRefresh();
         if (getBridge() != null && getBridge().getWebView() != null) {
             getBridge().getWebView().post(() -> getBridge().getWebView().evaluateJavascript(
                 "window.dispatchEvent(new Event('horizon-resume'))", null));

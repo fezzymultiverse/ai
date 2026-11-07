@@ -1320,6 +1320,8 @@
         .pk-st.on { background: rgba(34, 197, 94, 0.14); color: #16a34a; border-color: rgba(34, 197, 94, 0.5); }
         .pk-st.no { background: rgba(255, 59, 48, 0.1); color: #ff3b30; border-color: rgba(255, 59, 48, 0.4); }
         .pk-check { color: var(--accent-cyan); font-size: 20px; flex: 0 0 auto; }
+        .pk-row.pk-model { align-items: flex-start; }
+        .pk-row.pk-model .pk-tx small { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.35; }
         .pk-note { font-size: 13.5px; color: var(--text-muted); text-align: center; padding: 10px 6px; }
 
         /* chat box: bigger, with small icons; connected tools sit in their own strip above it */
@@ -1432,9 +1434,13 @@
     <link rel="stylesheet" href="horizon_header.css">
     <link rel="stylesheet" href="horizon_tidy.css">
     <link rel="stylesheet" href="horizon_htmlview.css">
+    <link rel="stylesheet" href="horizon_mdview.css">
+    <link rel="stylesheet" href="horizon_setai.css">
     <link rel="stylesheet" href="horizon_operator.css">
     <link rel="stylesheet" href="horizon_lock.css">
     <link rel="stylesheet" href="horizon_voicepill.css">
+    <link rel="stylesheet" href="horizon_hdr2.css">
+    <link rel="stylesheet" href="horizon_perf.css">
 </head>
 <body>
 
@@ -1603,11 +1609,28 @@
                 </div>
                 <div class="tool-menu" id="toolMenu" role="group" aria-label="Chat tools" hidden>
                     <div class="tm-head"><b>Tools</b><span>Green is on, black is off</span></div>
+                    <div class="tm-grp">Think and look</div>
                     <div class="tm-row is-off" id="tm-think" role="switch" aria-checked="false" tabindex="0">
                         <div class="tm-ic think-ic"><svg class="ic" aria-hidden="true"><use href="#i-brain"/></svg></div>
                         <div class="tm-text"><h4>Thinking</h4><p>The AI thinks harder before it answers: better for Termux scripts, PDFs, HTML and big ideas. Slower.</p><p class="tm-note"></p></div>
                         <button class="sw" type="button" tabindex="-1" aria-hidden="true"></button>
                     </div>
+                    <div class="tm-row is-off" id="tm-screen" role="switch" aria-checked="false" tabindex="0">
+                        <div class="tm-ic"><svg class="ic" aria-hidden="true"><use href="#i-screen"/></svg></div>
+                        <div class="tm-text"><h4>Screen</h4><p>Let Horizon see the app screen: open panels, switches, buttons and notices, plus a map of the whole app. Lens (Apps menu) adds the full UI map and a screenshot. Keys, the Vault and chat text stay hidden.</p><p class="tm-note"></p></div>
+                        <button class="sw" type="button" tabindex="-1" aria-hidden="true"></button>
+                    </div>
+                    <div class="tm-row is-off" id="tm-lens" role="switch" aria-checked="false" tabindex="0">
+                        <div class="tm-ic"><svg class="ic" aria-hidden="true"><use href="#i-lens"/></svg></div>
+                        <div class="tm-text"><h4>Lens</h4><p>Auto: the full UI map and a screenshot when you ask how something looks. Needs Screen on.</p><p class="tm-note"></p></div>
+                        <button class="sw" type="button" tabindex="-1" aria-hidden="true"></button>
+                    </div>
+                    <div class="tm-row is-off" id="tm-eye" role="switch" aria-checked="false" tabindex="0">
+                        <div class="tm-ic"><svg class="ic" aria-hidden="true"><use href="#i-eye"/></svg></div>
+                        <div class="tm-text"><h4>Browser eye</h4><p>Let the AI read the page open in the Horizon browser.</p><p class="tm-note"></p></div>
+                        <button class="sw" type="button" tabindex="-1" aria-hidden="true"></button>
+                    </div>
+                    <div class="tm-grp">Fetch</div>
                     <div class="tm-row is-off" id="tm-web" role="switch" aria-checked="false" tabindex="0">
                         <div class="tm-ic"><svg class="ic" aria-hidden="true"><use href="#i-globe"/></svg></div>
                         <div class="tm-text"><h4>Web</h4><p>Search the web and read pages with your scraper keys.</p><p class="tm-note"></p></div>
@@ -1628,6 +1651,7 @@
                         <div class="tm-text"><h4>Music</h4><p>Let Horizon see what is playing in your music player, comment on it and control it.</p><p class="tm-note"></p></div>
                         <button class="sw" type="button" tabindex="-1" aria-hidden="true"></button>
                     </div>
+                    <div class="tm-grp">Make</div>
                     <div class="tm-row is-off" id="tm-pdf" role="switch" aria-checked="false" tabindex="0">
                         <div class="tm-ic"><svg class="pdf-ic" viewBox="0 0 24 24" aria-hidden="true"><rect width="24" height="24" rx="5.5" fill="#FA0F00"/><path d="M12.2 4.8c-.95 0-1.25 1.05-1 2.1.35 1.75 1.4 4 2.9 6.15 1.6 2.25 3.5 3.95 4.95 4.15 1.1.15 1.3-.9.4-1.45-1.5-.95-4.55-.85-8.2.15-3.1.85-5.3 2.2-5.6 3.3-.2.7.6 1.05 1.4.45 1.6-1.2 3.2-4.55 4.1-7.7.5-1.8.5-3.6-.1-3.9" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
                         <div class="tm-text"><h4>PDF</h4><p>Let Horizon write A4 PDF documents. The Make PDF pill shows up below when this is on.</p><p class="tm-note"></p>
@@ -1639,29 +1663,15 @@
                         <div class="tm-text"><h4>Image</h4><p>Pollinations takes over and draws what you type. Free, no key.</p><p class="tm-note"></p></div>
                         <button class="sw" type="button" tabindex="-1" aria-hidden="true"></button>
                     </div>
+                    <div class="tm-grp">Remember</div>
                     <div class="tm-row is-off" id="tm-vault" role="switch" aria-checked="false" tabindex="0">
                         <div class="tm-ic"><svg class="ic" aria-hidden="true"><use href="#i-vault"/></svg></div>
                         <div class="tm-text"><h4>Vault</h4><p>Let Horizon write notes into your Vault. Keys, tokens and SSH keys are never shared with the AI.</p><p class="tm-note"></p></div>
                         <button class="sw" type="button" tabindex="-1" aria-hidden="true"></button>
                     </div>
-                    <div class="tm-row is-off" id="tm-screen" role="switch" aria-checked="false" tabindex="0">
-                        <div class="tm-ic"><svg class="ic" aria-hidden="true"><use href="#i-screen"/></svg></div>
-                        <div class="tm-text"><h4>Screen</h4><p>Let Horizon see the app screen: open panels, switches, buttons and notices, plus a map of the whole app. Lens (Apps menu) adds the full UI map and a screenshot. Keys, the Vault and chat text stay hidden.</p><p class="tm-note"></p></div>
-                        <button class="sw" type="button" tabindex="-1" aria-hidden="true"></button>
-                    </div>
                     <div class="tm-row is-off" id="tm-mem" role="switch" aria-checked="false" tabindex="0">
                         <div class="tm-ic"><svg class="ic" aria-hidden="true"><use href="#i-db"/></svg></div>
                         <div class="tm-text"><h4>Memory</h4><p>Let Horizon save durable facts about you and carry them into every chat. Never keys.</p><p class="tm-note"></p></div>
-                        <button class="sw" type="button" tabindex="-1" aria-hidden="true"></button>
-                    </div>
-                    <div class="tm-row is-off" id="tm-lens" role="switch" aria-checked="false" tabindex="0">
-                        <div class="tm-ic"><svg class="ic" aria-hidden="true"><use href="#i-lens"/></svg></div>
-                        <div class="tm-text"><h4>Lens</h4><p>Auto: the full UI map and a screenshot when you ask how something looks. Needs Screen on.</p><p class="tm-note"></p></div>
-                        <button class="sw" type="button" tabindex="-1" aria-hidden="true"></button>
-                    </div>
-                    <div class="tm-row is-off" id="tm-eye" role="switch" aria-checked="false" tabindex="0">
-                        <div class="tm-ic"><svg class="ic" aria-hidden="true"><use href="#i-eye"/></svg></div>
-                        <div class="tm-text"><h4>Browser eye</h4><p>Let the AI read the page open in the Horizon browser.</p><p class="tm-note"></p></div>
                         <button class="sw" type="button" tabindex="-1" aria-hidden="true"></button>
                     </div>
                 </div>
@@ -1673,7 +1683,7 @@
                     <button class="plus-btn lvl-none" id="webToggle" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="toolMenu" aria-label="Chat tools: web, YouTube, GitHub, music, PDF, image, vault"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg></button>
                     <button class="yt-btn" id="ytToggle" type="button" aria-pressed="false" aria-label="YouTube music for this chat: off"><svg class="ic" aria-hidden="true"><use href="#i-yt"/></svg></button>
                     <button class="in-btn clip" id="clipBtn" type="button" aria-label="Attach files: images, PDF, DOCX, MD, HTML, code and text" title="Attach files"><svg class="ic" aria-hidden="true"><use href="#i-clip"/></svg></button>
-                    <textarea id="chatInput" rows="1" placeholder="Message Horizon..." enterkeyhint="enter" autocomplete="off" autocapitalize="sentences" aria-label="Message"></textarea>
+                    <textarea id="chatInput" rows="1" placeholder="Message Horizon..." enterkeyhint="enter" autocomplete="on" autocorrect="on" spellcheck="true" autocapitalize="sentences" aria-label="Message"></textarea>
                     <div class="rec-bar" id="recBar" hidden role="status" aria-live="polite">
                         <button class="rec-cancel" id="recCancel" type="button" aria-label="Cancel the recording"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg></button>
                         <i class="rec-dot" aria-hidden="true"></i>
@@ -2264,7 +2274,11 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         }
 
         // V1.16.0: which providers/models can look at pictures
-        const canSeeImages = (prov, model) => prov === 'gemini' || (prov === 'groq' && /llama-4|scout|maverick|vision/i.test(model)) || (prov === 'mistral' && /pixtral|small|medium|large/i.test(model)) || (prov === 'cohere' && /vision/i.test(model)) || (prov === 'pollinations' && !/deepseek|llama|coder|roblox|unity|midijourney/i.test(model));
+        // V1.56.1: Groq vision. Current vision models are Qwen3.8 27B and Muse Spark (preview), plus the older Llama 4 and "vision" names.
+        // If the chosen Groq model cannot see but another Groq vision model is listed, the Groq call routes to it for that turn.
+        const GROQ_EYES = /llama-4|scout|maverick|vision|qwen3\.8|muse-spark/i;
+        const groqEyesModel = () => ((state && state.modelLists && state.modelLists.groq) || []).find(m => GROQ_EYES.test(m)) || '';
+        const canSeeImages = (prov, model) => prov === 'gemini' || (prov === 'groq' && (GROQ_EYES.test(model) || !!groqEyesModel())) || (prov === 'mistral' && /pixtral|small|medium|large/i.test(model)) || (prov === 'cohere' && /vision/i.test(model)) || (prov === 'pollinations' && !/deepseek|llama|coder|roblox|unity|midijourney/i.test(model));
 
         const PROVIDERS = {
             gemini: {
@@ -2329,7 +2343,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 placeholder: 'gsk_...',
                 keyUrl: 'https://console.groq.com/keys',
                 defaultModel: 'llama-3.3-70b-versatile',
-                fallbackModels: ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'openai/gpt-oss-120b', 'openai/gpt-oss-20b'],
+                fallbackModels: ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'openai/gpt-oss-120b', 'openai/gpt-oss-20b', 'qwen/qwen3.8-27b'],
                 modelsUrl: 'https://api.groq.com/openai/v1/models',
                 headers: k => ({ Authorization: `Bearer ${k}` }),
                 parseModels: d => (d.data || [])
@@ -2340,6 +2354,8 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 async chat(key, model, history) {
                     const T = curTurn; turnCheck(T);
                     const sys = getSystemPrompt();
+                    // V1.56.1: pictures in this turn (Lens screenshot, attachments) go to a Groq vision model.
+                    if ((history || []).some(m => m.imgs && m.imgs.length) && !GROQ_EYES.test(model)) { const alt = groqEyesModel() || 'qwen/qwen3.8-27b'; if (alt) model = alt; }
                     let oss = /gpt-oss/i.test(model);
                     let compact = false;
                     let cap = docMode ? 16000 : 0;
@@ -2355,7 +2371,9 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                         turnCheck(T);
                         // Groq's free tiers cap tokens per minute. A big system prompt plus history plus a
                         // second message trips it, so a retry sends a trimmed history.
-                        const msgs = compact ? history.slice(-6).map(m => ({ role: m.role, text: clip(m.text, 3000), imgs: m.imgs })) : history;
+                        let msgs = compact ? history.slice(-6).map(m => ({ role: m.role, text: clip(m.text, 3000), imgs: m.imgs })) : history;
+                        // Groq takes at most 3 pictures per request: keep the newest ones.
+                        { let left = 3; msgs = msgs.slice(); for (let q = msgs.length - 1; q >= 0; q--) { const im = msgs[q].imgs; if (!im || !im.length) continue; const keep = im.slice(0, left); left -= keep.length; msgs[q] = Object.assign({}, msgs[q], { imgs: keep.length ? keep : undefined }); } }
                         const body = {
                             model,
                             temperature: 0.8,
@@ -2901,6 +2919,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             if (window.HorizonMusic) parts.push(HorizonMusic.block());
             if (window.Horizon && Horizon.Shell) { const shb = Horizon.Shell.block(); if (shb) parts.push(shb); }
             parts.push(pdfBlock());
+            parts.push('MARKDOWN FILES\nWhen you write a Markdown document, notes, README or any text Fezzy will copy or keep, put the WHOLE thing inside ONE fenced block that starts with ```markdown and ends with ```, so the app shows it with Copy, Raw/Converted and Save. Inside that block, if you need a code fence, use ~~~ instead of ```. Normal chat replies are not wrapped.');
             if (window.HorizonArchive) { const ab = HorizonArchive.block(); if (ab) parts.push(ab); }
             if (window.HorizonVault) parts.push(HorizonVault.block());
             if (window.HorizonAttach) parts.push(HorizonAttach.systemNote());
@@ -3461,18 +3480,32 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         function renderMarkdown(text) {
             const frag = document.createDocumentFragment();
             const lines = String(text).replace(/\r\n/g, '\n').split('\n');
-            const isBlockStart = l => /^```/.test(l) || /^#{1,4}\s+/.test(l) || /^\s*[-*]\s+/.test(l) || /^\s*\d+[.)]\s+/.test(l);
+            const isBlockStart = l => /^(```|~~~)/.test(l) || /^#{1,4}\s+/.test(l) || /^\s*[-*]\s+/.test(l) || /^\s*\d+[.)]\s+/.test(l);
             let i = 0;
             while (i < lines.length) {
                 const line = lines[i];
                 if (/^\s*$/.test(line)) { i++; continue; }
                 if (/^\s*([-*_])\1{2,}\s*$/.test(line)) { i++; continue; }
 
-                if (/^```/.test(line)) {
-                    const langTag = line.replace(/^```+/, '').trim();
+                if (/^(```|~~~)/.test(line)) {
+                    // V1.57.0: fence-aware. ~~~ fences work, a longer fence closes only on an equal or longer one,
+                    // and a markdown block may hold inner ``` fences (they nest instead of ending the block early).
+                    const fm = /^(`{3,}|~{3,})(.*)$/.exec(line);
+                    const fch = fm[1].charAt(0), flen = fm[1].length;
+                    const langTag = fm[2].trim();
+                    const isMd = /^(md|markdown)\b/i.test(langTag);
+                    const closeRe = new RegExp('^' + (fch === '`' ? '`' : '~') + '{' + flen + ',}\\s*$');
                     const buf = [];
+                    let depth = 0;
                     i++;
-                    while (i < lines.length && !/^```\s*$/.test(lines[i])) { buf.push(lines[i]); i++; }
+                    while (i < lines.length) {
+                        const l = lines[i];
+                        if (isMd && fch === '`' && flen === 3) {
+                            if (/^```\s*\S/.test(l)) depth++;
+                            else if (/^```\s*$/.test(l)) { if (depth > 0) depth--; else break; }
+                        } else if (closeRe.test(l)) break;
+                        buf.push(l); i++;
+                    }
                     i++;
                     frag.appendChild(buildCodeBlock(buf.join('\n'), langTag));
                     continue;
@@ -4529,6 +4562,95 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             const label = `Choose AI provider and model. Now: ${p.name}, ${state.models[state.active]}`;
             $('#pickBtn').setAttribute('aria-label', label);
             $('#pickBtn').title = label;
+            // V1.56.0: the header provider pill and the snooze screen read these.
+            window.HzPick = { id: state.active, name: p.name, model: state.models[state.active], ready: pkReady(state.active), icon: p.icon };
+            window.HzProviders = PROVIDER_IDS.map(pid => ({ id: pid, name: PROVIDERS[pid].name, icon: PROVIDERS[pid].icon, ready: pkReady(pid) }));
+            document.dispatchEvent(new CustomEvent('hz:pick'));
+        }
+        // V1.56.0: open Settings > API providers on one provider's card (used by the AI sheet's "Set API key" tab).
+        function hzOpenKeys(id) {
+            // pkHide() walks history back; open the panel only after that popstate, or the back-step closes it again.
+            const wasPushed = pkPushed;
+            pkHide();
+            let opened = false;
+            const go = () => {
+                if (opened) return;
+                opened = true;
+                window.removeEventListener('popstate', onPop);
+                openPanel('right');
+                rightPage('providers');
+                setTimeout(focusCard, 380);
+            };
+            const onPop = () => setTimeout(go, 0);
+            if (wasPushed) { window.addEventListener('popstate', onPop); setTimeout(go, 500); } else go();
+            function focusCard() {
+                const card = id && cardEl(id);
+                if (!card) return;
+                try { card.scrollIntoView({ block: 'start', behavior: 'smooth' }); } catch (e) { card.scrollIntoView(); }
+                card.classList.remove('hz-flash'); void card.offsetWidth; card.classList.add('hz-flash');
+                const k = role(id, 'key');
+                if (k && !state.keys[id]) { try { k.focus({ preventScroll: true }); } catch (e) { /* ignore */ } }
+            }
+        }
+        window.HzOpenKeys = hzOpenKeys;
+        // V1.57.0: one plain-English line per model in the picker (no category labels). Matches by name; unknown models get a line built from their name.
+        function describeModel(prov, m) {
+            const n = String(m || '').toLowerCase();
+            const has = re => re.test(n);
+            if (prov === 'gemini') {
+                if (has(/image|imagen|tts|audio|live|embedding|aqa/)) return 'Specialist Google model for pictures or audio, not for normal chat.';
+                if (has(/pro/)) return 'Google\u2019s strongest. Deep reasoning, long code and big files. Slower, with tighter free limits.';
+                if (has(/flash-lite|lite/)) return 'Google\u2019s lightest. Very fast and cheap, good for short questions.';
+                if (has(/flash/)) return 'Fast all-rounder from Google. Sees pictures, handles long chats, generous free limits.';
+                if (has(/gemma/)) return 'Small open Google model. Quick and simple, lighter on detail.';
+                return 'Google Gemini model. Sees pictures and handles long chats.';
+            }
+            if (prov === 'groq') {
+                if (has(/whisper|guard|safeguard|tts|prompt-guard/)) return 'Support model for speech or safety checks, not for chatting.';
+                if (has(/gpt-oss-120b/)) return 'Large open reasoning model. Strong at code and multi-step problems.';
+                if (has(/gpt-oss-20b/)) return 'Mid-size open reasoning model. Quick and capable for everyday coding.';
+                if (has(/qwen/)) return 'Qwen model. Good at code and maths, and it can look at pictures.';
+                if (has(/llama-4|scout|maverick/)) return 'Llama 4. Sees pictures, fast, good general answers.';
+                if (has(/llama-3\.3-70b|70b/)) return 'Big Llama. Accurate, careful answers, solid at code. Slower than the small ones.';
+                if (has(/llama-3\.1-8b|8b/)) return 'Small Llama. Almost instant, best for quick questions and light tasks.';
+                if (has(/kimi/)) return 'Kimi model. Strong at long documents and agent-style tasks.';
+                if (has(/deepseek/)) return 'DeepSeek model. Step-by-step reasoning, good at maths and code.';
+                if (has(/muse/)) return 'Muse Spark. Sees pictures and gives quick general answers.';
+                return 'Open model running on Groq\u2019s very fast hardware.';
+            }
+            if (prov === 'cohere') {
+                if (has(/embed|rerank|classify/)) return 'Search and ranking model, not for chatting.';
+                if (has(/command-a.*vision|vision/)) return 'Command with picture understanding.';
+                if (has(/command-a/)) return 'Cohere\u2019s newest and strongest. Long context, strong at tools and writing.';
+                if (has(/r7b/)) return 'Smallest Command. Very quick, good for short answers.';
+                if (has(/r-plus/)) return 'Larger Command R. Better at long answers and looking things up.';
+                if (has(/command-r/)) return 'Balanced Command R. Reliable general chat at a good speed.';
+                if (has(/aya/)) return 'Aya. Strong in many languages besides English.';
+                return 'Cohere Command model for writing and chat.';
+            }
+            if (prov === 'mistral') {
+                if (has(/embed|moderation|ocr/)) return 'Support model, not for normal chat.';
+                if (has(/codestral|devstral/)) return 'Built for code. Writes, fixes and completes programs.';
+                if (has(/pixtral/)) return 'Mistral with picture understanding.';
+                if (has(/large/)) return 'Mistral\u2019s strongest. Best for hard problems and long answers.';
+                if (has(/medium/)) return 'Middle ground. Smarter than Small, quicker than Large.';
+                if (has(/small/)) return 'Light and quick. Good everyday chat, sees pictures.';
+                if (has(/ministral|tiny|nemo/)) return 'Tiny Mistral. Very fast, short and simple answers.';
+                if (has(/magistral/)) return 'Reasoning Mistral. Thinks step by step before answering.';
+                return 'Mistral model for general chat.';
+            }
+            if (prov === 'pollinations') {
+                if (has(/deepseek/)) return 'DeepSeek. Step-by-step reasoning, good at maths and code.';
+                if (has(/coder|code/)) return 'Tuned for writing and fixing code.';
+                if (has(/llama/)) return 'Llama. Free open model for general chat.';
+                if (has(/mistral/)) return 'Mistral. Quick, free general chat.';
+                if (has(/openai|gpt/)) return 'OpenAI-style model, free with no key. Good general answers.';
+                if (has(/gemini/)) return 'Gemini-style model, free with no key. Sees pictures.';
+                if (has(/claude/)) return 'Claude-style model, free with no key. Careful, clear writing.';
+                if (has(/qwen/)) return 'Qwen. Good at code and maths.';
+                return 'Free model through Pollinations, no key needed.';
+            }
+            return '';
         }
         function pkRow(iconName, title, sub, status, cls) {
             const b = document.createElement('button');
@@ -4560,9 +4682,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                     const row = pkRow(p.icon, p.name, ready ? state.models[id] : 'No key yet. Tap to add one', st, id === state.active ? 'active' : '');
                     row.addEventListener('click', () => {
                         if (!ready) {
-                            pkHide();
-                            openPanel('right');
-                            rightPage('providers');
+                            hzOpenKeys(id);
                             notice(`Add your ${p.name} key, then pick it here`);
                             return;
                         }
@@ -4588,7 +4708,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                     let st = null;
                     if (cur) { st = icon('i-check'); st.classList.add('pk-check'); }
                     else if (m === state.models[id]) { st = document.createElement('span'); st.className = 'pk-st'; st.textContent = 'LAST USED'; }
-                    const row = pkRow('', m, '', st, cur ? 'active' : '');
+                    const row = pkRow('', m, describeModel(id, m), st, (cur ? 'active' : '') + ' pk-model');
                     row.addEventListener('click', () => {
                         state.models[id] = m;
                         lsSet(LS.model(id), m);
@@ -7034,10 +7154,21 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             });
         }
         // the message box grows with the text; a programmatic value change resizes it too
-        function sizeInput() { chatInput.style.height = 'auto'; chatInput.style.height = Math.min(chatInput.scrollHeight, 150) + 'px'; }
+        // V1.58.2: typing no longer forces a full re-layout on every key. The box collapses first only when the text shrinks or is replaced;
+        // while it grows it just reads scrollHeight and writes a height when that changed.
+        let sizeLen = 0, sizeH = 0;
+        function sizeInput(full) {
+            const len = chatInput.value.length;
+            const shrink = full === true || len < sizeLen;
+            sizeLen = len;
+            if (!len) { if (sizeH) { chatInput.style.height = ''; sizeH = 0; } return; }
+            if (shrink) chatInput.style.height = 'auto';
+            const h = Math.min(chatInput.scrollHeight, 150);
+            if (shrink || h !== sizeH) { chatInput.style.height = h + 'px'; sizeH = h; }
+        }
         (function () {
             const d = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value');
-            Object.defineProperty(chatInput, 'value', { configurable: true, get() { return d.get.call(this); }, set(v) { d.set.call(this, v); sizeInput(); } });
+            Object.defineProperty(chatInput, 'value', { configurable: true, get() { return d.get.call(this); }, set(v) { d.set.call(this, v); sizeInput(true); } });
             // V1.38.0: several input events inside one frame (keyboard prediction, composition) resize once
             let sizeRaf = 0;
             chatInput.addEventListener('input', () => { if (sizeRaf) return; sizeRaf = requestAnimationFrame(() => { sizeRaf = 0; sizeInput(); }); });
@@ -7753,6 +7884,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         const trayDismissed = new Set();
         let trayKey = '';
         function paintTray() {
+            if (!trayKey && !/[.:\/]/.test(chatInput.value)) return;   // V1.58.2: no dot, colon or slash means no link, so no work
             const urls = extractUrls(chatInput.value).filter(u => !trayDismissed.has(u)).slice(0, 3);
             const key = urls.join('\n');
             if (key === trayKey) return;
@@ -7773,7 +7905,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         }
         function clearTray() { trayDismissed.clear(); trayKey = ''; linkTray.replaceChildren(); linkTray.hidden = true; }
         let trayTimer = 0;
-        chatInput.addEventListener('input', () => { clearTimeout(trayTimer); trayTimer = setTimeout(paintTray, 450); });
+        chatInput.addEventListener('input', () => { clearTimeout(trayTimer); trayTimer = setTimeout(paintTray, 800); });   // V1.58.2: was 450 ms
         chatInput.addEventListener('paste', () => { clearTimeout(trayTimer); trayTimer = setTimeout(paintTray, 0); });
 
         // --- Init ---
@@ -7840,8 +7972,12 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         replyIntent();
         const draft = lsGet(LS.draft);
         if (draft) chatInput.value = draft;
-        let draftT = 0;   // V1.38.0: the draft is saved after a short pause, not on every key
-        chatInput.addEventListener('input', () => { clearTimeout(draftT); draftT = setTimeout(() => { if (chatInput.value) lsSet(LS.draft, chatInput.value); else lsDel(LS.draft); }, 350); });
+        let draftT = 0;   // V1.58.2: saved after a 1.5 s pause, and always when the box loses focus or the app goes to the background
+        function saveDraft() { clearTimeout(draftT); draftT = 0; if (chatInput.value) lsSet(LS.draft, chatInput.value); else lsDel(LS.draft); }
+        chatInput.addEventListener('input', () => { clearTimeout(draftT); draftT = setTimeout(saveDraft, 1500); });
+        chatInput.addEventListener('blur', () => { if (draftT) saveDraft(); });
+        document.addEventListener('visibilitychange', () => { if (document.hidden && draftT) saveDraft(); });
+        window.addEventListener('pagehide', () => { if (draftT) saveDraft(); });
     })();
     </script>
     <script src="horizon_downloads.js"></script>
@@ -7850,12 +7986,16 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
     <script src="horizon_terminal.js"></script>
     <script src="horizon_termai.js"></script>
     <script src="horizon_typing.js"></script>
+    <script src="horizon_perf.js"></script>
     <script src="horizon_bojack.js"></script>
     <script src="horizon_header.js"></script>
     <script src="horizon_htmlview.js"></script>
+    <script src="horizon_mdview.js"></script>
+    <script src="horizon_setai.js"></script>
     <script src="horizon_snooze.js"></script>
     <script src="horizon_operator.js"></script>
     <script src="horizon_lock.js"></script>
     <script src="horizon_voicepill.js"></script>
+    <script src="horizon_hdr2.js"></script>
 </body>
 </html>

@@ -22,3 +22,6 @@
 .message.user .message-meta .meta-loc { color: #ffffff; font-weight: 700; max-width: 58%; }
 .message.user .message-meta .meta-loc.none { color: var(--text-muted); }
 .message-meta .meta-vpn { flex: 0 0 auto; margin-right: 5px; padding: 1px 6px; border-radius: 999px; font-size: 10px; font-weight: 800; letter-spacing: .6px; color: #000; background: #2bff88; box-shadow: 0 0 6px rgba(43,255,136,.6); }
+
+/* V1.52.0: no VPN chip on message bubbles */
+.message-meta .meta-vpn { display: none !important; }

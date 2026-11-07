@@ -45,7 +45,7 @@
   var idleSkip = 0;   // V1.47.0: with nothing playing the wave only looks again every 4th beat (about 4 DOM searches per 70 ms before)
   setInterval(function () {
     if (document.hidden) return;
-    if (window.hzTyping && (++waveSkip % 5)) return;
+    if (window.hzTyping || window.hzKbBusy) return;   // V1.58.2: the wave rests completely while you type or the keyboard slides
     if (wasOn === false && (++idleSkip % 4)) return;
     waveTick();
   }, 70);
@@ -188,6 +188,6 @@
   function sweep() { paintToolIcons(); paintType(); $$('.att-pv-body audio').forEach(decorateVoice); watchTerminal(); }
   document.addEventListener('DOMContentLoaded', sweep);
   window.addEventListener('load', sweep);
-  setInterval(function () { if (!window.hzTyping && !document.hidden) sweep(); }, 1500);   // V1.47.0: also not while the app is hidden   // V1.38.0: no sweep while typing
+  setInterval(function () { if (!window.hzTyping && !window.hzKbBusy && !document.hidden) sweep(); }, 1500);   // V1.47.0: also not while the app is hidden   // V1.38.0: no sweep while typing
   sweep();
 })();
