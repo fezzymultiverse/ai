@@ -1,0 +1,6 @@
+/* Horizon V1.43.1: the VOICE pill is animated by horizon_voicepill.js, so the CSS animations (which a reduce-motion setting kills) step aside. */
+.hz-voice.playing, .hz-voice.loading { animation: none !important; }
+.hz-voice.playing .hzv-wave i { animation: none !important; }
+.hz-voice.loading .hzv-wave::before { animation: none !important; }
+.hzv-wave::before { opacity: var(--hzv-line, .55); }
+.hz-voice.playing .hzv-wave::before { opacity: 0; }
