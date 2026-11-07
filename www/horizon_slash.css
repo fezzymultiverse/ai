@@ -1,0 +1,14 @@
+/* Horizon V1.27.0: SLASH COMMANDS palette. Sits where the + tools menu sits, just above the message box. */
+.hz-slash { position: absolute; left: 12px; right: 12px; bottom: calc(100% - 2px); max-height: min(46vh, 340px); overflow-y: auto; background: var(--card-bg); border: 1px solid var(--border-highlight); border-radius: 18px; box-shadow: 0 8px 28px rgba(0, 0, 0, 0.22); padding: 4px; z-index: 62; }
+.hz-slash[hidden] { display: none; }
+.hzs-row { display: flex; align-items: center; gap: 10px; width: 100%; padding: 9px 10px; border: 0; border-radius: 12px; background: transparent; color: var(--text-main); text-align: left; cursor: pointer; }
+.hzs-row.sel { background: var(--surface); }
+.hzs-row:active { background: var(--surface-hover, var(--surface)); }
+.hzs-row.info { cursor: default; }
+.hzs-g { flex: 0 0 auto; width: 30px; height: 30px; display: grid; place-items: center; font-size: 18px; border-radius: 9px; background: var(--surface); border: 1px solid var(--border-color); }
+.hzs-t { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.hzs-t b { font-size: 15.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hzs-t small { font-size: 13px; color: var(--text-muted); line-height: 1.35; }
+.hzs-b { flex: 0 0 auto; font-size: 12px; font-weight: 800; letter-spacing: 0.6px; padding: 5px 10px; border-radius: 999px; background: var(--surface); color: var(--text-muted); border: 1px solid var(--border-color); }
+.hzs-b.on { background: #16a34a; color: #fff; border-color: #16a34a; }
+.hzs-b.off { background: #dc2626; color: #fff; border-color: #dc2626; }

@@ -1,0 +1,86 @@
+/* HORIZON V1.49.0 · Creator (DiceBear, Memegen, p5.js). Everything is scoped to .hzcr-* so nothing else changes. */
+
+/* ---- strip inside the + menu ---- */
+.hzcr-bar { display: flex; align-items: center; gap: 8px; padding: 6px 14px 6px; border-bottom: 1px solid var(--border-color, rgba(128, 128, 128, 0.25)); }
+.hzcr-tool { flex: 1 1 0; min-width: 0; height: 38px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; border: 1px solid var(--border-highlight, rgba(128, 128, 128, 0.4)); border-radius: 19px; background: var(--surface); color: var(--text-main); font: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer; padding: 0 8px; -webkit-tap-highlight-color: transparent; }
+.hzcr-tool:active { background: var(--surface-hover, var(--surface)); transform: scale(0.97); }
+.hzcr-tool-ic { display: inline-grid; place-items: center; flex: 0 0 auto; }
+.hzcr-tool-l { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#tm-dicebear .hzcr-bi { color: var(--accent-cyan, #00e5ff); }
+#tm-memegen .hzcr-bi { color: #f97316; }
+#tm-p5 .hzcr-bi { color: #ed225d; }
+
+/* ---- icons ---- */
+.hzcr-bi, .hzcr-ti { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: 0 0 auto; }
+.hzcr-ti { width: 22px; height: 22px; }
+.hzcr-btn.hzcr-pri .hzcr-bi { stroke: currentColor; }
+.hzcr-bi[fill="currentColor"] { fill: currentColor; }
+
+/* ---- sheet ---- */
+.hzcr-shade { position: fixed; inset: 0; z-index: 9500; background: var(--bg-color, #000); }
+.hzcr-shade[hidden], .hzcr [hidden] { display: none !important; }
+.hzcr { display: flex; flex-direction: column; height: 100%; max-width: 720px; margin: 0 auto; color: var(--text-main); font-family: inherit; }
+.hzcr-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: max(10px, env(safe-area-inset-top)) 14px 10px; border-bottom: 1px solid var(--border-color, rgba(128, 128, 128, 0.25)); flex: 0 0 auto; }
+.hzcr-title { display: flex; align-items: center; gap: 10px; margin: 0; font-size: 20px; font-weight: 800; }
+.hzcr-title .hzcr-ti { color: var(--accent-cyan, #00e5ff); }
+.hzcr-x { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--border-highlight, rgba(128, 128, 128, 0.4)); background: var(--surface); color: var(--text-main); display: grid; place-items: center; cursor: pointer; padding: 0; }
+.hzcr-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 14px 14px max(28px, env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 14px; }
+.hzcr-body > * { flex-shrink: 0; }
+
+/* ---- stage (preview) ---- */
+.hzcr-stage { position: relative; border: 1px solid var(--border-highlight, rgba(128, 128, 128, 0.4)); border-radius: 18px; background: var(--surface); display: grid; place-items: center; overflow: hidden; transition: opacity 0.2s; }
+.hzcr-stage.busy { opacity: 0.7; }
+.hzcr-stage-sq { width: min(100%, 340px); aspect-ratio: 1 / 1; margin: 0 auto; }
+.hzcr-stage-meme { min-height: 220px; padding: 8px; }
+.hzcr-stage-p5 { background: #000; width: min(100%, 420px); }
+.hzcr-avatar { width: 100%; height: 100%; object-fit: contain; display: block; }
+.hzcr-meme { max-width: 100%; max-height: 62vh; border-radius: 10px; display: block; }
+.hzcr-meme:not([src]) { display: none; }
+.hzcr-holder { position: absolute; inset: 0; }
+.hzcr-frame { width: 100%; height: 100%; border: 0; background: #000; display: block; }
+.hzcr-msg { position: absolute; left: 10px; right: 10px; bottom: 10px; margin: 0; text-align: center; font-size: 13px; line-height: 1.4; color: var(--text-muted); pointer-events: none; }
+.hzcr-stage-p5 .hzcr-msg { top: 50%; bottom: auto; transform: translateY(-50%); color: #aaa; }
+.hzcr-msg:empty { display: none; }
+.hzcr-err { margin: 0; padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(255, 59, 48, 0.5); background: rgba(255, 59, 48, 0.1); color: var(--error, #ff3b30); font-family: var(--mono, ui-monospace, monospace); font-size: 12.5px; white-space: pre-wrap; word-break: break-word; }
+
+/* ---- fields ---- */
+.hzcr-field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.hzcr-lab { font-size: 12px; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase; color: var(--text-muted); }
+.hzcr-lab-solo { margin-bottom: -6px; }
+.hzcr-in { width: 100%; min-height: 44px; box-sizing: border-box; border-radius: 12px; border: 1px solid var(--border-highlight, rgba(128, 128, 128, 0.4)); background: var(--surface); color: var(--text-main); padding: 0 12px; font: inherit; font-size: 16px; min-width: 0; }
+.hzcr-in:focus-visible, .hzcr-code:focus-visible, .hzcr-btn:focus-visible, .hzcr-tool:focus-visible, .hzcr-x:focus-visible, .hzcr-chip:focus-visible, .hzcr-var:focus-visible { outline: 2px solid var(--accent-cyan, #00e5ff); outline-offset: 2px; }
+.hzcr-row { display: flex; align-items: center; gap: 8px; }
+.hzcr-row .hzcr-in { flex: 1 1 auto; }
+.hzcr-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.hzcr-lines { display: flex; flex-direction: column; gap: 8px; }
+.hzcr-range { flex: 1 1 auto; min-width: 0; accent-color: var(--accent-cyan, #00e5ff); }
+.hzcr-out { min-width: 28px; text-align: right; font-weight: 700; color: var(--text-muted); }
+.hzcr-check { display: flex; align-items: center; gap: 10px; font-size: 15px; min-height: 36px; }
+.hzcr-check input { width: 20px; height: 20px; accent-color: var(--accent-cyan, #00e5ff); }
+
+/* ---- chips and variations ---- */
+.hzcr-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.hzcr-chip { display: inline-flex; align-items: center; gap: 7px; min-height: 36px; padding: 0 12px 0 8px; border-radius: 18px; border: 1px solid var(--border-highlight, rgba(128, 128, 128, 0.4)); background: var(--surface); color: var(--text-main); font: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer; }
+.hzcr-chip.on { border-color: var(--accent-cyan, #00e5ff); box-shadow: 0 0 0 1px var(--accent-cyan, #00e5ff) inset; }
+.hzcr-dot { width: 16px; height: 16px; border-radius: 50%; border: 1px solid rgba(128, 128, 128, 0.6); display: inline-block; background-image: linear-gradient(45deg, rgba(128, 128, 128, 0.25) 25%, transparent 25%, transparent 75%, rgba(128, 128, 128, 0.25) 75%); background-size: 6px 6px; }
+.hzcr-vars { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+.hzcr-var { aspect-ratio: 1 / 1; padding: 0; border-radius: 12px; border: 1px solid var(--border-highlight, rgba(128, 128, 128, 0.4)); background: var(--surface); overflow: hidden; cursor: pointer; }
+.hzcr-var img { width: 100%; height: 100%; display: block; object-fit: contain; }
+
+/* ---- buttons ---- */
+.hzcr-acts { display: flex; flex-wrap: wrap; gap: 8px; }
+.hzcr-btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 42px; padding: 0 14px; border-radius: 21px; border: 1px solid var(--border-highlight, rgba(128, 128, 128, 0.4)); background: var(--surface); color: var(--text-main); font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.hzcr-btn:active { background: var(--surface-hover, var(--surface)); transform: scale(0.97); }
+.hzcr-btn:disabled { opacity: 0.5; }
+.hzcr-btn.hzcr-pri { background: var(--accent-cyan, #00e5ff); border-color: var(--accent-cyan, #00e5ff); color: #001014; }
+.hzcr-btn.hzcr-sm { min-height: 44px; flex: 0 0 auto; }
+
+/* ---- code box ---- */
+.hzcr-code { width: 100%; box-sizing: border-box; min-height: 260px; border-radius: 12px; border: 1px solid var(--border-highlight, rgba(128, 128, 128, 0.4)); background: #0b0f14; color: #d6e4f0; padding: 12px; font-family: var(--mono, ui-monospace, SFMono-Regular, Menlo, monospace); font-size: 13px; line-height: 1.5; tab-size: 2; white-space: pre; overflow: auto; resize: vertical; }
+.hzcr-hint { margin: 0; font-size: 12.5px; line-height: 1.5; color: var(--text-muted); }
+
+@media (max-width: 360px) {
+  .hzcr-vars { grid-template-columns: repeat(3, 1fr); }
+  .hzcr-row2 { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) { .hzcr-stage, .hzcr-tool, .hzcr-btn { transition: none !important; transform: none !important; } }
