@@ -1,0 +1,19 @@
+/* Horizon V1.42.0: OPERATOR name tag on your messages + its card under Personalisation. */
+.message-meta .meta-op { font-weight: 800; color: var(--accent-cyan); letter-spacing: .1px; flex: 0 1 auto; min-width: 0; max-width: 44vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.message-meta .meta-op::after { content: '\00b7'; margin-left: 6px; color: var(--text-muted); font-weight: 700; }
+.hzo-sw { position: relative; flex: 0 0 auto; width: 46px; height: 26px; padding: 0; border-radius: 13px; border: 1px solid var(--border-color); background: var(--surface); cursor: pointer; transition: background .2s, border-color .2s; -webkit-tap-highlight-color: transparent; }
+.hzo-sw i { position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%; background: var(--text-muted); transition: transform .2s, background .2s; }
+.hzo-sw[aria-checked="true"] { background: var(--accent-cyan); border-color: var(--accent-cyan); }
+.hzo-sw[aria-checked="true"] i { transform: translateX(20px); background: #000; }
+.hzo-input { box-sizing: border-box; width: 100%; height: 42px; padding: 0 14px; border-radius: 12px; border: 1px solid var(--border-color); background: var(--surface); color: var(--text-main); font: inherit; font-size: 14px; outline: none; }
+.hzo-input:focus { border-color: var(--accent-cyan); box-shadow: 0 0 10px var(--accent-cyan-glow); }
+.hzo-input:disabled { opacity: .5; }
+.hzo-row { display: flex; justify-content: flex-end; margin-top: 8px; }
+@media (prefers-reduced-motion: reduce) { .hzo-sw, .hzo-sw i { transition: none; } }
+
+/* V1.42.1: place tag on the right edge of your messages, red pin on the left of the name */
+.message.user .message-meta .meta-op { max-width: 32vw; }
+.message.user .message-meta .meta-loc { margin-left: auto; display: inline-flex; align-items: center; gap: 3px; flex: 0 1 auto; min-width: 0; max-width: 46%; color: var(--text-muted); font-weight: 600; }
+.message-meta .meta-pin { width: 12px; height: 12px; flex: 0 0 auto; fill: #ff3b30; }
+.message-meta .meta-loc-t { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hzo-locrow { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border-color); }

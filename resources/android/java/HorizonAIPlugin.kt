@@ -123,7 +123,7 @@ class HorizonAIPlugin : Plugin() {
         val url = call.getString("url") ?: return call.reject("Missing request URL")
         // Only the existing AI provider endpoints may receive stored credentials.
         val host = try { URL(url).host } catch (_: Exception) { "" }
-        if (!url.startsWith("https://") || host !in setOf("generativelanguage.googleapis.com", "api.groq.com", "api.cohere.com", "text.pollinations.ai")) {
+        if (!url.startsWith("https://") || host !in setOf("generativelanguage.googleapis.com", "api.groq.com", "api.cohere.com", "api.mistral.ai", "text.pollinations.ai")) {
             call.reject("Unsupported AI endpoint")
             return
         }

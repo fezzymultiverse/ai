@@ -78,7 +78,7 @@ if [ ! -d "$JAVA_DIR" ]; then
     echo "Missing $JAVA_DIR (appId mismatch?)" >&2
     exit 1
 fi
-for f in HorizonPermsPlugin.java HorizonBgService.java HorizonMediaPlugin.java HorizonMediaService.java HorizonSpeechPlugin.java HorizonLensPlugin.java HorizonStatsPlugin.java HorizonBrowserPlugin.java MainActivity.java; do
+for f in HorizonPermsPlugin.java HorizonBgService.java HorizonMediaPlugin.java HorizonMediaService.java HorizonArt.java HorizonSpeechPlugin.java HorizonLensPlugin.java HorizonStatsPlugin.java HorizonBrowserPlugin.java MainActivity.java; do
     sed "s/__APPID__/${APPID}/" "resources/android/java/$f" > "$JAVA_DIR/$f"
 done
 
@@ -121,7 +121,7 @@ echo "Horizon Kotlin AI jobs and reply notifications applied."
 
 # Fail the build loudly if any native plugin source did not land (a missing plugin only shows up at
 # runtime as "unable to find plugin : HorizonAI").
-for f in HorizonPermsPlugin.java HorizonBgService.java HorizonMediaPlugin.java HorizonMediaService.java HorizonSpeechPlugin.java HorizonLensPlugin.java HorizonStatsPlugin.java HorizonBrowserPlugin.java MainActivity.java HorizonAIPlugin.kt HorizonAIService.kt HorizonReplyReceiver.kt HorizonSpeakService.kt HorizonShellPlugin.kt; do
+for f in HorizonPermsPlugin.java HorizonBgService.java HorizonMediaPlugin.java HorizonMediaService.java HorizonArt.java HorizonSpeechPlugin.java HorizonLensPlugin.java HorizonStatsPlugin.java HorizonBrowserPlugin.java MainActivity.java HorizonAIPlugin.kt HorizonAIService.kt HorizonReplyReceiver.kt HorizonSpeakService.kt HorizonShellPlugin.kt; do
     [ -s "$JAVA_DIR/$f" ] || { echo "Native source missing after apply: $f" >&2; exit 1; }
 done
 grep -q "registerPlugin(HorizonAIPlugin.class)" "$JAVA_DIR/MainActivity.java" || { echo "MainActivity does not register HorizonAIPlugin" >&2; exit 1; }
@@ -133,3 +133,19 @@ grep -q 'android:name=".HorizonReplyReceiver"' "$MANIFEST" || { echo "Reply rece
 grep -q 'android:name=".HorizonSpeakService"' "$MANIFEST" || { echo "Speak service missing from the manifest" >&2; exit 1; }
 grep -q 'org.jetbrains.kotlin.android' android/app/build.gradle || { echo "Kotlin plugin not applied to app/build.gradle" >&2; exit 1; }
 echo "Native plugin sources verified."
+
+# ---- V1.37.0: offline neural voices (sherpa-onnx, Piper + Kokoro) ----
+sed "s/__APPID__/${APPID}/" "resources/android/java/HorizonSherpaPlugin.kt" > "$JAVA_DIR/HorizonSherpaPlugin.kt"
+python3 - <<'PY'
+from pathlib import Path
+app = Path('android/app/build.gradle')
+s = app.read_text()
+if 'commons-compress' not in s:
+    s = s.replace('dependencies {', "dependencies {\n    implementation 'org.apache.commons:commons-compress:1.26.2'", 1)
+app.write_text(s)
+PY
+bash scripts/fetch-sherpa.sh
+[ -s "$JAVA_DIR/HorizonSherpaPlugin.kt" ] || { echo "Native source missing after apply: HorizonSherpaPlugin.kt" >&2; exit 1; }
+grep -q "registerPlugin(HorizonSherpaPlugin.class)" "$JAVA_DIR/MainActivity.java" || { echo "MainActivity does not register HorizonSherpaPlugin" >&2; exit 1; }
+grep -q "commons-compress" android/app/build.gradle || { echo "commons-compress missing from app/build.gradle" >&2; exit 1; }
+echo "Offline neural voice engine applied."

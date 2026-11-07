@@ -5,6 +5,7 @@
  *   2. Pollinations  natural voice, 6 voices, uses a Pollinations key (enter.pollinations.ai)
  *   3. Native        Android's own speech engine through the HorizonSpeech plugin (free, offline, unlimited)
  *   4. Web Speech    the WebView's speechSynthesis, as a last resort
+ * V1.37.0: Offline neural voices (Piper and Kokoro through sherpa-onnx, HorizonSherpa plugin). Download once, then no internet.
  *
  * The voice is independent of the chat provider: Gemini voice works while Groq, Cohere or Pollinations answers.
  * V1.25.0: Piper is gone (it needed a 60 MB model, WASM and a module worker and did not run reliably on phones).
@@ -41,8 +42,8 @@
             { id: 'onyx', name: 'Onyx · deep male' }
         ]
     };
-    const MAX_CHARS = { native: 3000, web: 180, gemini: 1200, pollinations: 1000 };
-    const ENGINES = ['standard', 'gemini', 'pollinations'];
+    const MAX_CHARS = { native: 3000, web: 180, gemini: 1200, pollinations: 1000, sherpa: 450 };
+    const ENGINES = ['standard', 'gemini', 'pollinations', 'sherpa'];
     const KEYS = {
         engine: 'horizon_tts_engine',
         voice: 'horizon_tts_voice',
@@ -52,7 +53,9 @@
         gvoice: 'horizon_tts_gemini_voice',
         gmodel: 'horizon_tts_gemini_model',
         pvoice: 'horizon_tts_poll_voice',
-        pkey: 'horizon_tts_poll_key'
+        pkey: 'horizon_tts_poll_key',
+        smodel: 'horizon_tts_sherpa_model',
+        ssid: 'horizon_tts_sherpa_sid'
     };
 
     // ----------------------------------------------------------------- helpers
@@ -92,7 +95,9 @@
             rate: clamp(ls.get(KEYS.rate), 0.5, 2, 1),
             pitch: clamp(ls.get(KEYS.pitch), 0.5, 2, 1),
             gvoice: geminiIds.indexOf(gv) >= 0 ? gv : geminiIds[0],
-            pvoice: pollIds.indexOf(pv) >= 0 ? pv : pollIds[0]
+            pvoice: pollIds.indexOf(pv) >= 0 ? pv : pollIds[0],
+            smodel: ls.get(KEYS.smodel) || '',
+            ssid: Math.max(0, parseInt(ls.get(KEYS.ssid), 10) || 0)
         };
     }
     function set(key, value) {
@@ -105,6 +110,8 @@
             case 'gvoice': if (geminiIds.indexOf(value) >= 0) ls.set(KEYS.gvoice, value); break;
             case 'pvoice': if (pollIds.indexOf(value) >= 0) ls.set(KEYS.pvoice, value); break;
             case 'pkey': ls.set(KEYS.pkey, String(value || '').trim()); break;
+            case 'smodel': ls.set(KEYS.smodel, String(value || '')); break;
+            case 'ssid': ls.set(KEYS.ssid, String(Math.max(0, parseInt(value, 10) || 0))); break;
             default: return false;
         }
         return true;
@@ -170,6 +177,14 @@
         });
         flush();
         return out;
+    }
+
+    // Cloud voices are generated whole before they play, so a short first piece starts the sound much sooner.
+    function fastFirst(chunks) {
+        if (!chunks.length || chunks[0].length <= 170) return chunks;
+        const head = chunkText(chunks[0], 150);
+        if (head.length < 2) return chunks;
+        return [head[0], head.slice(1).join(' ')].concat(chunks.slice(1));
     }
 
     // ------------------------------------------------------------ state + events
@@ -265,6 +280,55 @@
         }
         } finally { if (startListener) await startListener.remove(); }
     }
+
+    // ------------------------------------------------------ engine: offline neural (sherpa-onnx)
+    function sherpaPlugin() {
+        if (!NATIVE || !plugFn) return null;
+        try { return plugFn('HorizonSherpa'); } catch (e) { return null; }
+    }
+    function b64Blob(b64, type) {
+        const bin = root.atob(b64);
+        const u8 = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+        return new root.Blob([u8], { type });
+    }
+    async function runSherpa(chunks, tok, s, started) {
+        const p = sherpaPlugin();
+        if (!p) throw new Error('The offline voice engine is not part of this build');
+        if (!s.smodel) throw new Error('no offline voice is downloaded yet (Voice settings, Offline neural)');
+        const synth = text => withTimeout(p.synthesize({ id: s.smodel, text, sid: s.ssid, speed: s.rate }), 120000, 'The offline voice timed out');
+        let first = true;
+        let next = synth(chunks[0]);
+        for (let i = 0; i < chunks.length; i++) {
+            if (tok.cancelled) return;
+            const r = await next;
+            if (tok.cancelled) return;
+            next = i + 1 < chunks.length ? synth(chunks[i + 1]) : null;   // make the next piece while this one plays
+            if (next) next.catch(() => { /* reported when it is awaited */ });
+            await playBlob(b64Blob(r.wav, 'audio/wav'), 1, () => { if (first) { first = false; started(); } }, s.pitch);
+        }
+    }
+    const sherpa = {
+        usable: () => !!sherpaPlugin(),
+        async status() {
+            const p = sherpaPlugin();
+            if (!p) return { available: false, models: [] };
+            return withTimeout(p.status(), 8000, 'Voice list timed out');
+        },
+        async download(id, onProgress) {
+            const p = sherpaPlugin();
+            if (!p) throw new Error('The offline voice engine is not part of this build');
+            let h = null;
+            try { h = await p.addListener('sherpaProgress', ev => { if (ev && ev.id === id && onProgress) onProgress(ev); }); } catch (e) { /* progress is optional */ }
+            try { await p.download({ id }); } finally { if (h) await h.remove(); }
+            voiceCache = null;
+        },
+        async remove(id) {
+            const p = sherpaPlugin();
+            if (!p) throw new Error('The offline voice engine is not part of this build');
+            await p.remove({ id });
+        }
+    };
 
     // ---------------------------------------------------------- engine: Web Speech
     const webUsable = () => !!(root.speechSynthesis && typeof root.SpeechSynthesisUtterance === 'function');
@@ -457,7 +521,7 @@
             if (tok.cancelled) return;
             next = i + 1 < chunks.length ? queued(tok, () => synth(chunks[i + 1])) : null;
             if (next) next.catch(() => { /* surfaced when awaited */ });
-            await playBlob(blob, s.rate, () => { if (first) { first = false; started(); } });
+            await playBlob(blob, s.rate, () => { if (first) { first = false; started(); } }, s.pitch);
             if (tok.cancelled) return;
         }
     }
@@ -483,7 +547,7 @@
             }
         } catch (e) { /* nothing to unlock */ }
     }
-    async function playWebAudio(blob, rate, onStart) {
+    async function playWebAudio(blob, rate, onStart, pitch) {
         const c = audioCtx();
         if (!c) throw new Error('Web Audio is not available');
         if (c.state !== 'running') {
@@ -498,7 +562,7 @@
         return new Promise((resolve, reject) => {
             const srcNode = c.createBufferSource();
             srcNode.buffer = buf;
-            srcNode.playbackRate.value = clamp(rate, 0.5, 2, 1);
+            srcNode.playbackRate.value = clamp(clamp(rate, 0.5, 2, 1) * clamp(pitch, 0.5, 2, 1), 0.25, 4, 1);
             srcNode.connect(c.destination);
             let fin = false;
             const stopFn = () => end();
@@ -516,7 +580,7 @@
             try { srcNode.start(0); if (onStart) onStart(); } catch (e) { end(e); }
         });
     }
-    function playElement(blob, rate, onStart) {
+    function playElement(blob, rate, onStart, pitch) {
         return new Promise((resolve, reject) => {
             const url = root.URL.createObjectURL(blob);
             const a = new root.Audio(url);
@@ -531,7 +595,8 @@
                 err ? reject(err) : resolve();
             };
             audioEnd = stopFn;
-            a.playbackRate = clamp(rate, 0.5, 2, 1);
+            try { a.preservesPitch = false; a.mozPreservesPitch = false; a.webkitPreservesPitch = false; } catch (e) { /* default */ }
+            a.playbackRate = clamp(clamp(rate, 0.5, 2, 1) * clamp(pitch, 0.5, 2, 1), 0.25, 4, 1);
             a.onended = () => end();
             a.onerror = () => end(new Error('Audio playback failed'));
             a.onplaying = () => { if (onStart) { const f = onStart; onStart = null; f(); } };
@@ -539,16 +604,16 @@
             if (pr && typeof pr.catch === 'function') pr.catch(e => end(new Error('The audio element was refused: ' + msg(e))));
         });
     }
-    async function playBlob(blob, rate, onStart) {
+    async function playBlob(blob, rate, onStart, pitch) {
         let began = false;
         const mark = () => { began = true; if (onStart) onStart(); };
         try {
-            await playWebAudio(blob, rate, mark);
+            await playWebAudio(blob, rate, mark, pitch);
             return;
         } catch (e1) {
             if (began) throw e1;                       // it was already playing: do not restart it
             try {
-                await playElement(blob, rate, mark);
+                await playElement(blob, rate, mark, pitch);
                 return;
             } catch (e2) {
                 if (began) throw e2;
@@ -558,8 +623,8 @@
     }
 
     // ------------------------------------------------------------- orchestration
-    const RUN = { gemini: runGemini, pollinations: runPollinations, native: runNative, web: runWeb };
-    const LABEL = { gemini: 'Gemini voice', pollinations: 'Pollinations voice', native: 'Android voice', web: 'Browser voice' };
+    const RUN = { gemini: runGemini, pollinations: runPollinations, sherpa: runSherpa, native: runNative, web: runWeb };
+    const LABEL = { gemini: 'Gemini voice', pollinations: 'Pollinations voice', sherpa: 'Offline voice', native: 'Android voice', web: 'Browser voice' };
 
     function stop(silent) {
         const c = cur;
@@ -588,18 +653,19 @@
         }
         emit({ state: 'loading', id, engine: '', error: '' });
         const order = [];
-        if (s.engine === 'gemini' || s.engine === 'pollinations') order.push(s.engine);
+        if (s.engine === 'gemini' || s.engine === 'pollinations' || s.engine === 'sherpa') order.push(s.engine);
         order.push('native', 'web');
         const errors = [];
         for (const eng of order) {
             if (tok.cancelled) return false;
+            if (eng === 'sherpa' && !sherpa.usable()) continue;
             if (eng === 'native' && !nativeUsable()) continue;
             if (eng === 'web' && !webUsable()) continue;
             if (cool[eng] && cool[eng] > Date.now()) { errors.push(LABEL[eng].toLowerCase() + ' is at its limit, trying again in a minute'); continue; }
             let began = false;
             try {
                 emit({ engine: eng });
-                await RUN[eng](chunkText(text, MAX_CHARS[eng]), tok, s, () => {
+                await RUN[eng]((eng === 'gemini' || eng === 'pollinations' || eng === 'sherpa') ? fastFirst(chunkText(text, MAX_CHARS[eng])) : chunkText(text, MAX_CHARS[eng]), tok, s, () => {
                     began = true;
                     if (!tok.cancelled) emit({ state: 'playing', id, engine: eng });
                 });
@@ -714,6 +780,9 @@
             if (!cloudKeys('gemini').length) return 'Gemini voice needs a key. Using the Android voice for now.';
             return 'Natural voice (Gemini · ' + s.gvoice + ')';
         }
+        if (s.engine === 'sherpa') {
+            return s.smodel ? 'Offline neural voice (' + s.smodel + ')' : 'Offline neural voice needs a download. Using the Android voice for now.';
+        }
         if (s.engine === 'pollinations') {
             if (!pollKey()) return 'Pollinations voice needs a key. Using the Android voice for now.';
             const v = POLL.voices.find(x => x.id === s.pvoice);
@@ -745,6 +814,7 @@
         cloud: {
             gemini: { voices: GEMINI.voices, keyCount: () => cloudKeys('gemini').length },
             pollinations: { voices: POLL.voices, hasKey: () => !!pollKey() }
-        }
+        },
+        sherpa
     };
 })(window);

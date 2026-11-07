@@ -538,7 +538,7 @@
             body.appendChild(swRow('AI may play and control music', 'Lets the AI search, play, queue, pause and skip songs in your Horizon music player. Needs the music library scanned in the Music tab.', 'music', () => { if (S.music && window.HorizonMusic && !HorizonMusic.seesAi()) HorizonMusic.setAi(true); }));
             body.appendChild(swRow('Eye also sends a screenshot', 'Adds a picture of the page, and of the app when the Lens is on (Pollinations and Gemini only). Off = text only.', 'eyeShot'));
             body.appendChild(optRow('Page text sent', 'Maximum characters of page text the AI receives.', 'eyeChars', [[3000, '3k'], [6000, '6k'], [12000, '12k'], [24000, '24k']]));
-            body.appendChild(optRow('Typewriter speed', '', 'speed', [['fast', 'Fast'], ['normal', 'Normal'], ['slow', 'Slow']]));
+            body.appendChild(infoCard('Typing speed moved to Horizon settings, PERSONALISATION.', false));
             body.appendChild(swRow('Open AI box on launch', '', 'autoOpen'));
             const prov = ls('horizon_active_provider') || 'pollinations';
             body.appendChild(infoCard('AI provider: ' + prov + ' (follows the one selected in Horizon chat; keys are read from Horizon settings and are only sent to that provider). Page text is treated as untrusted data, never as instructions.', false));
@@ -593,10 +593,10 @@
     }
     function sysMsg(text) { if (el.dock.classList.contains('expanded')) addMsg('sys', text); }
 
-    const SPEED = { fast: [6, 4], normal: [16, 2], slow: [32, 1] };
+    const SPEED = { fast: [6, 4], normal: [16, 2], slow: [32, 1], instant: [0, 100000] };
     function typeInto(node, text) {
         return new Promise(resolve => {
-            const [delay, step] = SPEED[S.speed] || SPEED.normal;
+            const [delay, step] = SPEED[ls('horizon_type_speed') || S.speed] || SPEED.normal;
             let i = 0, done = false;
             node.classList.remove('think'); node.classList.add('typing'); node.textContent = '';
             const finish = () => { if (done) return; done = true; node.textContent = text; node.classList.remove('typing'); scrollDown(false); resolve(); };
@@ -636,17 +636,46 @@
         const ctl = new AbortController(); const to = setTimeout(() => ctl.abort(), 70000);
         try {
             if (id === 'gemini') {
-                if (!key) throw new Error('Add your Gemini key in Horizon settings, or switch provider to Pollinations.');
+                let keys = [];
+                try { keys = JSON.parse(ls('horizon_xkeys_gemini') || '[]'); } catch (e) { keys = []; }
+                keys = [key].concat(Array.isArray(keys) ? keys : []).map(k => String(k || '').trim()).filter(Boolean);
+                keys = keys.filter((k, i) => keys.indexOf(k) === i);
+                if (!keys.length) throw new Error('Add your Gemini key in Horizon settings, or switch provider to Pollinations.');
                 const parts = [{ text: question }];
                 if (shot) parts.push({ inline_data: { mime_type: 'image/jpeg', data: shot } });
                 const contents = history_.map(m => ({ role: m.role === 'ai' ? 'model' : 'user', parts: [{ text: m.text }] })).concat([{ role: 'user', parts }]);
-                const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(model || 'gemini-2.5-flash') + ':generateContent?key=' + encodeURIComponent(key), {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: ctl.signal,
-                    body: JSON.stringify({ system_instruction: { parts: [{ text: system }] }, contents })
-                });
-                const j = await r.json();
-                if (!r.ok) throw new Error((j.error && j.error.message) || ('Gemini error ' + r.status));
-                return ((j.candidates || [])[0] || {}).content.parts.map(p => p.text || '').join('') || '(empty reply)';
+                const body = JSON.stringify({ system_instruction: { parts: [{ text: system }] }, contents });
+                const models = [model || 'gemini-2.5-flash', 'gemini-2.5-flash', 'gemini-2.5-flash-lite'].filter((m, i, a) => a.indexOf(m) === i);
+                let last = '';
+                for (const k of keys) {
+                    for (const m of models) {
+                        let r, j;
+                        try {
+                            r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(m) + ':generateContent', {
+                                method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': k }, signal: ctl.signal, body
+                            });
+                            j = await r.json().catch(() => ({}));
+                        } catch (e) { if (ctl.signal.aborted) throw new Error('Gemini took too long'); last = 'network: ' + (e && e.message || e); continue; }
+                        if (r.ok) {
+                            const c = (j.candidates || [])[0];
+                            const txt = c && c.content && c.content.parts ? c.content.parts.map(p => p.text || '').join('') : '';
+                            if (txt) return txt;
+                            const why = (j.promptFeedback && j.promptFeedback.blockReason) || (c && c.finishReason) || 'empty';
+                            last = 'Gemini returned no text (' + why + ')';
+                            continue;
+                        }
+                        last = (j.error && j.error.message) || ('Gemini error ' + r.status);
+                        if (r.status === 404 || r.status === 400 && /model/i.test(last)) continue;   // try the next model
+                        break;                                                                        // key problem or limit: next key
+                    }
+                }
+                try {
+                    const pr = await fetch('https://text.pollinations.ai/openai?referrer=horizon-app', { method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: ctl.signal,
+                        body: JSON.stringify({ model: 'openai', messages: [{ role: 'system', content: system }].concat(history_.map(m => ({ role: m.role === 'ai' ? 'assistant' : 'user', content: m.text })), [{ role: 'user', content: question }]) }) });
+                    const pj = await pr.json().catch(() => ({}));
+                    const pt = ((pj.choices || [])[0] || {}).message; if (pr.ok && pt && pt.content) return pt.content + '\n\n(Gemini failed on ' + keys.length + ' key' + (keys.length === 1 ? '' : 's') + ': ' + last + '. Answered by Pollinations.)';
+                } catch (e) { /* report the Gemini reason below */ }
+                throw new Error('Gemini failed on ' + keys.length + ' key' + (keys.length === 1 ? '' : 's') + ': ' + last);
             }
             if (id === 'cohere') {
                 if (!key) throw new Error('Add your Cohere key in Horizon settings, or switch provider.');
@@ -655,6 +684,15 @@
                 const j = await r.json();
                 if (!r.ok) throw new Error(j.message || ('Cohere error ' + r.status));
                 return ((j.message || {}).content || []).map(c => c.text || '').join('') || '(empty reply)';
+            }
+            if (id === 'mistral') {
+                if (!key) throw new Error('Add your Mistral key in Horizon settings, or switch provider.');
+                const mm = [{ role: 'system', content: system }].concat(history_.map(m => ({ role: m.role === 'ai' ? 'assistant' : 'user', content: m.text })), [{ role: 'user', content: question }]);
+                const r = await fetch('https://api.mistral.ai/v1/chat/completions', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + key }, signal: ctl.signal, body: JSON.stringify({ model: model || 'mistral-small-latest', messages: mm }) });
+                const j = await r.json().catch(() => ({}));
+                if (!r.ok) throw new Error(j.message || (j.error && j.error.message) || ('Mistral error ' + r.status));
+                const c = ((j.choices || [])[0] || {}).message;
+                return (c && (Array.isArray(c.content) ? c.content.map(p => p.text || '').join('') : c.content)) || '(empty reply)';
             }
             const groq = id === 'groq';
             if (groq && !key) throw new Error('Add your Groq key in Horizon settings, or switch provider to Pollinations.');
@@ -732,7 +770,7 @@
     function addHeaderButton() {
         const bar = $('.header-actions');
         if (!bar || $('#hzbOpen')) return;
-        const b = mk('button', 'header-btn hzb-hbtn'); b.id = 'hzbOpen'; b.type = 'button'; b.setAttribute('aria-label', 'Open Horizon Browser');
+        const b = mk('button', 'header-btn hzb-hbtn'); b.id = 'hzbOpen'; b.type = 'button'; b.setAttribute('data-lbl', 'Browser'); b.setAttribute('aria-label', 'Open Horizon Browser');
         b.innerHTML = NET;
         b.addEventListener('click', () => openBrowser());
         const menu = $('#menuBtn'); if (menu) bar.insertBefore(b, menu); else bar.appendChild(b);

@@ -1014,6 +1014,8 @@
         .avatar.prov-cohere { --ring: linear-gradient(135deg, #ff7759, #d18ee2); --ring-glow: rgba(255, 119, 89, 0.5); }
         .avatar.prov-pollinations { --ring: conic-gradient(from 200deg, #d9f24c, #ff5fb0, #8a5cff, #d9f24c); --ring-glow: rgba(217, 242, 76, 0.5); }
         .model-tag.prov-cohere .ic { color: #ff8a70; }
+        .avatar.prov-mistral { --ring: linear-gradient(135deg, #ffd800, #ff8205, #e10500); --ring-glow: rgba(255, 130, 5, 0.5); }
+        .model-tag.prov-mistral .ic { color: #ff8205; }
         .model-tag.prov-pollinations .ic { color: #c8e63a; }
         .model-tag .tk { font-variant-numeric: tabular-nums; opacity: 0.85; }
         #loadingBubble .message-meta { width: 100%; }
@@ -1406,6 +1408,11 @@
     <link rel="stylesheet" href="horizon_slash.css">
     <link rel="stylesheet" href="horizon_dash.css">
     <link rel="stylesheet" href="horizon_browser.css">
+    <link rel="stylesheet" href="horizon_bojack.css">
+    <link rel="stylesheet" href="horizon_header.css">
+    <link rel="stylesheet" href="horizon_tidy.css">
+    <link rel="stylesheet" href="horizon_htmlview.css">
+    <link rel="stylesheet" href="horizon_operator.css">
 </head>
 <body>
 
@@ -1433,11 +1440,12 @@
             <symbol id="i-spark" viewBox="0 0 24 24"><polygon points="12 2 15 9 22 12 15 15 12 22 9 15 2 12 9 9 12 2"/></symbol>
             <symbol id="i-b-gemini" viewBox="0 0 24 24"><rect x=".5" y=".5" width="23" height="23" rx="6" fill="#fff" stroke="#e3e5e8"/><defs><linearGradient id="gGem" x1="5" y1="19" x2="19" y2="5" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#34A853"/><stop offset=".35" stop-color="#FBBC05"/><stop offset=".7" stop-color="#4285F4"/><stop offset="1" stop-color="#EA4335"/></linearGradient></defs><path transform="translate(3.6 3.6) scale(.7)" fill="url(#gGem)" stroke="none" d="M11.04 19.32Q12 21.51 12 24q0-2.49.93-4.68.96-2.19 2.58-3.81t3.81-2.55Q21.51 12 24 12q-2.49 0-4.68-.93a12.3 12.3 0 0 1-3.81-2.58 12.3 12.3 0 0 1-2.58-3.81Q12 2.49 12 0q0 2.49-.96 4.68-.93 2.19-2.55 3.81a12.3 12.3 0 0 1-3.81 2.55Q2.49 12 0 12q2.49 0 4.68.96 2.19.93 3.81 2.55t2.55 3.81"/></symbol>
             <symbol id="i-b-groq" viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#F05037" stroke="none"/><path d="M15.4 9.2a3.9 3.9 0 1 0 0 5.6M15.4 8v9.2c0 2-1.5 3-3.4 3-1.2 0-2.2-.4-2.9-1" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+            <symbol id="i-b-mistral" viewBox="0 0 24 24"><rect width="24" height="24" rx="6" fill="#0b0b0b" stroke="none"/><g stroke="none"><rect x="4.0" y="4.0" width="3.2" height="3.2" fill="#FFD800"/><rect x="16.8" y="4.0" width="3.2" height="3.2" fill="#FFD800"/><rect x="4.0" y="7.2" width="3.2" height="3.2" fill="#FFAF00"/><rect x="7.2" y="7.2" width="3.2" height="3.2" fill="#FFAF00"/><rect x="13.6" y="7.2" width="3.2" height="3.2" fill="#FFAF00"/><rect x="16.8" y="7.2" width="3.2" height="3.2" fill="#FFAF00"/><rect x="4.0" y="10.4" width="3.2" height="3.2" fill="#FF8205"/><rect x="10.4" y="10.4" width="3.2" height="3.2" fill="#FF8205"/><rect x="16.8" y="10.4" width="3.2" height="3.2" fill="#FF8205"/><rect x="4.0" y="13.6" width="3.2" height="3.2" fill="#FA500F"/><rect x="16.8" y="13.6" width="3.2" height="3.2" fill="#FA500F"/><rect x="4.0" y="16.8" width="3.2" height="3.2" fill="#E10500"/><rect x="16.8" y="16.8" width="3.2" height="3.2" fill="#E10500"/></g></symbol>
             <symbol id="i-b-cohere" viewBox="0 0 24 24"><rect x=".5" y=".5" width="23" height="23" rx="6" fill="#fff" stroke="#e3e5e8"/><path d="M6 6.2c0-1.3 1.6-2.2 4.2-2.2h4.3c2.4 0 3.7 1.2 3.7 2.8 0 2-1.9 3.2-4.4 3.2H9.5C7.4 10 6 8.6 6 6.2z" fill="#39594D" stroke="none"/><circle cx="8" cy="16.4" r="3" fill="#FF7759" stroke="none"/><ellipse cx="16" cy="15.6" rx="3.6" ry="3.2" fill="#D18EE2" stroke="none"/></symbol>
             <symbol id="i-b-pollinations" viewBox="0 0 24 24"><rect width="24" height="24" rx="6" fill="#0b0b0b" stroke="none"/><g fill="none" stroke="#fff" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4.5c1.9 1.7 2.5 4.2 0 8.5-2.5-4.3-1.9-6.8 0-8.5z"/><path d="M12 13c-1.5-4 .4-6.6 3.6-6.8 1 2.6-.4 5.5-3.6 6.8zM12 13c1.5-4-.4-6.6-3.6-6.8-1 2.6.4 5.5 3.6 6.8z"/><path d="M12 13c3.2-.4 5.6-2.8 6.4-5.6-3 0-6 1.4-6.4 5.6zM12 13c-3.2-.4-5.6-2.8-6.4-5.6 3 0 6 1.4 6.4 5.6z"/><path d="M6 14.2h12M8.4 17.4h7.2"/></g></symbol>
             <symbol id="i-eye" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></symbol>
             <symbol id="i-dl" viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 11 5 5 5-5"/><path d="M5 20h14"/></symbol>
-            <symbol id="i-lens" viewBox="0 0 24 24"><path d="M4 8V5a1 1 0 0 1 1-1h3"/><path d="M16 4h3a1 1 0 0 1 1 1v3"/><path d="M20 16v3a1 1 0 0 1-1 1h-3"/><path d="M8 20H5a1 1 0 0 1-1-1v-3"/><circle cx="12" cy="12" r="3.5"/></symbol>
+            <symbol id="i-lens" viewBox="0 0 24 24"><path d="M4 8V5a1 1 0 0 1 1-1h3"/><path d="M16 4h3a1 1 0 0 1 1 1v3"/><path d="M20 16v3a1 1 0 0 1-1 1h-3"/><path d="M8 20H5a1 1 0 0 1-1-1v-3"/><circle cx="12" cy="12" r="3.5" style="stroke:var(--hz-lens-dot,currentColor)"/></symbol>
             <symbol id="i-eye-off" viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></symbol>
             <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></symbol>
             <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></symbol>
@@ -1465,6 +1473,7 @@
             <symbol id="i-pin" viewBox="0 0 24 24"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/></symbol>
             <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
             <symbol id="i-ok" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></symbol>
+            <symbol id="i-brain" viewBox="0 0 24 24"><path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"/><path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z"/><path d="M15 13a4.5 4.5 0 0 1-3-4 4.5 4.5 0 0 1-3 4"/><path d="M17.599 6.5a3 3 0 0 0 .399-1.375"/><path d="M6.003 5.125A3 3 0 0 0 6.401 6.5"/><path d="M3.477 10.896a4 4 0 0 1 .585-.396"/><path d="M19.938 10.5a4 4 0 0 1 .585.396"/><path d="M6 18a4 4 0 0 1-1.967-.516"/><path d="M19.967 17.484A4 4 0 0 1 18 18"/></symbol>
             <symbol id="i-volume" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></symbol>
             <symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2" ry="2"/></symbol>
             <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></symbol>
@@ -1519,14 +1528,16 @@
             <div class="chip-logo"><svg class="ic" aria-hidden="true"><use href="#i-cpu"/></svg></div>
             <div class="brand">
                 <h1>HORIZON</h1>
-                <span>AI APK</span>
             </div>
         </div>
+        <div class="hz-subrow">
+            <span class="hz-sub">Strategy Over Impulse</span>
+        </div>
         <div class="header-actions">
-            <button class="header-btn" id="snoozeBtn" type="button" aria-pressed="false" aria-label="Snooze: turn network and permissions off"><svg class="ic" aria-hidden="true"><use href="#i-snooze"/></svg><span class="zz" aria-hidden="true">z</span></button>
-            <button class="header-btn" id="pickBtn" type="button" aria-haspopup="dialog" aria-label="Choose AI provider and model"><svg class="hz-robot" viewBox="0 0 64 64" aria-hidden="true"><use href="#i-robot"/></svg><i class="pk-dot" id="pkDot"></i></button>
-            <button class="header-btn" id="menuBtn" type="button" aria-label="Open menu"><svg class="ic" aria-hidden="true"><use href="#i-menu"/></svg></button>
-            <button class="header-btn" id="settingsBtn" type="button" aria-label="Open settings: API providers plus keys, web scraping, permissions, personalisation"><svg class="ic" aria-hidden="true"><use href="#i-sliders"/></svg></button>
+            <button class="header-btn" id="snoozeBtn" data-lbl="Snooze" type="button" aria-pressed="false" aria-label="Snooze: turn network and permissions off"><svg class="ic" aria-hidden="true"><use href="#i-snooze"/></svg><span class="zz" aria-hidden="true">z</span></button>
+            <button class="header-btn" id="pickBtn" data-lbl="AI" type="button" aria-haspopup="dialog" aria-label="Choose AI provider and model"><svg class="hz-robot" viewBox="0 0 64 64" aria-hidden="true"><use href="#i-robot"/></svg><i class="pk-dot" id="pkDot"></i></button>
+            <button class="header-btn" id="menuBtn" data-lbl="Menu" type="button" aria-label="Open menu"><svg class="ic" aria-hidden="true"><use href="#i-menu"/></svg></button>
+            <button class="header-btn" id="settingsBtn" data-lbl="Settings" type="button" aria-label="Open settings: API providers plus keys, web scraping, permissions, personalisation"><svg class="ic" aria-hidden="true"><use href="#i-sliders"/></svg></button>
         </div>
     </header>
     <div class="mp-now" id="mpNow" hidden></div>
@@ -1554,7 +1565,6 @@
         <!-- Chat Interface -->
         <main class="chat-interface">
             <div class="chat-top-actions" id="aiSelector" role="group" aria-label="Provider"></div>
-            <button class="hz-badge" id="hzBadge" type="button" aria-label="Open usage and engine dashboard"></button>
 
             <div class="chat-scroll" id="chatScroll">
                 <div class="chat-messages" id="chatMessages"></div>
@@ -1571,6 +1581,11 @@
                 </div>
                 <div class="tool-menu" id="toolMenu" role="group" aria-label="Chat tools" hidden>
                     <div class="tm-head"><b>Tools</b><span>Green is on, black is off</span></div>
+                    <div class="tm-row is-off" id="tm-think" role="switch" aria-checked="false" tabindex="0">
+                        <div class="tm-ic think-ic"><svg class="ic" aria-hidden="true"><use href="#i-brain"/></svg></div>
+                        <div class="tm-text"><h4>Thinking</h4><p>The AI thinks harder before it answers: better for Termux scripts, PDFs, HTML and big ideas. Slower.</p><p class="tm-note"></p></div>
+                        <button class="sw" type="button" tabindex="-1" aria-hidden="true"></button>
+                    </div>
                     <div class="tm-row is-off" id="tm-web" role="switch" aria-checked="false" tabindex="0">
                         <div class="tm-ic"><svg class="ic" aria-hidden="true"><use href="#i-globe"/></svg></div>
                         <div class="tm-text"><h4>Web</h4><p>Search the web and read pages with your scraper keys.</p><p class="tm-note"></p></div>
@@ -1609,7 +1624,22 @@
                     </div>
                     <div class="tm-row is-off" id="tm-screen" role="switch" aria-checked="false" tabindex="0">
                         <div class="tm-ic"><svg class="ic" aria-hidden="true"><use href="#i-screen"/></svg></div>
-                        <div class="tm-text"><h4>Screen</h4><p>Let Horizon see the app screen: open panels, switches, buttons and notices. Lens (Apps menu) adds the full UI map and a screenshot. Keys, the Vault and chat text stay hidden.</p><p class="tm-note"></p></div>
+                        <div class="tm-text"><h4>Screen</h4><p>Let Horizon see the app screen: open panels, switches, buttons and notices, plus a map of the whole app. Lens (Apps menu) adds the full UI map and a screenshot. Keys, the Vault and chat text stay hidden.</p><p class="tm-note"></p></div>
+                        <button class="sw" type="button" tabindex="-1" aria-hidden="true"></button>
+                    </div>
+                    <div class="tm-row is-off" id="tm-mem" role="switch" aria-checked="false" tabindex="0">
+                        <div class="tm-ic"><svg class="ic" aria-hidden="true"><use href="#i-db"/></svg></div>
+                        <div class="tm-text"><h4>Memory</h4><p>Let Horizon save durable facts about you and carry them into every chat. Never keys.</p><p class="tm-note"></p></div>
+                        <button class="sw" type="button" tabindex="-1" aria-hidden="true"></button>
+                    </div>
+                    <div class="tm-row is-off" id="tm-lens" role="switch" aria-checked="false" tabindex="0">
+                        <div class="tm-ic"><svg class="ic" aria-hidden="true"><use href="#i-lens"/></svg></div>
+                        <div class="tm-text"><h4>Lens</h4><p>Auto: the full UI map and a screenshot when you ask how something looks. Needs Screen on.</p><p class="tm-note"></p></div>
+                        <button class="sw" type="button" tabindex="-1" aria-hidden="true"></button>
+                    </div>
+                    <div class="tm-row is-off" id="tm-eye" role="switch" aria-checked="false" tabindex="0">
+                        <div class="tm-ic"><svg class="ic" aria-hidden="true"><use href="#i-eye"/></svg></div>
+                        <div class="tm-text"><h4>Browser eye</h4><p>Let the AI read the page open in the Horizon browser.</p><p class="tm-note"></p></div>
                         <button class="sw" type="button" tabindex="-1" aria-hidden="true"></button>
                     </div>
                 </div>
@@ -1632,6 +1662,10 @@
                     <button class="send-btn" id="sendBtn" type="button" aria-label="Send"><svg class="ic" aria-hidden="true"><use href="#i-up"/></svg></button>
                 </div>
                 <button class="status-text" id="statusText" type="button"></button>
+                <div class="hz-bottom" id="hzBottom">
+                    <button class="hz-badge" id="hzBadge" type="button" aria-label="Open usage and engine dashboard"></button>
+                    <button class="hz-voice" id="hzVoice" type="button" aria-label="Voice: idle. Tap to open voice settings"><svg class="ic" aria-hidden="true"><use href="#i-volume"/></svg><span class="hzv-name">Voice</span><span class="hzv-wave" aria-hidden="true"><i style="--i:0"></i><i style="--i:1"></i><i style="--i:2"></i><i style="--i:3"></i><i style="--i:4"></i><i style="--i:5"></i><i style="--i:6"></i><i style="--i:7"></i><i style="--i:8"></i><i style="--i:9"></i><i style="--i:10"></i><i style="--i:11"></i><i style="--i:12"></i><i style="--i:13"></i><i style="--i:14"></i><i style="--i:15"></i></span></button>
+                </div>
             </div>
         </main>
 
@@ -1736,14 +1770,16 @@
 
         <!-- Right Panel: Settings list -> API PROVIDERS PLUS KEYS / WEB SCRAPING / PERMISSIONS -->
         <aside class="panel right-panel" id="rightPanel" aria-label="Settings">
-            <div class="panel-header">
-                <button class="close-btn" data-close type="button" aria-label="Close settings"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg></button>
-                <div class="logo-area">
-                    <div class="brand"><h1>HORIZON</h1></div>
-                    <div class="chip-logo"><svg class="ic" aria-hidden="true"><use href="#i-cpu"/></svg></div>
-                </div>
+            <div class="panel-title" id="settingsTitle"><h2>Settings</h2>
+<div class="hz-theme-row" id="hzThemeRow">
+                <span class="hz-theme-lbl">THEME</span>
+                <div class="hz-theme-pill" id="hzThemePill" role="radiogroup" aria-label="Theme">
+                <button type="button" role="radio" aria-checked="true" data-pill-theme="light" aria-label="Light theme" title="Light"><svg class="ic" aria-hidden="true"><use href="#i-sun"/></svg></button>
+                <button type="button" role="radio" aria-checked="false" data-pill-theme="dark" aria-label="Dark theme" title="Dark"><svg class="ic" aria-hidden="true"><use href="#i-moon"/></svg></button>
+                <button type="button" role="radio" aria-checked="false" data-pill-theme="neon" aria-label="Cyan theme" title="Cyan"><svg class="ic" aria-hidden="true"><use href="#i-zap"/></svg></button>
             </div>
-            <div class="panel-title" id="settingsTitle"><h2>Settings</h2></div>
+            </div>
+            </div>
             <div class="settings-home" id="settingsHome" data-home role="tablist" aria-label="Settings sections">
                 <button class="set-row" role="tab" data-tab="providers" aria-selected="false" type="button">
                     <span class="set-text"><h3>API PROVIDERS PLUS KEYS</h3><p>Gemini, Groq and Cohere keys, plus free Pollinations (no key). Pick the model and choose which engine answers.</p></span>
@@ -1871,6 +1907,42 @@
                     </div>
                 </section>
 
+                <section class="provider-card" id="opCard">
+                    <div class="settings-row-header">
+                        <div class="settings-row-content">
+                            <h3><svg class="ic" aria-hidden="true"><use href="#i-spark"/></svg> Your name tag</h3>
+                            <p id="opStatus">Shown on your messages, beside the time and date</p>
+                        </div>
+                        <button class="hzo-sw" id="opSwitch" type="button" role="switch" aria-checked="true" aria-label="Show my name on my messages"><i></i></button>
+                    </div>
+                    <label class="field-label" for="opName">Name</label>
+                    <input id="opName" class="hzo-input" type="text" maxlength="24" placeholder="Operator" autocomplete="off" spellcheck="false" enterkeyhint="done">
+                    <p class="hint">Call yourself whatever you like. Switch it off and your messages show only the date and time.</p>
+                    <div class="hzo-row"><button class="use-btn" id="opReset" type="button">Reset to Operator</button></div>
+                    <div class="settings-row-header hzo-locrow">
+                        <div class="settings-row-content">
+                            <h3>Show my place</h3>
+                            <p id="opLocStatus">Your real place name on the right of your messages</p>
+                        </div>
+                        <button class="hzo-sw" id="opLocSwitch" type="button" role="switch" aria-checked="true" aria-label="Show my place on my messages"><i></i></button>
+                    </div>
+                </section>
+
+                <section class="provider-card" id="typeCard">
+                    <div class="settings-row-header">
+                        <div class="settings-row-content">
+                            <h3><svg class="ic" aria-hidden="true"><use href="#i-spark"/></svg> AI typing speed</h3>
+                            <p id="typeStatus">How fast replies type out in chat and in the browser AI box</p>
+                        </div>
+                    </div>
+                    <div class="theme-list" id="typeMenu" role="radiogroup" aria-label="AI typing speed">
+                        <button class="theme-opt" type="button" role="radio" aria-checked="false" data-type-opt="instant"><span class="to-tx"><b>Instant</b><small>No typing effect</small></span></button>
+                        <button class="theme-opt" type="button" role="radio" aria-checked="false" data-type-opt="fast"><span class="to-tx"><b>Fast</b><small>Default</small></span></button>
+                        <button class="theme-opt" type="button" role="radio" aria-checked="false" data-type-opt="normal"><span class="to-tx"><b>Normal</b><small>Easy to follow</small></span></button>
+                        <button class="theme-opt" type="button" role="radio" aria-checked="false" data-type-opt="slow"><span class="to-tx"><b>Slow</b><small>Like a person typing</small></span></button>
+                    </div>
+                </section>
+
                 <section class="provider-card" id="ttsCard">
                     <div class="settings-row-header">
                         <div class="settings-row-content">
@@ -1883,7 +1955,8 @@
                     <label class="field-label" for="ttsEngine">Voice</label>
                     <select id="ttsEngine">
                         <option value="gemini">Natural: Gemini (30 voices)</option>
-                        <option value="pollinations">Natural: Pollinations (6 voices)</option>
+                        <option value="pollinations">Natural: Pollinations (6 voices, needs key)</option>
+                        <option value="sherpa">Offline neural: Piper and Kokoro (download once)</option>
                         <option value="standard">Standard: Android voice (free, offline)</option>
                     </select>
                     <div class="tts-nat" id="ttsNat" hidden>
@@ -1898,6 +1971,19 @@
                             </div>
                         </div>
                         <p class="hint" id="ttsNatHint"></p>
+                    </div>
+                    <div class="tts-nat" id="ttsSherpa" hidden>
+                        <label class="field-label" for="ttsSModel">Offline voice</label>
+                        <select id="ttsSModel"></select>
+                        <div id="ttsSSidRow" hidden>
+                            <label class="field-label" for="ttsSSid">Speaker</label>
+                            <select id="ttsSSid"></select>
+                        </div>
+                        <div class="card-actions">
+                            <button class="use-btn" id="ttsSGet" type="button">Download</button>
+                            <button class="use-btn" id="ttsSDel" type="button" hidden>Delete</button>
+                        </div>
+                        <p class="hint" id="ttsSHint"></p>
                     </div>
                     <div id="ttsAndroid">
                         <label class="field-label" for="ttsLang">Accent or language</label>
@@ -2002,6 +2088,8 @@
 
     <script src="horizon_usage.js"></script>
     <script src="horizon_about.js"></script>
+    <script src="horizon_toast.js"></script>
+    <script src="horizon_plus.js"></script>
     <script src="ember_document_engine.js"></script>
     <script src="horizon_pdf.js"></script>
     <script src="ember_artbox.js"></script>
@@ -2082,6 +2170,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             ytInst: 'horizon_yt_instances',
             dls: 'horizon_downloads',
             pdf: 'horizon_pdf_on',
+            think: 'horizon_think_on',
             img: 'horizon_img_on',
             bg: 'horizon_perm_bg',
             notifOn: 'horizon_perm_notif',
@@ -2153,7 +2242,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         }
 
         // V1.16.0: which providers/models can look at pictures
-        const canSeeImages = (prov, model) => prov === 'gemini' || (prov === 'groq' && /llama-4|scout|maverick|vision/i.test(model)) || (prov === 'cohere' && /vision/i.test(model)) || (prov === 'pollinations' && !/deepseek|llama|coder|roblox|unity|midijourney/i.test(model));
+        const canSeeImages = (prov, model) => prov === 'gemini' || (prov === 'groq' && /llama-4|scout|maverick|vision/i.test(model)) || (prov === 'mistral' && /pixtral|small|medium|large/i.test(model)) || (prov === 'cohere' && /vision/i.test(model)) || (prov === 'pollinations' && !/deepseek|llama|coder|roblox|unity|midijourney/i.test(model));
 
         const PROVIDERS = {
             gemini: {
@@ -2172,22 +2261,39 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 wrongKey: k => /^gsk_/.test(k) ? 'That looks like a Groq key.' : '',
                 async chat(key, model, history) {
                     const T = curTurn; turnCheck(T);
-                    const res = await timed(aiFetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
-                        body: JSON.stringify({
-                            systemInstruction: { parts: [{ text: getSystemPrompt() }] },
-                            generationConfig: docMode ? { temperature: 0.7, maxOutputTokens: 32768 } : { temperature: 0.85 },
-                            contents: history.map(m => ({ role: m.role === 'user' ? 'user' : 'model', parts: [{ text: m.text }].concat((m.imgs || []).map(g => ({ inlineData: { mimeType: g.mime, data: g.b64 } }))) }))
-                        })
-                    }), docMode ? 240000 : 90000);
+                    let tc = state.thinkOn ? geminiThink(model) : null;
+                    const send = () => {
+                        const gc = docMode ? { temperature: 0.7, maxOutputTokens: tc ? 65536 : 32768 } : { temperature: 0.85 };
+                        if (tc) gc.thinkingConfig = tc;
+                        return timed(aiFetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
+                            body: JSON.stringify({
+                                systemInstruction: { parts: [{ text: getSystemPrompt() }] },
+                                generationConfig: gc,
+                                contents: history.map(m => ({ role: m.role === 'user' ? 'user' : 'model', parts: [{ text: m.text }].concat((m.imgs || []).map(g => ({ inlineData: { mimeType: g.mime, data: g.b64 } }))) }))
+                            })
+                        }), (docMode || tc) ? 240000 : 90000);
+                    };
+                    let res = await send();
+                    if (!res.ok && tc) {
+                        const why0 = await errorText(res.clone());
+                        if (/think|budget|level/i.test(why0)) {
+                            tc = null;
+                            thoughtAdd('i-brain', 'This model refused the thinking setting', true, 'Sent normally, with the plan-and-check prompt only');
+                            res = await send();
+                        }
+                    }
                     if (!res.ok) throw new Error(await errorText(res));
                     const data = await res.json();
                     const um = data.usageMetadata || {};
                     noteUsage(um.promptTokenCount, (um.candidatesTokenCount || 0) + (um.thoughtsTokenCount || 0));
                     const cand = data.candidates && data.candidates[0];
                     noteCut(cand && cand.finishReason);
-                    const out = ((cand && cand.content && cand.content.parts) || []).map(p => p.text || '').join('').trim();
+                    const gparts = (cand && cand.content && cand.content.parts) || [];
+                    const out = gparts.filter(p => !p.thought).map(p => p.text || '').join('').trim();
+                    const tsum = gparts.filter(p => p.thought).map(p => p.text || '').join(' ').replace(/\*\*/g, '').replace(/\s+/g, ' ').trim();
+                    if (tsum) thoughtAdd('i-brain', 'Model reasoning (summary)', true, tsum);
                     if (!out) {
                         const why = (data.promptFeedback && data.promptFeedback.blockReason) || (cand && cand.finishReason);
                         throw new Error(why ? `No response (${why})` : 'Empty response');
@@ -2234,12 +2340,12 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                             messages: [{ role: 'system', content: sys }].concat(msgs.map(m => ({ role: m.role, content: window.HorizonAttach ? HorizonAttach.openaiContent(m, canSeeImages('groq', model)) : m.text })))
                         };
                         if (cap) body.max_tokens = cap;
-                        if (oss) { body.reasoning_effort = 'low'; body.include_reasoning = false; }
+                        if (oss) { body.reasoning_effort = state.thinkOn ? 'high' : 'low'; body.include_reasoning = false; }
                         const res = await timed(aiFetch('https://api.groq.com/openai/v1/chat/completions', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
                             body: JSON.stringify(body)
-                        }), docMode ? 240000 : 90000);
+                        }), (docMode || (oss && state.thinkOn)) ? 240000 : 90000);
                         if (res.ok) {
                             const data = await res.json();
                             noteUsage(data.usage && data.usage.prompt_tokens, data.usage && data.usage.completion_tokens);
@@ -2323,6 +2429,66 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                             }
                         }
                         throw new Error(res.status === 429 ? `${why} Trial keys are limited per minute and per month. Wait a bit or switch provider.` : lastWhy);
+                    }
+                    throw new Error(lastWhy);
+                }
+            },
+            // V1.37.1: Mistral Studio (formerly La Plateforme). OpenAI-style chat at api.mistral.ai.
+            mistral: {
+                name: 'Mistral',
+                icon: 'i-b-mistral',
+                placeholder: 'Mistral Studio API key',
+                keyUrl: 'https://console.mistral.ai/api-keys',
+                defaultModel: 'mistral-small-latest',
+                fallbackModels: ['mistral-small-latest', 'mistral-medium-latest', 'mistral-large-latest', 'codestral-latest'],
+                modelsUrl: 'https://api.mistral.ai/v1/models',
+                headers: k => ({ Authorization: `Bearer ${k}` }),
+                parseModels: d => Array.from(new Set((d.data || [])
+                    .filter(m => m && m.id && !(m.capabilities && m.capabilities.completion_chat === false))
+                    .map(m => m.id)
+                    .filter(id => !/embed|moderation|ocr|voxtral|transcribe|tts/i.test(id)))).sort(),
+                wrongKey: k => /^gsk_/.test(k) ? 'That looks like a Groq key.' : /^AIza/.test(k) ? 'That looks like a Gemini key.' : '',
+                async chat(key, model, history) {
+                    const T = curTurn; turnCheck(T);
+                    const sys = getSystemPrompt();
+                    let cap = docMode ? 8000 : 0;
+                    let lastWhy = 'Request failed';
+                    const sleep = ms => new Promise(r => setTimeout(r, ms));
+                    for (let attempt = 0; attempt < 4; attempt++) {
+                        turnCheck(T);
+                        const body = {
+                            model,
+                            temperature: 0.8,
+                            messages: [{ role: 'system', content: sys }].concat(history.map(m => ({ role: m.role === 'user' ? 'user' : 'assistant', content: window.HorizonAttach ? HorizonAttach.openaiContent(m, canSeeImages('mistral', model)) : m.text })))
+                        };
+                        if (cap) body.max_tokens = cap;
+                        const res = await timed(aiFetch('https://api.mistral.ai/v1/chat/completions', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', Accept: 'application/json', Authorization: `Bearer ${key}` },
+                            body: JSON.stringify(body)
+                        }), docMode ? 240000 : 90000);
+                        if (res.ok) {
+                            const data = await res.json();
+                            noteUsage(data.usage && data.usage.prompt_tokens, data.usage && data.usage.completion_tokens);
+                            noteCut(data.choices && data.choices[0] && data.choices[0].finish_reason);
+                            const c = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+                            const out = (Array.isArray(c) ? c.map(p => (p && p.text) || '').join('') : (c || '')).trim();
+                            if (!out) throw new Error('Empty response');
+                            return out;
+                        }
+                        const why = await errorText(res.clone());
+                        lastWhy = `${why} (HTTP ${res.status})`;
+                        if (cap > 4000 && /max_?tokens/i.test(why)) { cap = 4000; continue; }
+                        if (res.status === 429 && attempt < 3) {
+                            const h = Number(res.headers && res.headers.get ? res.headers.get('retry-after') : 0);
+                            const w = h > 0 ? h : 3 * (attempt + 1);
+                            if (w <= 45) {
+                                setLoading(`Mistral is rate limiting, retrying in ${Math.ceil(w)}s`);
+                                await sleep(Math.ceil(w * 1000) + 300);
+                                continue;
+                            }
+                        }
+                        throw new Error(lastWhy);
                     }
                     throw new Error(lastWhy);
                 }
@@ -2424,6 +2590,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                         for (const other of PROVIDER_IDS) {
                             if (other === pid || !PROVIDERS[other].defaultModel || PROVIDERS[other].noChat) continue;
                             if (!hasKey(other)) continue;
+                            if (window.HzUsage && HzUsage.limitedNow(other)) continue;   // V1.40.0: autopilot skips a provider that is limited right now
                             const om = state.models[other] || PROVIDERS[other].defaultModel;
                             if (needsEyes && !canSeeImages(other, om)) continue;
                             const keys = [keyOf(other)].concat(xKeys(other));
@@ -2431,11 +2598,15 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                                 try {
                                     const out = await ORIG[other].call(PROVIDERS[other], k, om, history);
                                     notice(`${PROVIDERS[pid].name} hit its limit, so ${PROVIDERS[other].name} answered`);
+                                    // V1.40.0: key-health autopilot. Warn with a toast and make the working provider the active one.
+                                    if (state.active === pid) { try { setActive(other); } catch (e4) { /* ignore */ } }
+                                    if (window.HzToast) HzToast.show({ icon: 'i-zap', title: `${PROVIDERS[pid].name} key is limited`, sub: `Switched to ${PROVIDERS[other].name} \u00b7 tap for Usage`, kind: 'bad', onTap: () => openPanel('right', 'usage') });
                                     return out + `\n\n_(${PROVIDERS[pid].name} hit its rate limit, so ${PROVIDERS[other].name} · ${om} answered.)_`;
                                 } catch (e3) { if (!isLimit(e3)) break; }
                             }
                         }
                     }
+                    if (window.HzToast) HzToast.show({ icon: 'i-zap', title: `${PROVIDERS[pid].name} key is limited`, sub: 'No other provider with a key is free. Add one under API KEYS.', kind: 'bad', onTap: () => openPanel('right', 'usage') });
                     throw e;
                 }
             };
@@ -2714,9 +2885,29 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             if (window.HorizonScreen) parts.push(HorizonScreen.block());
             if (window.HorizonLens) { const lb = HorizonLens.block(); if (lb) parts.push(lb); }
             if (window.HorizonDash) { const db = HorizonDash.block(); if (db) parts.push(db); }
+            if (state.thinkOn) parts.push(thinkBlock());
             parts.push(`NOW\n${new Date().toString()}`);
             return parts.join('\n\n');
         }
+
+        // ===== V1.41.0: Thinking switch (+ menu). Real reasoning where the model has it, plan-and-check prompt everywhere =====
+        function thinkBlock() {
+            return 'THINKING MODE (ON)\nFezzy switched Thinking on: he wants your best answer, not your fastest. Before you answer, work out what he really needs, test your plan for mistakes and edge cases, and for code or shell scripts trace them line by line (quoting, paths, rootless Termux limits, bash -n clean) and fix what you find. Then send only the finished answer: lead with the call, no thinking out loud, no padding. If you are not sure of a fact, say so instead of guessing.';
+        }
+        function geminiThink(model) {
+            const m = String(model || '').toLowerCase();
+            if (/gemini-3/.test(m)) return { thinkingLevel: 'high', includeThoughts: true };
+            if (/gemini-2\.5/.test(m)) return { thinkingBudget: /pro/.test(m) ? 32768 : 24576, includeThoughts: true };
+            return null;
+        }
+        // 'native' = the provider has a real reasoning control Horizon turns up; 'prompt' = no switch, so Horizon makes the model plan and check first
+        function thinkHow(id, model) {
+            const m = String(model || '').toLowerCase();
+            if (id === 'gemini' && geminiThink(m)) return 'native';
+            if (id === 'groq' && /gpt-oss/.test(m)) return 'native';
+            return 'prompt';
+        }
+        const thinkLabel = () => state.thinkOn ? 'Thinking hard...' : 'Thinking...';
 
         // ===== V1.4.0: PDF artifacts (Ember A4 document engine) =====
         let docMode = ''; // '' | 'auto' (asked for a PDF in words) | 'forced' (PDF button)
@@ -2774,6 +2965,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             newChatGh: false,
             pdfOn: lsGet(LS.pdf) !== '0',
             imgOn: lsGet(LS.img) === '1',
+            thinkOn: lsGet(LS.think) === '1',
             downloads: []
         };
 
@@ -2828,6 +3020,8 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         }
 
         const fmtTime = ts => new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        // V1.42.0: date and time on every message
+        const fmtStamp = ts => new Date(ts).toLocaleDateString([], { day: 'numeric', month: 'short' }) + ', ' + fmtTime(ts);
         const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
         const scrollBottom = () => { chatScroll.scrollTop = chatScroll.scrollHeight; };
 
@@ -3328,7 +3522,11 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
 
                 const caret = document.createElement('span');
                 caret.className = 'caret';
-                const step = Math.max(1, Math.ceil(total / 320));
+                let tsp = 'fast';
+                try { tsp = localStorage.getItem('horizon_type_speed') || 'fast'; } catch (e) { /* default */ }
+                const TSP = { fast: [320, 16], normal: [700, 18], slow: [1400, 26] };
+                const tcfg = TSP[tsp] || TSP.fast;
+                const step = Math.max(1, Math.ceil(total / tcfg[0]));
                 let count = 0;
                 let timer = null;
                 let done = false;
@@ -3371,10 +3569,10 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                     paint(count);
                     if (nearBottom) scrollBottom();
                     if (count >= total) finish();
-                    else timer = setTimeout(tick, 16);
+                    else timer = setTimeout(tick, tcfg[1]);
                 }
 
-                if (total === 0) { finish(); return; }
+                if (total === 0 || tsp === 'instant') { finish(); return; }
                 state.typer = { finish };
                 bubble.addEventListener('click', finish, { once: true });
                 tick();
@@ -3384,27 +3582,44 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         function skipTyping() { if (state.typer) state.typer.finish(); }
 
         // --- Messages ---
+        // V1.41.0: who answered, like a username: provider svg, bold name, muted model. Older replies with no provider keep the Horizon avatar.
+        function appendWho(meta, prov, model, live) {
+            const known = prov && PROVIDERS[prov];
+            if (!known) {
+                meta.appendChild(avatarEl(prov, live));
+                const nm = document.createElement('span');
+                nm.className = 'meta-name';
+                nm.textContent = 'Horizon';
+                meta.appendChild(nm);
+                return;
+            }
+            const pv = document.createElement('span');
+            pv.className = 'meta-prov prov-' + prov + (live ? ' live' : '');
+            pv.appendChild(icon(known.icon));
+            meta.appendChild(pv);
+            const nm = document.createElement('span');
+            nm.className = 'meta-name';
+            nm.textContent = known.name;
+            meta.appendChild(nm);
+            if (model) {
+                const md = document.createElement('span');
+                md.className = 'meta-model';
+                md.textContent = String(model).replace(/^models\//i, '');
+                meta.appendChild(md);
+            }
+        }
         function buildMessage(role, ts, ms, info) {
             const wrap = document.createElement('div');
             wrap.className = `message ${role}`;
             const meta = document.createElement('div');
             meta.className = 'message-meta';
-            if (role === 'ai') {
-                meta.appendChild(avatarEl(info && info.prov));
-                const nm = document.createElement('span');
-                nm.className = 'meta-name';
-                nm.textContent = 'Horizon';
-                meta.appendChild(nm);
-            }
+            if (role === 'ai') appendWho(meta, info && info.prov, info && info.model, false);
             const t = document.createElement('span');
-            t.textContent = fmtTime(ts) + (role === 'ai' && ms ? ` · ${(ms / 1000).toFixed(1)}s` : '');
+            t.className = 'meta-time';
+            t.textContent = (role === 'ai' ? fmtTime(ts) : fmtStamp(ts)) + (role === 'ai' && ms ? ` · ${(ms / 1000).toFixed(1)}s` : '');   // V1.42.1: AI replies show the time only, no date
             meta.appendChild(t);
-            if (role === 'ai' && info && info.usage && (info.usage.i || info.usage.o)) {
-                const pill = document.createElement('span');
-                pill.className = 'tok-pill';
-                pill.textContent = fmtTok(info.usage.i + info.usage.o) + ' tok';
-                meta.appendChild(pill);
-            }
+            // V1.41.0: tokens now live in the badge under the message box; the full count stays on hover
+            if (role === 'ai' && info && info.usage && (info.usage.i || info.usage.o)) meta.title = `↑${info.usage.i.toLocaleString()} in · ↓${info.usage.o.toLocaleString()} out · ${fmtTok(info.usage.i + info.usage.o)} tokens`;
             const bubble = document.createElement('div');
             bubble.className = 'bubble';
             wrap.appendChild(meta);
@@ -3416,7 +3631,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         function addUserMessage(text, ts, att, msg) {
             const bubble = buildMessage('user', ts);
             bubble.textContent = text;
-            if (msg) { bubble.parentNode._msg = msg; if (msg.edited) { const tm = bubble.parentNode.querySelector('.message-meta span'); if (tm) tm.textContent += ' \u00b7 edited'; } }
+            if (msg) { bubble.parentNode._msg = msg; if (msg.edited) { const tm = bubble.parentNode.querySelector('.message-meta .meta-time'); if (tm) tm.textContent += ' \u00b7 edited'; } }
             if (att && att.length && window.HorizonAttach) bubble.parentNode.appendChild(HorizonAttach.cards(att));
             if (att && att.length && att.every(a => a.kind === 'voice') && /^Voice notes?\.$/.test(text)) bubble.style.display = 'none';   // a voice note alone shows just its card
             const urls = extractUrls(text).slice(0, 4);
@@ -3443,29 +3658,32 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 row.innerHTML = '<span class="sources-label"><svg class="ic" aria-hidden="true"><use href="#i-globe"/></svg> Sources · ' + links.length + '</span><div class="src-list">' + links.map(l => `<a class="src-card" href="${esc(l.u)}" target="_blank" rel="noopener noreferrer">${favHTML(l.u)}<span class="src-tx"><b>${esc(l.t || hostName(l.u))}</b><small>${esc(hostName(l.u))}</small></span><svg class="ic src-go" aria-hidden="true"><use href="#i-chev-r"/></svg></a>`).join('') + '</div>';
                 foot.appendChild(row);
             }
-            if (info.prov && PROVIDERS[info.prov]) {
-                const tag = document.createElement('div');
-                tag.className = 'model-tag prov-' + info.prov;
-                tag.appendChild(icon(PROVIDERS[info.prov].icon));
-                tag.appendChild(document.createTextNode(` ${PROVIDERS[info.prov].name} · ${info.model || ''}`));
-                if (info.usage && (info.usage.i || info.usage.o)) {
-                    const tk = document.createElement('span');
-                    tk.className = 'tk';
-                    tk.textContent = ` · ↑${info.usage.i.toLocaleString()} ↓${info.usage.o.toLocaleString()} tok`;
-                    tag.appendChild(tk);
-                }
-                foot.appendChild(tag);
+            if (foot.childNodes.length) {
+                const ar = wrap.querySelector(':scope > .act-row');
+                if (ar) wrap.insertBefore(foot, ar); else wrap.appendChild(foot);
             }
-            if (foot.childNodes.length) wrap.appendChild(foot);
         }
 
+        // V1.41.0: one pill row under every reply. Left: Copy, Regenerate, Continue. Right: read aloud.
+        function actRow(wrap) {
+            let r = wrap.querySelector(':scope > .act-row');
+            if (!r) {
+                r = document.createElement('div');
+                r.className = 'act-row';
+                const l = document.createElement('div'); l.className = 'act-left';
+                const g = document.createElement('div'); g.className = 'act-right';
+                r.append(l, g);
+                wrap.appendChild(r);
+            }
+            return r;
+        }
         // --- V1.7.0: read-aloud button on every Horizon reply ---
         let speakSeq = 0;
         function attachSpeak(wrap, text) {
             const T = window.HorizonTTS;
             if (!T || !text || !String(text).trim()) return;
-            const meta = wrap.querySelector('.message-meta');
-            if (!meta || meta.querySelector('.speak-btn')) return;
+            const meta = actRow(wrap).querySelector('.act-right');
+            if (meta.querySelector('.speak-btn')) return;
             const id = 'm' + (++speakSeq);
             const b = document.createElement('button');
             b.type = 'button';
@@ -3479,8 +3697,8 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         // --- V1.12.0: copy button on every Horizon reply ---
         function attachCopy(wrap, text) {
             if (!text || !String(text).trim()) return;
-            const meta = wrap.querySelector('.message-meta');
-            if (!meta || meta.querySelector('.copy-btn')) return;
+            const meta = actRow(wrap).querySelector('.act-left');
+            if (meta.querySelector('.copy-btn')) return;
             const b = document.createElement('button');
             b.type = 'button';
             b.className = 'copy-btn';
@@ -3496,7 +3714,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 clearTimeout(t);
                 t = setTimeout(() => { b.classList.remove('done', 'fail'); paint('i-copy', 'Copy'); }, 1600);
             });
-            meta.appendChild(b);
+            meta.prepend(b);
         }
         function ttsStop() { if (window.HorizonTTS) window.HorizonTTS.stop(); }
 
@@ -3535,6 +3753,24 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             scrollBottom();
         }
 
+        // V1.42.0: a failed turn pops an inline Retry bar under the chat. It reruns the same message (files included).
+        function showRetry(chat, p, e) {
+            if (state.currentId !== chat.id) return;
+            chatMessages.querySelectorAll('.retry-bar').forEach(n => n.remove());
+            const bar = document.createElement('div');
+            bar.className = 'retry-bar';
+            bar.setAttribute('role', 'alert');
+            const tx = document.createElement('div');
+            tx.className = 'rb-tx';
+            tx.append(Object.assign(document.createElement('b'), { textContent: 'Message failed' }),
+                Object.assign(document.createElement('small'), { textContent: `${p.name}: ${shortTxt(friendlyError(e), 160)}` }));
+            const go = qaBtn('i-refresh', 'Retry', 'qa-primary', () => retryLast());
+            const x = qaBtn('i-x', 'Dismiss', 'qa-ghost icon-only qa-mini', () => { bar.remove(); decorateActions(); });
+            bar.append(tx, go, x);
+            chatMessages.appendChild(bar);
+            scrollBottom();
+        }
+
         const esc = t => String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
         // --- V1.5.1: thought process. Real steps from what the app actually does, stacked vertically,
         //     live while working and kept above the reply afterwards (tap to expand) ---
@@ -3556,7 +3792,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         }
         function thoughtAdd(ic, text, real, detail, bad, links) {
             if (!thought) return;
-            const d = detail ? shortTxt(detail, 220) : '';
+            const d = detail ? shortTxt(detail, ic === 'i-brain' ? 700 : 220) : '';
             const last = thought.steps[thought.steps.length - 1];
             if (last && last.t === text && (last.d || '') === d) return;
             const st = { i: ic, t: shortTxt(text, 120), r: real ? 1 : 0, at: Date.now() - thought.t0 };
@@ -3646,6 +3882,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             const custom = !!(lsGet(LS.persona) || '').trim();
             const prefs = !!(lsGet(LS.prefs) || '').trim();
             thoughtAdd('i-layers', 'Set the rules', false, `Persona: ${custom ? 'your custom one' : 'Horizon default'} · Reply preferences: ${prefs ? 'active, they beat the defaults' : 'none set'}`);
+            if (state.thinkOn) thoughtAdd('i-brain', 'Thinking mode is on', true, thinkHow(p === PROVIDERS[state.active] ? state.active : '', model) === 'native' ? 'Real extra reasoning is switched up for this model' : 'This model has no thinking switch, so it is told to plan, check and fix before answering');
             const live = enabledWeb();
             if (live.length) {
                 const names = live.map(id => WEB[id].name).join(', ');
@@ -3672,7 +3909,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             const u = turnUsage;
             const secs = ((Date.now() - thought.t0) / 1000).toFixed(1) + 's';
             const tok = u.real ? fmtTok(u.i + u.o) + ' tok' : (u.estIn ? '~' + fmtTok(u.estIn) + ' tok in' : '');
-            el.textContent = [liveCtx.name, shortTxt(liveCtx.model, 22), secs, tok].filter(Boolean).join(' · ');
+            el.textContent = [secs, tok].filter(Boolean).join(' · ');
         }
 
         function showLoading(label) {
@@ -3681,11 +3918,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             wrap.id = 'loadingBubble';
             const meta = document.createElement('div');
             meta.className = 'message-meta';
-            meta.appendChild(avatarEl(liveCtx.prov, true));
-            const nm = document.createElement('span');
-            nm.className = 'meta-name';
-            nm.textContent = 'Horizon';
-            meta.appendChild(nm);
+            appendWho(meta, liveCtx.prov, liveCtx.model, true);
             const rd = document.createElement('span');
             rd.className = 'live-read';
             rd.id = 'liveRead';
@@ -3724,7 +3957,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
 
         function setLoading(label, detail, ic) {
             if (!thought) return;
-            if (label === 'Thinking...') thoughtAdd('i-spark', 'Working out the answer', false, detail);
+            if (label === 'Thinking...' || label === 'Thinking hard...') thoughtAdd('i-spark', 'Working out the answer', false, detail);
             else thoughtAdd(ic || thoughtIcon(label), label, true, detail);
         }
 
@@ -4377,7 +4610,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 statusText.classList.remove('warn');
             } else if (hasKey(id)) {
                 const live = enabledWeb().length;
-                statusText.textContent = `${p.name} · ${state.models[id]} · Web ${live ? 'on' : 'off'}${chatYtOn() ? ' · YouTube on' : ''}${chatGhOn() ? ' · GitHub on' : ''}`;
+                statusText.textContent = '';   // V1.41.0: provider, model and tokens are in the badge below; tools show as chips above the box
                 statusText.classList.remove('warn');
             } else {
                 statusText.textContent = `No ${p.name} key. Open API PROVIDERS PLUS KEYS`;
@@ -4437,6 +4670,68 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 ta.value = xKeys(id).join('\n');
                 ta.addEventListener('change', () => { const list = Array.from(new Set(ta.value.split(/\s+/).map(x => x.trim()).filter(Boolean))); lsSet(XKEY(id), JSON.stringify(list)); ta.value = list.join('\n'); notice(list.length ? `${list.length} backup key${list.length === 1 ? '' : 's'} saved for ${p.name}` : `Backup keys cleared for ${p.name}`); });
                 card.appendChild(xb);
+                {
+                    const kh = document.createElement('div');
+                    kh.className = 'xkeys-health';
+                    kh.innerHTML = '<div class="kh-bar"><button type="button" class="use-btn kh-btn">Check key health</button><span class="kh-sum" aria-live="polite"></span></div><div class="kh-list"></div>';
+                    xb.appendChild(kh);
+                    const khBtn = kh.querySelector('.kh-btn'), khSum = kh.querySelector('.kh-sum'), khList = kh.querySelector('.kh-list');
+                    let khBusy = false;
+                    const khCheck = async key => {
+                        const t0 = Date.now();
+                        try {
+                            if (id === 'gemini') {
+                                const r = await timed(fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent', {
+                                    method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
+                                    body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: 'ok' }] }], generationConfig: { maxOutputTokens: 4 } })
+                                }), 15000);
+                                if (r.ok) return { c: 'live', t: 'LIVE', ms: Date.now() - t0 };
+                                const j = await r.json().catch(() => ({}));
+                                const m = (j.error && j.error.message) || ('HTTP ' + r.status);
+                                if (r.status === 429 || /quota|rate.?limit|exhaust/i.test(m)) return { c: 'warn', t: 'LIMITED', ms: Date.now() - t0, m };
+                                if (r.status === 400 || r.status === 401 || r.status === 403) return { c: 'bad', t: 'REJECTED', ms: Date.now() - t0, m };
+                                return { c: 'bad', t: 'ERROR', ms: Date.now() - t0, m };
+                            }
+                            await fetchModels(id, key);
+                            return { c: 'live', t: 'LIVE', ms: Date.now() - t0 };
+                        } catch (e) {
+                            const m = String((e && e.message) || e);
+                            if (/rate.?limit|quota|too many|429|exhaust/i.test(m)) return { c: 'warn', t: 'LIMITED', ms: Date.now() - t0, m };
+                            if (/api.?key|invalid|unauthori|permission|denied|forbidden|401|403/i.test(m)) return { c: 'bad', t: 'REJECTED', ms: Date.now() - t0, m };
+                            return { c: 'bad', t: 'ERROR', ms: Date.now() - t0, m };
+                        }
+                    };
+                    const khRun = async () => {
+                        if (khBusy) return;
+                        const all = [state.keys[id]].concat(xKeys(id)).map(k => String(k || '').trim()).filter(Boolean);
+                        const keys = all.filter((k, i) => all.indexOf(k) === i);
+                        khList.textContent = '';
+                        if (!keys.length) { khSum.textContent = 'No keys saved yet'; return; }
+                        khBusy = true; khBtn.disabled = true;
+                        const rows = keys.map((k, i) => {
+                            const row = document.createElement('div'); row.className = 'kh-row';
+                            const dot = document.createElement('i'); dot.className = 'kh-dot';
+                            const nm = document.createElement('span'); nm.className = 'kh-name'; nm.textContent = (i === 0 ? 'Main' : 'Backup ' + i) + ' \u00b7\u00b7\u00b7\u00b7' + k.slice(-4);
+                            const st = document.createElement('b'); st.className = 'kh-st'; st.textContent = 'checking...';
+                            row.append(dot, nm, st); khList.appendChild(row);
+                            return { row, st };
+                        });
+                        let live = 0, lim = 0, bad = 0;
+                        for (let i = 0; i < keys.length; i++) {
+                            khSum.textContent = 'Checking ' + (i + 1) + ' of ' + keys.length;
+                            const r = await khCheck(keys[i]);
+                            rows[i].row.className = 'kh-row ' + r.c;
+                            rows[i].st.textContent = r.t + ' \u00b7 ' + (r.ms / 1000).toFixed(1) + 's';
+                            if (r.m) rows[i].row.title = r.m;
+                            if (r.c === 'live') live++; else if (r.c === 'warn') lim++; else bad++;
+                        }
+                        khSum.textContent = live + ' live' + (lim ? ', ' + lim + ' limited' : '') + (bad ? ', ' + bad + ' failing' : '') + ' of ' + keys.length;
+                        khBusy = false; khBtn.disabled = false;
+                    };
+                    khBtn.addEventListener('click', khRun);
+                    card.hzKh = { run: khRun, sum: khSum, busy: () => khBusy };   // V1.37.2: lets Test all drive this card
+                    xb.querySelector('textarea').addEventListener('change', () => setTimeout(khRun, 120));
+                }
                 if (id === PROVIDER_IDS[0]) {
                     const sw = document.createElement('label');
                     sw.className = 'opt-row'; sw.style.cssText = 'padding:12px 20px;border-bottom:1px solid var(--border-color)';
@@ -4965,6 +5260,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         function cleanReply(raw) {
             const saved = [];
             let vaulted = [];
+            if (window.HorizonDash && HorizonDash.extract) { const d = HorizonDash.extract(String(raw || '')); raw = d.text; }
             if (window.HorizonVault) { const v = HorizonVault.extract(String(raw || '')); raw = v.text; vaulted = v.saved; }
             let text = String(raw || '').replace(new RegExp(REMEMBER_SRC, 'gi'), (m, fact) => {
                 if (state.memAuto && saved.length < 2 && addMemory(fact, 'ai')) saved.push(fact.trim());
@@ -5241,12 +5537,12 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         // The AI half of a turn: everything after the user's message is in the chat. Send, Edit and Regenerate all run through here.
         async function runAiTurn(chat, id, p, key, text, restore) {
             // Regenerate passes the reply it replaced: if the new turn is stopped or fails, the old reply comes back.
-            const restoreOld = () => { if (!restore) return; chat.messages.push(restore); chat.updated = Date.now(); saveChats(); if (state.currentId === chat.id) renderMessages(chat); };
+            const restoreOld = () => { if (!restore) return; [].concat(restore).forEach(r => chat.messages.push(r)); chat.updated = Date.now(); saveChats(); if (state.currentId === chat.id) renderMessages(chat); };
             resetUsage();
             liveCtx = { prov: id, name: p.name, model: state.models[id], chatId: chat.id };
             const T = newTurn();
             setBusy(true);
-            showLoading(docMode ? 'Writing your PDF...' : 'Thinking...');
+            showLoading(docMode ? 'Writing your PDF...' : thinkLabel());
             thoughtAnalyse(text, chat, p, state.models[id]);
             const t0 = Date.now();
 
@@ -5261,7 +5557,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                             if (lens.wantedShot && !lens.sees && !sendMessage.lensWarned) { sendMessage.lensWarned = 1; notice(`${p.name} (${state.models[id]}) cannot see pictures, so Lens sent the UI map only. Gemini can see the screenshot too.`); }
                         }
                     } catch (le) { HorizonLens.done(); }
-                    setLoading(docMode ? 'Writing your PDF...' : 'Thinking...');
+                    setLoading(docMode ? 'Writing your PDF...' : thinkLabel());
                 }
                 if (NATIVE && lsGet(LS.bg) !== '0') {
                     const started = await callNative('HorizonAI', 'beginTurn');
@@ -5301,6 +5597,11 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                     saved.forEach(s => notice(`Saved to memory: ${clip(s, 90)}`));
                     vaulted.forEach(t => notice(`Saved to HORIZON VAULT: ${clip(t, 70)}`));
                 }
+                if (window.HzToast) {
+                    const toVault = () => { if (!rightPanel.classList.contains('open')) openPanel('right'); rightPage('vault'); };
+                    vaulted.forEach(t => HzToast.show({ icon: 'i-vault', title: 'Horizon saved a note', sub: clip(t, 70) + ' \u00b7 tap to open the Vault', kind: 'ok', onTap: toVault }));
+                    saved.forEach(s => HzToast.show({ icon: 'i-db', title: 'Saved to memory', sub: clip(s, 80), kind: 'ok' }));
+                }
             } catch (e) {
                 if (e && e.stopped) {
                     thoughtAdd('i-x', 'Stopped by you', true, 'The request was cancelled before the reply arrived.', true);
@@ -5311,7 +5612,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                     thoughtAdd('i-x', `${p.name} failed`, true, friendlyError(e), true);
                     hideLoading();
                     restoreOld();
-                    if (state.currentId === chat.id) notice(`${p.name} error: ${friendlyError(e)}`, 'error');
+                    showRetry(chat, p, e);
                 }
             } finally {
                 if (window.HorizonLens) HorizonLens.done();
@@ -5340,28 +5641,81 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             b.addEventListener('click', fn);
             return b;
         }
-        // Edit sits under your messages, Regenerate and Continue under the newest reply. All hidden while Horizon is working.
+        // V1.42.0: under your messages: small Edit and a Delete X (plus Retry when no reply came). Under EVERY reply: Regenerate next to Copy (Continue on a cut-off newest reply). All hidden while Horizon is working.
         function decorateActions() {
             chatMessages.querySelectorAll('.qa').forEach(n => n.remove());
             const chat = currentChat();
             if (!chat || state.busy) return;
             const msgs = chat.messages;
+            const last = msgs.length - 1;
             chatMessages.querySelectorAll(':scope > .message').forEach(wrap => {
                 const m = wrap._msg;
                 const i = m ? msgs.indexOf(m) : -1;
                 if (i < 0 || wrap.querySelector('.qa-edit')) return;
-                const row = document.createElement('div');
-                row.className = 'qa qa-row';
                 if (m.role === 'user') {
                     const nx = msgs[i + 1];
-                    if ((nx && nx.img) || (m.att && m.att.length && m.att.every(a => a.kind === 'voice') && /^Voice notes?\.$/.test(m.text))) return;
-                    row.appendChild(qaBtn('i-edit', 'Edit message', 'qa-ghost icon-only', () => startEdit(wrap)));
-                } else if (i === msgs.length - 1 && i > 0 && msgs[i - 1].role === 'user' && !m.img) {
-                    if (m.cut) row.appendChild(qaBtn('i-forward', 'Continue', 'qa-primary', continueReply));
-                    row.appendChild(qaBtn('i-refresh', 'Regenerate', 'qa-ghost', regenerateReply));
-                } else return;
-                wrap.appendChild(row);
+                    const voiceOnly = !!(m.att && m.att.length && m.att.every(a => a.kind === 'voice') && /^Voice notes?\.$/.test(m.text));
+                    const row = document.createElement('div');
+                    row.className = 'qa qa-row';
+                    if (i === last && !chatMessages.querySelector('.retry-bar')) row.appendChild(qaBtn('i-refresh', 'Retry', 'qa-primary', () => retryLast()));
+                    if (!(nx && nx.img) && !voiceOnly) row.appendChild(qaBtn('i-edit', 'Edit message', 'qa-ghost icon-only qa-mini', () => startEdit(wrap)));
+                    row.appendChild(qaBtn('i-x', 'Delete message', 'qa-ghost icon-only qa-mini qa-del', () => deleteMessage(wrap)));
+                    wrap.appendChild(row);
+                } else if (i > 0 && msgs[i - 1].role === 'user' && !m.img) {
+                    const left = actRow(wrap).querySelector('.act-left');
+                    if (i === last && m.cut) { const cb = qaBtn('i-forward', 'Continue', 'qa-primary', continueReply); cb.classList.add('qa'); left.appendChild(cb); }
+                    const rb = qaBtn('i-refresh', 'Regenerate', 'qa-ghost', () => regenerateAt(wrap));
+                    rb.classList.add('qa');
+                    left.appendChild(rb);
+                }
             });
+        }
+        // Delete removes your message and the reply under it.
+        function deleteMessage(wrap) {
+            if (state.busy) return;
+            const m = wrap._msg, chat = currentChat();
+            if (!m || !chat) return;
+            const i = chat.messages.indexOf(m);
+            if (i < 0) return;
+            const nx = chat.messages[i + 1];
+            const both = !!(nx && nx.role !== 'user');
+            if (!confirm(both ? 'Delete this message and the reply under it?' : 'Delete this message?')) return;
+            chat.messages.splice(i, both ? 2 : 1);
+            chat.updated = Date.now();
+            saveChats();
+            renderChatList();
+            renderMessages(chat);
+            if (!chat.messages.length) showWelcome();
+        }
+        // Regenerate any reply. The newest one is a straight redo; an older one drops what came after it (restored if the new try fails).
+        function regenerateAt(wrap) {
+            if (state.busy) return;
+            const chat = currentChat(), m = wrap._msg;
+            if (!chat || !m) return;
+            const i = chat.messages.indexOf(m), um = chat.messages[i - 1];
+            if (i < 1 || m.role === 'user' || m.img || !um || um.role !== 'user') return;
+            if (i < chat.messages.length - 1 && !confirm('Regenerate this reply? Everything after it is removed first.')) return;
+            const s = turnSetup();
+            if (!s) return;
+            const tail = chat.messages.splice(i);
+            chat.updated = Date.now();
+            saveChats();
+            renderMessages(chat);
+            docMode = pdfModeFor(um.text, chat.messages.slice(0, -1).reverse().find(x => x.role !== 'user'));
+            return runAiTurn(chat, s.id, s.p, s.key, um.text, tail);
+        }
+        // Retry: rerun the last unanswered message, or redo the newest reply when the failure was a regenerate.
+        function retryLast() {
+            if (state.busy) return;
+            const chat = currentChat();
+            if (!chat || !chat.messages.length) return;
+            const msgs = chat.messages, last = msgs[msgs.length - 1];
+            if (last.role !== 'user') return regenerateReply();
+            const s = turnSetup();
+            if (!s) return;
+            chatMessages.querySelectorAll('.retry-bar').forEach(n => n.remove());
+            docMode = pdfModeFor(last.text, msgs.slice(0, -1).reverse().find(x => x.role !== 'user'));
+            return runAiTurn(chat, s.id, s.p, s.key, last.text);
         }
         function startEdit(wrap) {
             if (state.busy) return;
@@ -6505,6 +6859,12 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 notice('File access is off, so downloads cannot be saved. Turn it on under PERMISSIONS.', 'error');
             }
         }
+        function toggleThink() {
+            state.thinkOn = !state.thinkOn;
+            lsSet(LS.think, state.thinkOn ? '1' : '0');
+            updateUI();
+            notice(`Thinking ${state.thinkOn ? 'on' : 'off'}`);
+        }
         function togglePdf() {
             state.pdfOn = !state.pdfOn;
             lsSet(LS.pdf, state.pdfOn ? '1' : '0');
@@ -6537,6 +6897,8 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             paint('gh', gh, gh ? (window.HorizonGitHub && HorizonGitHub.hasRepos() ? 'On for this chat. Repos are open to the AI' : 'On for this chat. Nothing pulled yet') : 'Off for this chat');
             const mu = !!(window.HorizonMusic && HorizonMusic.seesAi());
             paint('music', mu, mu ? 'The AI can see what is playing' : 'Hidden from the AI');
+            const th = !!state.thinkOn;
+            paint('think', th, th ? (thinkHow(state.active, state.models[state.active]) === 'native' ? 'On. Real extra reasoning on this model' : 'On. This model has no thinking switch, so it is told to plan and check first') : 'Off. Faster replies');
             paint('pdf', pdf, pdf ? 'On' : 'Off');
             paint('img', img, img ? 'On. Everything you type is drawn by Pollinations' : 'Off');
             const hv = window.HorizonVault;
@@ -6544,6 +6906,29 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             paint('vault', va, !hv ? 'Not available' : (va ? (hv.isLocked() ? 'On, but the vault is locked' : 'On. AI can write notes') : 'Off. AI cannot write'));
             const sc = !!(window.HorizonScreen && HorizonScreen.on());
             paint('screen', sc, !window.HorizonScreen ? 'Not available' : (sc ? 'On. The AI can see the app screen' : 'Off. The AI cannot see the screen'));
+            const me = !!state.memAuto;
+            paint('mem', me, me ? `On. ${state.memories.length} saved, never keys` : 'Off. Horizon will not save facts');
+            const lm = window.HorizonLens ? HorizonLens.mode() : 'off';
+            const ln = !!(window.HorizonLens && HorizonLens.enabled());
+            paint('lens', ln, !window.HorizonLens ? 'Not available' : (ln ? `On (${lm}). UI map plus screenshot` : (lm === 'off' ? 'Off' : 'Needs Screen on')));
+            const ey = !!(window.HorizonBrowser && HorizonBrowser.eye);
+            paint('eye', ey, !window.HorizonBrowser ? 'Not available' : (ey ? 'On. The AI can read the open page' : 'Off. Pages stay private'));
+            if (window.HzPlus) {
+                const online = navigator.onLine !== false, filesOk = lsGet(LS.filesOn) !== '0';
+                const sn = $('#snoozeBtn') && $('#snoozeBtn').getAttribute('aria-pressed') === 'true';
+                const go = p => () => { setToolMenu(false); if (!rightPanel.classList.contains('open')) openPanel('right'); rightPage(p); };
+                HzPlus.paint({
+                    web: [[hasKey, 'Scraper key', go('web')], [liveWeb().length > 0, 'A key is on', go('web')], [online, 'Online']],
+                    yt: [[filesOk, 'File access', go('permissions')], [online, 'Online']],
+                    gh: [[!!(window.HorizonGitHub && HorizonGitHub.hasRepos()), 'Repo pulled', () => { setToolMenu(false); const b = document.querySelector('.hz-app[data-addon="github"]'); if (b) b.click(); }]],
+                    music: [[!!window.HorizonMusic, 'Player ready']],
+                    img: [[online, 'Online']],
+                    vault: [[!!hv && !hv.isLocked(), 'Vault unlocked', go('vault')], [!!hv && hv.aiOn(), 'AI notes switch', go('vault')]],
+                    screen: [[sn !== true, 'Snooze off']],
+                    lens: [[!!(window.HorizonScreen && HorizonScreen.on()), 'Screen on', () => toggleScreen()], [lm !== 'off', 'Lens not off']],
+                    eye: [[!!window.HorizonBrowser, 'Browser ready']]
+                }, sn ? 'Snooze is ON: network and access are off' : '');
+            }
             const count = (web ? 1 : 0) + (yt ? 1 : 0) + (gh ? 1 : 0) + (mu ? 1 : 0) + (pdf ? 1 : 0) + (va ? 1 : 0);
             plusBtn.classList.toggle('lvl-all', count === 6);
             plusBtn.classList.toggle('lvl-some', count > 0 && count < 6);
@@ -6554,12 +6939,13 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             plusBtn.title = label;
             $('#ytToggle').hidden = !yt;
             $('#pdfBtn').hidden = !pdf;
-            paintStrip({ web, yt, gh, music: mu, pdf, img, vault: va });
+            paintStrip({ think: th, web, yt, gh, music: mu, pdf, img, vault: va });
         }
         // ===== V1.11.0: connected tools show as small chips above the message box, each with an X =====
         const hzStrip = $('#hzStrip');
         const STRIP_PDF = '<svg class="pdf-ic" viewBox="0 0 24 24" aria-hidden="true"><rect width="24" height="24" rx="5.5" fill="#FA0F00"/><path d="M12.2 4.8c-.95 0-1.25 1.05-1 2.1.35 1.75 1.4 4 2.9 6.15 1.6 2.25 3.5 3.95 4.95 4.15 1.1.15 1.3-.9.4-1.45-1.5-.95-4.55-.85-8.2.15-3.1.85-5.3 2.2-5.6 3.3-.2.7.6 1.05 1.4.45 1.6-1.2 3.2-4.55 4.1-7.7.5-1.8.5-3.6-.1-3.9" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
         const STRIP_DEF = [
+            { id: 'think', label: 'Thinking', ic: 'i-brain', off: () => toggleThink() },
             { id: 'web', label: 'Web', ic: 'i-globe', off: () => toggleWeb() },
             { id: 'yt', label: 'YouTube', ic: 'i-yt', off: () => toggleYt() },
             { id: 'gh', label: 'GitHub', ic: 'i-gh', off: () => toggleGh() },
@@ -6597,7 +6983,9 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         (function () {
             const d = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value');
             Object.defineProperty(chatInput, 'value', { configurable: true, get() { return d.get.call(this); }, set(v) { d.set.call(this, v); sizeInput(); } });
-            chatInput.addEventListener('input', sizeInput);
+            // V1.38.0: several input events inside one frame (keyboard prediction, composition) resize once
+            let sizeRaf = 0;
+            chatInput.addEventListener('input', () => { if (sizeRaf) return; sizeRaf = requestAnimationFrame(() => { sizeRaf = 0; sizeInput(); }); });
         })();
 
         function toggleVault() {
@@ -6611,6 +6999,23 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             lsSet(LS.img, state.imgOn ? '1' : '0');
             updateUI();
             notice(state.imgOn ? 'Image mode on. Pollinations will draw what you type.' : 'Image mode off. Back to chat.');
+        }
+        function toggleMem() {
+            memAutoBtn.click();
+            updateToolMenu();
+            notice(state.memAuto ? 'Memory on. Horizon will save durable facts (never keys).' : 'Memory off. Horizon will not save new facts.');
+        }
+        function toggleLens() {
+            if (!window.HorizonLens) { notice('Lens is not available.', 'error'); return; }
+            HorizonLens.setMode(HorizonLens.mode() === 'off' ? 'auto' : 'off');
+            updateToolMenu();
+            notice(HorizonLens.mode() === 'off' ? 'Lens off.' : 'Lens on (auto).');
+        }
+        function toggleEye() {
+            if (!window.HorizonBrowser) { notice('The browser is not available.', 'error'); return; }
+            HorizonBrowser.eye = !HorizonBrowser.eye;
+            updateToolMenu();
+            notice(HorizonBrowser.eye ? 'Browser eye on. The AI can read the page you open.' : 'Browser eye off.');
         }
         function toggleScreen() {
             if (!window.HorizonScreen) { notice('Screen view is not available.', 'error'); return; }
@@ -6633,7 +7038,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             plusBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
         }
         plusBtn.addEventListener('click', e => { e.stopPropagation(); setToolMenu(toolMenu.hidden); });
-        [['web', toggleWeb], ['yt', toggleYt], ['gh', toggleGh], ['music', toggleMusic], ['pdf', togglePdf], ['img', toggleImg], ['vault', toggleVault], ['screen', toggleScreen]].forEach(([id, fn]) => {
+        [['think', toggleThink], ['web', toggleWeb], ['yt', toggleYt], ['gh', toggleGh], ['music', toggleMusic], ['pdf', togglePdf], ['img', toggleImg], ['vault', toggleVault], ['screen', toggleScreen], ['mem', toggleMem], ['lens', toggleLens], ['eye', toggleEye]].forEach(([id, fn]) => {
             const row = $('#tm-' + id);
             row.addEventListener('click', e => { e.stopPropagation(); fn(); });
             row.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fn(); } });
@@ -6693,7 +7098,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                     screen: g(() => window.HorizonScreen && HorizonScreen.on())
                 };
             },
-            toggle: id => ({ web: toggleWeb, yt: toggleYt, gh: toggleGh, eye: toggleMusic, pdf: togglePdf, img: toggleImg, vault: toggleVault, screen: toggleScreen })[id](),
+            toggle: id => ({ think: toggleThink, web: toggleWeb, yt: toggleYt, gh: toggleGh, eye: toggleMusic, pdf: togglePdf, img: toggleImg, vault: toggleVault, screen: toggleScreen })[id](),
             recon: target => {
                 if (state.busy) { notice('Horizon is busy. Try again in a moment.', 'error'); return false; }
                 if (!WEB_IDS.some(id => state.webKeys[id])) {
@@ -6826,6 +7231,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             'card-gemini': 'Google Gemini. Add a key, pick a model and switch it on.',
             'card-groq': 'Groq. Fast Llama and GPT-OSS models. Add a key and pick a model.',
             'card-cohere': 'Cohere Command models. Add a key (a free trial key works) and pick a model.',
+            'card-mistral': 'Mistral Studio. Small, Medium, Large and Codestral models. Add a Studio API key and pick a model.',
             'card-pollinations': 'Free chat, no key. One request at a time, about 30 seconds apart. Also draws images from the + menu.'
         };
         function enhanceCard(card) {
@@ -6906,6 +7312,12 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', closeAllPanels));
         $('#newChatBtn').addEventListener('click', newChat);
         statusText.addEventListener('click', () => openPanel('right', 'providers'));
+        $('#hzVoice').addEventListener('click', () => {
+            const hv = $('#hzVoice');
+            if (hv.classList.contains('playing') || hv.classList.contains('loading')) { if (window.HorizonTTS) HorizonTTS.stop(); return; }
+            if (!rightPanel.classList.contains('open')) openPanel('right');
+            rightPage('personalisation');
+        });
         sendBtn.addEventListener('click', async () => {
             if (window.HorizonVoice && HorizonVoice.recording()) { if (await HorizonVoice.finish()) sendMessage(); return; }
             if (state.busy) stopTurn(); else sendMessage();
@@ -7006,6 +7418,12 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         }
 
         function paintSpeakButtons(st) {
+            const hv = document.getElementById('hzVoice');
+            if (hv) {
+                hv.classList.toggle('loading', st.state === 'loading');
+                hv.classList.toggle('playing', st.state === 'playing');
+                hv.setAttribute('aria-label', st.state === 'idle' ? 'Voice: idle. Tap to open voice settings' : 'Voice: ' + st.state + '. Tap to stop');
+            }
             document.querySelectorAll('.speak-btn').forEach(b => {
                 const s = st.id === b.dataset.speakId ? st.state : 'idle';
                 b.classList.toggle('loading', s === 'loading');
@@ -7020,7 +7438,8 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             status: $('#ttsStatus'), test: $('#ttsTest'), engine: $('#ttsEngine'), voice: $('#ttsVoice'), lang: $('#ttsLang'), diag: $('#ttsDiag'), more: $('#ttsMore'),
             rate: $('#ttsRate'), rateVal: $('#ttsRateVal'), pitch: $('#ttsPitch'), pitchVal: $('#ttsPitchVal'), pitchWrap: $('#ttsPitchWrap'),
             android: $('#ttsAndroid'), nat: $('#ttsNat'), nVoice: $('#ttsNVoice'), nHint: $('#ttsNatHint'),
-            pollRow: $('#ttsPollRow'), pollKey: $('#ttsPollKey'), pollSave: $('#ttsPollSave'), pollClear: $('#ttsPollClear')
+            pollRow: $('#ttsPollRow'), pollKey: $('#ttsPollKey'), pollSave: $('#ttsPollSave'), pollClear: $('#ttsPollClear'),
+            sherpa: $('#ttsSherpa'), sModel: $('#ttsSModel'), sSid: $('#ttsSSid'), sSidRow: $('#ttsSSidRow'), sGet: $('#ttsSGet'), sDel: $('#ttsSDel'), sHint: $('#ttsSHint')
         };
         const fmtX = v => (+v).toFixed(2).replace(/\.?0+$/, '') + '\u00d7';
 
@@ -7028,12 +7447,14 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         function paintEngine() {
             if (!TTS) return;
             const s = TTS.settings();
-            const cloud = s.engine !== 'standard';
+            const cloud = s.engine !== 'standard' && s.engine !== 'sherpa';
             vEl.engine.value = s.engine;
-            vEl.android.hidden = cloud;
-            vEl.pitchWrap.hidden = cloud;
+            vEl.android.hidden = s.engine !== 'standard';
+            vEl.pitchWrap.hidden = false;
             vEl.nat.hidden = !cloud;
+            vEl.sherpa.hidden = s.engine !== 'sherpa';
             vEl.pollRow.hidden = s.engine !== 'pollinations';
+            if (s.engine === 'sherpa') paintSherpa();
             if (!cloud) return;
             const eng = TTS.cloud[s.engine];
             vEl.nVoice.replaceChildren();
@@ -7046,20 +7467,66 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             if (s.engine === 'gemini') {
                 const n = eng.keyCount();
                 vEl.nHint.textContent = n
-                    ? `Uses your Gemini key${n === 1 ? '' : 's'} from API PROVIDERS PLUS KEYS (${n} found). Google's free tier has limits. When it runs out, Horizon switches to the Android voice. Speed works, pitch does not.`
+                    ? `Uses your Gemini key${n === 1 ? '' : 's'} from API PROVIDERS PLUS KEYS (${n} found). Google's free tier has limits. When it runs out, Horizon switches to the Android voice. Speed and pitch both work (pitch also shifts speed a little on natural voices).`
                     : 'No Gemini key found. Add one under API PROVIDERS PLUS KEYS, or pick another voice.';
             } else {
                 vEl.nHint.textContent = eng.hasKey()
-                    ? 'Key saved. Pollinations free credit is limited. When it runs out, Horizon switches to the Android voice. Speed works, pitch does not.'
-                    : 'Create a free key at enter.pollinations.ai (sign in with GitHub), then paste it above.';
+                    ? 'Key saved. Pollinations free credit is limited. When it runs out, Horizon switches to the Android voice. Speed and pitch both work (pitch also shifts speed a little on natural voices).'
+                    : 'Pollinations voices need a key now (their docs say audio is not keyless). Create a free one at enter.pollinations.ai, paste it above, or use the Android voice, which is instant and free.';
                 vEl.pollKey.placeholder = eng.hasKey() ? 'Key saved. Paste a new one to replace it' : 'sk_... or pk_...';
             }
+        }
+
+        // V1.37.0: offline neural voices. Pick one, download it once, then it speaks with no internet.
+        let sherpaInfo = null, sherpaBusy = false;
+        function sherpaPick() { return (sherpaInfo && sherpaInfo.models.find(m => m.id === vEl.sModel.value)) || null; }
+        function paintSherpaButtons() {
+            const m = sherpaPick();
+            vEl.sGet.hidden = !m || m.installed;
+            vEl.sDel.hidden = !m || !m.installed;
+            vEl.sGet.disabled = vEl.sDel.disabled = sherpaBusy;
+            vEl.sSidRow.hidden = !m || !m.installed || m.speakers < 2;
+            if (m && m.speakers > 1) {
+                const cur = TTS.settings().ssid;
+                vEl.sSid.replaceChildren();
+                for (let i = 0; i < m.speakers; i++) { const o = document.createElement('option'); o.value = i; o.textContent = 'Voice ' + (i + 1); vEl.sSid.appendChild(o); }
+                vEl.sSid.value = String(Math.min(cur, m.speakers - 1));
+            }
+        }
+        async function paintSherpa() {
+            if (!TTS) return;
+            try { sherpaInfo = await TTS.sherpa.status(); } catch (e) { sherpaInfo = { available: false, models: [] }; }
+            if (!sherpaInfo.available || !sherpaInfo.models.length) {
+                vEl.sModel.replaceChildren();
+                vEl.sGet.hidden = vEl.sDel.hidden = vEl.sSidRow.hidden = true;
+                vEl.sHint.textContent = TTS.sherpa.usable()
+                    ? 'The offline voice engine could not start on this device (it needs a 64-bit phone). Horizon will use the Android voice.'
+                    : 'Offline neural voices need the Android app build with the offline engine. Horizon will use the Android voice.';
+                return;
+            }
+            const s = TTS.settings();
+            vEl.sModel.replaceChildren();
+            sherpaInfo.models.forEach(m => {
+                const o = document.createElement('option');
+                o.value = m.id;
+                o.textContent = `${m.name} · ~${m.sizeMB} MB${m.installed ? ' · downloaded' : ''}`;
+                vEl.sModel.appendChild(o);
+            });
+            const want = sherpaInfo.models.find(m => m.id === s.smodel && m.installed) || sherpaInfo.models.find(m => m.installed) || sherpaInfo.models[0];
+            vEl.sModel.value = want.id;
+            if (want.installed && s.smodel !== want.id) TTS.set('smodel', want.id);
+            if (!want.installed) TTS.set('smodel', '');
+            paintSherpaButtons();
+            vEl.sHint.textContent = want.installed
+                ? 'Runs fully offline. Speed works; pitch shifts speed a little. If it fails, Horizon switches to the Android voice and tells you why.'
+                : 'Tap Download once (needs internet and the size shown). After that it works with no connection.';
+            vEl.status.textContent = TTS.describe();
         }
 
         async function paintVoice() {
             if (!TTS) {
                 vEl.status.textContent = 'The voice engine did not load. Install the latest build.';
-                [vEl.test, vEl.engine, vEl.voice, vEl.lang, vEl.more, vEl.rate, vEl.pitch, vEl.nVoice, vEl.pollSave, vEl.pollClear].forEach(x => { x.disabled = true; });
+                [vEl.test, vEl.engine, vEl.voice, vEl.lang, vEl.more, vEl.rate, vEl.pitch, vEl.nVoice, vEl.pollSave, vEl.pollClear, vEl.sModel, vEl.sGet, vEl.sDel].forEach(x => { x.disabled = true; });
                 return;
             }
             const s = TTS.settings();
@@ -7141,6 +7608,42 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 paintEngine();
                 vEl.status.textContent = TTS.describe();
             });
+            vEl.sModel.addEventListener('change', () => {
+                const m = sherpaPick();
+                if (m && m.installed) TTS.set('smodel', m.id);
+                paintSherpaButtons();
+                vEl.sHint.textContent = m && m.installed ? 'Runs fully offline.' : 'Tap Download once (needs internet and the size shown).';
+                vEl.status.textContent = TTS.describe();
+            });
+            vEl.sSid.addEventListener('change', () => TTS.set('ssid', vEl.sSid.value));
+            vEl.sGet.addEventListener('click', async () => {
+                const m = sherpaPick();
+                if (!m || sherpaBusy) return;
+                sherpaBusy = true; paintSherpaButtons();
+                try {
+                    await TTS.sherpa.download(m.id, ev => { vEl.sHint.textContent = ev.phase === 'download' ? `Downloading ${m.name}: ${ev.pct}%` : 'Installing the voice...'; });
+                    TTS.set('smodel', m.id);
+                    ttsToast('Offline voice ready. Tap Test to hear it.');
+                } catch (e) {
+                    ttsToast('Voice download failed: ' + ((e && e.message) || e), true);
+                }
+                sherpaBusy = false;
+                await paintSherpa();
+            });
+            vEl.sDel.addEventListener('click', async () => {
+                const m = sherpaPick();
+                if (!m || sherpaBusy) return;
+                sherpaBusy = true; paintSherpaButtons();
+                try {
+                    await TTS.sherpa.remove(m.id);
+                    if (TTS.settings().smodel === m.id) TTS.set('smodel', '');
+                    ttsToast('Voice deleted.');
+                } catch (e) {
+                    ttsToast('Could not delete the voice: ' + ((e && e.message) || e), true);
+                }
+                sherpaBusy = false;
+                await paintSherpa();
+            });
             vEl.nVoice.addEventListener('change', () => {
                 TTS.set(TTS.settings().engine === 'gemini' ? 'gvoice' : 'pvoice', vEl.nVoice.value);
                 vEl.status.textContent = TTS.describe();
@@ -7186,7 +7689,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                     vEl.status.textContent = TTS.describe();
                 } else if (st.state === 'playing') {
                     vEl.status.classList.remove('error');
-                    vEl.status.textContent = 'Playing: ' + (st.engine === 'gemini' ? 'Gemini voice' : st.engine === 'pollinations' ? 'Pollinations voice' : st.engine === 'native' ? 'Android voice' : 'Browser voice');
+                    vEl.status.textContent = 'Playing: ' + (st.engine === 'gemini' ? 'Gemini voice' : st.engine === 'pollinations' ? 'Pollinations voice' : st.engine === 'sherpa' ? 'Offline voice' : st.engine === 'native' ? 'Android voice' : 'Browser voice');
                 } else if (st.state === 'idle' && !vEl.status.classList.contains('error')) {
                     vEl.status.textContent = TTS.describe();
                 }
@@ -7224,6 +7727,32 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
 
         // --- Init ---
         PROVIDER_IDS.forEach(buildCard);
+        // V1.37.2: one Test all button above the provider cards. Runs each provider's own key health check in turn.
+        {
+            const tb = document.createElement('div');
+            tb.className = 'hz-ptools';
+            tb.innerHTML = '<div class="hz-ptools-bar"><b>PROVIDERS</b><button type="button" class="use-btn" id="hzTestAll">Test all</button></div><div class="hz-ptools-list" aria-live="polite"></div>';
+            providerList.insertBefore(tb, providerList.firstChild);
+            const taBtn = tb.querySelector('#hzTestAll'), taList = tb.querySelector('.hz-ptools-list');
+            taBtn.addEventListener('click', async () => {
+                if (taBtn.disabled) return;
+                taBtn.disabled = true; taBtn.textContent = 'Testing...'; taList.textContent = '';
+                for (const pid of PROVIDER_IDS) {
+                    const c = cardEl(pid);
+                    if (!c || !c.hzKh) continue;
+                    const row = document.createElement('div'); row.className = 'hz-pt-row';
+                    const nm = document.createElement('span'); nm.textContent = PROVIDERS[pid].name;
+                    const st = document.createElement('b'); st.textContent = 'testing...';
+                    row.append(nm, st); taList.appendChild(row);
+                    while (c.hzKh.busy()) await new Promise(r => setTimeout(r, 200));
+                    try { await c.hzKh.run(); } catch (e) { /* shown below as no result */ }
+                    const t = c.hzKh.sum.textContent || 'no result';
+                    st.textContent = t;
+                    row.className = 'hz-pt-row ' + (/failing/.test(t) ? 'bad' : /limited/.test(t) ? 'warn' : /No keys/.test(t) ? 'none' : 'live');
+                }
+                taBtn.disabled = false; taBtn.textContent = 'Test all';
+            });
+        }
         WEB_IDS.forEach(buildWebCard);
         initTabs(leftPanel);
         initRight();
@@ -7260,13 +7789,19 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         replyIntent();
         const draft = lsGet(LS.draft);
         if (draft) chatInput.value = draft;
-        chatInput.addEventListener('input', () => { if (chatInput.value) lsSet(LS.draft, chatInput.value); else lsDel(LS.draft); });
+        let draftT = 0;   // V1.38.0: the draft is saved after a short pause, not on every key
+        chatInput.addEventListener('input', () => { clearTimeout(draftT); draftT = setTimeout(() => { if (chatInput.value) lsSet(LS.draft, chatInput.value); else lsDel(LS.draft); }, 350); });
     })();
     </script>
     <script src="horizon_downloads.js"></script>
     <script src="horizon_youtube.js"></script>
     <script src="horizon_addons.js"></script>
     <script src="horizon_terminal.js"></script>
+    <script src="horizon_typing.js"></script>
+    <script src="horizon_bojack.js"></script>
+    <script src="horizon_header.js"></script>
+    <script src="horizon_htmlview.js"></script>
     <script src="horizon_snooze.js"></script>
+    <script src="horizon_operator.js"></script>
 </body>
 </html>

@@ -24,6 +24,21 @@ public class HorizonMediaPlugin extends Plugin {
             } catch (Exception e) { call.reject(e.toString()); }
         });
     }
+    /** Album artwork as a small JPEG data URL (embedded picture, Android thumbnail or cover.jpg). Empty result when the song has none. */
+    @PluginMethod public void art(PluginCall call) {
+        final String source = call.getString("source", "");
+        final Integer asked = call.getInt("size", 256);
+        final int px = Math.max(64, Math.min(1024, asked == null ? 256 : asked));
+        if (source == null || source.isEmpty()) { call.resolve(new JSObject()); return; }
+        new Thread(() -> {
+            JSObject o = new JSObject();
+            try {
+                byte[] b = HorizonArt.jpeg(getContext(), source, px);
+                if (b != null) o.put("data", "data:image/jpeg;base64," + android.util.Base64.encodeToString(b, android.util.Base64.NO_WRAP));
+            } catch (Throwable ignored) {}
+            call.resolve(o);
+        }).start();
+    }
     @PluginMethod public void pause(PluginCall call) { getActivity().runOnUiThread(() -> { if (HorizonMediaService.instance != null) HorizonMediaService.instance.pause(); call.resolve(); }); }
     @PluginMethod public void seek(PluginCall call) { getActivity().runOnUiThread(() -> { if (HorizonMediaService.instance != null) HorizonMediaService.instance.seek((long)(call.getDouble("position",0.0)*1000)); call.resolve(); }); }
     @PluginMethod public void state(PluginCall call) { getActivity().runOnUiThread(() -> { call.resolve(HorizonMediaService.instance == null ? new JSObject() : HorizonMediaService.instance.state("state")); }); }

@@ -28,6 +28,9 @@
 
   function top() {
     const layers = [
+      ['Terminal', '#hzTerm:not([hidden])'],
+      ['Horizon Browser', '#hzb'],
+      ['AI and model picker', '#pkSheet'],
       ['Music/GitHub/YouTube/Lens add-on window', '#hzExtensionWindow'],
       ['AI EXTENSION ADD ONS panel', '#hzAddons'],
       ['Settings panel (right)', '#rightPanel.open'],
@@ -64,10 +67,65 @@
     return out;
   }
 
+
+  /* V1.38.0: APP MAP. A short, always-current outline of the WHOLE app (closed panels, every tab,
+     every settings section, switches, theme), read from the live page. Secrets stay hidden. */
+  function appMap() {
+    const L = ['APP MAP (the whole app, also the parts that are closed or off screen)'];
+    const th = document.documentElement.getAttribute('data-theme') || 'light';
+    L.push('Theme: ' + (th === 'neon' ? 'Cyan (neon)' : th === 'dark' ? 'Dark' : 'Light') + ' (Light, Dark and Cyan icons are under the Settings title in the right panel, or Settings > PERSONALISATION).');
+    const open = [];
+    if ($('#leftPanel.open')) open.push('Menu panel');
+    if ($('#rightPanel.open')) open.push('Settings panel');
+    L.push('Panels open now: ' + (open.length ? open.join(', ') : 'none (chat only)'));
+    const hb = [...document.querySelectorAll('.app-header .header-btn')].map(b => clean(b.getAttribute('aria-label') || b.title, 40)).filter(Boolean);
+    if (hb.length) L.push('Header buttons: ' + hb.join(' | '));
+    const lt = [...document.querySelectorAll('#leftPanel > .tabbar .tab')].map(t => clean(t.textContent, 30)).filter(Boolean);
+    if (lt.length) L.push('Menu panel (left) tabs: ' + lt.join(', '));
+    const rows = [...document.querySelectorAll('#settingsHome .set-row')];
+    rows.forEach(r => {
+      const h = r.querySelector('h3'), pp = r.querySelector('p'), tab = r.getAttribute('data-tab');
+      if (!h) return;
+      let line = 'Settings > ' + clean(h.textContent, 40) + ': ' + clean(pp && pp.textContent, 110);
+      if (tab && tab !== 'vault') {
+        const body = document.querySelector('#rightPanel .tab-body[data-tab="' + tab + '"]');
+        if (body && !blocked(body)) {
+          const hs = [];
+          body.querySelectorAll('h3,h4').forEach(e => { if (hs.length < 6 && !blocked(e)) { const t = clean(e.textContent, 34); if (t && hs.indexOf(t) < 0) hs.push(t); } });
+          if (hs.length) line += ' [inside: ' + hs.join(', ') + ']';
+        }
+      }
+      L.push(line);
+    });
+    const sw = [];
+    document.querySelectorAll('#rightPanel [role="switch"], #rightPanel input[type="checkbox"]').forEach(e => {
+      if (sw.length >= 16 || blocked(e) || isSecret(e)) return;
+      const lab = e.getAttribute('aria-label') || (e.labels && e.labels[0] && e.labels[0].textContent) || (e.closest('.perm-row,.tm-row,label,.acc-row') || {}).textContent || '';
+      const st = e.getAttribute('aria-checked') != null ? e.getAttribute('aria-checked') === 'true' : !!e.checked;
+      const n = clean(lab, 34); if (n) sw.push(n + ' ' + (st ? 'on' : 'off'));
+    });
+    if (sw.length) L.push('Settings switches: ' + sw.join(', '));
+    const ap = [...document.querySelectorAll('#hzDock .hz-app')].map(b => clean(b.textContent || b.getAttribute('aria-label'), 24)).filter(Boolean);
+    if (ap.length) L.push('APPS dock (right panel, bottom): ' + ap.join(', ') + '. Also ABOUT & UPDATES and USAGE & ENGINE rows above it.');
+    const sn = document.getElementById('snoozeBtn');
+    if (sn) L.push('Snooze (network and permissions off): ' + (sn.getAttribute('aria-pressed') === 'true' ? 'ON, Horizon is offline' : 'off'));
+    const say = (label, sel, n) => { const e = $(sel); const t = e && !e.hidden ? clean(e.textContent, n || 90) : ''; if (t) L.push(label + ': ' + t); };
+    const cl = document.querySelectorAll('#chatList > *').length;
+    L.push('Menu data: ' + cl + ' chat rows' + ($('#memStatus') ? ', memories ' + clean($('#memStatus').textContent, 24) : '') + ($('#artTitle') ? ', ' + clean($('#artTitle').textContent, 24) : ''));
+    say('Engine badge', '#hzBadge', 90);
+    say('Now playing', '#mpNow', 110);
+    say('Downloads tray', '#dlSummary', 80);
+    say('DASH widget (time, weather, device)', '#hzDash', 200);
+    if ($('#hzb') && onscreen($('#hzb'))) L.push('The Horizon browser is open.');
+    if ($('#hzTerm') && onscreen($('#hzTerm'))) L.push('The Terminal is open.');
+    if (window.HorizonVault && HorizonVault.summary) L.push(HorizonVault.summary());
+    return L.join('\n').slice(0, 4400);
+  }
+
   function block() {
     if (!on()) return 'SCREEN VIEW\nSwitched off (the + menu, Screen). You cannot see the app screen. If Fezzy asks what is on it, tell him to switch Screen on.';
     const L = [];
-    L.push('SCREEN VIEW\nA live look at the Horizon app, taken as Fezzy sent this message. Use it to know what he is looking at, what just happened and which button to point him to. Keys, tokens, passwords, the Vault and chat text are hidden on purpose: never ask to see them and never guess them.');
+    L.push('SCREEN VIEW\nA live look at the Horizon app, taken as Fezzy sent this message. Use it to know what he is looking at, what just happened and which button to point him to. Keys, tokens, passwords and Vault secrets are hidden on purpose: never ask to see them and never guess them. Vault notes are in the VAULT NOTES block and chat text is already in this conversation.');
     const t = top();
     L.push('Top layer: ' + t.name);
     const comp = $('#statusText');
@@ -76,6 +134,7 @@
     if (ld) L.push('Loading line: ' + clean(ld.textContent, 100));
     const sw = [...document.querySelectorAll('#toolMenu .tm-row[role="switch"]')].map(r => { const h = r.querySelector('h4'); return (h ? h.textContent : r.id) + ' ' + (r.getAttribute('aria-checked') === 'true' ? 'on' : 'off'); });
     if (sw.length) L.push('Tool switches: ' + sw.join(', '));
+    try { L.push(appMap()); } catch (e) { /* map is a bonus: never break the message */ }
     const tm = document.getElementById('toolMenu');
     if (tm && !tm.hidden) L.push('The + tools menu is open.');
     const att = document.getElementById('attTray');

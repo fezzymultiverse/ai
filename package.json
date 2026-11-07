@@ -1,8 +1,8 @@
 {
   "name": "horizon",
-  "version": "1.35.1",
+  "version": "1.42.1",
   "private": true,
-  "description": "Horizon AI APK",
+  "description": "Horizon Bojack Security",
   "license": "MIT",
   "dependencies": {
     "@capacitor/android": "^6.2.0",

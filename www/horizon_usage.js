@@ -8,7 +8,7 @@
     'use strict';
     var KEY = 'horizon_usage_v1';
     var MAXLAT = 40, MAXT = 40, KEEP_DAYS = 30;
-    var COLORS = { gemini: '#4f8cff', groq: '#f97316', cohere: '#a855f7', pollinations: '#22c55e' };
+    var COLORS = { gemini: '#4f8cff', groq: '#f97316', cohere: '#a855f7', mistral: '#ff8205', pollinations: '#22c55e' };
     var EXTRA = ['#06b6d4', '#eab308', '#ec4899', '#14b8a6'];
     var cfg = null, live = null, tick = 0, saveT = 0, root = null;
     var net = { busy: false, data: null, err: '', at: 0 };
@@ -93,6 +93,13 @@
         if (code === 429 || /rate.?limit|quota|tokens per|too many|exhaust/i.test(msg)) return { t: 'RATE-LIMITED', c: 'warn' };
         if (code === 401 || code === 403 || /api.?key|invalid|unauthori|permission|denied|forbidden/i.test(msg)) return { t: 'KEY FAILING', c: 'bad' };
         return { t: 'FAILING', c: 'bad' };
+    }
+
+    /* V1.40.0: key-health autopilot helper. True when the newest result for this provider was a limit/quota error in the last 10 minutes. */
+    function limitedNow(id) {
+        var st = store.p[id], ev = st && st.last;
+        if (!ev || ev.ok || Date.now() - ev.at > 600000) return false;
+        return ev.status === 429 || /rate.?limit|quota|tokens per|too many|exhaust/i.test(ev.err || '');
     }
 
     /* ---------- badge ---------- */
@@ -415,5 +422,5 @@
         paintBadge();
     }
 
-    window.HzUsage = { bind: bind, begin: begin, end: end, badge: paintBadge, open: open, render: function () { if (visible()) render(); } };
+    window.HzUsage = { limitedNow: limitedNow, bind: bind, begin: begin, end: end, badge: paintBadge, open: open, render: function () { if (visible()) render(); } };
 })();

@@ -124,7 +124,7 @@
     function mediaSession() {
         if (!cur || !('mediaSession' in navigator) || typeof MediaMetadata === 'undefined') return;
         try {
-            navigator.mediaSession.metadata = new MediaMetadata({ title: cur.title, artist: cur.artist, album: cur.album });
+            navigator.mediaSession.metadata = new MediaMetadata({ title: cur.title, artist: cur.artist, album: cur.album, artwork: artCache.get(cur.id) ? [{ src: artCache.get(cur.id), sizes: '256x256', type: 'image/jpeg' }] : [] }); wantArt(cur);
             navigator.mediaSession.setActionHandler('play', () => { if (au.paused) toggle(); });
             navigator.mediaSession.setActionHandler('pause', () => { if (!au.paused) au.pause(); });
             navigator.mediaSession.setActionHandler('nexttrack', () => next(false));
@@ -236,12 +236,54 @@
     }
 
     // ---------- paint ----------
+    // V1.40.0: real album artwork. Android pulls the embedded picture (or the thumbnail, or cover.jpg beside the file) and caches it.
+    const artCache = new Map();   // track id -> data URL, or '' when the song has no artwork
+    const artQueue = [];
+    let artBusy = 0;
+    const artPlugin = () => { try { const c = window.Capacitor; return c && c.isNativePlatform && c.isNativePlatform() ? ((c.Plugins && c.Plugins.HorizonMedia) || (c.registerPlugin && c.registerPlugin('HorizonMedia'))) : null; } catch (_) { return null; } };
+    const artSource = t => (t && t.path && !t.tmp) ? (/^(content|file):\/\//.test(t.path) ? t.path : 'file://' + t.path) : '';
+    function paintArt(node, url) {
+        if (!node || !url) return;
+        node.style.background = 'center / cover no-repeat url("' + url + '")';
+        node.textContent = '';
+        node.classList.add('has-art');
+    }
+    function paintArtFor(id) {
+        const url = artCache.get(id);
+        if (!url) return;
+        document.querySelectorAll('.mp-tile[data-art="' + String(id).replace(/"/g, '') + '"]').forEach(n => paintArt(n, url));
+        if (cur && cur.id === id && 'mediaSession' in navigator && typeof MediaMetadata !== 'undefined') {
+            try { navigator.mediaSession.metadata = new MediaMetadata({ title: cur.title, artist: cur.artist, album: cur.album, artwork: [{ src: url, sizes: '256x256', type: 'image/jpeg' }] }); } catch (_) { /* optional */ }
+        }
+    }
+    function pumpArt() {
+        const p = artPlugin();
+        while (p && artBusy < 2 && artQueue.length) {
+            const t = artQueue.shift();
+            if (artCache.has(t.id)) { paintArtFor(t.id); continue; }
+            artBusy++;
+            Promise.resolve(p.art({ source: artSource(t), size: 256 })).then(r => { artCache.set(t.id, (r && r.data) || ''); paintArtFor(t.id); }, () => { artCache.set(t.id, ''); }).then(() => { artBusy--; pumpArt(); });
+        }
+    }
+    function wantArt(t) {
+        if (!t || !artSource(t) || !artPlugin()) return;
+        if (artCache.has(t.id)) { paintArtFor(t.id); return; }
+        if (artQueue.some(q => q.id === t.id)) return;
+        artQueue.push(t); pumpArt();
+    }
+    const artObserver = ('IntersectionObserver' in window) ? new IntersectionObserver(es => { es.forEach(e => { if (e.isIntersecting) { artObserver.unobserve(e.target); const t = byId.get(e.target.dataset.art); if (t) wantArt(t); } }); }, { rootMargin: '120px' }) : null;
     function tile(t, big) {
         const d = document.createElement('span');
         d.className = 'mp-tile' + (big ? ' big' : '');
         const h = hue(t ? t.artist + t.album : 'x');
         d.style.background = `linear-gradient(135deg, hsl(${h} 70% 48%), hsl(${(h + 50) % 360} 70% 38%))`;
         d.textContent = t ? (t.title.trim().charAt(0) || '♪').toUpperCase() : '♪';
+        if (t && artSource(t)) {
+            d.dataset.art = t.id;
+            if (artCache.has(t.id)) paintArt(d, artCache.get(t.id));
+            else if (big || !artObserver) wantArt(t);
+            else artObserver.observe(d);
+        }
         return d;
     }
     function eyeBtn(cls) {
@@ -262,19 +304,24 @@
         if (a) a.textContent = fmt(pos);
         if (b) b.textContent = dur ? fmt(dur) : '--:--';
     }
+    let dismissedId = '', wasPlaying = false;
     function paintNow() {
         const playing = !!cur && !au.paused;
         const title = cur ? cur.title : 'Nothing playing';
         const sub = cur ? cur.artist + (cur.album && cur.album !== 'Unknown album' ? ' · ' + cur.album : '') : 'Scan your storage in the Music tab';
         const strip = $('mpNow');
         if (strip) {
-            strip.hidden = !cur;
+            if (playing && !wasPlaying) dismissedId = '';
+            wasPlaying = playing;
+            strip.hidden = !cur || (!!cur && dismissedId === cur.id);
+            strip.style.transform = ''; strip.style.opacity = ''; strip.classList.remove('swiping');
             strip.classList.toggle('playing', playing);
             strip.innerHTML = `<button class="mp-now-main" type="button" data-act="open" aria-label="Open the music player">
                 <span class="mp-now-t"><b></b><span></span></span>
                 <span class="mp-wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></button>
                 <button class="mp-ctl" type="button" data-act="toggle" aria-label="${playing ? 'Pause' : 'Play'}">${ico(playing ? 'i-pause' : 'i-play')}</button>
                 ${eyeBtn()}<i class="mp-prog"></i>`;
+            if (cur) { const nt = tile(cur); nt.classList.add('mp-now-ic'); strip.querySelector('.mp-now-main').prepend(nt); }
             strip.querySelector('.mp-now-t b').textContent = title;
             strip.querySelector('.mp-now-t span').textContent = cur ? cur.artist : '';
         }
@@ -518,6 +565,45 @@
     }
 
     // ---------- init ----------
+    // V1.40.0: swipe the now-playing strip to the right to remove it (it comes back with the next song, or when you press play again).
+    function bindSwipe() {
+        const strip = $('mpNow');
+        if (!strip || strip.dataset.swipe) return;
+        strip.dataset.swipe = '1';
+        let x0 = 0, y0 = 0, dx = 0, on = false, locked = false;
+        strip.addEventListener('touchstart', e => {
+            if (e.touches.length !== 1) return;
+            x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; dx = 0; on = true; locked = false;
+        }, { passive: true });
+        strip.addEventListener('touchmove', e => {
+            if (!on) return;
+            const mx = e.touches[0].clientX - x0, my = e.touches[0].clientY - y0;
+            if (!locked) {
+                if (Math.abs(my) > 12 && Math.abs(my) > Math.abs(mx)) { on = false; return; }
+                if (Math.abs(mx) > 10 && Math.abs(mx) > Math.abs(my) * 1.4) { locked = true; strip.classList.add('swiping'); }
+                else return;
+            }
+            dx = Math.max(0, mx);
+            strip.style.transform = 'translateX(' + dx + 'px)';
+            strip.style.opacity = String(Math.max(0.25, 1 - dx / (strip.offsetWidth || 300)));
+        }, { passive: true });
+        const end = () => {
+            if (!on) return;
+            on = false;
+            if (!locked) return;
+            const w = strip.offsetWidth || 300;
+            if (dx > Math.min(110, w * 0.3)) {
+                strip.style.transform = 'translateX(' + w + 'px)'; strip.style.opacity = '0';
+                const id = cur ? cur.id : '';
+                setTimeout(() => { dismissedId = id; strip.hidden = true; strip.classList.remove('swiping'); strip.style.transform = ''; strip.style.opacity = ''; }, 170);
+            } else {
+                strip.classList.remove('swiping'); strip.style.transform = ''; strip.style.opacity = '';
+            }
+            locked = false;
+        };
+        strip.addEventListener('touchend', end, { passive: true });
+        strip.addEventListener('touchcancel', end, { passive: true });
+    }
     async function init(h) {
         host = Object.assign(host, h || {});
         liked = new Set(jget(LS.liked, []));
@@ -527,6 +613,7 @@
         allAudio = host.lsGet(LS.all) === '1';
         sortBy = host.lsGet(LS.sort) || 'title';
         build();
+        bindSwipe();
         try {
             const c = await kvGet('lib');
             if (c && c.tracks) { scanTs = c.ts || 0; setLib(c.tracks.map(withSrc).filter(t => t.src)); }

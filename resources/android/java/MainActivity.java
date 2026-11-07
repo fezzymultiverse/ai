@@ -18,6 +18,7 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(HorizonStatsPlugin.class);
         registerPlugin(HorizonBrowserPlugin.class);
         registerPlugin(HorizonShellPlugin.class);
+        registerPlugin(HorizonSherpaPlugin.class);
         super.onCreate(savedInstanceState);
 
         // V1.8.0: let the WebView start audio without a fresh tap. Read-aloud with the Piper voice plays

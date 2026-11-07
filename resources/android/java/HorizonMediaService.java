@@ -23,6 +23,7 @@ public class HorizonMediaService extends Service {
     private boolean prepared, playing, resumeOnFocus, playWhenReady;
     private String title = "Horizon Music", artist = "", album = "", trackId = "", source = "";
     private long position, duration;
+    private android.graphics.Bitmap albumArt;
     private final Runnable tick = new Runnable() { @Override public void run() { publish("timeupdate"); main.postDelayed(this, 1000); } };
     private final BroadcastReceiver noisy = new BroadcastReceiver() { @Override public void onReceive(Context c, Intent i) { pause(); } };
     @Override public IBinder onBind(Intent i) { return null; }
@@ -65,7 +66,7 @@ public class HorizonMediaService extends Service {
     }
     private void load(Intent i) throws Exception {
         if (player != null) { player.release(); player = null; }
-        prepared = false; playing = false; playWhenReady = true; position = 0; duration = 0;
+        prepared = false; playing = false; playWhenReady = true; position = 0; duration = 0; albumArt = null;
         trackId = i.getStringExtra("id"); source = i.getStringExtra("source");
         title = i.getStringExtra("title"); artist = i.getStringExtra("artist"); album = i.getStringExtra("album");
         player = new MediaPlayer();
@@ -75,6 +76,13 @@ public class HorizonMediaService extends Service {
         player.setOnCompletionListener(p -> { playing = false; position = duration; abandonFocus(); update(); publish("ended"); });
         player.setOnErrorListener((p, what, extra) -> { playing = false; error("Android media error " + what + "/" + extra); stopSelf(); return true; });
         player.setDataSource(this, Uri.parse(source)); player.prepareAsync(); update();
+        final String forSource = source;
+        new Thread(() -> {
+            android.graphics.Bitmap art = null;
+            try { art = HorizonArt.bitmap(HorizonMediaService.this, forSource, 512); } catch (Throwable ignored) {}
+            final android.graphics.Bitmap got = art;
+            if (got != null) main.post(() -> { if (forSource != null && forSource.equals(source)) { albumArt = got; update(); } });
+        }).start();
     }
     private final AudioManager.OnAudioFocusChangeListener focusChange = change -> main.post(() -> {
         if (change == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK) { if (player != null && prepared) player.setVolume(.2f,.2f); }
@@ -122,14 +130,17 @@ public class HorizonMediaService extends Service {
             .addAction(new Notification.Action.Builder(playing ? android.R.drawable.ic_media_pause : android.R.drawable.ic_media_play, playing ? "Pause" : "Play", action(playing ? "pause" : "play", 2)).build())
             .addAction(new Notification.Action.Builder(android.R.drawable.ic_media_next, "Next", action("next", 3)).build())
             .setStyle(new Notification.MediaStyle().setMediaSession(session.getSessionToken()).setShowActionsInCompactView(0,1,2));
+        if (albumArt != null) b.setLargeIcon(albumArt);
         if (open != null) b.setContentIntent(PendingIntent.getActivity(this, 0, open, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE));
         b.setDeleteIntent(action("stop", 4)); return b.build();
     }
     private void update() {
         if (session == null) return;
-        session.setMetadata(new MediaMetadata.Builder().putString(MediaMetadata.METADATA_KEY_TITLE,title)
+        MediaMetadata.Builder md = new MediaMetadata.Builder().putString(MediaMetadata.METADATA_KEY_TITLE,title)
             .putString(MediaMetadata.METADATA_KEY_ARTIST,artist).putString(MediaMetadata.METADATA_KEY_ALBUM,album)
-            .putLong(MediaMetadata.METADATA_KEY_DURATION,duration).build());
+            .putLong(MediaMetadata.METADATA_KEY_DURATION,duration);
+        if (albumArt != null) md.putBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART, albumArt).putBitmap(MediaMetadata.METADATA_KEY_ART, albumArt);
+        session.setMetadata(md.build());
         session.setPlaybackState(new PlaybackState.Builder().setActions(PlaybackState.ACTION_PLAY | PlaybackState.ACTION_PAUSE | PlaybackState.ACTION_PLAY_PAUSE | PlaybackState.ACTION_SKIP_TO_NEXT | PlaybackState.ACTION_SKIP_TO_PREVIOUS | PlaybackState.ACTION_SEEK_TO | PlaybackState.ACTION_STOP)
             .setState(playing ? PlaybackState.STATE_PLAYING : PlaybackState.STATE_PAUSED,position,playing ? 1f : 0f).build());
         ((NotificationManager)getSystemService(NOTIFICATION_SERVICE)).notify(NOTIFICATION,notification());

@@ -20,7 +20,7 @@
  *   then the plaintext copy is removed.
  * - Wrong passphrase attempts are slowed down after the third miss.
  *
- * Public API: window.HorizonVault = { init, SRC, block, extract, aiOn, setAi, add, count, refresh, lock, isLocked }
+ * Public API: window.HorizonVault = { init, SRC, EDIT_SRC, block, extract, summary, aiOn, setAi, add, count, refresh, lock, isLocked }
  */
 (function () {
     'use strict';
@@ -37,6 +37,8 @@
     const BG_MS = 60 * 1000;
     const AAD = new TextEncoder().encode('horizon-vault-v1');
     const SRC = '\\[\\[vault\\.note:\\s*([^|\\]]{1,90}?)\\s*\\|\\s*((?:(?!\\]\\])[\\s\\S])*?)\\s*\\]\\]';
+    // V1.40.0: [[vault.edit: Title | text]] appends to a note the AI filed itself; [[vault.edit: Title | replace: text]] rewrites it.
+    const EDIT_SRC = '\\[\\[vault\\.edit:\\s*([^|\\]]{1,90}?)\\s*\\|\\s*((?:(?!\\]\\])[\\s\\S])*?)\\s*\\]\\]';
     const SECRET_RE = /(AIza[0-9A-Za-z_-]{20,}|gsk_[A-Za-z0-9]{20,}|sk-[A-Za-z0-9_-]{20,}|ghp_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|xox[abp]-[A-Za-z0-9-]{10,}|-----BEGIN [A-Z ]*PRIVATE KEY-----)/;
 
     const TYPES = [
@@ -328,14 +330,43 @@
     // [[vault.note: Title | text]] in an AI reply. Always stripped; filed only when the switch is on and the Vault is unlocked.
     function extract(raw) {
         const saved = [];
-        const text = String(raw || '').replace(new RegExp(SRC, 'gi'), (m, title, body) => {
+        let refused = '';
+        const norm = t => String(t || '').toLowerCase().replace(/\s+/g, ' ').trim();
+        const text = String(raw || '').replace(new RegExp(EDIT_SRC, 'gi'), (m, title, body) => {
+            if (!canFile() || saved.length >= 2 || !body || SECRET_RE.test(title + '\n' + body)) {
+                if (!refused) refused = !aiOn() ? 'AI notes are switched off' : (!cryptoKey ? 'the Vault is locked' : (SECRET_RE.test(title + '\n' + body) ? 'it looked like a key or secret' : 'the limit is 2 notes per reply'));
+                return '';
+            }
+            const k = norm(title);
+            const mine = items.filter(i => i.type === 'note' && i.by === 'ai');
+            const it = mine.find(i => norm(i.title) === k) || mine.find(i => norm(i.title).includes(k) || k.includes(norm(i.title)));
+            if (!it) { if (!refused) refused = 'no note you filed is called "' + title.slice(0, 40) + '"'; return ''; }
+            const rep = /^replace:\s*/i.test(body);
+            const add = body.replace(/^replace:\s*/i, '').trim();
+            it.value = (rep ? add : (it.value + '\n\n' + add)).slice(0, MAX_VALUE);
+            it.t = Date.now();
+            save();
+            render();
+            saved.push(it.title + ' (updated)');
+            return '';
+        }).replace(new RegExp(SRC, 'gi'), (m, title, body) => {
             if (canFile() && saved.length < 2 && body && !SECRET_RE.test(title + '\n' + body)) {
                 const it = add({ type: 'note', title, value: body, by: 'ai' });
                 if (it) saved.push(it.title);
+            } else if (!refused) {
+                refused = !aiOn() ? 'AI notes are switched off' : (!cryptoKey ? 'the Vault is locked' : (SECRET_RE.test(title + '\n' + body) ? 'it looked like a key or secret' : 'the limit is 2 notes per reply'));
             }
             return '';
         }).replace(/\n{3,}/g, '\n\n').trim();
+        if (refused && window.HzToast) HzToast.show({ icon: 'i-vault', title: 'Horizon could not save a note', sub: 'Because ' + refused + '.', kind: 'bad' });
         return { text, saved };
+    }
+
+    function summary() {
+        if (!cryptoKey) return 'Vault: locked';
+        const c = {};
+        items.forEach(i => { c[i.type] = (c[i.type] || 0) + 1; });
+        return 'Vault: unlocked, ' + items.length + ' items (' + TYPES.map(t => (c[t.id] || 0) + ' ' + t.plural.toLowerCase()).join(', ') + '). Only notes are readable by the AI; key, SSH and token values are never shared.';
     }
 
     function block() {
@@ -345,11 +376,19 @@
         if (!cryptoKey) {
             return 'HORIZON VAULT NOTES\nThe Vault is locked (encrypted). You cannot file notes and you cannot see what is in it. If Fezzy asks you to save something, tell him to unlock the Vault in the right panel first.';
         }
-        const titles = items.filter(i => i.type === 'note').slice(0, 25).map(i => '- ' + i.title);
+        let used = 0;
+        const titles = [];
+        items.filter(i => i.type === 'note').slice(0, 25).forEach(i => {
+            const body = String(i.value || '').replace(/\s+/g, ' ').slice(0, 500);
+            if (used + body.length > 6000) return;
+            used += body.length;
+            titles.push('- ' + i.title + (i.by === 'ai' ? ' (you filed it)' : '') + ': ' + body);
+        });
         return [
             'HORIZON VAULT NOTES (Fezzy\'s private note stash in the right panel)',
             'When Fezzy asks you to write, plan, outline or save something he will want to keep (a plan, checklist, script, summary, config, snippet), or when you finish a substantial piece he would obviously want filed, add ONE line at the very END of your reply: [[vault.note: Short title | the note text]]. The note text may run over several lines and use Markdown. Max 2 per reply. Do not file small talk or things already in the chat that he did not need kept. Never put keys, tokens, passwords or SSH keys in a note. Tell him in a few words that it is in the Vault. The app strips the tag.',
-            titles.length ? 'Notes already in the Vault (do not duplicate):\n' + titles.join('\n') : ''
+            'EDITING YOUR NOTES: you can change notes marked "(you filed it)". To add to one, put [[vault.edit: exact title | text to append]] at the END of your reply; to rewrite it, use [[vault.edit: exact title | replace: the full new text]]. Prefer appending (checklist ticks, new steps, a log line). Counts toward the 2 tags per reply. Never edit notes Fezzy wrote himself. REPO NOTES: after you read a pulled GitHub repo and Fezzy asks you to note, document or summarise it, file it as [[vault.note: Repo: name | summary]] (what it is, stack, layout, entry points, how to run, open problems).',
+            titles.length ? 'Notes in the Vault (you can read these; do not duplicate them. AI keys, scraping keys, SSH keys and tokens are never shown to you):\n' + titles.join('\n') : ''
         ].filter(Boolean).join('\n');
     }
 

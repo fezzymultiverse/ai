@@ -5,12 +5,12 @@
     var KEY = 'horizon_snooze', SNAP = 'horizon_snooze_snap';
     var AIS = [
         { id: 'gemini', name: 'Gemini' }, { id: 'groq', name: 'Groq' },
-        { id: 'cohere', name: 'Cohere' }, { id: 'pollinations', name: 'Pollinations' }
+        { id: 'cohere', name: 'Cohere' }, { id: 'mistral', name: 'Mistral' }, { id: 'pollinations', name: 'Pollinations' }
     ];
     var NS = 'http://www.w3.org/2000/svg';
     var btn = document.getElementById('snoozeBtn'), bar = document.getElementById('hzSnoozeBar');
     var chatMessages = document.getElementById('chatMessages'), chatInput = document.getElementById('chatInput');
-    var sendBtn = document.getElementById('sendBtn'), brandSub = document.querySelector('.brand span');
+    var sendBtn = document.getElementById('sendBtn'), brandSub = document.querySelector('.app-header .hz-sub') || document.querySelector('.brand span');
     if (!btn) return;
     var busy = false, origBrand = brandSub ? brandSub.textContent : '', origPh = chatInput ? chatInput.placeholder : '';
 

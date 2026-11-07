@@ -12,6 +12,24 @@
   <img alt="Capacitor 6" src="https://img.shields.io/badge/Capacitor-6-00e5ff">
 </p>
 
+## What's new in V1.41.0
+
+- **Bottom row under the message box:** the usage badge (provider, model, tokens, time) sits on the right, a new **Voice** pill beside it. Voice is a flat line when idle and a pulsing waveform while a reply is read aloud; tap it to stop.
+- **Replies start like a username:** provider logo, name and model on top of the thought process. The repeated model and token line under each reply, and the repeated status line under the box, are gone (full token count shows on press-and-hold of the header).
+- **Pill action row:** Copy and Regenerate (plus Continue when a reply is cut off) on the left, read-aloud on the right.
+- **Thinking switch** (brain, top of the + menu): real thinking budget on Gemini 2.5 and 3, high reasoning effort on Groq gpt-oss, plan-and-check prompt on every other model.
+- *Tested:* syntax checks and a desktop browser render with a mocked Gemini reply. *Not tested:* on a phone, and not against the live Gemini API.
+
+## What's new in V1.40.0
+
+- **Settings fits one screen.** No X, no second logo; the title and Theme icons share the top row, rows are compact, nothing scrolls on the home view. Back still works.
+- **Browser follows the theme** (white in Light, black in Dark and Cyan).
+- **AI sees the whole app** with Screen on (browser, terminal, picker, badge, now playing, downloads, DASH, Vault counts). It reads Vault notes, never AI keys, scraping keys, SSH keys or tokens.
+- **Toasts** when the AI saves a Vault note or a memory, and a red toast when it could not (tap the green one to open the Vault).
+- **Plus menu checks** with tap-to-fix chips, plus new Memory, Lens and Browser eye switches.
+- **Chat tidy-up:** spacing, pill chips, equal buttons.
+- *Tested:* syntax checks and a desktop browser render. *Not tested:* on a phone.
+
 ## What's new in V1.35.1
 
 - **SECURITY is its own row in Settings**, directly under HORIZON VAULT, with a red title and a red edge. The SECURITY AND PRIVACY block (the do-not-train switch and the live "what the AI can reach" list) moved there from ABOUT & UPDATES, so it is no longer shown twice.

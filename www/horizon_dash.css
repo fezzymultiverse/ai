@@ -123,3 +123,4 @@ html:not([data-theme]) .hzd-net{background:rgba(255,255,255,.55)}
   .mp-now.playing .mp-wave i{animation:none!important;height:10px}
 }
 @media(max-width:360px){.hzd-time{font-size:17px}.hzd-temp{font-size:19px}.hzd-stats{gap:7px 8px}}
+.hz-dash .hzd-chev.noroom,.hz-dash .noroom{opacity:.45}

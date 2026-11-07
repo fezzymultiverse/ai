@@ -6,7 +6,18 @@
 (function () {
     'use strict';
     var MAXLINES = 1500;
-    var WELCOME = ['Welcome to Termux, Fezzy.', 'Welcome to Horizon, where your phone is the lab.', 'Type a command, or type help.'];
+    var WELCOME = [
+        '\u2566 \u2566\u2554\u2550\u2557\u2566\u2550\u2557\u2566\u2554\u2550\u2557\u2554\u2550\u2557\u2554\u2557\u2554',
+        '\u2560\u2550\u2563\u2551 \u2551\u2560\u2566\u255D\u2551\u2554\u2550\u255D\u2551 \u2551\u2551\u2551\u2551',
+        '\u2569 \u2569\u255A\u2550\u255D\u2569\u255A\u2550\u2569\u255A\u2550\u255D\u255A\u2550\u255D\u255D\u255A\u255D',
+        '\u25C6 BOJACK SECURITY // SHELL \u25C6',
+        '\u26A1 no root \u00B7 no limits \u00B7 all vibes',
+        '[SOI] Strategy Over Impulse \u00B7 999',
+        '',
+        'Welcome to Termux, Fezzy.',
+        'Welcome to Horizon, where your phone is the lab.',
+        'Type a command, or type help.'
+    ];
     var st = { built: false, open: false, alive: false, cwd: '', home: '', running: false, last: '', hist: [], hi: 0, ctrl: false, kill: '', cmds: 0,
         rsOn: false, rsQ: '', rsI: 0, typing: null, pendingOpen: 0 };
     var el = {};
@@ -30,7 +41,7 @@
         var o = document.createElement('div'); o.id = 'hzTerm'; o.className = 'hzt'; o.hidden = true;
         o.setAttribute('role', 'dialog'); o.setAttribute('aria-modal', 'true'); o.setAttribute('aria-label', 'Terminal');
         o.innerHTML = '<header class="hzt-bar">' + LOGO
-            + '<div class="hzt-name"><b>Termux <i>&lt;</i> Horizon</b><small>Horizon shell \u00B7 no root</small></div>'
+            + '<div class="hzt-name"><b>Termux <i>&lt;</i> Horizon</b><small>Bojack Security \u00B7 no root \u00B7 \u26A1</small></div>'
             + '<span class="hzt-dot" aria-hidden="true"></span>'
             + '<button type="button" class="hzt-btn hzt-min" aria-label="Minimize terminal">\u2304</button>'
             + '<button type="button" class="hzt-btn hzt-exit" aria-label="Exit terminal">\u2715</button></header>'
