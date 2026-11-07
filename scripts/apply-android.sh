@@ -59,6 +59,7 @@ add_perm WRITE_EXTERNAL_STORAGE ' android:maxSdkVersion="28"'
 add_perm ACCESS_NETWORK_STATE
 add_perm ACCESS_COARSE_LOCATION
 add_perm ACCESS_FINE_LOCATION
+add_perm USE_BIOMETRIC
 
 # V1.5.0: background keep-alive service declared in the manifest
 if ! grep -q "HorizonBgService" "$MANIFEST"; then
@@ -114,14 +115,14 @@ if 'android:name=".HorizonReplyReceiver"' not in s:
     s = s.replace('</application>', '    <receiver android:name=".HorizonReplyReceiver" android:exported="false" />\n    </application>')
 manifest.write_text(s)
 PY
-for f in HorizonAIPlugin.kt HorizonAIService.kt HorizonReplyReceiver.kt HorizonSpeakService.kt HorizonShellPlugin.kt; do
+for f in HorizonAIPlugin.kt HorizonAIService.kt HorizonReplyReceiver.kt HorizonSpeakService.kt HorizonShellPlugin.kt HorizonLockPlugin.kt; do
     sed "s/__APPID__/${APPID}/" "resources/android/java/$f" > "$JAVA_DIR/$f"
 done
 echo "Horizon Kotlin AI jobs and reply notifications applied."
 
 # Fail the build loudly if any native plugin source did not land (a missing plugin only shows up at
 # runtime as "unable to find plugin : HorizonAI").
-for f in HorizonPermsPlugin.java HorizonBgService.java HorizonMediaPlugin.java HorizonMediaService.java HorizonArt.java HorizonSpeechPlugin.java HorizonLensPlugin.java HorizonStatsPlugin.java HorizonBrowserPlugin.java MainActivity.java HorizonAIPlugin.kt HorizonAIService.kt HorizonReplyReceiver.kt HorizonSpeakService.kt HorizonShellPlugin.kt; do
+for f in HorizonPermsPlugin.java HorizonBgService.java HorizonMediaPlugin.java HorizonMediaService.java HorizonArt.java HorizonSpeechPlugin.java HorizonLensPlugin.java HorizonStatsPlugin.java HorizonBrowserPlugin.java MainActivity.java HorizonAIPlugin.kt HorizonAIService.kt HorizonReplyReceiver.kt HorizonSpeakService.kt HorizonShellPlugin.kt HorizonLockPlugin.kt; do
     [ -s "$JAVA_DIR/$f" ] || { echo "Native source missing after apply: $f" >&2; exit 1; }
 done
 grep -q "registerPlugin(HorizonAIPlugin.class)" "$JAVA_DIR/MainActivity.java" || { echo "MainActivity does not register HorizonAIPlugin" >&2; exit 1; }
@@ -149,3 +150,17 @@ bash scripts/fetch-sherpa.sh
 grep -q "registerPlugin(HorizonSherpaPlugin.class)" "$JAVA_DIR/MainActivity.java" || { echo "MainActivity does not register HorizonSherpaPlugin" >&2; exit 1; }
 grep -q "commons-compress" android/app/build.gradle || { echo "commons-compress missing from app/build.gradle" >&2; exit 1; }
 echo "Offline neural voice engine applied."
+
+# ---- V1.43.0: app lock (fingerprint prompt) ----
+python3 - <<'PY'
+from pathlib import Path
+app = Path('android/app/build.gradle')
+s = app.read_text()
+if 'androidx.biometric:biometric' not in s:
+    s = s.replace('dependencies {', "dependencies {\n    implementation 'androidx.biometric:biometric:1.1.0'", 1)
+app.write_text(s)
+PY
+grep -q "androidx.biometric:biometric" android/app/build.gradle || { echo "biometric library missing from app/build.gradle" >&2; exit 1; }
+grep -q "registerPlugin(HorizonLockPlugin.class)" "$JAVA_DIR/MainActivity.java" || { echo "MainActivity does not register HorizonLockPlugin" >&2; exit 1; }
+[ -s "$JAVA_DIR/HorizonLockPlugin.kt" ] || { echo "Native source missing after apply: HorizonLockPlugin.kt" >&2; exit 1; }
+echo "App lock (biometric) applied."

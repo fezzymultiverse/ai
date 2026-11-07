@@ -7,6 +7,9 @@ import android.content.IntentFilter;
 import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
+import android.net.NetworkRequest;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.BatteryManager;
 import android.os.Environment;
 import android.os.Process;
@@ -97,6 +100,89 @@ public class HorizonStatsPlugin extends Plugin {
         return false;
     }
 
+
+    // V1.43.0: link details. type = the physical link under any VPN (wifi, cellular, ethernet, none).
+    private JSObject netInfo(Context ctx) {
+        JSObject o = new JSObject();
+        boolean vpn = false;
+        String type = "none";
+        boolean online = false;
+        boolean metered = false;
+        try {
+            ConnectivityManager cm = (ConnectivityManager) ctx.getSystemService(Context.CONNECTIVITY_SERVICE);
+            if (cm != null) {
+                for (Network n : cm.getAllNetworks()) {
+                    NetworkCapabilities c = cm.getNetworkCapabilities(n);
+                    if (c == null) continue;
+                    if (c.hasTransport(NetworkCapabilities.TRANSPORT_VPN)) { vpn = true; continue; }
+                    if (!c.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)) continue;
+                    boolean ok = c.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED);
+                    if (ok || type.equals("none")) {
+                        if (c.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) type = "wifi";
+                        else if (c.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) type = "cellular";
+                        else if (c.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) type = "ethernet";
+                        else type = "other";
+                        online = online || ok;
+                        metered = !c.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED);
+                    }
+                }
+            }
+        } catch (Exception ignored) {
+            // permission missing or service unavailable: report what we have
+        }
+        o.put("vpn", vpn);
+        o.put("netType", type);
+        o.put("netOnline", online);
+        o.put("netMetered", metered);
+        return o;
+    }
+
+    private ConnectivityManager.NetworkCallback watcher;
+    private final Handler mainH = new Handler(Looper.getMainLooper());
+    private final Runnable pushNet = new Runnable() {
+        @Override public void run() {
+            try { notifyListeners("netChange", netInfo(getContext())); } catch (Exception ignored) { /* bridge gone */ }
+        }
+    };
+
+    /** Pushes a "netChange" event the moment Wi-Fi, mobile data or a VPN comes or goes (debounced). */
+    @PluginMethod
+    public synchronized void startWatch(PluginCall call) {
+        try {
+            if (watcher == null) {
+                ConnectivityManager cm = (ConnectivityManager) getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+                if (cm != null) {
+                    watcher = new ConnectivityManager.NetworkCallback() {
+                        private void kick() { mainH.removeCallbacks(pushNet); mainH.postDelayed(pushNet, 500); }
+                        @Override public void onAvailable(Network n) { kick(); }
+                        @Override public void onLost(Network n) { kick(); }
+                        @Override public void onCapabilitiesChanged(Network n, NetworkCapabilities c) { kick(); }
+                    };
+                    cm.registerNetworkCallback(new NetworkRequest.Builder().build(), watcher);
+                }
+            }
+            JSObject o = netInfo(getContext());
+            o.put("watching", watcher != null);
+            call.resolve(o);
+        } catch (Exception e) {
+            call.reject("Watch failed: " + e.getMessage());
+        }
+    }
+
+    @Override
+    protected void handleOnDestroy() {
+        try {
+            if (watcher != null) {
+                ConnectivityManager cm = (ConnectivityManager) getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+                if (cm != null) cm.unregisterNetworkCallback(watcher);
+                watcher = null;
+            }
+        } catch (Exception ignored) {
+            // already unregistered
+        }
+        super.handleOnDestroy();
+    }
+
     @PluginMethod
     public synchronized void snapshot(PluginCall call) {
         try {
@@ -130,6 +216,10 @@ public class HorizonStatsPlugin extends Plugin {
             o.put("cpuApp", appCpuPercent());
             o.put("cores", Runtime.getRuntime().availableProcessors());
             o.put("vpn", vpnUp(ctx));
+            JSObject ni = netInfo(ctx);
+            o.put("netType", ni.getString("netType"));
+            o.put("netOnline", ni.getBool("netOnline"));
+            o.put("netMetered", ni.getBool("netMetered"));
             call.resolve(o);
         } catch (Exception e) {
             call.reject("Stats failed: " + e.getMessage());

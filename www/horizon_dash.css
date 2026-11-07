@@ -124,3 +124,8 @@ html:not([data-theme]) .hzd-net{background:rgba(255,255,255,.55)}
 }
 @media(max-width:360px){.hzd-time{font-size:17px}.hzd-temp{font-size:19px}.hzd-stats{gap:7px 8px}}
 .hz-dash .hzd-chev.noroom,.hz-dash .noroom{opacity:.45}
+
+/* V1.43.4: the date pill is black (white text, thin light edge so it still shows on dark themes). */
+.hzd-date{background:#000;color:#fff;border:1px solid rgba(255,255,255,.28)}
+.hzd-date .ic{color:#fff}
+.hzd-date:active{background:#26282c}

@@ -19,6 +19,7 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(HorizonBrowserPlugin.class);
         registerPlugin(HorizonShellPlugin.class);
         registerPlugin(HorizonSherpaPlugin.class);
+        registerPlugin(HorizonLockPlugin.class);
         super.onCreate(savedInstanceState);
 
         // V1.8.0: let the WebView start audio without a fresh tap. Read-aloud with the Piper voice plays
@@ -35,6 +36,7 @@ public class MainActivity extends BridgeActivity {
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
+                if (HorizonLockPlugin.locked) { moveTaskToBack(true); return; }   // V1.43.0: Back never gets past the lock screen
                 if (HorizonBrowserPlugin.handleBack()) return;
                 WebView wv = getBridge() != null ? getBridge().getWebView() : null;
                 if (wv != null && wv.canGoBack()) {

@@ -202,7 +202,40 @@
                 if (was !== null && was !== st.vpn) { S.netAt = 0; S.wxAt = 0; refreshNet(true); }
             }
             paintStats();
+            startNetWatch();
         });
+    }
+    /* V1.43.0: Android pushes "netChange" the moment Wi-Fi, mobile data or a VPN comes or goes, so the IP, the VPN badge
+       and the weather update at once instead of at the next poll. */
+    function linkText(st) {
+        if (!st || !st.netType) return '';
+        var t = st.netOnline === false && st.netType === 'none' ? 'Offline' : ({ wifi: 'Wi-Fi', cellular: 'Mobile data', ethernet: 'Ethernet', none: 'Offline' }[st.netType] || 'Connected');
+        if (st.netType !== 'none' && st.netOnline === false) t += ' \u00B7 no internet';
+        if (st.netMetered && st.netType !== 'wifi' && st.netType !== 'none') t += ' \u00B7 metered';
+        return t;
+    }
+    function onNetChange(e) {
+        if (!e) return;
+        var key = [e.vpn, e.netType, e.netOnline].join('|');
+        S.stats = S.stats || {};
+        S.stats.netType = e.netType; S.stats.netOnline = e.netOnline; S.stats.netMetered = e.netMetered;
+        if (typeof e.vpn === 'boolean') { S.stats.vpn = e.vpn; S.vpn = e.vpn; S.vpnHow = 'Android reports a VPN connection'; }
+        if (key === S.linkKey) return;
+        S.linkKey = key;
+        S.netAt = 0; S.wxAt = 0;
+        paintNet();
+        if (e.netOnline !== false) refreshNet(true);
+    }
+    function startNetWatch() {
+        if (S.watching || !(H && H.native)) return;
+        S.watching = true;
+        try {
+            var p = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.HorizonStats;
+            if (!p || typeof p.addListener !== 'function' || typeof p.startWatch !== 'function') { S.watching = false; return; }
+            Promise.resolve(p.addListener('netChange', onNetChange)).then(function () { return p.startWatch(); }).then(function (r) {
+                if (r) { S.linkKey = [r.vpn, r.netType, r.netOnline].join('|'); S.stats = S.stats || {}; S.stats.netType = r.netType; S.stats.netOnline = r.netOnline; S.stats.netMetered = r.netMetered; paintNet(); }
+            }).catch(function () { S.watching = false; });
+        } catch (e) { S.watching = false; }
     }
     function level(p, inv) {
         var v = inv ? 100 - p : p;
@@ -407,6 +440,13 @@
             r2n.appendChild(el('span', 'k', 'Seen as'));
             r2n.appendChild(el('span', 'v', ipPlace(n) + (n.cc ? ' (' + n.cc + ')' : '')));
             box.appendChild(r2n);
+        }
+        var lt = linkText(S.stats);
+        if (lt) {
+            var rl = el('div', 'hzd-net-r sub');
+            rl.appendChild(el('span', 'k', 'Link'));
+            rl.appendChild(el('span', 'v', lt + (S.vpn ? ' \u00B7 via VPN' : '')));
+            box.appendChild(rl);
         }
         var r3 = el('div', 'hzd-net-r sub');
         r3.appendChild(el('span', 'k', S.vpn ? 'Real area' : 'You are in'));
@@ -617,9 +657,17 @@
             window.addEventListener('orientationchange', queueFit);
             setTimeout(queueFit, 0); setTimeout(queueFit, 600);
         }
+        // V1.43.3: tapping expand now closes the open Menu tabs above to make room (it used to just stay folded, dimmed, until you closed them by hand).
+        function closeTabsAbove() {
+            try {
+                var rows = panel.querySelectorAll('.acc-row[aria-expanded="true"]');
+                for (var i = 0; i < rows.length; i++) rows[i].click();   // the row's own click closes it and saves which tabs are open
+            } catch (e) { /* leave the tabs as they are */ }
+        }
         chev.addEventListener('click', function () {
             userOpen = root.classList.contains('collapsed');
             lss(K.open, userOpen ? '1' : '0');
+            if (userOpen && panel && !fits()) closeTabsAbove();
             autoFit();
             if (userOpen && root.classList.contains('collapsed')) { chev.classList.add('noroom'); }
         });

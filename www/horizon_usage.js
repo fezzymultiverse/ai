@@ -110,6 +110,14 @@
         var id = cfg.active(), p = cfg.providers[id];
         if (!p) return;
         var st = status(id), running = !!(live && live.id === id), s = store.p[id];
+        // V1.43.2: while a reply runs this repaints every 250 ms. Rebuilding the pill each time restarted its sliding bar and pulsing dot
+        // before they could move. If nothing but the clock changed, only the clock text is updated and the animations keep running.
+        var key = [id, cfg.model(id), running ? 'run' : st.c, st.t, (s && s.lat ? s.lat.slice(-6) : []).join(',')].join('|');
+        if (running && b._hzKey === key && b.firstChild) {
+            var rd = b.querySelector('.hzb-read');
+            if (rd) { rd.textContent = fmtMs(Date.now() - live.t0); return; }
+        }
+        b._hzKey = key;
         var pill = el('span', 'hzb-pill' + (running ? ' busy' : ''));
         pill.style.setProperty('--pc', colorOf(id));
         b.replaceChildren(pill);

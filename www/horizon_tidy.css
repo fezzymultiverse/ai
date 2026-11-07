@@ -157,7 +157,7 @@ button.tm-c.no:active { transform: scale(.95); }
 
 
 /* ---------- V1.42.0: your messages, bottom row ---------- */
-/* name tag + date/time sit on the left, the bubble stays on the right, in the AI side's cyan-on-ink colours */
+/* name tag + date/time sit on the left, the bubble stays on the right. V1.43.2: the bubble is dark grey again, in every theme. */
 .message.user { align-self: stretch; max-width: 100%; min-width: 0; }
 .message.user .bubble { max-width: 88%; }
 .message.user > .link-card { align-self: flex-end; width: 88%; max-width: 88%; }
@@ -165,12 +165,11 @@ button.tm-c.no:active { transform: scale(.95); }
 .message.user .message-meta .meta-time { white-space: nowrap; }
 .message.user .bubble { align-self: flex-end; }
 html .message.user .bubble, html[data-theme] .message.user .bubble {
-  background: color-mix(in srgb, var(--accent-cyan) 12%, var(--bg-color));
-  color: var(--ink); border: 1px solid color-mix(in srgb, var(--accent-cyan) 55%, transparent); box-shadow: none;
+  background: #26282c; color: #f2f3f5; border: 1px solid #3a3d43; box-shadow: none;
 }
 html .message.user .bubble a, html .message.user .bubble strong,
-html .message.user .bubble h3, html .message.user .bubble h4 { color: var(--ink); }
-html .message.user .bubble code { color: var(--ink); background: var(--surface-hover); }
+html .message.user .bubble h3, html .message.user .bubble h4 { color: #ffffff; }
+html .message.user .bubble code { color: #f2f3f5; background: #373a40; }
 
 /* provider pill left, VOICE right: same width, same height. The pill has two lines so nothing is dropped. */
 .hz-bottom { gap: 8px; align-items: stretch; }

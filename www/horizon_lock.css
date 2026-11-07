@@ -1,0 +1,33 @@
+/* Horizon V1.43.0: APP LOCK screen and its card in Settings > SECURITY. */
+html.hz-locked, html.hz-locked body { overflow: hidden; }
+.hzl { position: fixed; inset: 0; z-index: 2147483000; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: env(safe-area-inset-top, 0px) 20px env(safe-area-inset-bottom, 0px); box-sizing: border-box; background: var(--bg-color, #fff); color: var(--text-main, #000); -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; }
+.hzl-brand { font-size: 11px; font-weight: 800; letter-spacing: 2px; color: var(--accent-cyan, #00e5ff); }
+.hzl-title { font-size: 20px; font-weight: 700; }
+.hzl-dots { display: flex; gap: 14px; height: 18px; align-items: center; margin-top: 4px; }
+.hzl-dots i { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--text-muted, #666); box-sizing: border-box; transition: background .12s, border-color .12s; }
+.hzl-dots i.on { background: var(--accent-cyan, #00e5ff); border-color: var(--accent-cyan, #00e5ff); }
+.hzl-msg { min-height: 18px; font-size: 13px; color: var(--text-muted, #666); text-align: center; }
+.hzl-msg.bad { color: var(--error, #ff3b30); font-weight: 600; }
+.hzl-pad { display: grid; grid-template-columns: repeat(3, 72px); gap: 14px 22px; margin-top: 4px; }
+.hzl-key { width: 72px; height: 72px; border-radius: 50%; border: 1px solid var(--border-color, rgba(0,0,0,.1)); background: var(--surface, #f0f2f5); color: var(--text-main, #000); font: inherit; font-size: 26px; font-weight: 600; display: flex; align-items: center; justify-content: center; padding: 0; cursor: pointer; }
+.hzl-key:active:not(:disabled) { background: var(--accent-cyan, #00e5ff); color: #000; }
+.hzl-key.fn { background: transparent; border-color: transparent; font-size: 22px; }
+.hzl-key.ghost { visibility: hidden; }
+.hzl-key:disabled { opacity: .45; }
+.hzl-fp { width: 32px; height: 32px; fill: none; stroke: var(--accent-cyan, #00e5ff); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.hzl.shake .hzl-dots { animation: hzlShake .35s; }
+@keyframes hzlShake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-9px); } 40% { transform: translateX(9px); } 60% { transform: translateX(-6px); } 80% { transform: translateX(6px); } }
+@media (max-height: 600px) { .hzl { gap: 8px; } .hzl-pad { gap: 8px 18px; grid-template-columns: repeat(3, 58px); } .hzl-key { width: 58px; height: 58px; font-size: 22px; } }
+@media (prefers-reduced-motion: reduce) { .hzl.shake .hzl-dots { animation: none; } }
+
+.hzl-card { border-left: 3px solid #ff3b30; }
+.hzl-set { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-color); }
+.hzl-head.hzl-set { margin-top: 0; padding-top: 0; border-top: 0; }
+.hzl-form { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+.hzl-in { letter-spacing: 4px; }
+.hzl-err { color: var(--error, #ff3b30); min-height: 16px; margin: 0; }
+.hzl-btns { gap: 8px; margin-top: 10px; }
+.hzl-go { background: var(--accent-cyan, #00e5ff); color: #000; border-color: transparent; font-weight: 700; }
+.hzl-seg { display: flex; gap: 6px; margin-top: 8px; }
+.hzl-opt { flex: 1 1 0; min-width: 0; height: 38px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--surface); color: var(--text-main); font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; padding: 0 4px; }
+.hzl-opt[aria-checked="true"] { background: var(--accent-cyan, #00e5ff); color: #000; border-color: transparent; }

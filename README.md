@@ -12,6 +12,30 @@
   <img alt="Capacitor 6" src="https://img.shields.io/badge/Capacitor-6-00e5ff">
 </p>
 
+## What's new in V1.43.4
+
+- **Widget date pill is black** (white text, thin light edge so it shows on dark themes). *Not tested:* on a phone.
+
+## What's new in V1.43.3
+
+- **Weather widget expands on tap.** The arrow now closes the open Menu tabs above it to make room, instead of staying folded until you closed them by hand. *Tested:* syntax only. *Not tested:* on a phone.
+
+## What's new in V1.43.2
+
+- **Your bubble is dark grey again** in Light, Dark and Cyan.
+- **Provider pill animates while a reply runs.** The pill used to be rebuilt every 250 ms, which restarted its sliding bar and pulsing dot each time. Now only the clock text updates. *Tested:* syntax and logic with a stubbed DOM. *Not tested:* on a phone.
+
+## What's new in V1.43.1
+
+- **Voice pill animates again.** The wave and pulse are now driven from JavaScript (like the now-playing waveform), so Android's reduce-motion setting cannot freeze them. *Tested:* logic with a stubbed DOM. *Not tested:* on a phone.
+
+## What's new in V1.43.0
+
+- **App lock** (Settings, SECURITY, App lock): a 4 to 6 digit PIN (salted PBKDF2 hash, stored only on the device) plus the Android fingerprint prompt where the phone has one. Locks on start and after Right away, 1 or 5 minutes in the background. Back cannot get past the lock screen. Five wrong PINs start a growing wait that survives a restart. Optional: hide Horizon in recent apps (this also blocks screenshots).
+- **Live network.** Android now pushes Wi-Fi, mobile data and VPN changes to DASH the moment they happen, and DASH has a new Link row (Wi-Fi, Mobile data, offline, metered, via VPN).
+- *Honest limit:* the lock keeps people out of Horizon on a phone you left unlocked. It does not encrypt the API keys stored on the device.
+- *Tested:* syntax checks only. *Not tested:* on a phone. The new Kotlin (HorizonLockPlugin.kt) and the Stats plugin changes have not been compiled.
+
 ## What's new in V1.41.0
 
 - **Bottom row under the message box:** the usage badge (provider, model, tokens, time) sits on the right, a new **Voice** pill beside it. Voice is a flat line when idle and a pulsing waveform while a reply is read aloud; tap it to stop.
