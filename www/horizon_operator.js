@@ -6,7 +6,7 @@
     'use strict';
     var ON = 'horizon_operator_on', NM = 'horizon_operator_name', DEF = 'Operator', MAX = 24;
     var LON = 'horizon_operator_loc_on', LCA = 'horizon_operator_loc_cache', NS = 'http://www.w3.org/2000/svg';
-    var placeName = '', locNote = '', locBusy = false, locAt = 0, vpn = null;
+    var placeName = '', locNote = '', locErr = 0, locBusy = false, locAt = 0, vpn = null;
     function rd(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
     function wr(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* storage full or blocked */ } }
     function del(k) { try { localStorage.removeItem(k); } catch (e) { /* storage blocked */ } }
@@ -31,10 +31,13 @@
             if (tag.textContent !== nm) tag.textContent = nm;
         });
         var lon = locOn();
-        var shown = placeName || (locNote ? 'No location' : 'Locating\u2026');
+        var liveShown = placeName || (locNote ? (locErr === 1 ? 'Allow location' : locErr === 2 ? 'Location off' : 'No location') : 'Locating\u2026');
         feed.querySelectorAll('.message.user > .message-meta').forEach(function (meta) {
+            var wrap = meta.parentNode, stamped = (wrap.dataset && wrap.dataset.place) || '', fresh = !!(wrap.dataset && wrap.dataset.fresh === '1');
             var loc = meta.querySelector(':scope > .meta-loc');
-            if (!lon) { if (loc) loc.remove(); return; }
+            /* V1.51.0: each message shows the place it was SENT from. Old messages without one show nothing. */
+            if (!lon || (!stamped && !fresh)) { if (loc) loc.remove(); return; }
+            var shown = stamped || liveShown, isPlace = !!(stamped || placeName), isVpn = stamped ? wrap.dataset.vpn === '1' : vpn === true;
             if (!loc) {
                 loc = document.createElement('span'); loc.className = 'meta-loc';
                 var svg = document.createElementNS(NS, 'svg'); svg.setAttribute('class', 'meta-pin'); svg.setAttribute('viewBox', '0 0 24 24'); svg.setAttribute('aria-hidden', 'true');
@@ -45,18 +48,19 @@
             }
             var tx = loc.querySelector('.meta-loc-t');
             if (tx && tx.textContent !== shown) tx.textContent = shown;
-            loc.title = (placeName || locNote || 'Finding your place') + (vpn === true ? ' (VPN on)' : '');
+            loc.title = (stamped || placeName || locNote || 'Finding your place') + (isVpn ? ' (VPN on)' : '');
             var vc = loc.querySelector('.meta-vpn');
-            if (vpn === true) {
+            if (isVpn) {
                 if (!vc) { vc = document.createElement('span'); vc.className = 'meta-vpn'; vc.textContent = 'VPN'; loc.insertBefore(vc, loc.firstChild); }
             } else if (vc) vc.remove();
-            loc.classList.toggle('none', !placeName);
+            loc.classList.toggle('none', !isPlace);
         });
     }
 
     /* Place name: the phone's own GPS (a VPN cannot change it), turned into a suburb name. Rounded to ~1 km before lookup. */
     function snoozed() { return rd('horizon_snooze') === '1'; }
-    function getGps() {
+    function getGps(ask) {
+        if (window.HzGeo) return window.HzGeo.get(ask !== false);
         return new Promise(function (res) {
             if (!navigator.geolocation) return res({ err: 0 });
             navigator.geolocation.getCurrentPosition(function (p) { res({ lat: p.coords.latitude, lon: p.coords.longitude }); },
@@ -91,11 +95,12 @@
         locBusy = true;
         getGps().then(function (g) {
             if (g.lat == null) {
-                locNote = g.err === 1 ? 'Location is blocked. Allow it in Android Settings > Apps > Horizon > Permissions' : 'No GPS fix yet';
+                locErr = g.err == null ? 3 : g.err;
+                locNote = g.why || (g.err === 1 ? 'Location is blocked. Allow it in Android Settings > Apps > Horizon > Permissions' : 'No GPS fix yet');
                 return null;
             }
-            return reverse(g.lat, g.lon).then(function (n) { if (n) { placeName = n; locNote = ''; wr(LCA, JSON.stringify({ n: n })); } }, function () { locNote = 'Could not look up the place name'; });
-        }).then(function () { locBusy = false; locAt = Date.now(); apply(); paint(); }, function () { locBusy = false; });
+            return reverse(g.lat, g.lon).then(function (n) { if (n) { placeName = n; locNote = ''; locErr = 0; wr(LCA, JSON.stringify({ n: n })); } }, function () { locNote = 'Could not look up the place name'; });
+        }).then(function () { locBusy = false; locAt = placeName ? Date.now() : Date.now() - 540000; apply(); paint(); }, function () { locBusy = false; });
     }
     function paint(note) {
         var on = enabled();
@@ -118,12 +123,22 @@
         input.addEventListener('blur', function () { paint(); });
     }
     if (lsw) lsw.addEventListener('click', function (e) { e.stopPropagation(); wr(LON, locOn() ? '0' : '1'); apply(); paint(); if (locOn()) refreshLoc(true); });
-    document.addEventListener('visibilitychange', function () { if (!document.hidden) { refreshLoc(false); readVpn(); } });
+    document.addEventListener('visibilitychange', function () { if (!document.hidden) { if (!placeName && window.HzGeo) window.HzGeo.forget(); refreshLoc(false); readVpn(); } });
     setInterval(function () { if (!document.hidden) readVpn(); }, 15000);
     if (reset) reset.addEventListener('click', function () { del(NM); if (input) input.value = ''; apply(); paint('reset'); });
 
+    /* V1.50.0: tap the place tag. No place yet: ask again (shows the Android prompt). Blocked: open the app's settings page. */
+    if (feed) feed.addEventListener('click', function (e) {
+        var t = e.target && e.target.closest ? e.target.closest('.message.user .meta-loc') : null;
+        if (!t || !t.classList.contains('none')) return;
+        if (locErr === 1 && window.HzGeo) { window.HzGeo.settings(); return; }
+        if (window.HzGeo) window.HzGeo.forget();
+        locNote = ''; locErr = 0; apply(); refreshLoc(true);
+    });
     if (feed && window.MutationObserver) new MutationObserver(apply).observe(feed, { childList: true, subtree: true });
-    window.HzOperator = { enabled: enabled, name: name, apply: apply, place: function () { return placeName; } };
+    window.HzOperator = { enabled: enabled, name: name, apply: apply, place: function () { return placeName; },
+        /* V1.51.0: what to save on a message at the moment it is sent */
+        stamp: function () { return locOn() && placeName ? { place: placeName, vpn: vpn === true } : null; } };
     apply();
     paint();
     setTimeout(function () { refreshLoc(true); readVpn(); }, 1500);

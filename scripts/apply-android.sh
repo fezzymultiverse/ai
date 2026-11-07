@@ -135,21 +135,7 @@ grep -q 'android:name=".HorizonSpeakService"' "$MANIFEST" || { echo "Speak servi
 grep -q 'org.jetbrains.kotlin.android' android/app/build.gradle || { echo "Kotlin plugin not applied to app/build.gradle" >&2; exit 1; }
 echo "Native plugin sources verified."
 
-# ---- V1.37.0: offline neural voices (sherpa-onnx, Piper; Kokoro removed in V1.44.0) ----
-sed "s/__APPID__/${APPID}/" "resources/android/java/HorizonSherpaPlugin.kt" > "$JAVA_DIR/HorizonSherpaPlugin.kt"
-python3 - <<'PY'
-from pathlib import Path
-app = Path('android/app/build.gradle')
-s = app.read_text()
-if 'commons-compress' not in s:
-    s = s.replace('dependencies {', "dependencies {\n    implementation 'org.apache.commons:commons-compress:1.26.2'", 1)
-app.write_text(s)
-PY
-bash scripts/fetch-sherpa.sh
-[ -s "$JAVA_DIR/HorizonSherpaPlugin.kt" ] || { echo "Native source missing after apply: HorizonSherpaPlugin.kt" >&2; exit 1; }
-grep -q "registerPlugin(HorizonSherpaPlugin.class)" "$JAVA_DIR/MainActivity.java" || { echo "MainActivity does not register HorizonSherpaPlugin" >&2; exit 1; }
-grep -q "commons-compress" android/app/build.gradle || { echo "commons-compress missing from app/build.gradle" >&2; exit 1; }
-echo "Offline neural voice engine applied."
+# ---- V1.47.0: Piper / sherpa-onnx removed (no native voice libraries, no commons-compress) ----
 
 # ---- V1.43.0: app lock (fingerprint prompt) ----
 python3 - <<'PY'

@@ -12,6 +12,40 @@
   <img alt="Capacitor 6" src="https://img.shields.io/badge/Capacitor-6-00e5ff">
 </p>
 
+## What's new in V1.51.0
+
+- **Place stamped when you send.** Each message saves the place (and VPN flag) it was sent from, in the chat itself (`place`, `vpn` on the message, set in `pushMessage` through `HzOperator.stamp()`). The tag reads that saved place, so old messages no longer jump to wherever you are now. Messages sent before V1.51.0 show no place tag. A just-sent message with no known place yet shows the live state (Allow location, Location off, Locating) and tapping it retries.
+- *Tested in headless Chromium with a stubbed Android plugin: stamped, old and VPN messages render correctly. Not tested on a device.*
+
+## What's new in V1.50.0
+
+- **Place on your messages fixed.** The red pin and place name never showed because the app leaned on the WebView's own location prompt, which Android did not always raise. Horizon now asks Android directly (new native methods `locationStatus`, `requestLocation`, `getLocation` in HorizonPermsPlugin) and the new `horizon_geo.js` (`window.HzGeo`) shares one request between the message tag and the DASH, so there is never a double prompt. In a plain browser it falls back to the normal browser location.
+- **The tag explains itself.** *Allow location*, *Location off* or *No location* instead of one vague text. Tap it: it asks again, or opens Android's app settings when location is blocked.
+- **Location switch** under Settings, Permissions (red or green like the others). The DASH "Use my real location" button opens Android settings when blocked.
+- **Square starter tiles.** The 4 tiles on the chat screen (Build a script, Search the web, Make a PDF, Plan a build) are squares: icon on top, title and text at the bottom. Phones under 340 px wide keep one wide tile per row; Snooze keeps its compact tiles.
+- *Not tested on a device: the Java was not compiled here (no Android toolchain), so the CI build is the first compile. JavaScript passed syntax checks.*
+
+## What's new in V1.49.0
+
+- **Create strip in the + menu.** Three buttons under the Tools title, each with its own SVG icon: **DiceBear**, **Memegen** and **p5.js**. Each opens a full-screen sheet (Back or Esc closes it). Results can be **attached to the next message**, copied or saved to Documents/Horizon. No keys anywhere. New files: horizon_creator.js/css; `window.HorizonCreator` is started from index.html next to HorizonAttach.
+- **DiceBear** (api.dicebear.com, `9.x`, falls back to `7.x`): 30 styles, any seed, Random, 6 variations to tap, background colour, corner radius, flip. Attach sends a 512 px PNG; Copy SVG, Save SVG, Save PNG and Copy link are there too.
+- **Memegen** (api.memegen.link): live template list (cached, with a built-in fallback), one input per text line, JPG/PNG/WebP/GIF, width, Random example, and a **custom** template with your own background image link. Special characters are escaped the Memegen way (`?` `&` `%` `#` `/` `"` and line breaks).
+- **p5.js** (1.9.4): four samples, editable code, Run and Stop, touch works. The sketch runs in a sealed iframe (`sandbox="allow-scripts"`) so it cannot read chats, keys or the Vault. Attach picture, Attach code (so the AI can fix it), Save PNG, Save code, Copy code. p5.js is fetched from jsDelivr (cdnjs as backup) on first run and kept in Cache Storage after that, so the first run needs internet.
+- *Not tested on a device. Checked in headless Chromium with the three services mocked; the live DiceBear and Memegen endpoints and the p5.js download were not reachable from the build machine. The Memegen template ids in the built-in fallback list (other than buzz, ds, oprah, iw, rollsafe, pigeon, ugandanknuck, both, custom) are from memory; the live list replaces them.*
+
+## What's new in V1.48.0
+
+- **TTS.ai replaces FreeTTS.ai** (Settings, Voice, Natural: TTS.ai). Kokoro voices through `api.tts.ai/v1/tts/`: the text is queued, then Horizon polls `/v1/speech/results/` for the audio link. No key needed on their free tier (500 characters per request, about 5,000 a day); an optional `sk-tts-` key from tts.ai/account raises limits. The ten voices listed are the standard Kokoro set; tts.ai's own live voice list was not checked. *Not tested against the live service here.*
+
+## What's new in V1.47.0
+
+- **Piper removed.** The sherpa-onnx offline engine, its download script and the Voice settings panel are gone. No native voice libraries ship in the APK any more. Old Piper downloads in app storage are deleted on the next launch. A saved Piper choice becomes the Android voice.
+- **Android speech engine list** (Settings, Voice, Android voice). Lists every speech engine installed on the phone and lets you choose one (Google, Samsung, a Kokoro engine app). The plugin starts a third-party engine only when it speaks and releases it after about 45 seconds idle. *Not tested on a device: the Java was not compiled here (no Android toolchain), so the CI build is the first compile.*
+- **Test plays the selected voice only.** It no longer falls back to another voice silently; a missing key or failure is shown. Normal replies keep the fallback chain.
+- **Thinking toggle text** in the + menu wraps instead of ending in dots (all tool rows).
+- **Voice notes:** Groq gets the original recording; the WAV re-encode only happens for Gemini or if Groq cannot read the container.
+- **Idle load:** the wave animation and the background tidy-up skip work while nothing plays or the app is hidden.
+
 ## What's new in V1.46.0
 
 - **Terminal AI box.** AI button in the Terminal bar opens a half-screen floating box. Commands get COPY and → $ (prompt) buttons; the AI never runs anything. PINNED / MOVE sign locks or drags the box. OUT attaches the last terminal output. New files: horizon_termai.js/css; bridge `window.HorizonAskAI` in index.html.
@@ -34,7 +68,7 @@
 
 ## What's new in V1.44.0
 
-- **Kokoro removed.** The Kokoro offline voice is gone from the Voice list and the native plugin (Piper voices stay). A Kokoro download from an older version is deleted on the next Voice settings visit to free about 330 MB. *Tested:* syntax checks only. *Not tested:* the Kotlin change has not been compiled.
+- **Kokoro removed.** The Kokoro offline voice is gone from the Voice list and the native plugin (Piper was removed later, in V1.47.0). A Kokoro download from an older version is deleted on the next Voice settings visit to free about 330 MB. *Tested:* syntax checks only. *Not tested:* the Kotlin change has not been compiled.
 - **FreeTTS.ai voice** (Settings, Voice, Natural: FreeTTS.ai). You paste the endpoint and your key; the voice name is optional. It accepts raw audio, base64 audio inside JSON, or a link to the audio inside JSON. Any failure falls back to the Android voice and says why. Pollinations voice is still there, untouched. *Planned:* lock the endpoint and request shape to FreeTTS.ai's real docs once the key exists. *Not tested:* against FreeTTS.ai (no key, no network here).
 - **No more white flash when leaving the app.** The window and WebView behind the page were always white. They now take the theme colour (Light, Dark, Cyan), saved on the device and repainted on start, pause and resume (HorizonPerms.setBackdrop). *Not tested:* on a phone. The Java change has not been compiled.
 

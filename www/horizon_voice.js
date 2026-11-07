@@ -190,13 +190,22 @@
     const keysOf = id => (host.keys ? host.keys(id) : []).filter(Boolean);
     const groq = keysOf('groq'), gem = keysOf('gemini');
     if (!groq.length && !gem.length) throw new Error('Add a Groq or Gemini key in API PROVIDERS PLUS KEYS to send voice notes.');
-    let file = blob, name = 'voice.' + (/mp4/.test(blob.type) ? 'm4a' : /ogg/.test(blob.type) ? 'ogg' : 'webm'), mime = blob.type || 'audio/webm';
-    try { file = await toWav(blob); name = 'voice.wav'; mime = 'audio/wav'; } catch (e) { /* send the original recording */ }
-    let last = null;
+    // V1.47.0: Groq reads the original recording (webm/ogg/m4a) directly. The old code always decoded it and re-encoded a
+    // 16 kHz WAV first, which is slow on a phone and 5 to 8 times bigger to upload. The WAV is now made only when Gemini needs it.
+    const origName = 'voice.' + (/mp4|m4a|aac/.test(blob.type) ? 'm4a' : /ogg/.test(blob.type) ? 'ogg' : 'webm');
+    let last = null, wavP = null;
+    const wav = () => wavP || (wavP = toWav(blob));
     const attempts = [];
-    groq.slice(0, 2).forEach(k => attempts.push(() => viaGroq(file, name, k)));
-    if (mime === 'audio/wav' || /ogg|mp4|mpeg|aac/.test(mime)) gem.slice(0, 2).forEach(k => attempts.push(() => viaGemini(file, mime, k)));
-    if (!attempts.length) throw new Error('This recording needs a Groq key to be read.');
+    groq.slice(0, 2).forEach(k => attempts.push(async () => {
+      try { return await viaGroq(blob, origName, k); }
+      catch (e) {
+        // only if Groq could not read the container, fall back to the slower WAV
+        if (e && /format|decod|invalid|unsupported|media|file/i.test(String(e.message || ''))) return viaGroq(await wav(), 'voice.wav', k);
+        throw e;
+      }
+    }));
+    gem.slice(0, 2).forEach(k => attempts.push(async () => { const w = await wav(); return viaGemini(w, 'audio/wav', k); }));
+    if (!attempts.length) throw new Error('This recording needs a Groq or Gemini key to be read.');
     for (const run of attempts) {
       try {
         const text = await run();

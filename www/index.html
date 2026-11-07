@@ -1413,6 +1413,7 @@
         .tm-row .tm-pill:active { background: var(--surface-hover); }
     </style>
     <link rel="stylesheet" href="horizon_addons.css">
+    <link rel="stylesheet" href="horizon_creator.css">
     <link rel="stylesheet" href="horizon_attach.css">
     <link rel="stylesheet" href="horizon_chatq.css">
     <link rel="stylesheet" href="horizon_voice.css">
@@ -1976,24 +1977,19 @@
                     <label class="field-label" for="ttsEngine">Voice</label>
                     <select id="ttsEngine">
                         <option value="gemini">Natural: Gemini (30 voices)</option>
-                        <option value="freetts">Natural: FreeTTS.ai (needs key)</option>
+                        <option value="ttsai">Natural: TTS.ai (Kokoro, free tier, no key)</option>
                         <option value="pollinations">Natural: Pollinations (6 voices, needs key)</option>
-                        <option value="sherpa">Offline neural: Piper (download once)</option>
                         <option value="standard">Standard: Android voice (free, offline)</option>
                     </select>
                     <div class="tts-nat" id="ttsNat" hidden>
                         <label class="field-label" id="ttsNVoiceLbl" for="ttsNVoice">Natural voice</label>
                         <select id="ttsNVoice"></select>
-                        <div id="ttsFreeRow" hidden>
-                            <label class="field-label" for="ttsFreeUrl">FreeTTS.ai endpoint</label>
-                            <input type="url" id="ttsFreeUrl" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="https://... (the text-to-speech address from your FreeTTS.ai dashboard)">
-                            <label class="field-label" for="ttsFreeKey">FreeTTS.ai key</label>
-                            <input type="password" id="ttsFreeKey" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Paste your FreeTTS.ai key">
-                            <label class="field-label" for="ttsFreeVoice">Voice name (optional)</label>
-                            <input type="text" id="ttsFreeVoice" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Leave empty for their default voice">
+                        <div id="ttsAiRow" hidden>
+                            <label class="field-label" for="ttsAiKey">TTS.ai key (optional)</label>
+                            <input type="password" id="ttsAiKey" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="sk-tts-... (leave empty to use the free tier)">
                             <div class="card-actions">
-                                <button class="use-btn" id="ttsFreeSave" type="button">Save</button>
-                                <button class="use-btn" id="ttsFreeClear" type="button">Remove key</button>
+                                <button class="use-btn" id="ttsAiSave" type="button">Save key</button>
+                                <button class="use-btn" id="ttsAiClear" type="button">Remove key</button>
                             </div>
                         </div>
                         <div id="ttsPollRow" hidden>
@@ -2006,20 +2002,10 @@
                         </div>
                         <p class="hint" id="ttsNatHint"></p>
                     </div>
-                    <div class="tts-nat" id="ttsSherpa" hidden>
-                        <label class="field-label" for="ttsSModel">Offline voice</label>
-                        <select id="ttsSModel"></select>
-                        <div id="ttsSSidRow" hidden>
-                            <label class="field-label" for="ttsSSid">Speaker</label>
-                            <select id="ttsSSid"></select>
-                        </div>
-                        <div class="card-actions">
-                            <button class="use-btn" id="ttsSGet" type="button">Download</button>
-                            <button class="use-btn" id="ttsSDel" type="button" hidden>Delete</button>
-                        </div>
-                        <p class="hint" id="ttsSHint"></p>
-                    </div>
                     <div id="ttsAndroid">
+                        <label class="field-label" for="ttsNEngine">Android speech engine</label>
+                        <select id="ttsNEngine"><option value="">Phone default</option></select>
+                        <p class="hint" id="ttsNEngineHint"></p>
                         <label class="field-label" for="ttsLang">Accent or language</label>
                         <select id="ttsLang"><option value="">All voices</option></select>
                         <label class="field-label" for="ttsVoice">Android voice</label>
@@ -2133,11 +2119,13 @@
     <script src="horizon_music.js"></script>
     <script src="horizon_vault.js"></script>
     <script src="horizon_attach.js"></script>
+    <script src="horizon_creator.js"></script>
     <script src="horizon_voice.js"></script>
     <script src="horizon_screen.js"></script>
     <script src="horizon_lens.js"></script>
     <script src="horizon_archive.js"></script>
     <script src="horizon_slash.js"></script>
+    <script src="horizon_geo.js"></script>
     <script src="horizon_dash.js"></script>
     <script src="horizon_shell.js"></script>
     <script src="horizon_browser.js"></script>
@@ -3662,9 +3650,12 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             return bubble;
         }
 
-        function addUserMessage(text, ts, att, msg) {
+        function addUserMessage(text, ts, att, msg, stamp) {
             const bubble = buildMessage('user', ts);
             bubble.textContent = text;
+            { const st = msg || stamp, w0 = bubble.parentNode;   // V1.51.0: the saved place rides on the message element
+              if (st && st.place) { w0.dataset.place = st.place; if (st.vpn) w0.dataset.vpn = '1'; }
+              if (Date.now() - ts < 8000) w0.dataset.fresh = '1'; }
             if (msg) { bubble.parentNode._msg = msg; if (msg.edited) { const tm = bubble.parentNode.querySelector('.message-meta .meta-time'); if (tm) tm.textContent += ' \u00b7 edited'; } }
             if (att && att.length && window.HorizonAttach) bubble.parentNode.appendChild(HorizonAttach.cards(att));
             if (att && att.length && att.every(a => a.kind === 'voice') && /^Voice notes?\.$/.test(text)) bubble.style.display = 'none';   // a voice note alone shows just its card
@@ -4125,6 +4116,10 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             const m = { role, text, ts: Date.now() };
             if (ms) m.ms = ms;
             if (info) Object.assign(m, info);
+            if (role === 'user' && window.HzOperator && window.HzOperator.stamp) {   // V1.51.0: the place is stamped when the message is sent and never changes
+                const pl = window.HzOperator.stamp();
+                if (pl && pl.place) { m.place = pl.place; if (pl.vpn) m.vpn = 1; }
+            }
             chat.messages.push(m);
             chat.updated = m.ts;
             if (role === 'user' && chat.title === 'New chat') chat.title = text.replace(/\s+/g, ' ').slice(0, 42);
@@ -5494,7 +5489,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             clearTray();
             if (!opts.redo) {
                 const userMsg = pushMessage(chat, 'user', text);
-                addUserMessage(text, userMsg.ts);
+                addUserMessage(text, userMsg.ts, null, null, userMsg);
             }
             resetUsage();
             liveCtx = { prov: 'pollinations', name: 'Pollinations', model: 'image' };
@@ -6270,6 +6265,20 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                     return 'Microphone allowed';
                 },
                 async off() { lsSet(LS.micOn, '0'); return 'Horizon will not use the microphone'; }
+            },
+            {
+                id: 'loc', name: 'Location', icon: 'i-globe',
+                desc: 'Lets Horizon read your phone location for the place name on your messages and the DASH weather. It is rounded to about 1 km before any lookup and never sent with your chats.',
+                async status() { return window.HzGeo ? await window.HzGeo.status() : null; },
+                async on() {
+                    if (!window.HzGeo) throw new Error('Location helper is missing.');
+                    window.HzGeo.forget();
+                    const g = await window.HzGeo.get(true);
+                    if (g && g.lat != null) return 'Location allowed';
+                    if (g && g.err === 1) { await window.HzGeo.settings(); throw new Error('Allow Location in the settings page that opened.'); }
+                    throw new Error((g && g.why) || 'No location fix yet.');
+                },
+                async off() { await window.HzGeo.settings(); return 'Turn Location off for Horizon in the settings page that opened'; }
             }
         ];
         const permState = {};
@@ -7071,6 +7080,30 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             notice(next ? 'Screen on. Horizon can see the app screen (never keys, the Vault or chat text).' : 'Screen off. Horizon cannot see the app screen.');
         }
         if (window.HorizonAttach) HorizonAttach.init({ notice: (t, k) => notice(t, k) });
+        // V1.49.0: Create strip in the + menu (DiceBear, Memegen.link, p5.js). No keys.
+        if (window.HorizonCreator) HorizonCreator.init({
+            notice: (t, k) => notice(t, k),
+            fetch: u => webFetchFn()(u),
+            save: async (blob, fname) => {
+                const FSP = plug('Filesystem');
+                if (NATIVE && FSP) {
+                    const data = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1]); r.onerror = () => rej(r.error); r.readAsDataURL(blob); });
+                    const targets = [
+                        { directory: 'DOCUMENTS', path: `Horizon/${fname}`, label: `Documents/Horizon/${fname}` },
+                        { directory: 'EXTERNAL', path: `Horizon/${fname}`, label: `app storage/Horizon/${fname}` }
+                    ];
+                    let first = '';
+                    for (const t of targets) {
+                        try { await FSP.writeFile({ path: t.path, data, directory: t.directory, recursive: true }); return t.label; } catch (e) { first = first || friendlyError(e); }
+                    }
+                    throw new Error('Could not save the file: ' + first);
+                }
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob); a.download = fname;
+                document.body.appendChild(a); a.click(); a.remove();
+                return fname;
+            }
+        });
         if (window.HorizonArchive) HorizonArchive.init({ notice: (t, k) => notice(t, k) });
         if (window.HorizonLens) HorizonLens.init({
             canSee: () => canSeeImages(state.active, state.models[state.active]),
@@ -7273,7 +7306,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             permIntro: 'What Horizon is allowed to do on this phone.',
             ytCard: 'The servers Horizon uses to find and fetch music.',
             themeCard: 'Light, Dark or Neon cyan.',
-            ttsCard: 'Hear Horizon\'s replies read aloud. Natural Gemini, FreeTTS.ai or Pollinations voices, or the free Android voice.',
+            ttsCard: 'Hear Horizon\'s replies read aloud. Natural Gemini, TTS.ai or Pollinations voices, or the free Android voice.',
             'card-gemini': 'Google Gemini. Add a key, pick a model and switch it on.',
             'card-groq': 'Groq. Fast Llama and GPT-OSS models. Add a key and pick a model.',
             'card-cohere': 'Cohere Command models. Add a key (a free trial key works) and pick a model.',
@@ -7485,9 +7518,9 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             status: $('#ttsStatus'), test: $('#ttsTest'), engine: $('#ttsEngine'), voice: $('#ttsVoice'), lang: $('#ttsLang'), diag: $('#ttsDiag'), more: $('#ttsMore'),
             rate: $('#ttsRate'), rateVal: $('#ttsRateVal'), pitch: $('#ttsPitch'), pitchVal: $('#ttsPitchVal'), pitchWrap: $('#ttsPitchWrap'),
             android: $('#ttsAndroid'), nat: $('#ttsNat'), nVoice: $('#ttsNVoice'), nHint: $('#ttsNatHint'),
-            freeRow: $('#ttsFreeRow'), freeUrl: $('#ttsFreeUrl'), freeKey: $('#ttsFreeKey'), freeVoice: $('#ttsFreeVoice'), freeSave: $('#ttsFreeSave'), freeClear: $('#ttsFreeClear'), nLbl: $('#ttsNVoiceLbl'),
+            aiRow: $('#ttsAiRow'), aiKey: $('#ttsAiKey'), aiSave: $('#ttsAiSave'), aiClear: $('#ttsAiClear'), nLbl: $('#ttsNVoiceLbl'),
             pollRow: $('#ttsPollRow'), pollKey: $('#ttsPollKey'), pollSave: $('#ttsPollSave'), pollClear: $('#ttsPollClear'),
-            sherpa: $('#ttsSherpa'), sModel: $('#ttsSModel'), sSid: $('#ttsSSid'), sSidRow: $('#ttsSSidRow'), sGet: $('#ttsSGet'), sDel: $('#ttsSDel'), sHint: $('#ttsSHint')
+            nEngine: $('#ttsNEngine'), nEngineHint: $('#ttsNEngineHint')
         };
         const fmtX = v => (+v).toFixed(2).replace(/\.?0+$/, '') + '\u00d7';
 
@@ -7495,28 +7528,15 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         function paintEngine() {
             if (!TTS) return;
             const s = TTS.settings();
-            const cloud = s.engine !== 'standard' && s.engine !== 'sherpa';
+            const cloud = s.engine !== 'standard';
             vEl.engine.value = s.engine;
             vEl.android.hidden = s.engine !== 'standard';
             vEl.pitchWrap.hidden = false;
             vEl.nat.hidden = !cloud;
-            vEl.sherpa.hidden = s.engine !== 'sherpa';
             vEl.pollRow.hidden = s.engine !== 'pollinations';
-            vEl.freeRow.hidden = s.engine !== 'freetts';
-            if (s.engine === 'sherpa') paintSherpa();
+            vEl.aiRow.hidden = s.engine !== 'ttsai';
             if (!cloud) return;
             const eng = TTS.cloud[s.engine];
-            if (s.engine === 'freetts') {
-                // V1.44.0: FreeTTS.ai has no fixed voice list here. The endpoint, key and an optional voice name are typed in.
-                vEl.nVoice.hidden = true; vEl.nLbl.hidden = true;
-                if (document.activeElement !== vEl.freeUrl) vEl.freeUrl.value = s.furl || '';
-                if (document.activeElement !== vEl.freeVoice) vEl.freeVoice.value = s.fvoice || '';
-                vEl.freeKey.placeholder = eng.hasKey() ? 'Key saved. Paste a new one to replace it' : 'Paste your FreeTTS.ai key';
-                vEl.nHint.textContent = (eng.hasKey() && eng.hasUrl())
-                    ? 'FreeTTS.ai is ready. Tap Test to hear it. If it fails or runs out, Horizon switches to the Android voice and tells you why. Speed and pitch both work.'
-                    : 'Paste the FreeTTS.ai text-to-speech address from your dashboard and your key, then tap Save and Test.';
-                return;
-            }
             vEl.nVoice.hidden = false; vEl.nLbl.hidden = false;
             vEl.nVoice.replaceChildren();
             eng.voices.forEach(v => {
@@ -7524,8 +7544,13 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 o.value = v.id; o.textContent = v.name;
                 vEl.nVoice.appendChild(o);
             });
-            vEl.nVoice.value = s.engine === 'gemini' ? s.gvoice : s.pvoice;
-            if (s.engine === 'gemini') {
+            vEl.nVoice.value = s.engine === 'gemini' ? s.gvoice : s.engine === 'ttsai' ? s.avoice : s.pvoice;
+            if (s.engine === 'ttsai') {
+                vEl.aiKey.placeholder = eng.hasKey() ? 'Key saved. Paste a new one to replace it' : 'sk-tts-... (leave empty to use the free tier)';
+                vEl.nHint.textContent = eng.hasKey()
+                    ? 'TTS.ai key saved. Kokoro voices from tts.ai. If it fails or runs out, Horizon switches to the Android voice and tells you why. Speed and pitch both work.'
+                    : 'Works with no key on the TTS.ai free tier (about 5,000 characters a day, 10 requests a minute). A free account from tts.ai/account gives a key with higher limits. Speed and pitch both work.';
+            } else if (s.engine === 'gemini') {
                 const n = eng.keyCount();
                 vEl.nHint.textContent = n
                     ? `Uses your Gemini key${n === 1 ? '' : 's'} from API PROVIDERS PLUS KEYS (${n} found). Google's free tier has limits. When it runs out, Horizon switches to the Android voice. Speed and pitch both work (pitch also shifts speed a little on natural voices).`
@@ -7538,56 +7563,10 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             }
         }
 
-        // V1.37.0: offline neural voices. Pick one, download it once, then it speaks with no internet.
-        let sherpaInfo = null, sherpaBusy = false;
-        function sherpaPick() { return (sherpaInfo && sherpaInfo.models.find(m => m.id === vEl.sModel.value)) || null; }
-        function paintSherpaButtons() {
-            const m = sherpaPick();
-            vEl.sGet.hidden = !m || m.installed;
-            vEl.sDel.hidden = !m || !m.installed;
-            vEl.sGet.disabled = vEl.sDel.disabled = sherpaBusy;
-            vEl.sSidRow.hidden = !m || !m.installed || m.speakers < 2;
-            if (m && m.speakers > 1) {
-                const cur = TTS.settings().ssid;
-                vEl.sSid.replaceChildren();
-                for (let i = 0; i < m.speakers; i++) { const o = document.createElement('option'); o.value = i; o.textContent = 'Voice ' + (i + 1); vEl.sSid.appendChild(o); }
-                vEl.sSid.value = String(Math.min(cur, m.speakers - 1));
-            }
-        }
-        async function paintSherpa() {
-            if (!TTS) return;
-            try { sherpaInfo = await TTS.sherpa.status(); } catch (e) { sherpaInfo = { available: false, models: [] }; }
-            if (!sherpaInfo.available || !sherpaInfo.models.length) {
-                vEl.sModel.replaceChildren();
-                vEl.sGet.hidden = vEl.sDel.hidden = vEl.sSidRow.hidden = true;
-                vEl.sHint.textContent = TTS.sherpa.usable()
-                    ? 'The offline voice engine could not start on this device (it needs a 64-bit phone). Horizon will use the Android voice.'
-                    : 'Offline neural voices need the Android app build with the offline engine. Horizon will use the Android voice.';
-                return;
-            }
-            const s = TTS.settings();
-            vEl.sModel.replaceChildren();
-            sherpaInfo.models.forEach(m => {
-                const o = document.createElement('option');
-                o.value = m.id;
-                o.textContent = `${m.name} · ~${m.sizeMB} MB${m.installed ? ' · downloaded' : ''}`;
-                vEl.sModel.appendChild(o);
-            });
-            const want = sherpaInfo.models.find(m => m.id === s.smodel && m.installed) || sherpaInfo.models.find(m => m.installed) || sherpaInfo.models[0];
-            vEl.sModel.value = want.id;
-            if (want.installed && s.smodel !== want.id) TTS.set('smodel', want.id);
-            if (!want.installed) TTS.set('smodel', '');
-            paintSherpaButtons();
-            vEl.sHint.textContent = want.installed
-                ? 'Runs fully offline. Speed works; pitch shifts speed a little. If it fails, Horizon switches to the Android voice and tells you why.'
-                : 'Tap Download once (needs internet and the size shown). After that it works with no connection.';
-            vEl.status.textContent = TTS.describe();
-        }
-
         async function paintVoice() {
             if (!TTS) {
                 vEl.status.textContent = 'The voice engine did not load. Install the latest build.';
-                [vEl.test, vEl.engine, vEl.voice, vEl.lang, vEl.more, vEl.rate, vEl.pitch, vEl.nVoice, vEl.pollSave, vEl.pollClear, vEl.sModel, vEl.sGet, vEl.sDel].forEach(x => { x.disabled = true; });
+                [vEl.test, vEl.engine, vEl.voice, vEl.lang, vEl.more, vEl.rate, vEl.pitch, vEl.nVoice, vEl.pollSave, vEl.pollClear, vEl.nEngine].forEach(x => { x.disabled = true; });
                 return;
             }
             const s = TTS.settings();
@@ -7597,11 +7576,33 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             vEl.status.classList.remove('error');
             paintEngine();
             try {
+                await fillEngines();
                 voiceList = await TTS.listVoices();
                 fillLangs();
                 fillVoices();
                 paintDiag();
             } catch (e) { /* the default option stays */ }
+        }
+
+        // V1.47.0: pick which speech engine Android uses (Google, Samsung, a Kokoro engine app...)
+        async function fillEngines() {
+            if (!vEl.nEngine) return;
+            const r = await TTS.listEngines();
+            vEl.nEngine.replaceChildren();
+            const d = document.createElement('option');
+            d.value = '';
+            const defLabel = (r.engines.find(e => e.name === r.def) || {}).label;
+            d.textContent = defLabel ? `Phone default (${defLabel})` : 'Phone default';
+            vEl.nEngine.appendChild(d);
+            r.engines.forEach(e => {
+                const o = document.createElement('option');
+                o.value = e.name; o.textContent = e.label + (e.name === r.def ? ' (default)' : '');
+                vEl.nEngine.appendChild(o);
+            });
+            vEl.nEngine.value = r.engines.some(e => e.name === r.selected) ? r.selected : '';
+            vEl.nEngineHint.textContent = r.engines.length > 1
+                ? `${r.engines.length} speech engines on this phone. Install an engine app (Kokoro, Samsung, Google) and it shows up here. Horizon starts the engine only while it reads and lets it go after a short idle, so no second app keeps running.`
+                : 'Only the phone default engine was found. Install another speech engine app and it will show up here.';
         }
 
         // V1.8.0: every voice and accent Android reports, grouped by accent, with friendly names
@@ -7665,68 +7666,38 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
 
         if (TTS) {
             vEl.engine.addEventListener('change', () => {
+                TTS.stop();                      // so Test always runs the voice you just picked
                 TTS.set('engine', vEl.engine.value);
                 paintEngine();
                 vEl.status.textContent = TTS.describe();
             });
-            vEl.sModel.addEventListener('change', () => {
-                const m = sherpaPick();
-                if (m && m.installed) TTS.set('smodel', m.id);
-                paintSherpaButtons();
-                vEl.sHint.textContent = m && m.installed ? 'Runs fully offline.' : 'Tap Download once (needs internet and the size shown).';
+            vEl.nEngine.addEventListener('change', async () => {
+                TTS.stop();
+                TTS.set('nengine', vEl.nEngine.value);
+                vEl.status.textContent = 'Switching the Android speech engine...';
+                try { voiceList = await TTS.listVoices(true); fillLangs(); fillVoices(); paintDiag(); } catch (e) { /* the default option stays */ }
                 vEl.status.textContent = TTS.describe();
-            });
-            vEl.sSid.addEventListener('change', () => TTS.set('ssid', vEl.sSid.value));
-            vEl.sGet.addEventListener('click', async () => {
-                const m = sherpaPick();
-                if (!m || sherpaBusy) return;
-                sherpaBusy = true; paintSherpaButtons();
-                try {
-                    await TTS.sherpa.download(m.id, ev => { vEl.sHint.textContent = ev.phase === 'download' ? `Downloading ${m.name}: ${ev.pct}%` : 'Installing the voice...'; });
-                    TTS.set('smodel', m.id);
-                    ttsToast('Offline voice ready. Tap Test to hear it.');
-                } catch (e) {
-                    ttsToast('Voice download failed: ' + ((e && e.message) || e), true);
-                }
-                sherpaBusy = false;
-                await paintSherpa();
-            });
-            vEl.sDel.addEventListener('click', async () => {
-                const m = sherpaPick();
-                if (!m || sherpaBusy) return;
-                sherpaBusy = true; paintSherpaButtons();
-                try {
-                    await TTS.sherpa.remove(m.id);
-                    if (TTS.settings().smodel === m.id) TTS.set('smodel', '');
-                    ttsToast('Voice deleted.');
-                } catch (e) {
-                    ttsToast('Could not delete the voice: ' + ((e && e.message) || e), true);
-                }
-                sherpaBusy = false;
-                await paintSherpa();
+                ttsToast('Engine changed. Tap Test to hear it.');
             });
             vEl.nVoice.addEventListener('change', () => {
-                TTS.set(TTS.settings().engine === 'gemini' ? 'gvoice' : 'pvoice', vEl.nVoice.value);
+                TTS.set(TTS.settings().engine === 'gemini' ? 'gvoice' : TTS.settings().engine === 'ttsai' ? 'avoice' : 'pvoice', vEl.nVoice.value);
                 vEl.status.textContent = TTS.describe();
             });
-            vEl.freeSave.addEventListener('click', () => {
-                const u = vEl.freeUrl.value.trim(), k = vEl.freeKey.value.trim();
-                if (u && !/^https:\/\//i.test(u)) { ttsToast('The endpoint must start with https://', true); return; }
-                if (!u && !TTS.settings().furl) { ttsToast('Paste the FreeTTS.ai endpoint first.', true); return; }
-                if (u) TTS.set('furl', u);
-                if (k) TTS.set('fkey', k);
-                TTS.set('fvoice', vEl.freeVoice.value.trim());
-                vEl.freeKey.value = '';
+            vEl.aiSave.addEventListener('click', () => {
+                const v = vEl.aiKey.value.trim();
+                if (!v) { ttsToast('Paste your TTS.ai key first, or just use the free tier without one.', true); return; }
+                TTS.set('akey', v);
+                vEl.aiKey.value = '';
                 paintEngine();
                 vEl.status.textContent = TTS.describe();
-                ttsToast(TTS.cloud.freetts.hasKey() ? 'FreeTTS.ai saved. Tap Test to hear it.' : 'Saved. Now paste your FreeTTS.ai key.', !TTS.cloud.freetts.hasKey());
+                ttsToast('TTS.ai key saved. Tap Test to hear it.');
             });
-            vEl.freeClear.addEventListener('click', () => {
-                TTS.set('fkey', '');
-                vEl.freeKey.value = '';
+            vEl.aiClear.addEventListener('click', () => {
+                TTS.set('akey', '');
+                vEl.aiKey.value = '';
                 paintEngine();
                 vEl.status.textContent = TTS.describe();
-                ttsToast('FreeTTS.ai key removed.');
+                ttsToast('TTS.ai key removed. The free tier still works.');
             });
             vEl.pollSave.addEventListener('click', () => {
                 const v = vEl.pollKey.value.trim();
@@ -7769,7 +7740,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                     vEl.status.textContent = TTS.describe();
                 } else if (st.state === 'playing') {
                     vEl.status.classList.remove('error');
-                    vEl.status.textContent = 'Playing: ' + (st.engine === 'gemini' ? 'Gemini voice' : st.engine === 'pollinations' ? 'Pollinations voice' : st.engine === 'freetts' ? 'FreeTTS.ai voice' : st.engine === 'sherpa' ? 'Offline voice' : st.engine === 'native' ? 'Android voice' : 'Browser voice');
+                    vEl.status.textContent = 'Playing: ' + (st.engine === 'gemini' ? 'Gemini voice' : st.engine === 'pollinations' ? 'Pollinations voice' : st.engine === 'ttsai' ? 'TTS.ai voice' : st.engine === 'native' ? 'Android voice' : 'Browser voice');
                 } else if (st.state === 'idle' && !vEl.status.classList.contains('error')) {
                     vEl.status.textContent = TTS.describe();
                 }

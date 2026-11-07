@@ -9,6 +9,7 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.PowerManager;
 import android.provider.MediaStore;
 import android.provider.Settings;
@@ -38,7 +39,8 @@ import com.getcapacitor.annotation.PermissionCallback;
         @Permission(alias = "microphone", strings = { Manifest.permission.RECORD_AUDIO }),
         @Permission(alias = "audio", strings = { "android.permission.READ_MEDIA_AUDIO" }),
         @Permission(alias = "storage", strings = { Manifest.permission.READ_EXTERNAL_STORAGE }),
-        @Permission(alias = "legacyStorage", strings = { Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE })
+        @Permission(alias = "legacyStorage", strings = { Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE }),
+        @Permission(alias = "location", strings = { Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION })
     }
 )
 public class HorizonPermsPlugin extends Plugin {
@@ -272,6 +274,148 @@ public class HorizonPermsPlugin extends Plugin {
     @PermissionCallback
     private void storageCallback(PluginCall call) {
         resolveStorage(call);
+    }
+
+    // ---------- V1.50.0: location (native, so the place tag and DASH do not depend on the WebView prompt) ----------
+
+    private boolean locOn() {
+        Context c = getContext();
+        return ContextCompat.checkSelfPermission(c, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+            || ContextCompat.checkSelfPermission(c, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+    }
+
+    private void resolveLoc(PluginCall call) {
+        JSObject ret = new JSObject();
+        ret.put("granted", locOn());
+        call.resolve(ret);
+    }
+
+    @PluginMethod
+    public void locationStatus(PluginCall call) {
+        resolveLoc(call);
+    }
+
+    @PluginMethod
+    public void requestLocation(PluginCall call) {
+        if (Build.VERSION.SDK_INT >= 23 && !locOn()) {
+            getActivity().runOnUiThread(() -> requestPermissionForAlias("location", call, "locCallback"));
+            return;
+        }
+        resolveLoc(call);
+    }
+
+    @PermissionCallback
+    private void locCallback(PluginCall call) {
+        resolveLoc(call);
+    }
+
+    private static android.location.Location bestLast(android.location.LocationManager lm, long maxAgeMs) {
+        android.location.Location best = null;
+        String[] names = { android.location.LocationManager.GPS_PROVIDER, android.location.LocationManager.NETWORK_PROVIDER, android.location.LocationManager.PASSIVE_PROVIDER };
+        for (String n : names) {
+            try {
+                android.location.Location l = lm.getLastKnownLocation(n);
+                if (l == null) continue;
+                if (best == null || l.getTime() > best.getTime()) best = l;
+            } catch (SecurityException ignored) {
+                // permission was taken away; the caller sees no fix
+            } catch (Exception ignored) {
+                // provider missing on this phone
+            }
+        }
+        if (best != null && maxAgeMs > 0 && System.currentTimeMillis() - best.getTime() > maxAgeMs) return null;
+        return best;
+    }
+
+    private void resolveFix(PluginCall call, android.location.Location l) {
+        JSObject ret = new JSObject();
+        ret.put("lat", l.getLatitude());
+        ret.put("lon", l.getLongitude());
+        ret.put("acc", (double) l.getAccuracy());
+        ret.put("ageMs", Math.max(0L, System.currentTimeMillis() - l.getTime()));
+        ret.put("provider", l.getProvider() == null ? "" : l.getProvider());
+        call.resolve(ret);
+    }
+
+    @PluginMethod
+    public void getLocation(final PluginCall call) {
+        if (!locOn()) {
+            call.reject("Location permission is denied", "DENIED");
+            return;
+        }
+        final android.location.LocationManager lm = (android.location.LocationManager) getContext().getSystemService(Context.LOCATION_SERVICE);
+        if (lm == null) {
+            call.reject("No location service on this phone", "NOFIX");
+            return;
+        }
+        Integer maxAge = call.getInt("maxAge", 600000);
+        Integer tmo = call.getInt("timeout", 14000);
+        final long maxAgeMs = maxAge == null ? 600000L : maxAge.longValue();
+        final long timeoutMs = tmo == null ? 14000L : tmo.longValue();
+
+        android.location.Location cached = bestLast(lm, maxAgeMs);
+        if (cached != null) {
+            resolveFix(call, cached);
+            return;
+        }
+
+        String prov = null;
+        try {
+            if (lm.isProviderEnabled(android.location.LocationManager.NETWORK_PROVIDER)) prov = android.location.LocationManager.NETWORK_PROVIDER;
+            else if (lm.isProviderEnabled(android.location.LocationManager.GPS_PROVIDER)) prov = android.location.LocationManager.GPS_PROVIDER;
+        } catch (Exception ignored) {
+            prov = null;
+        }
+        if (prov == null) {
+            android.location.Location any = bestLast(lm, 0L);
+            if (any != null) resolveFix(call, any);
+            else call.reject("Location is switched off on the phone", "OFF");
+            return;
+        }
+
+        final java.util.concurrent.atomic.AtomicBoolean done = new java.util.concurrent.atomic.AtomicBoolean(false);
+        final android.os.Handler h = new android.os.Handler(android.os.Looper.getMainLooper());
+        final String provider = prov;
+
+        final Runnable giveUp = new Runnable() {
+            @Override public void run() {
+                if (!done.compareAndSet(false, true)) return;
+                android.location.Location any = bestLast(lm, 0L);
+                if (any != null) resolveFix(call, any);
+                else call.reject("No GPS fix yet", "NOFIX");
+            }
+        };
+        h.postDelayed(giveUp, timeoutMs);
+
+        try {
+            if (Build.VERSION.SDK_INT >= 30) {
+                lm.getCurrentLocation(provider, null, getContext().getMainExecutor(), new java.util.function.Consumer<android.location.Location>() {
+                    @Override public void accept(android.location.Location l) {
+                        if (!done.compareAndSet(false, true)) return;
+                        h.removeCallbacks(giveUp);
+                        if (l != null) { resolveFix(call, l); return; }
+                        android.location.Location any = bestLast(lm, 0L);
+                        if (any != null) resolveFix(call, any);
+                        else call.reject("No GPS fix yet", "NOFIX");
+                    }
+                });
+            } else {
+                lm.requestSingleUpdate(provider, new android.location.LocationListener() {
+                    @Override public void onLocationChanged(android.location.Location l) {
+                        if (!done.compareAndSet(false, true)) return;
+                        h.removeCallbacks(giveUp);
+                        resolveFix(call, l);
+                    }
+                    @Override public void onStatusChanged(String p, int status, Bundle extras) { }
+                    @Override public void onProviderEnabled(String p) { }
+                    @Override public void onProviderDisabled(String p) { }
+                }, android.os.Looper.getMainLooper());
+            }
+        } catch (SecurityException e) {
+            if (done.compareAndSet(false, true)) { h.removeCallbacks(giveUp); call.reject("Location permission is denied", "DENIED"); }
+        } catch (Exception e) {
+            if (done.compareAndSet(false, true)) { h.removeCallbacks(giveUp); call.reject("Could not read the location: " + e.getMessage(), "NOFIX"); }
+        }
     }
 
     // ---------- background keep-alive service ----------

@@ -3,10 +3,10 @@
  * Engines. You pick one under Voice quality; Horizon always falls back to the Android voice if it fails:
  *   1. Gemini        natural voice, 30 voices, uses your Gemini key(s) from API PROVIDERS PLUS KEYS
  *   2. Pollinations  natural voice, 6 voices, uses a Pollinations key (enter.pollinations.ai)
- *   2b. FreeTTS.ai   natural voice (V1.44.0), uses your FreeTTS.ai key and the endpoint you paste under Voice
+ *   2b. TTS.ai       natural Kokoro voices (V1.48.0). Works with no key on their free tier; an optional key raises the limits
  *   3. Native        Android's own speech engine through the HorizonSpeech plugin (free, offline, unlimited)
  *   4. Web Speech    the WebView's speechSynthesis, as a last resort
- * V1.37.0: Offline neural voices (Piper through sherpa-onnx, HorizonSherpa plugin). Download once, then no internet. V1.44.0: Kokoro removed.
+ * V1.47.0: Piper (sherpa-onnx) is removed. The Android voice can now use any speech engine installed on the phone (Google, Samsung, a Kokoro engine app...).
  *
  * The voice is independent of the chat provider: Gemini voice works while Groq, Cohere or Pollinations answers.
  * V1.25.0: Piper is gone (it needed a 60 MB model, WASM and a module worker and did not run reliably on phones).
@@ -43,10 +43,21 @@
             { id: 'onyx', name: 'Onyx · deep male' }
         ]
     };
-    const MAX_CHARS = { native: 3000, web: 180, gemini: 1200, pollinations: 1000, freetts: 1000, sherpa: 450 };
-    const ENGINES = ['standard', 'gemini', 'pollinations', 'freetts', 'sherpa'];
-    const FREE = { timeoutMs: 90000 };      // V1.44.0: FreeTTS.ai. The endpoint is a setting, so a changed URL is a paste, not a rebuild
-    const CLOUD = ['gemini', 'pollinations', 'freetts', 'sherpa'];
+    const MAX_CHARS = { native: 3000, web: 180, gemini: 1200, pollinations: 1000, ttsai: 450 };
+    const ENGINES = ['standard', 'gemini', 'pollinations', 'ttsai'];
+    // V1.48.0: TTS.ai (replaces FreeTTS.ai). POST /v1/tts/ queues a job, then /v1/speech/results/ is polled for the audio link.
+    // No key needed for their free models (500 characters per request). Kokoro voice ids are the standard Kokoro set.
+    const TTSAI = {
+        base: 'https://api.tts.ai/v1/',
+        model: 'kokoro',
+        timeoutMs: 90000,
+        voices: [
+            ['af_bella', 'Bella · US female'], ['af_nicole', 'Nicole · US female'], ['af_sarah', 'Sarah · US female'], ['af_sky', 'Sky · US female'],
+            ['am_adam', 'Adam · US male'], ['am_michael', 'Michael · US male'],
+            ['bf_emma', 'Emma · UK female'], ['bf_isabella', 'Isabella · UK female'], ['bm_george', 'George · UK male'], ['bm_lewis', 'Lewis · UK male']
+        ].map(v => ({ id: v[0], name: v[1] }))
+    };
+    const CLOUD = ['gemini', 'pollinations', 'ttsai'];
     const KEYS = {
         engine: 'horizon_tts_engine',
         voice: 'horizon_tts_voice',
@@ -57,11 +68,9 @@
         gmodel: 'horizon_tts_gemini_model',
         pvoice: 'horizon_tts_poll_voice',
         pkey: 'horizon_tts_poll_key',
-        fkey: 'horizon_tts_free_key',
-        furl: 'horizon_tts_free_url',
-        fvoice: 'horizon_tts_free_voice',
-        smodel: 'horizon_tts_sherpa_model',
-        ssid: 'horizon_tts_sherpa_sid'
+        akey: 'horizon_tts_ttsai_key',
+        avoice: 'horizon_tts_ttsai_voice',
+        nengine: 'horizon_tts_native_engine'
     };
 
     // ----------------------------------------------------------------- helpers
@@ -90,12 +99,14 @@
         return list.filter((k, i, a) => typeof k === 'string' && k.trim() && k !== 'free' && a.indexOf(k) === i).map(k => k.trim());
     }
     const pollKey = () => String(ls.get(KEYS.pkey) || '').trim();
-    const freeKey = () => String(ls.get(KEYS.fkey) || '').trim();
-    const freeUrl = () => String(ls.get(KEYS.furl) || '').trim();
+    const aiIds = TTSAI.voices.map(v => v.id);
+    const aiKey = () => String(ls.get(KEYS.akey) || '').trim();
     function settings() {
-        const gv = ls.get(KEYS.gvoice), pv = ls.get(KEYS.pvoice);
+        const gv = ls.get(KEYS.gvoice), pv = ls.get(KEYS.pvoice), av = ls.get(KEYS.avoice);
         let eng = ls.get(KEYS.engine);
-        if (ENGINES.indexOf(eng) < 0) eng = cloudKeys('gemini').length ? 'gemini' : 'standard';   // first run, or the old Piper setting
+        if (eng === 'freetts') eng = 'ttsai';     // V1.48.0: FreeTTS.ai was replaced by TTS.ai
+        if (eng === 'sherpa') eng = 'standard';   // V1.47.0: Piper is gone, so an old Piper pick becomes the Android voice
+        if (ENGINES.indexOf(eng) < 0) eng = cloudKeys('gemini').length ? 'gemini' : 'standard';   // first run
         return {
             engine: eng,
             voice: ls.get(KEYS.voice) || '',
@@ -104,9 +115,8 @@
             pitch: clamp(ls.get(KEYS.pitch), 0.5, 2, 1),
             gvoice: geminiIds.indexOf(gv) >= 0 ? gv : geminiIds[0],
             pvoice: pollIds.indexOf(pv) >= 0 ? pv : pollIds[0],
-            fvoice: String(ls.get(KEYS.fvoice) || '').trim(),
-            smodel: /^kokoro/i.test(ls.get(KEYS.smodel) || '') ? '' : (ls.get(KEYS.smodel) || ''),   // V1.44.0: a saved Kokoro pick is dropped
-            ssid: Math.max(0, parseInt(ls.get(KEYS.ssid), 10) || 0)
+            avoice: aiIds.indexOf(av) >= 0 ? av : aiIds[0],
+            nengine: String(ls.get(KEYS.nengine) || '').trim()
         };
     }
     function set(key, value) {
@@ -119,11 +129,9 @@
             case 'gvoice': if (geminiIds.indexOf(value) >= 0) ls.set(KEYS.gvoice, value); break;
             case 'pvoice': if (pollIds.indexOf(value) >= 0) ls.set(KEYS.pvoice, value); break;
             case 'pkey': ls.set(KEYS.pkey, String(value || '').trim()); break;
-            case 'fkey': ls.set(KEYS.fkey, String(value || '').trim()); break;
-            case 'furl': ls.set(KEYS.furl, String(value || '').trim()); break;
-            case 'fvoice': ls.set(KEYS.fvoice, String(value || '').trim()); break;
-            case 'smodel': ls.set(KEYS.smodel, String(value || '')); break;
-            case 'ssid': ls.set(KEYS.ssid, String(Math.max(0, parseInt(value, 10) || 0))); break;
+            case 'akey': ls.set(KEYS.akey, String(value || '').trim()); break;
+            case 'avoice': if (aiIds.indexOf(value) >= 0) ls.set(KEYS.avoice, value); break;
+            case 'nengine': ls.set(KEYS.nengine, String(value || '').trim()); voiceCache = null; break;
             default: return false;
         }
         return true;
@@ -235,10 +243,38 @@
     const isMissing = e => !!e && (e.code === 'UNIMPLEMENTED' || /not implemented/i.test(String(e.message || e)));
     const nativeUsable = () => !!nativePlugin();
 
+    // V1.47.0: which speech engine Android uses (Google, Samsung, an engine app...). '' = the phone's default.
+    let engineApplied = null;               // null = nothing sent to the plugin yet this run
+    async function applyEngine(p) {
+        const want = settings().nengine || '';
+        if (engineApplied === want) return;
+        try {
+            const r = await withTimeout(p.setEngine({ engine: want }), 15000, 'it took too long to start');
+            engineApplied = (r && r.failed) ? '' : want;
+            if (r && r.failed) { ls.set(KEYS.nengine, ''); voiceCache = null; throw new Error('it would not start, so Horizon went back to the phone default'); }
+        } catch (e) {
+            if (isMissing(e)) { engineApplied = want; return; }     // an older build without engine choice
+            if (want) { ls.set(KEYS.nengine, ''); engineApplied = ''; voiceCache = null; }
+            throw new Error('The speech engine you picked failed (' + msg(e) + '). Back on the phone default. Tap Test again');
+        }
+    }
+    async function listEngines() {
+        const p = nativePlugin();
+        if (!p) return { engines: [], def: '', selected: '' };
+        try {
+            const r = await withTimeout(p.getEngines(), 8000, 'Engine list timed out');
+            return { engines: (r && r.engines) || [], def: (r && r.default) || '', selected: settings().nengine || '' };
+        } catch (e) {
+            if (isMissing(e)) return { engines: [], def: '', selected: '' };
+            return { engines: [], def: '', selected: '' };
+        }
+    }
+
     async function nativeVoices() {
         const p = nativePlugin();
         if (!p) return [];
         try {
+            await applyEngine(p);
             const r = await withTimeout(p.getSupportedVoices(), 8000, 'Voice list timed out');
             const arr = (r && r.voices) || [];
             return arr.map((v, i) => ({
@@ -257,6 +293,7 @@
         const p = nativePlugin();
         if (!p) throw new Error('The Android voice plugin is not part of this build');
         await nativeStop;
+        await applyEngine(p);                         // throws a readable error if the picked engine will not start
         const voices = await nativeVoices();
         if (tok.cancelled) return;
         const v = voices.find(x => x.id === s.voice) || null;
@@ -292,55 +329,6 @@
         }
         } finally { if (startListener) await startListener.remove(); }
     }
-
-    // ------------------------------------------------------ engine: offline neural (sherpa-onnx)
-    function sherpaPlugin() {
-        if (!NATIVE || !plugFn) return null;
-        try { return plugFn('HorizonSherpa'); } catch (e) { return null; }
-    }
-    function b64Blob(b64, type) {
-        const bin = root.atob(b64);
-        const u8 = new Uint8Array(bin.length);
-        for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
-        return new root.Blob([u8], { type });
-    }
-    async function runSherpa(chunks, tok, s, started) {
-        const p = sherpaPlugin();
-        if (!p) throw new Error('The offline voice engine is not part of this build');
-        if (!s.smodel) throw new Error('no offline voice is downloaded yet (Voice settings, Offline neural)');
-        const synth = text => withTimeout(p.synthesize({ id: s.smodel, text, sid: s.ssid, speed: s.rate }), 120000, 'The offline voice timed out');
-        let first = true;
-        let next = synth(chunks[0]);
-        for (let i = 0; i < chunks.length; i++) {
-            if (tok.cancelled) return;
-            const r = await next;
-            if (tok.cancelled) return;
-            next = i + 1 < chunks.length ? synth(chunks[i + 1]) : null;   // make the next piece while this one plays
-            if (next) next.catch(() => { /* reported when it is awaited */ });
-            await playBlob(b64Blob(r.wav, 'audio/wav'), 1, () => { if (first) { first = false; started(); } }, s.pitch);
-        }
-    }
-    const sherpa = {
-        usable: () => !!sherpaPlugin(),
-        async status() {
-            const p = sherpaPlugin();
-            if (!p) return { available: false, models: [] };
-            return withTimeout(p.status(), 8000, 'Voice list timed out');
-        },
-        async download(id, onProgress) {
-            const p = sherpaPlugin();
-            if (!p) throw new Error('The offline voice engine is not part of this build');
-            let h = null;
-            try { h = await p.addListener('sherpaProgress', ev => { if (ev && ev.id === id && onProgress) onProgress(ev); }); } catch (e) { /* progress is optional */ }
-            try { await p.download({ id }); } finally { if (h) await h.remove(); }
-            voiceCache = null;
-        },
-        async remove(id) {
-            const p = sherpaPlugin();
-            if (!p) throw new Error('The offline voice engine is not part of this build');
-            await p.remove({ id });
-        }
-    };
 
     // ---------------------------------------------------------- engine: Web Speech
     const webUsable = () => !!(root.speechSynthesis && typeof root.SpeechSynthesisUtterance === 'function');
@@ -525,64 +513,45 @@
         return new Blob([u8], { type: (u8[0] === 0x52) ? 'audio/wav' : 'audio/mpeg' });
     }
 
-    // ---- FreeTTS.ai (V1.44.0)
-    // Sends the text with your key to the endpoint you saved under Voice, and accepts the usual ways a TTS API answers:
-    // raw audio, audio as base64 inside JSON, or a link to the audio file inside JSON.
-    const B64ISH = /^[A-Za-z0-9+/=\s_-]{200,}$/;
-    function findAudioIn(o, depth) {
-        if (!o || typeof o !== 'object' || depth > 3) return null;
-        const keys = Object.keys(o);
-        for (const k of keys) {
-            const v = o[k];
-            if (typeof v !== 'string') continue;
-            if (/^data:audio\//i.test(v)) return { b64: v.slice(v.indexOf(',') + 1) };
-            if (/(audio|b64|base64|content|data)/i.test(k) && B64ISH.test(v)) return { b64: v };
-            if (/^https:\/\//i.test(v) && /(url|link|file|audio|result|download)/i.test(k)) return { url: v };
-        }
-        for (const k of keys) { const r = findAudioIn(o[k], depth + 1); if (r) return r; }
-        return null;
-    }
-    async function freeBytes(res) {
-        let u8 = new Uint8Array(await res.arrayBuffer());
-        if (looksLikeAudio(u8)) return u8;
-        let txt = '';
-        try { txt = new TextDecoder().decode(u8); } catch (e) { txt = ''; }
-        try { const dec = b64ToBytes(txt); if (looksLikeAudio(dec)) return dec; } catch (e) { /* not base64 */ }
-        let j = null;
-        try { j = JSON.parse(txt); } catch (e) { j = null; }
-        const hit = j && findAudioIn(j, 0);
-        if (hit && hit.b64) { const dec = b64ToBytes(hit.b64.replace(/-/g, '+').replace(/_/g, '/')); if (looksLikeAudio(dec)) return dec; }
-        if (hit && hit.url) {
-            const r2 = await withTimeout(root.fetch(hit.url), FREE.timeoutMs, 'FreeTTS.ai audio download took too long');
-            if (!r2.ok) throw new Error('FreeTTS.ai audio link gave HTTP ' + r2.status);
-            const b = new Uint8Array(await r2.arrayBuffer());
-            if (looksLikeAudio(b)) return b;
-            try { const dec = b64ToBytes(new TextDecoder().decode(b)); if (looksLikeAudio(dec)) return dec; } catch (e) { /* not base64 */ }
-        }
-        const peek = txt.replace(/\s+/g, ' ').trim().slice(0, 120);
-        throw new Error('FreeTTS.ai did not return audio' + (peek ? ' (it said: ' + peek + ')' : ''));
-    }
-    async function freeSynth(text, voice) {
-        const url = freeUrl(), key = freeKey();
-        if (!url) throw new Error('paste the FreeTTS.ai endpoint under Voice first');
-        if (!/^https:\/\//i.test(url)) throw new Error('the FreeTTS.ai endpoint must start with https://');
-        if (!key) throw new Error('add your FreeTTS.ai key under Voice first');
-        const body = { text, input: text };
-        if (voice) body.voice = voice;
-        const res = await withTimeout(root.fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Accept': 'audio/*, application/json', 'Authorization': 'Bearer ' + key, 'x-api-key': key },
-            body: JSON.stringify(body)
-        }), FREE.timeoutMs, 'FreeTTS.ai voice took too long');
+    // ---- TTS.ai (V1.48.0)
+    const sleep = ms => new Promise(r => setTimeout(r, ms));
+    async function ttsaiSynth(text, voice) {
+        const key = aiKey();
+        const headers = { 'Content-Type': 'application/json' };
+        if (key) headers.Authorization = 'Bearer ' + key;
+        const res = await withTimeout(root.fetch(TTSAI.base + 'tts/', {
+            method: 'POST', headers,
+            body: JSON.stringify({ model: TTSAI.model, text, voice, format: 'mp3' })
+        }), TTSAI.timeoutMs, 'TTS.ai took too long to accept the text');
         if (!res.ok) {
             const m = await errText(res);
-            if (res.status === 401 || res.status === 403) throw new Error('the FreeTTS.ai key was rejected (' + (m || res.status) + ')');
-            if (res.status === 402) throw limitErr('FreeTTS.ai balance is used up (' + (m || '402') + ')', 402);
-            if (res.status === 429) throw limitErr('FreeTTS.ai rate limit (' + (m || '429') + ')', 429);
-            if (res.status === 404) throw new Error('the FreeTTS.ai endpoint was not found (404). Check the address you pasted');
-            throw new Error('FreeTTS.ai error ' + res.status + (m ? ': ' + m : ''));
+            if (res.status === 401 || res.status === 403) throw new Error('the TTS.ai key was rejected (' + (m || res.status) + ')');
+            if (res.status === 402 || res.status === 429) throw limitErr('TTS.ai limit reached (' + (m || res.status) + '). Free tier is 5,000 characters a day and 10 requests a minute', res.status);
+            throw new Error('TTS.ai error ' + res.status + (m ? ': ' + m : ''));
         }
-        const u8 = await freeBytes(res);
+        let u8 = new Uint8Array(await res.arrayBuffer());
+        if (!looksLikeAudio(u8)) {
+            let j = null;
+            try { j = JSON.parse(new TextDecoder().decode(u8)); } catch (e) { j = null; }
+            if (!j || !j.uuid) throw new Error('TTS.ai did not return a job' + (j && (j.error || j.detail) ? ' (' + String(j.error || j.detail).slice(0, 120) + ')' : ''));
+            const t0 = Date.now();
+            let url = '';
+            while (!url) {
+                if (Date.now() - t0 > TTSAI.timeoutMs) throw new Error('TTS.ai took too long to make the audio');
+                await sleep(1200);
+                const r = await withTimeout(root.fetch(TTSAI.base + 'speech/results/?uuid=' + encodeURIComponent(j.uuid)), 20000, 'TTS.ai status check timed out');
+                if (!r.ok) { if (r.status >= 500 || r.status === 404) continue; throw new Error('TTS.ai status error ' + r.status); }
+                let pj = null;
+                try { pj = await r.json(); } catch (e) { pj = null; }
+                if (pj && pj.status === 'failed') throw new Error('TTS.ai could not make the audio' + (pj.error ? ': ' + String(pj.error).slice(0, 120) : ''));
+                if (pj && pj.status === 'completed' && pj.result_url) url = String(pj.result_url);
+            }
+            if (!/^https:\/\//i.test(url)) throw new Error('TTS.ai gave an audio link that is not https');
+            const a = await withTimeout(root.fetch(url), TTSAI.timeoutMs, 'TTS.ai audio download took too long');
+            if (!a.ok) throw new Error('TTS.ai audio link gave HTTP ' + a.status);
+            u8 = new Uint8Array(await a.arrayBuffer());
+            if (!looksLikeAudio(u8)) throw new Error('TTS.ai audio file was not readable');
+        }
         return new Blob([u8], { type: (u8[0] === 0x52) ? 'audio/wav' : (u8[0] === 0x4F ? 'audio/ogg' : 'audio/mpeg') });
     }
 
@@ -600,7 +569,7 @@
     }
     const runGemini = (chunks, tok, s, started) => runCloud(t => geminiSynth(t, s.gvoice), chunks, tok, s, started);
     const runPollinations = (chunks, tok, s, started) => runCloud(t => pollSynth(t, s.pvoice), chunks, tok, s, started);
-    const runFreeTTS = (chunks, tok, s, started) => runCloud(t => freeSynth(t, s.fvoice), chunks, tok, s, started);
+    const runTTSAI = (chunks, tok, s, started) => runCloud(t => ttsaiSynth(t, s.avoice), chunks, tok, s, started);
 
     // Android can refuse to start audio that was not triggered by a tap, and cloud voices take seconds to arrive,
     // so the tap is long gone by the time the sound is ready. A Web Audio context that was created and resumed
@@ -697,8 +666,8 @@
     }
 
     // ------------------------------------------------------------- orchestration
-    const RUN = { gemini: runGemini, pollinations: runPollinations, freetts: runFreeTTS, sherpa: runSherpa, native: runNative, web: runWeb };
-    const LABEL = { gemini: 'Gemini voice', pollinations: 'Pollinations voice', freetts: 'FreeTTS.ai voice', sherpa: 'Offline voice', native: 'Android voice', web: 'Browser voice' };
+    const RUN = { gemini: runGemini, pollinations: runPollinations, ttsai: runTTSAI, native: runNative, web: runWeb };
+    const LABEL = { gemini: 'Gemini voice', pollinations: 'Pollinations voice', ttsai: 'TTS.ai voice', native: 'Android voice', web: 'Browser voice' };
 
     function stop(silent) {
         const c = cur;
@@ -712,7 +681,7 @@
         if (!silent && (c || status.state !== 'idle')) emit({ state: 'idle', id: null, engine: '', error: '' });
     }
 
-    async function speak(id, rawText) {
+    async function speak(id, rawText, opts) {
         unlockAudio();                                 // must run synchronously inside the tap
         stop(true);
         const tok = { cancelled: false };
@@ -727,12 +696,14 @@
         }
         emit({ state: 'loading', id, engine: '', error: '' });
         const order = [];
+        // V1.47.0: strict (the Test button) runs ONLY the voice that is selected, so a missing key or a failure is
+        // reported instead of quietly playing a different voice. Replies keep the fallback chain.
+        const strict = !!(opts && opts.strict);
         if (CLOUD.indexOf(s.engine) >= 0) order.push(s.engine);
-        order.push('native', 'web');
+        if (!strict || CLOUD.indexOf(s.engine) < 0) order.push('native', 'web');
         const errors = [];
         for (const eng of order) {
             if (tok.cancelled) return false;
-            if (eng === 'sherpa' && !sherpa.usable()) continue;
             if (eng === 'native' && !nativeUsable()) continue;
             if (eng === 'web' && !webUsable()) continue;
             if (cool[eng] && cool[eng] > Date.now()) { errors.push(LABEL[eng].toLowerCase() + ' is at its limit, trying again in a minute'); continue; }
@@ -767,12 +738,12 @@
         return false;
     }
 
-    function toggle(id, text) {
+    function toggle(id, text, opts) {
         if (status.id === id && (status.state === 'loading' || status.state === 'playing')) { stop(); return Promise.resolve(false); }
-        return speak(id, text);
+        return speak(id, text, opts);
     }
     const TEST_LINE = 'This is how Horizon sounds. Strategy over impulse.';
-    const test = () => toggle('test', TEST_LINE);
+    const test = () => toggle('test', TEST_LINE, { strict: true });
 
     // ------------------------------------------------------------------ voices UI
     let dispNames = null;
@@ -845,7 +816,7 @@
             langCount: l.langs.length,
             geminiKeys: cloudKeys('gemini').length,
             pollKey: !!pollKey(),
-            freeTTS: !!(freeKey() && freeUrl()),
+            ttsaiKey: !!aiKey(),
             audio
         };
     }
@@ -855,12 +826,9 @@
             if (!cloudKeys('gemini').length) return 'Gemini voice needs a key. Using the Android voice for now.';
             return 'Natural voice (Gemini · ' + s.gvoice + ')';
         }
-        if (s.engine === 'sherpa') {
-            return s.smodel ? 'Offline neural voice (' + s.smodel + ')' : 'Offline neural voice needs a download. Using the Android voice for now.';
-        }
-        if (s.engine === 'freetts') {
-            if (!freeUrl() || !freeKey()) return 'FreeTTS.ai voice needs its endpoint and key. Using the Android voice for now.';
-            return 'Natural voice (FreeTTS.ai' + (s.fvoice ? ' · ' + s.fvoice : '') + ')';
+        if (s.engine === 'ttsai') {
+            const v = TTSAI.voices.find(x => x.id === s.avoice);
+            return 'Natural voice (TTS.ai · ' + (v ? v.name.split(' · ')[0] : s.avoice) + (aiKey() ? '' : ' · free tier') + ')';
         }
         if (s.engine === 'pollinations') {
             if (!pollKey()) return 'Pollinations voice needs a key. Using the Android voice for now.';
@@ -887,14 +855,13 @@
     }
 
     root.HorizonTTS = {
-        init, settings, set, speak, toggle, stop, test, onState, listVoices, describe, diagnose,
+        init, settings, set, speak, toggle, stop, test, onState, listVoices, listEngines, describe, diagnose,
         status: () => status,
         speakable, chunkText,
         cloud: {
             gemini: { voices: GEMINI.voices, keyCount: () => cloudKeys('gemini').length },
             pollinations: { voices: POLL.voices, hasKey: () => !!pollKey() },
-            freetts: { voices: [], hasKey: () => !!freeKey(), hasUrl: () => !!freeUrl() }
-        },
-        sherpa
+            ttsai: { voices: TTSAI.voices, hasKey: () => !!aiKey() }
+        }
     };
 })(window);

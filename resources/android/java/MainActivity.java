@@ -18,12 +18,16 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(HorizonStatsPlugin.class);
         registerPlugin(HorizonBrowserPlugin.class);
         registerPlugin(HorizonShellPlugin.class);
-        registerPlugin(HorizonSherpaPlugin.class);
         registerPlugin(HorizonLockPlugin.class);
         super.onCreate(savedInstanceState);
         HorizonPermsPlugin.paintBackdrop(this);   // V1.44.0: theme colour behind the page, no white flash
 
-        // V1.8.0: let the WebView start audio without a fresh tap. Read-aloud with the Piper voice plays
+        // V1.47.0: Piper is gone. Delete the offline voices an older version downloaded (about 80 MB each).
+        new Thread(() -> {
+            try { deleteTree(new java.io.File(getFilesDir(), "sherpa")); } catch (Throwable ignored) { /* tries again next launch */ }
+        }, "horizon-cleanup").start();
+
+        // V1.8.0: let the WebView start audio without a fresh tap. Read-aloud with a cloud voice plays
         // seconds after the tap that asked for it, and Android refuses that unless this is false.
         try {
             WebView media = getBridge() != null ? getBridge().getWebView() : null;
@@ -49,6 +53,14 @@ public class MainActivity extends BridgeActivity {
         });
     }
 
+    private static void deleteTree(java.io.File f) {
+        if (f == null || !f.exists()) return;
+        java.io.File[] kids = f.listFiles();
+        if (kids != null) for (java.io.File k : kids) deleteTree(k);
+        //noinspection ResultOfMethodCallIgnored
+        f.delete();
+    }
+
     @Override
     public void onPause() {
         HorizonAIPlugin.foreground = false;
@@ -57,7 +69,7 @@ public class MainActivity extends BridgeActivity {
         // Let a reply that is still being fetched finish while the app is in the background.
         try {
             WebView wv = getBridge() != null ? getBridge().getWebView() : null;
-            // Also keep the WebView running while read-aloud is playing, so Piper audio and the next chunk are not frozen.
+            // Also keep the WebView running while read-aloud is playing, so cloud audio and the next chunk are not frozen.
             if (wv != null && (HorizonBgService.wanted || HorizonSpeakService.active)) { wv.onResume(); wv.resumeTimers(); }
         } catch (Exception ignored) {
             // nothing to do

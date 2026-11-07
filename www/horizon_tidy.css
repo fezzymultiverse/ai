@@ -186,3 +186,17 @@ html .message.user .bubble code { color: #f2f3f5; background: #373a40; }
 .hz-bottom .hzb-read { flex: 0 0 100%; min-width: 0; font-size: 12px; overflow: hidden; text-overflow: ellipsis; }
 .hz-bottom > .hz-voice { height: 40px; justify-content: center; padding: 0 10px; border-radius: 20px; }
 @media (max-width: 360px) { .hz-bottom .hzb-bars { display: inline-flex; } .hz-bottom .hzb-model { display: inline; } }
+
+/* V1.47.0: the tool-menu status line was cut off with "..." (Thinking on says "Real extra reasoning on this model").
+   It now wraps to as many lines as it needs. Short notes still sit beside the title; long ones drop under it. */
+#toolMenu .tm-text p.tm-note { flex: 1 1 11em; overflow: visible; text-overflow: clip; white-space: normal; line-height: 1.35; overflow-wrap: anywhere; }
+
+/* V1.50.0: the 4 starter tiles on the chat screen are squares (icon on top, title and text at the bottom). */
+.starters { max-width: 440px; gap: 10px; }
+.starter { aspect-ratio: 1 / 1; min-height: 0; padding: 12px; gap: 5px; justify-content: flex-start; overflow: hidden; }
+.starter .st-ic { margin-bottom: auto; flex: 0 0 auto; }
+.starter b { font-size: 14.5px; line-height: 1.2; }
+.starter small { font-size: 12px; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+@media (max-width: 340px) { .starter { aspect-ratio: auto; min-height: 104px; } .starter .st-ic { margin-bottom: 0; } }
+html.hz-snoozed .welcome .starter { aspect-ratio: auto; }
+html.hz-snoozed .welcome .starter .st-ic { margin-bottom: 0; }

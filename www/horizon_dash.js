@@ -319,6 +319,9 @@
     }
 
     function gpsPermission() {
+        if (window.HzGeo) {
+            return window.HzGeo.status().then(function (ok) { return ok === true ? 'granted' : ok === false ? 'prompt' : 'unknown'; }, function () { return 'unknown'; });
+        }
         try {
             if (navigator.permissions && navigator.permissions.query) {
                 return navigator.permissions.query({ name: 'geolocation' }).then(function (p) { return p.state; }, function () { return 'unknown'; });
@@ -326,7 +329,8 @@
         } catch (e) { /* fall through */ }
         return Promise.resolve('unknown');
     }
-    function getGps() {
+    function getGps(ask) {
+        if (window.HzGeo) return window.HzGeo.get(ask !== false);
         return new Promise(function (res) {
             if (!navigator.geolocation) return res(null);
             navigator.geolocation.getCurrentPosition(function (p) { res({ lat: p.coords.latitude, lon: p.coords.longitude }); },
@@ -355,7 +359,7 @@
             S.gpsState = state;
             var want = state === 'granted' || (lsg(K.gps) === '1' && state !== 'denied');
             if (!want) return null;
-            return getGps();
+            return getGps(state === 'granted');
         }).then(function (g) {
             if (g && g.lat != null) {
                 S.gpsState = 'granted'; lss(K.gps, '1');
@@ -370,6 +374,7 @@
         S.gpsState = 'asking'; paintNet();
         return getGps().then(function (g) {
             if (g && g.lat != null) return resolveReal();
+            if (window.HzGeo) window.HzGeo.forget();
             S.gpsState = (g && g.err === 1) ? 'denied' : 'unknown';
             if (H && H.notice) H.notice(S.gpsState === 'denied' ? 'Location is blocked. Allow it in Android Settings > Apps > Horizon > Permissions.' : 'Could not get a location fix. Try again outside or with GPS on.', 'error');
         }).then(function () { S.netAt = 0; S.wxAt = 0; paintNet(); paintTop(); return refreshWx(true); });
@@ -454,9 +459,9 @@
         box.appendChild(r3);
         var need = S.gpsState !== 'granted' && !(S.real && S.real.src === 'GPS');
         if (need && (S.vpn || S.gpsState === 'asking' || S.gpsState === 'denied' || S.gpsState === 'prompt' || S.gpsState === 'unknown')) {
-            var b = el('button', 'hzd-gps', S.gpsState === 'asking' ? 'Asking...' : S.gpsState === 'denied' ? 'Location blocked in Android settings' : 'Use my real location (GPS)');
-            b.type = 'button'; b.disabled = S.gpsState === 'asking' || S.gpsState === 'denied';
-            b.addEventListener('click', askGps);
+            var b = el('button', 'hzd-gps', S.gpsState === 'asking' ? 'Asking...' : S.gpsState === 'denied' ? 'Location blocked. Tap to open settings' : 'Use my real location (GPS)');
+            b.type = 'button'; b.disabled = S.gpsState === 'asking';
+            b.addEventListener('click', function () { if (S.gpsState === 'denied' && window.HzGeo) { window.HzGeo.settings(); return; } askGps(); });
             box.appendChild(b);
         }
     }
