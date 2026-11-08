@@ -182,7 +182,6 @@ else:
 m.write_text(s)
 PY
 grep -q "requestHighRefresh" "$JAVA_DIR/MainActivity.java" || { echo "MainActivity has no 90 Hz request" >&2; exit 1; }
-echo "Keyboard resize mode and 90 Hz request applied."
 
 # ---- V1.63.0: Kotlin coroutines (structured concurrency) + LeakCanary + pop-up notifications ----
 python3 - <<'PY'
