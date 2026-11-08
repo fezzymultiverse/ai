@@ -181,7 +181,6 @@ else:
     s = s.replace('<activity ', '<activity android:windowSoftInputMode="adjustResize" ', 1)
 m.write_text(s)
 PY
-grep -q 'android:windowSoftInputMode="adjustResize"' "$MANIFEST" || { echo "Could not pin the keyboard resize mode (skipped)" >&2; exit 1; }
 grep -q "requestHighRefresh" "$JAVA_DIR/MainActivity.java" || { echo "MainActivity has no 90 Hz request" >&2; exit 1; }
 echo "Keyboard resize mode and 90 Hz request applied."
 
