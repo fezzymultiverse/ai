@@ -60,6 +60,8 @@ add_perm ACCESS_NETWORK_STATE
 add_perm ACCESS_COARSE_LOCATION
 add_perm ACCESS_FINE_LOCATION
 add_perm USE_BIOMETRIC
+add_perm VIBRATE
+add_perm USE_FULL_SCREEN_INTENT   # V1.63.0: lets a reply open over a locked screen (Android 14 asks the user once)
 
 # V1.5.0: background keep-alive service declared in the manifest
 if ! grep -q "HorizonBgService" "$MANIFEST"; then
@@ -79,7 +81,7 @@ if [ ! -d "$JAVA_DIR" ]; then
     echo "Missing $JAVA_DIR (appId mismatch?)" >&2
     exit 1
 fi
-for f in HorizonPermsPlugin.java HorizonBgService.java HorizonMediaPlugin.java HorizonMediaService.java HorizonArt.java HorizonSpeechPlugin.java HorizonLensPlugin.java HorizonStatsPlugin.java HorizonBrowserPlugin.java MainActivity.java; do
+for f in HorizonPermsPlugin.java HorizonBgService.java HorizonMediaPlugin.java HorizonMediaService.java HorizonArt.java HorizonSpeechPlugin.java HorizonEdgeTts.java HorizonLensPlugin.java HorizonStatsPlugin.java HorizonBrowserPlugin.java MainActivity.java; do
     sed "s/__APPID__/${APPID}/" "resources/android/java/$f" > "$JAVA_DIR/$f"
 done
 
@@ -115,14 +117,14 @@ if 'android:name=".HorizonReplyReceiver"' not in s:
     s = s.replace('</application>', '    <receiver android:name=".HorizonReplyReceiver" android:exported="false" />\n    </application>')
 manifest.write_text(s)
 PY
-for f in HorizonAIPlugin.kt HorizonAIService.kt HorizonReplyReceiver.kt HorizonSpeakService.kt HorizonShellPlugin.kt HorizonLockPlugin.kt; do
+for f in HorizonAIPlugin.kt HorizonAIService.kt HorizonReplyReceiver.kt HorizonSpeakService.kt HorizonShellPlugin.kt HorizonLockPlugin.kt HorizonNotify.kt HorizonScopes.kt HorizonCanary.kt; do
     sed "s/__APPID__/${APPID}/" "resources/android/java/$f" > "$JAVA_DIR/$f"
 done
 echo "Horizon Kotlin AI jobs and reply notifications applied."
 
 # Fail the build loudly if any native plugin source did not land (a missing plugin only shows up at
 # runtime as "unable to find plugin : HorizonAI").
-for f in HorizonPermsPlugin.java HorizonBgService.java HorizonMediaPlugin.java HorizonMediaService.java HorizonArt.java HorizonSpeechPlugin.java HorizonLensPlugin.java HorizonStatsPlugin.java HorizonBrowserPlugin.java MainActivity.java HorizonAIPlugin.kt HorizonAIService.kt HorizonReplyReceiver.kt HorizonSpeakService.kt HorizonShellPlugin.kt HorizonLockPlugin.kt; do
+for f in HorizonPermsPlugin.java HorizonBgService.java HorizonMediaPlugin.java HorizonMediaService.java HorizonArt.java HorizonSpeechPlugin.java HorizonEdgeTts.java HorizonLensPlugin.java HorizonStatsPlugin.java HorizonBrowserPlugin.java MainActivity.java HorizonAIPlugin.kt HorizonAIService.kt HorizonReplyReceiver.kt HorizonSpeakService.kt HorizonShellPlugin.kt HorizonLockPlugin.kt HorizonNotify.kt HorizonScopes.kt HorizonCanary.kt; do
     [ -s "$JAVA_DIR/$f" ] || { echo "Native source missing after apply: $f" >&2; exit 1; }
 done
 grep -q "registerPlugin(HorizonAIPlugin.class)" "$JAVA_DIR/MainActivity.java" || { echo "MainActivity does not register HorizonAIPlugin" >&2; exit 1; }
@@ -146,6 +148,17 @@ if 'androidx.biometric:biometric' not in s:
     s = s.replace('dependencies {', "dependencies {\n    implementation 'androidx.biometric:biometric:1.1.0'", 1)
 app.write_text(s)
 PY
+# ---- V1.62.0: Edge neural voice (native WebSocket) needs OkHttp ----
+python3 - <<'PY'
+from pathlib import Path
+app = Path('android/app/build.gradle')
+s = app.read_text()
+if 'com.squareup.okhttp3:okhttp' not in s:
+    s = s.replace('dependencies {', "dependencies {\n    implementation 'com.squareup.okhttp3:okhttp:4.12.0'", 1)
+app.write_text(s)
+PY
+grep -q "com.squareup.okhttp3:okhttp" android/app/build.gradle || { echo "okhttp library missing from app/build.gradle" >&2; exit 1; }
+[ -s "$JAVA_DIR/HorizonEdgeTts.java" ] || { echo "Native source missing after apply: HorizonEdgeTts.java" >&2; exit 1; }
 grep -q "androidx.biometric:biometric" android/app/build.gradle || { echo "biometric library missing from app/build.gradle" >&2; exit 1; }
 grep -q "registerPlugin(HorizonLockPlugin.class)" "$JAVA_DIR/MainActivity.java" || { echo "MainActivity does not register HorizonLockPlugin" >&2; exit 1; }
 [ -s "$JAVA_DIR/HorizonLockPlugin.kt" ] || { echo "Native source missing after apply: HorizonLockPlugin.kt" >&2; exit 1; }
@@ -156,5 +169,43 @@ grep -q "setBackdrop" "$JAVA_DIR/HorizonPermsPlugin.java" || { echo "HorizonPerm
 grep -q "paintBackdrop" "$JAVA_DIR/MainActivity.java" || { echo "MainActivity does not paint the backdrop" >&2; exit 1; }
 echo "Theme backdrop applied."
 
-echo "Skipping keyboard manifest injection (known issue)"
+# ---- V1.58.2: keyboard resize mode pinned in the manifest + native 90 Hz request ----
+python3 - <<'PY'
+import re
+from pathlib import Path
+m = Path('android/app/src/main/AndroidManifest.xml')
+s = m.read_text()
+if 'android:windowSoftInputMode' in s:
+    s = re.sub(r'android:windowSoftInputMode="[^"]*"', 'android:windowSoftInputMode="adjustResize"', s)
+else:
+    s = s.replace('<activity ', '<activity android:windowSoftInputMode="adjustResize" ', 1)
+m.write_text(s)
+PY
+grep -q 'android:windowSoftInputMode="adjustResize"' "$MANIFEST" || { echo "Could not pin the keyboard resize mode in the manifest" >&2; exit 1; }
+grep -q "requestHighRefresh" "$JAVA_DIR/MainActivity.java" || { echo "MainActivity has no 90 Hz request" >&2; exit 1; }
 echo "Keyboard resize mode and 90 Hz request applied."
+
+# ---- V1.63.0: Kotlin coroutines (structured concurrency) + LeakCanary + pop-up notifications ----
+python3 - <<'PY'
+from pathlib import Path
+app = Path('android/app/build.gradle')
+s = app.read_text()
+for dep in (
+    "implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1'",
+    "implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1'",
+    # LeakCanary 2.14 needs no code in an Application class: it installs itself through a ContentProvider.
+    # It is on `implementation`, not `debugImplementation`, because the APK Horizon ships is a release build.
+    "implementation 'com.squareup.leakcanary:leakcanary-android:2.14'",
+):
+    artifact = dep.split("'")[1].rsplit(':', 1)[0]
+    if artifact not in s:
+        s = s.replace('dependencies {', 'dependencies {\n    ' + dep, 1)
+app.write_text(s)
+PY
+grep -q "kotlinx-coroutines-android" android/app/build.gradle || { echo "coroutines library missing from app/build.gradle" >&2; exit 1; }
+grep -q "leakcanary-android" android/app/build.gradle || { echo "LeakCanary library missing from app/build.gradle" >&2; exit 1; }
+grep -q "android.permission.USE_FULL_SCREEN_INTENT" "$MANIFEST" || { echo "Full-screen intent permission missing from the manifest" >&2; exit 1; }
+grep -q "HorizonCanary.init" "$JAVA_DIR/MainActivity.java" || { echo "MainActivity does not start LeakCanary" >&2; exit 1; }
+grep -q "watchKeyboard" "$JAVA_DIR/MainActivity.java" || { echo "MainActivity has no keyboard watcher" >&2; exit 1; }
+grep -q "HorizonNotify.alert" "$JAVA_DIR/HorizonAIPlugin.kt" || { echo "Replies do not use the pop-up notification channel" >&2; exit 1; }
+echo "Coroutines, LeakCanary and pop-up notifications applied."

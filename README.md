@@ -12,6 +12,41 @@
   <img alt="Capacitor 6" src="https://img.shields.io/badge/Capacitor-6-00e5ff">
 </p>
 
+## What's new in V1.63.0
+
+- Replies pop up as a banner over the screen with a sound (new channel, `/notif` to test).
+- Keyboard lift/collapse freeze fixed: native start/end signal, one browser bounds update, stuck-proof guard.
+- Kotlin coroutines with structured concurrency for background AI jobs and media saves.
+- LeakCanary built in (`/canary`).
+
+## Earlier: V1.62.0
+
+- **Edge voice (keyless).** Settings > Voice > *Natural: Microsoft Edge*. No key, no account, no limit. 18 neural voices incl. South African, six tone presets, native Android WebSocket (needs OkHttp, added by `apply-android.sh`).
+
+## What's new in V1.61.0
+
+- **Debate.** In a group chat, tap **Debate** in the members bar and each AI critiques the others' replies. It reuses the `[Name said]` history, so it is one more round.
+- **Free only.** The OpenRouter model picker has a **Free only** switch (remembered) that keeps just the `:free` models.
+- **What's this song?** New button on the music notification: Gemini listens to a clip and answers in a notification, without opening the app (red eye on, Gemini key set).
+- **Save to Vault.** Gemini's song answers get a **Save to Vault** button that files them as an encrypted note.
+
+## What's new in V1.60.1
+
+- **Tools grid dots.** The green tile highlight and tinted icons are gone. Each tile has a dot on the right: green = on, red = off or needs attention.
+
+## What's new in V1.60.0
+
+- **Group chat.** New Group tile (top right): pick 2+ AIs with a model each. Every message is answered by each one in turn; they see each other's replies as `[Name said]: ...`. Members show as chips above the message box. Stored on the chat (`chat.group`), so it survives restarts.
+- **@mentions.** Typing `@` pops up the AI names (like the slash menu). `@groq hi` sends that one message only to Groq, in any chat (a normal chat is marked multi-AI from then on). `@all` wakes the whole group. Stop ends the rest of the round; Regenerate and Retry use the AI that wrote the reply.
+- Each AI uses its own group model for its turn only; your normal model picks are not changed. Not tested on a phone yet.
+
+## What's new in V1.59.0
+
+- **OpenRouter.** New provider: one key, hundreds of models, free ones end in `:free`. Default model `openrouter/auto`. Works with backup keys, auto-switch, usage stats, the browser AI and slash model picks. Native background calls now allow `openrouter.ai` (rebuild the Android app to pick that up).
+- **Gemini ears.** The ear button (now-playing bar, mini player, full player) opens an ask sheet. Gemini hears a 30 s / 1 / 2 / 5 min clip cut on the phone (mono 16 kHz WAV, about 1 MB per 30 s) from where the song is now or from the start. Follow-ups reuse what he heard; Listen again sends a fresh clip. Tracks over 20 minutes are refused.
+- **Chat tool.** `[[music.listen: question]]` lets the chat AI ask Gemini to listen. Off until you switch on Let the chat AI ask him to listen in the sheet. The red eye hides the music from every AI.
+- Logic adapted from Raindrops' Gemini ears (clip cut + inlineData audio/wav). Tested in a desktop browser with mocked Gemini and OpenRouter; not tested on a phone yet.
+
 ## What's new in V1.58.5
 
 - **Tools grid.** The + menu shows every tool at once as two-column tiles with no scrolling: a Generators row (Avatars, Memes, Visuals) on top, then Think and look, Fetch, Make and Remember. Green tile = on, plain tile = off, red dot = needs attention. Tap a tile to switch it (the existing switch code is untouched); hold a tile to read its description and status in the strip at the bottom. The strip also shows the missing-item chips (keys and so on) and the Make PDF button while PDF is on.

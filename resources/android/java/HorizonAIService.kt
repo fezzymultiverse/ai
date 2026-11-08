@@ -13,25 +13,42 @@ import android.os.Looper
 import android.os.PowerManager
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runInterruptible
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.Executors
 
-/** Bounded, foreground native I/O. Does not promise survival after Android force-stop. */
+/**
+ * Bounded, foreground native I/O. Does not promise survival after Android force-stop.
+ * V1.63.0: jobs run as child coroutines of this service's own scope (structured concurrency). Every job has a hard timeout,
+ * failures are contained per job (SupervisorJob), and onDestroy cancels the whole scope so no job can outlive the service.
+ */
 class HorizonAIService : Service() {
     companion object {
         @Volatile private var instance: HorizonAIService? = null
         fun releaseTurn() { instance?.let { service -> service.main.post { service.releaseHold() } } }
-        private val jobs = ConcurrentHashMap<String, () -> Unit>()
-        fun submit(context: Context, job: () -> Unit) {
+        private const val JOB_TIMEOUT_MS = 300_000L
+        private class Pending(val block: () -> Unit, val onFail: (Throwable) -> Unit)
+        private val jobs = ConcurrentHashMap<String, Pending>()
+        /** [onFail] runs if the job is cancelled or times out before it settled its own call, so the page never waits forever. */
+        fun submit(context: Context, onFail: (Throwable) -> Unit = {}, job: () -> Unit) {
             val id = UUID.randomUUID().toString()
-            jobs[id] = job
+            jobs[id] = Pending(job, onFail)
             try {
                 ContextCompat.startForegroundService(context, Intent(context, HorizonAIService::class.java).putExtra("job", id))
             } catch(e: Exception) { jobs.remove(id); throw e }
         }
     }
-    private val executor = Executors.newFixedThreadPool(3)
+    private val scope: CoroutineScope = HorizonScopes.child("horizon-ai-service", Dispatchers.IO)
+    // At most three jobs run at once, as before; the rest wait their turn instead of piling up threads.
+    private val slots = kotlinx.coroutines.sync.Semaphore(3)
     private val main = Handler(Looper.getMainLooper())
     private var active = 0
     private var held = false
@@ -69,15 +86,27 @@ class HorizonAIService : Service() {
         val job = intent?.getStringExtra("job")?.let { jobs.remove(it) }
         if (job == null) { if (active == 0 && !held) stopSelf(); return START_NOT_STICKY }
         active++
-        executor.execute {
+        scope.launch {
             val pm = getSystemService(POWER_SERVICE) as PowerManager
             val lock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "$packageName:ai-job")
             try {
-                lock.acquire(300000L)
-                job()
+                slots.acquire()
+                try {
+                    lock.acquire(JOB_TIMEOUT_MS + 5_000L)
+                    // runInterruptible turns cancellation into a thread interrupt, so a cancelled job stops waiting.
+                    withTimeout(JOB_TIMEOUT_MS) { runInterruptible { job.block() } }
+                } finally { slots.release() }
+            } catch (e: TimeoutCancellationException) {
+                job.onFail(e)
+            } catch (e: CancellationException) {
+                job.onFail(e)
+                throw e
+            } catch (e: Throwable) {
+                job.onFail(e)
             } finally {
                 if (lock.isHeld) lock.release()
-                main.post { active--; if (active == 0 && !held) stopSelf() }
+                // This runs even when the scope is already cancelled, so the service always winds down.
+                withContext(NonCancellable + Dispatchers.Main) { active--; if (active == 0 && !held) stopSelf() }
             }
         }
         return START_NOT_STICKY
@@ -87,7 +116,7 @@ class HorizonAIService : Service() {
         main.removeCallbacks(watchdog)
         turnLock?.let { if (it.isHeld) it.release() }
         turnLock = null
-        executor.shutdown() // Let an already-started HTTP operation close normally.
+        HorizonScopes.cancel(scope, "HorizonAIService destroyed")   // every running job is cancelled with its service
         super.onDestroy()
     }
 }

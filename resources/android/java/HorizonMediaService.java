@@ -59,7 +59,7 @@ public class HorizonMediaService extends Service {
             if ("load".equals(action)) load(i);
             else if ("play".equals(action)) resume();
             else if ("pause".equals(action)) pause();
-            else if ("next".equals(action) || "prev".equals(action)) command(action);
+            else if ("next".equals(action) || "prev".equals(action) || "identify".equals(action)) command(action);
             else if ("stop".equals(action)) stopSelf();
         } catch (Exception e) { error(e.toString()); stopSelf(); }
         return START_NOT_STICKY;
@@ -129,6 +129,7 @@ public class HorizonMediaService extends Service {
             .addAction(new Notification.Action.Builder(android.R.drawable.ic_media_previous, "Previous", action("prev", 1)).build())
             .addAction(new Notification.Action.Builder(playing ? android.R.drawable.ic_media_pause : android.R.drawable.ic_media_play, playing ? "Pause" : "Play", action(playing ? "pause" : "play", 2)).build())
             .addAction(new Notification.Action.Builder(android.R.drawable.ic_media_next, "Next", action("next", 3)).build())
+            .addAction(new Notification.Action.Builder(android.R.drawable.ic_btn_speak_now, "What's this?", action("identify", 5)).build())
             .setStyle(new Notification.MediaStyle().setMediaSession(session.getSessionToken()).setShowActionsInCompactView(0,1,2));
         if (albumArt != null) b.setLargeIcon(albumArt);
         if (open != null) b.setContentIntent(PendingIntent.getActivity(this, 0, open, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE));

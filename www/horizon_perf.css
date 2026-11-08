@@ -37,6 +37,9 @@
 html.hz-kb-moving .chat-messages > .message,
 html.hz-kb-moving .chat-messages > .notice { animation: none !important; }
 html.hz-kb-moving .chat-input-area { transition: none !important; }
+/* V1.63.0: no scroll anchoring, smooth scrolling or hover work while the keyboard slides; the page is re-fitted once at the end. */
+html.hz-kb-moving, html.hz-kb-moving * { scroll-behavior: auto !important; overflow-anchor: none !important; }
+html.hz-kb-moving .chat-messages { contain: layout style; }
 
 /* ---- 3. Test switches from the lag detector (only active while you flip them on; they reset when the panel closes). ---- */
 html.hzp-noglow .hzsa-btn, html.hzp-noglow .hzsa-btn::before, html.hzp-noglow .hzsa-btn svg,

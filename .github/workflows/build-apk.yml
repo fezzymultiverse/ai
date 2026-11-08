@@ -89,7 +89,7 @@ jobs:
           UNSIGNED="$(ls android/app/build/outputs/apk/release/*.apk | head -1)"
           rm -rf "$RUNNER_TEMP/dexcheck" && mkdir -p "$RUNNER_TEMP/dexcheck"
           unzip -q -o "$UNSIGNED" 'classes*.dex' -d "$RUNNER_TEMP/dexcheck"
-          for cls in HorizonAIPlugin HorizonAIService HorizonMediaPlugin HorizonSpeechPlugin HorizonPermsPlugin; do
+          for cls in HorizonAIPlugin HorizonAIService HorizonMediaPlugin HorizonSpeechPlugin HorizonPermsPlugin HorizonNotify HorizonScopes HorizonCanary; do
             if ! grep -aq "$cls" "$RUNNER_TEMP"/dexcheck/classes*.dex; then
               echo "::error::$cls is missing from the APK"; exit 1
             fi

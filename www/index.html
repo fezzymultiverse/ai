@@ -1032,6 +1032,8 @@
         .avatar.prov-cohere { --ring: linear-gradient(135deg, #ff7759, #d18ee2); --ring-glow: rgba(255, 119, 89, 0.5); }
         .avatar.prov-pollinations { --ring: conic-gradient(from 200deg, #d9f24c, #ff5fb0, #8a5cff, #d9f24c); --ring-glow: rgba(217, 242, 76, 0.5); }
         .model-tag.prov-cohere .ic { color: #ff8a70; }
+        .avatar.prov-openrouter { --ring: linear-gradient(135deg, #6366f1, #8b5cf6, #22d3ee); --ring-glow: rgba(124, 92, 246, 0.5); }
+        .model-tag.prov-openrouter .ic { color: #8b8cf8; }
         .avatar.prov-mistral { --ring: linear-gradient(135deg, #ffd800, #ff8205, #e10500); --ring-glow: rgba(255, 130, 5, 0.5); }
         .model-tag.prov-mistral .ic { color: #ff8205; }
         .model-tag.prov-pollinations .ic { color: #c8e63a; }
@@ -1308,6 +1310,9 @@
         .pk-x[hidden] { display: none; }
         .pk-search { width: 100%; padding: 11px 14px; border-radius: 14px; border: 1px solid var(--border-color); background: var(--surface); color: var(--text-main); font-size: 17px; outline: none; }
         .pk-search[hidden] { display: none; }
+        .pk-free { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 14px; border-radius: 16px; border: 1px solid var(--border-color); background: none; color: var(--text-main); font-size: 13px; font-weight: 700; cursor: pointer; }
+        .pk-free[hidden] { display: none; }
+        .pk-free.on { border-color: var(--accent-cyan); color: var(--accent-cyan); background: rgba(0, 229, 255, 0.10); }
         .pk-search:focus { border-color: var(--accent-cyan); }
         .pk-list { overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-bottom: 2px; }
         .pk-row { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px; border-radius: 16px; border: 1px solid var(--border-color); background: var(--surface); color: var(--text-main); text-align: left; cursor: pointer; font-family: inherit; }
@@ -1433,6 +1438,8 @@
     <link rel="stylesheet" href="horizon_bojack.css">
     <link rel="stylesheet" href="horizon_header.css">
     <link rel="stylesheet" href="horizon_tidy.css">
+    <link rel="stylesheet" href="horizon_ears.css">
+    <link rel="stylesheet" href="horizon_group.css">
     <link rel="stylesheet" href="horizon_htmlview.css">
     <link rel="stylesheet" href="horizon_mdview.css">
     <link rel="stylesheet" href="horizon_setai.css">
@@ -1470,6 +1477,9 @@
             <symbol id="i-b-gemini" viewBox="0 0 24 24"><rect x=".5" y=".5" width="23" height="23" rx="6" fill="#fff" stroke="#e3e5e8"/><defs><linearGradient id="gGem" x1="5" y1="19" x2="19" y2="5" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#34A853"/><stop offset=".35" stop-color="#FBBC05"/><stop offset=".7" stop-color="#4285F4"/><stop offset="1" stop-color="#EA4335"/></linearGradient></defs><path transform="translate(3.6 3.6) scale(.7)" fill="url(#gGem)" stroke="none" d="M11.04 19.32Q12 21.51 12 24q0-2.49.93-4.68.96-2.19 2.58-3.81t3.81-2.55Q21.51 12 24 12q-2.49 0-4.68-.93a12.3 12.3 0 0 1-3.81-2.58 12.3 12.3 0 0 1-2.58-3.81Q12 2.49 12 0q0 2.49-.96 4.68-.93 2.19-2.55 3.81a12.3 12.3 0 0 1-3.81 2.55Q2.49 12 0 12q2.49 0 4.68.96 2.19.93 3.81 2.55t2.55 3.81"/></symbol>
             <symbol id="i-b-groq" viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#F05037" stroke="none"/><path d="M15.4 9.2a3.9 3.9 0 1 0 0 5.6M15.4 8v9.2c0 2-1.5 3-3.4 3-1.2 0-2.2-.4-2.9-1" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></symbol>
             <symbol id="i-b-mistral" viewBox="0 0 24 24"><rect width="24" height="24" rx="6" fill="#0b0b0b" stroke="none"/><g stroke="none"><rect x="4.0" y="4.0" width="3.2" height="3.2" fill="#FFD800"/><rect x="16.8" y="4.0" width="3.2" height="3.2" fill="#FFD800"/><rect x="4.0" y="7.2" width="3.2" height="3.2" fill="#FFAF00"/><rect x="7.2" y="7.2" width="3.2" height="3.2" fill="#FFAF00"/><rect x="13.6" y="7.2" width="3.2" height="3.2" fill="#FFAF00"/><rect x="16.8" y="7.2" width="3.2" height="3.2" fill="#FFAF00"/><rect x="4.0" y="10.4" width="3.2" height="3.2" fill="#FF8205"/><rect x="10.4" y="10.4" width="3.2" height="3.2" fill="#FF8205"/><rect x="16.8" y="10.4" width="3.2" height="3.2" fill="#FF8205"/><rect x="4.0" y="13.6" width="3.2" height="3.2" fill="#FA500F"/><rect x="16.8" y="13.6" width="3.2" height="3.2" fill="#FA500F"/><rect x="4.0" y="16.8" width="3.2" height="3.2" fill="#E10500"/><rect x="16.8" y="16.8" width="3.2" height="3.2" fill="#E10500"/></g></symbol>
+            <symbol id="i-b-openrouter" viewBox="0 0 24 24"><rect width="24" height="24" rx="6" fill="#0f1020" stroke="none"/><g fill="none" stroke="#8b8cf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 13h4.2c2 0 3.2-1 4.6-3.2s2.6-3.2 4.7-3.2h2.5"/><path d="M3.5 13h4.2c2 0 3.2 1 4.6 3.2s2.6 3.2 4.7 3.2h2.5"/><path d="M17.8 4.4 20.6 7l-2.8 2.6" stroke-width="1.8"/><path d="M17.8 14.4l2.8 2.6-2.8 2.6" stroke-width="1.8"/></g></symbol>
+            <symbol id="i-users" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+            <symbol id="i-ear" viewBox="0 0 24 24"><path d="M6 8.5a6 6 0 0 1 12 0c0 2.6-1.4 3.7-2.6 4.8-1 .9-1.4 1.6-1.4 3a3.2 3.2 0 0 1-6.2 1"/><path d="M9.5 8.8a2.5 2.5 0 0 1 5 0c0 1.3-.8 1.8-1.5 2.4"/></symbol>
             <symbol id="i-b-cohere" viewBox="0 0 24 24"><rect x=".5" y=".5" width="23" height="23" rx="6" fill="#fff" stroke="#e3e5e8"/><path d="M6 6.2c0-1.3 1.6-2.2 4.2-2.2h4.3c2.4 0 3.7 1.2 3.7 2.8 0 2-1.9 3.2-4.4 3.2H9.5C7.4 10 6 8.6 6 6.2z" fill="#39594D" stroke="none"/><circle cx="8" cy="16.4" r="3" fill="#FF7759" stroke="none"/><ellipse cx="16" cy="15.6" rx="3.6" ry="3.2" fill="#D18EE2" stroke="none"/></symbol>
             <symbol id="i-b-pollinations" viewBox="0 0 24 24"><rect width="24" height="24" rx="6" fill="#0b0b0b" stroke="none"/><g fill="none" stroke="#fff" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4.5c1.9 1.7 2.5 4.2 0 8.5-2.5-4.3-1.9-6.8 0-8.5z"/><path d="M12 13c-1.5-4 .4-6.6 3.6-6.8 1 2.6-.4 5.5-3.6 6.8zM12 13c1.5-4-.4-6.6-3.6-6.8-1 2.6.4 5.5 3.6 6.8z"/><path d="M12 13c3.2-.4 5.6-2.8 6.4-5.6-3 0-6 1.4-6.4 5.6zM12 13c-3.2-.4-5.6-2.8-6.4-5.6 3 0 6 1.4 6.4 5.6z"/><path d="M6 14.2h12M8.4 17.4h7.2"/></g></symbol>
             <symbol id="i-eye" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></symbol>
@@ -1564,6 +1574,7 @@
         </div>
         <div class="header-actions">
             <button class="header-btn" id="snoozeBtn" data-lbl="Snooze" type="button" aria-pressed="false" aria-label="Snooze: turn network and permissions off"><svg class="ic" aria-hidden="true"><use href="#i-snooze"/></svg><span class="zz" aria-hidden="true">z</span></button>
+            <button class="header-btn" id="groupBtn" data-lbl="Group" type="button" aria-haspopup="dialog" aria-label="Group chat: start a chat with several AIs at once"><svg class="ic" aria-hidden="true"><use href="#i-users"/></svg></button>
             <button class="header-btn" id="pickBtn" data-lbl="AI" type="button" aria-haspopup="dialog" aria-label="Choose AI provider and model"><svg class="hz-robot" viewBox="0 0 64 64" aria-hidden="true"><use href="#i-robot"/></svg><i class="pk-dot" id="pkDot"></i></button>
             <button class="header-btn" id="menuBtn" data-lbl="Menu" type="button" aria-label="Open menu"><svg class="ic" aria-hidden="true"><use href="#i-menu"/></svg></button>
             <button class="header-btn" id="settingsBtn" data-lbl="Settings" type="button" aria-label="Open settings: API providers plus keys, web scraping, permissions, personalisation"><svg class="ic" aria-hidden="true"><use href="#i-sliders"/></svg></button>
@@ -1581,6 +1592,7 @@
                 <button class="pk-x" id="pkClose" type="button" aria-label="Close"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg></button>
             </div>
             <input class="pk-search" id="pkSearch" type="text" placeholder="Search models" autocomplete="off" autocapitalize="off" spellcheck="false" hidden>
+            <button class="pk-free" id="pkFree" type="button" aria-pressed="false" hidden></button>
             <div class="pk-list" id="pkList"></div>
         </div>
     </div>
@@ -1815,7 +1827,7 @@
             </div>
             <div class="settings-home" id="settingsHome" data-home role="tablist" aria-label="Settings sections">
                 <button class="set-row" role="tab" data-tab="providers" aria-selected="false" type="button">
-                    <span class="set-text"><h3>API PROVIDERS PLUS KEYS</h3><p>Gemini, Groq and Cohere keys, plus free Pollinations (no key). Pick the model and choose which engine answers.</p></span>
+                    <span class="set-text"><h3>API PROVIDERS PLUS KEYS</h3><p>Gemini, Groq, Cohere, Mistral and OpenRouter keys, plus free Pollinations (no key). Pick the model and choose which engine answers.</p></span>
                     <svg class="ic set-chev" aria-hidden="true"><use href="#i-chev-r"/></svg>
                 </button>
                 <button class="set-row" role="tab" data-tab="web" aria-selected="false" type="button">
@@ -1980,6 +1992,7 @@
                     <p class="hint">Tap the speaker beside the time on any Horizon reply to hear it. The voice works with every chat provider. If a natural voice fails or runs out, Horizon switches to the Android voice and tells you why.</p>
                     <label class="field-label" for="ttsEngine">Voice</label>
                     <select id="ttsEngine">
+                        <option value="edge">Natural: Microsoft Edge (free, no key, unlimited)</option>
                         <option value="gemini">Natural: Gemini (30 voices)</option>
                         <option value="ttsai">Natural: TTS.ai (Kokoro, free tier, no key)</option>
                         <option value="pollinations">Natural: Pollinations (6 voices, needs key)</option>
@@ -1988,6 +2001,10 @@
                     <div class="tts-nat" id="ttsNat" hidden>
                         <label class="field-label" id="ttsNVoiceLbl" for="ttsNVoice">Natural voice</label>
                         <select id="ttsNVoice"></select>
+                        <div id="ttsEdgeRow" hidden>
+                            <label class="field-label" for="ttsEdgePreset">Tone preset</label>
+                            <select id="ttsEdgePreset"></select>
+                        </div>
                         <div id="ttsAiRow" hidden>
                             <label class="field-label" for="ttsAiKey">TTS.ai key (optional)</label>
                             <input type="password" id="ttsAiKey" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="sk-tts-... (leave empty to use the free tier)">
@@ -2121,6 +2138,7 @@
     <script src="horizon_github.js"></script>
     <script src="horizon_native_audio.js"></script>
     <script src="horizon_music.js"></script>
+    <script src="horizon_group.js"></script>
     <script src="horizon_vault.js"></script>
     <script src="horizon_attach.js"></script>
     <script src="horizon_creator.js"></script>
@@ -2241,8 +2259,9 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         function stopTurn() {
             if (!state.busy) return;
             if (state.typer) { skipTyping(); return; }
-            if (!curTurn.cancelled) { curTurn.cancelled = true; if (curTurn.rej) curTurn.rej(stoppedErr()); }
+            if (!curTurn.cancelled) { curTurn.cancelled = true; groupAbort = true; if (curTurn.rej) curTurn.rej(stoppedErr()); }
         }
+        let groupAbort = false;   // V1.60.0: Stop also ends the rest of a group round
 
         // --- Providers ---
         const timed = (promise, ms = 60000) => Promise.race([
@@ -2272,7 +2291,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         // If the chosen Groq model cannot see but another Groq vision model is listed, the Groq call routes to it for that turn.
         const GROQ_EYES = /llama-4|scout|maverick|vision|qwen3\.8|muse-spark/i;
         const groqEyesModel = () => ((state && state.modelLists && state.modelLists.groq) || []).find(m => GROQ_EYES.test(m)) || '';
-        const canSeeImages = (prov, model) => prov === 'gemini' || (prov === 'groq' && (GROQ_EYES.test(model) || !!groqEyesModel())) || (prov === 'mistral' && /pixtral|small|medium|large/i.test(model)) || (prov === 'cohere' && /vision/i.test(model)) || (prov === 'pollinations' && !/deepseek|llama|coder|roblox|unity|midijourney/i.test(model));
+        const canSeeImages = (prov, model) => prov === 'gemini' || (prov === 'groq' && (GROQ_EYES.test(model) || !!groqEyesModel())) || (prov === 'mistral' && /pixtral|small|medium|large/i.test(model)) || (prov === 'cohere' && /vision/i.test(model)) || (prov === 'openrouter' && /gemini|gpt-4|gpt-5|claude|vision|vl\b|-vl|llama-4|pixtral|auto|grok|qwen.*(vl|omni)/i.test(model)) || (prov === 'pollinations' && !/deepseek|llama|coder|roblox|unity|midijourney/i.test(model));
 
         const PROVIDERS = {
             gemini: {
@@ -2522,6 +2541,79 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                                 continue;
                             }
                         }
+                        throw new Error(lastWhy);
+                    }
+                    throw new Error(lastWhy);
+                }
+            },
+            // V1.59.0: OpenRouter. One key, hundreds of models (OpenAI-style chat at openrouter.ai/api/v1). Model ids look like "vendor/model"; ids ending ":free" cost nothing.
+            openrouter: {
+                name: 'OpenRouter',
+                icon: 'i-b-openrouter',
+                placeholder: 'sk-or-v1-...',
+                keyUrl: 'https://openrouter.ai/settings/keys',
+                defaultModel: 'openrouter/auto',
+                fallbackModels: ['openrouter/auto', 'google/gemini-2.5-flash', 'openai/gpt-4o-mini', 'anthropic/claude-3.5-haiku', 'meta-llama/llama-3.3-70b-instruct:free', 'deepseek/deepseek-chat-v3.1:free'],
+                modelsUrl: 'https://openrouter.ai/api/v1/models',
+                headers: k => ({ Authorization: `Bearer ${k}` }),
+                parseModels: d => {
+                    const ids = Array.from(new Set((d.data || [])
+                        .filter(m => m && m.id && !(m.architecture && Array.isArray(m.architecture.output_modalities) && m.architecture.output_modalities.indexOf('text') === -1))
+                        .map(m => m.id)
+                        .filter(id => !/embed|moderation|whisper|tts|image-preview|-image\b/i.test(id))));
+                    ids.sort((a, b) => (/:free$/.test(b) ? 1 : 0) - (/:free$/.test(a) ? 1 : 0) || a.localeCompare(b));
+                    return ['openrouter/auto'].concat(ids.filter(id => id !== 'openrouter/auto'));
+                },
+                wrongKey: k => /^gsk_/.test(k) ? 'That looks like a Groq key.' : /^AIza/.test(k) ? 'That looks like a Gemini key.' : '',
+                async chat(key, model, history) {
+                    const T = curTurn; turnCheck(T);
+                    const sys = getSystemPrompt();
+                    let cap = docMode ? 8000 : 0;
+                    let lastWhy = 'Request failed';
+                    const sleep = ms => new Promise(r => setTimeout(r, ms));
+                    for (let attempt = 0; attempt < 4; attempt++) {
+                        turnCheck(T);
+                        const body = {
+                            model,
+                            temperature: 0.8,
+                            messages: [{ role: 'system', content: sys }].concat(history.map(m => ({ role: m.role === 'user' ? 'user' : 'assistant', content: window.HorizonAttach ? HorizonAttach.openaiContent(m, canSeeImages('openrouter', model)) : m.text })))
+                        };
+                        if (cap) body.max_tokens = cap;
+                        const res = await timed(aiFetch('https://openrouter.ai/api/v1/chat/completions', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', Accept: 'application/json', Authorization: `Bearer ${key}`, 'X-Title': 'Horizon' },
+                            body: JSON.stringify(body)
+                        }), docMode ? 240000 : 120000);
+                        if (res.ok) {
+                            const data = await res.json();
+                            // OpenRouter reports upstream failures as HTTP 200 with an "error" object and no choices.
+                            if (data && data.error && !(data.choices && data.choices.length)) {
+                                const em = (typeof data.error === 'string' ? data.error : (data.error.message || 'Upstream error'));
+                                const err = new Error(em + (data.error.code ? ` (${data.error.code})` : ''));
+                                err.status = Number(data.error.code) || 502;
+                                throw err;
+                            }
+                            noteUsage(data.usage && data.usage.prompt_tokens, data.usage && data.usage.completion_tokens);
+                            noteCut(data.choices && data.choices[0] && data.choices[0].finish_reason);
+                            const c = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+                            const out = (Array.isArray(c) ? c.map(p => (p && p.text) || '').join('') : (c || '')).trim();
+                            if (!out) throw new Error('Empty response' + (data.model ? ` from ${data.model}` : ''));
+                            return out;
+                        }
+                        const why = await errorText(res.clone());
+                        lastWhy = `${why} (HTTP ${res.status})`;
+                        if (cap > 4000 && /max_?tokens|context|output/i.test(why)) { cap = 4000; continue; }
+                        if ((res.status === 429 || res.status === 502 || res.status === 503) && attempt < 3) {
+                            const h = Number(res.headers && res.headers.get ? res.headers.get('retry-after') : 0);
+                            const w = h > 0 ? h : 4 * (attempt + 1);
+                            if (w <= 45) {
+                                setLoading(`OpenRouter is busy, retrying in ${Math.ceil(w)}s`);
+                                await sleep(Math.ceil(w * 1000) + 300);
+                                continue;
+                            }
+                        }
+                        if (res.status === 401) throw new Error('OpenRouter rejected the key. Check it at openrouter.ai/settings/keys.');
+                        if (res.status === 402) throw new Error('OpenRouter says this model needs credits. Pick a model ending in :free or top up your balance.');
                         throw new Error(lastWhy);
                     }
                     throw new Error(lastWhy);
@@ -2901,6 +2993,12 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             return parts.join('\n\n');
         }
 
+        function groupBlock() {
+            const ch = currentChat(), me = liveCtx && liveCtx.prov;
+            if (!ch || !me || !PROVIDERS[me] || !(ch.group || ch.multi)) return '';
+            const names = ch.group ? ch.group.members.map(m => PROVIDERS[m.id] && PROVIDERS[m.id].name).filter(Boolean) : [];
+            return `GROUP CHAT\nFezzy is talking to several AIs in one chat${names.length ? ` (${names.join(', ')})` : ''}. You are ${PROVIDERS[me].name}${state.models[me] ? ` (${state.models[me]})` : ''}. Replies from the other AIs show up in the history as "[Name said]: ...". Answer as yourself, in your own voice, and never write lines for the other AIs or put your own name in front of your reply. Do not repeat what another AI already covered: add to it, correct it or disagree briefly. When Fezzy @-mentions one AI, only that AI answers.`;
+        }
         function getSystemPrompt() {
             const parts = [getPersona()];
             const prefs = (lsGet(LS.prefs) || '').trim();
@@ -2921,6 +3019,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             if (window.HorizonLens) { const lb = HorizonLens.block(); if (lb) parts.push(lb); }
             if (window.HorizonDash) { const db = HorizonDash.block(); if (db) parts.push(db); }
             if (state.thinkOn) parts.push(thinkBlock());
+            { const gb = groupBlock(); if (gb) parts.push(gb); }
             parts.push(`NOW\n${new Date().toString()}`);
             return parts.join('\n\n');
         }
@@ -3917,7 +4016,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         function thoughtAnalyse(text, chat, p, model) {
             const it = readIntent(text);
             thoughtAdd('i-eye', 'Read your message', true, `${it.words} word${it.words === 1 ? '' : 's'} · ${it.kind}${it.flags.length ? ' · ' + it.flags.join(', ') : ''}`);
-            const turns = Math.max(0, buildHistory(chat.messages).length - 1);
+            const turns = Math.max(0, buildHistory(chat.messages, chat).length - 1);
             const cut = chat.messages.length > MAX_HISTORY;
             thoughtAdd('i-chat', turns ? 'Pulled in this chat’s context' : 'Fresh chat, no earlier context', true, turns ? `${turns} earlier turn${turns === 1 ? '' : 's'} attached${cut ? ' (older ones dropped, limit ' + MAX_HISTORY + ')' : ''}` : 'Nothing before this message');
             if (state.memories.length) {
@@ -4148,15 +4247,19 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             return m;
         }
 
-        function buildHistory(messages) {
+        // V1.60.0: in a group chat the other AIs' replies reach each AI as "[Name said]: ..." so nobody mistakes them for their own words.
+        function buildHistory(messages, chat) {
             const out = [];
+            const me = liveCtx && liveCtx.prov;
+            const multi = !!(chat && (chat.group || chat.multi) && me);
             const win = messages.slice(-MAX_HISTORY);
             let lastAtt = -1;
             win.forEach((m, i) => { if (m.att && m.att.length) lastAtt = i; });
             win.forEach((m, i) => {
-                const role = m.role === 'user' ? 'user' : 'assistant';
+                const other = multi && m.role !== 'user' && m.prov && m.prov !== me && PROVIDERS[m.prov];
+                const role = (m.role === 'user' || other) ? 'user' : 'assistant';
                 const hasAtt = window.HorizonAttach && m.att && m.att.length;
-                let text = m.text;
+                let text = other ? `[${PROVIDERS[m.prov].name} said]: ${m.text}` : m.text;
                 if (hasAtt) text += '\n\n' + HorizonAttach.block(m.att, i === lastAtt);
                 const imgs = hasAtt && i === lastAtt ? HorizonAttach.images(m.att) : [];
                 const last = out[out.length - 1];
@@ -4538,7 +4641,10 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         }
 
         // ===== V1.11.0: robot button -> providers -> models =====
-        const pkSheet = $('#pkSheet'), pkList = $('#pkList'), pkTitle = $('#pkTitle'), pkBack = $('#pkBack'), pkSearch = $('#pkSearch');
+        const pkSheet = $('#pkSheet'), pkList = $('#pkList'), pkTitle = $('#pkTitle'), pkBack = $('#pkBack'), pkSearch = $('#pkSearch'), pkFree = $('#pkFree');
+        // V1.61.0: OpenRouter mixes :free models in with hundreds of paid ones, so the model step gets a Free only switch (remembered).
+        const OR_FREE = 'horizon_or_free_only';
+        const isFreeModel = m => /:free$/.test(m) || m === 'openrouter/free';
         let pkStep = 'prov', pkProv = '';
         function pkReady(id) { return !!(PROVIDERS[id].keyless || state.keys[id]); }
         function pkPaintBtn() {
@@ -4626,6 +4732,19 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 if (has(/magistral/)) return 'Reasoning Mistral. Thinks step by step before answering.';
                 return 'Mistral model for general chat.';
             }
+            if (prov === 'openrouter') {
+                if (n === 'openrouter/auto') return 'OpenRouter picks the best model for each message for you.';
+                const free = /:free$/.test(n) ? ' Free to use, with daily limits.' : '';
+                if (has(/gemini/)) return 'Google Gemini through OpenRouter. Sees pictures, long chats.' + free;
+                if (has(/claude/)) return 'Anthropic Claude through OpenRouter. Careful, clear writing and strong code.' + free;
+                if (has(/gpt|o1|o3|o4/)) return 'OpenAI model through OpenRouter. Strong all-rounder.' + free;
+                if (has(/deepseek/)) return 'DeepSeek through OpenRouter. Step-by-step reasoning, good at maths and code.' + free;
+                if (has(/llama/)) return 'Meta Llama through OpenRouter. Open general chat model.' + free;
+                if (has(/qwen/)) return 'Qwen through OpenRouter. Good at code, maths and many languages.' + free;
+                if (has(/mistral|mixtral|codestral/)) return 'Mistral family model through OpenRouter.' + free;
+                if (has(/grok/)) return 'xAI Grok through OpenRouter.' + free;
+                return 'Model served through OpenRouter.' + free;
+            }
             if (prov === 'pollinations') {
                 if (has(/deepseek/)) return 'DeepSeek. Step-by-step reasoning, good at maths and code.';
                 if (has(/coder|code/)) return 'Tuned for writing and fixing code.';
@@ -4660,6 +4779,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 pkTitle.textContent = 'Choose an AI';
                 pkBack.hidden = true;
                 pkSearch.hidden = true;
+                pkFree.hidden = true;
                 PROVIDER_IDS.forEach(id => {
                     const p = PROVIDERS[id];
                     const ready = pkReady(id);
@@ -4687,6 +4807,13 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 let list = orderModels(state.modelLists[id], p.defaultModel);
                 if (state.models[id] && list.indexOf(state.models[id]) === -1) list.unshift(state.models[id]);
                 pkSearch.hidden = list.length <= 8;
+                const nFree = id === 'openrouter' ? list.filter(isFreeModel).length : 0;
+                const freeOn = nFree > 0 && lsGet(OR_FREE) === '1';
+                pkFree.hidden = !nFree;
+                pkFree.classList.toggle('on', freeOn);
+                pkFree.setAttribute('aria-pressed', String(freeOn));
+                pkFree.textContent = (freeOn ? '\u2713 ' : '') + 'Free only \u00b7 ' + nFree;
+                if (freeOn) list = list.filter(isFreeModel);
                 const q = (pkSearch.value || '').trim().toLowerCase();
                 if (q) list = list.filter(m => m.toLowerCase().indexOf(q) !== -1);
                 if (!list.length) { const n = document.createElement('div'); n.className = 'pk-note'; n.textContent = 'No model matches that.'; pkList.appendChild(n); }
@@ -4727,6 +4854,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         $('#pkClose').addEventListener('click', () => pkHide());
         pkBack.addEventListener('click', () => { if (history.state && history.state.pk === 2) history.back(); else { pkStep = 'prov'; pkRender(); } });
         pkSearch.addEventListener('input', pkRender);
+        pkFree.addEventListener('click', () => { lsSet(OR_FREE, lsGet(OR_FREE) === '1' ? '0' : '1'); pkRender(); });
         pkSheet.addEventListener('click', e => { if (e.target === pkSheet) pkHide(); });
         document.addEventListener('keydown', e => { if (e.key === 'Escape' && !pkSheet.hidden) pkHide(); });
         window.addEventListener('popstate', () => {
@@ -4961,6 +5089,12 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
 
         async function fetchModels(id, key) {
             const p = PROVIDERS[id];
+            // OpenRouter lists its models without a key, so check the key itself first or any text would pass.
+            if (id === 'openrouter' && key) {
+                let kr = await timed(fetch('https://openrouter.ai/api/v1/key', { headers: p.headers(key) }), 20000);
+                if (kr.status === 404) kr = await timed(fetch('https://openrouter.ai/api/v1/auth/key', { headers: p.headers(key) }), 20000);
+                if (kr.status === 401 || kr.status === 403) throw new Error('OpenRouter rejected this key (invalid API key). Check it at openrouter.ai/settings/keys.');
+            }
             const res = await timed(fetch(p.modelsUrl, { headers: p.headers(key) }), 30000);
             if (!res.ok) throw new Error(await errorText(res));
             const list = p.parseModels(await res.json());
@@ -5315,7 +5449,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
 
         async function runTurn(chat, p, key, model) {
             const T = curTurn;
-            const base = buildHistory(chat.messages);
+            const base = buildHistory(chat.messages, chat);
             const extra = [];
             const read = [];
             const found = [];
@@ -5411,13 +5545,13 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         // --- V1.4.3: long documents (section by section) and auto-continue when a reply is cut off ---
         const pagesWanted = t => { const m = /(\d{1,3})\s*(?:-|\s)?\s*pages?\b/i.exec(t); return m ? Math.min(60, +m[1]) : 0; };
         const longPlan = t => !/\b(?:cv|resume|letter|invoice)\b/i.test(t) && (pagesWanted(t) >= 8 || /\b(?:long|detailed|comprehensive|in-depth|thorough|full report|ebook)\b/i.test(t));
-        const lastUserText = chat => { const b = buildHistory(chat.messages); return b.length ? b[b.length - 1].text : ''; };
+        const lastUserText = chat => { const b = buildHistory(chat.messages, chat); return b.length ? b[b.length - 1].text : ''; };
 
         async function runLong(chat, p, key, model, text) {
             const P = pagesWanted(text) || 12;
             const n = Math.max(4, Math.min(14, Math.ceil(P / 2.5)));
             const words = Math.round(P * 430 / n / 10) * 10;
-            const base = buildHistory(chat.messages);
+            const base = buildHistory(chat.messages, chat);
             const ask0 = lastUserText(chat);
             setLoading('Outlining the document', 'Planning the title, theme and section list before writing anything');
             const planAsk = ask0 + '\n\n[APP INSTRUCTION] Do NOT write the document yet. Plan it. Reply with ONLY these lines, nothing else:\nTITLE: <document title>\nTHEME: <ocean|ember|forest|violet|crimson|teal|slate|gold|rose|midnight|mint|sunset|mono>\nthen exactly ' + n + ' lines like: 1. Section title | one-line scope';
@@ -5453,7 +5587,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 setLoading('Continuing the document (part ' + (k + 1) + ')', 'The reply stopped mid-document, asking the model to carry on from the cut');
                 let more = '';
                 try {
-                    more = await p.chat(key, model, buildHistory(chat.messages).concat({ role: 'assistant', text: out }, { role: 'user', text: '[APP INSTRUCTION] Your document was cut off. Continue exactly where it stopped, even mid-sentence. Output only the remaining Markdown: no repeated text and no new <artifact> opening tag. Close with </artifact> when the document is complete.' }));
+                    more = await p.chat(key, model, buildHistory(chat.messages, chat).concat({ role: 'assistant', text: out }, { role: 'user', text: '[APP INSTRUCTION] Your document was cut off. Continue exactly where it stopped, even mid-sentence. Output only the remaining Markdown: no repeated text and no new <artifact> opening tag. Close with </artifact> when the document is complete.' }));
                 } catch (e) { return out; }
                 out += more.replace(/<artifact\b[^>]*>/gi, '');
             }
@@ -5642,16 +5776,22 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             if ((!text && !hasAtt) || state.busy) return;
             if (state.imgOn && !opts.pdf && !hasAtt) return sendImage(text);
 
-            const id = state.active;
-            const p = PROVIDERS[id];
-            const key = keyOf(id);
-            if (!key) {
-                notice(`Add a ${p.name} key in API PROVIDERS PLUS KEYS to chat.`, 'error');
-                openPanel('right', 'providers');
-                return;
+            // V1.60.0: group chats and @mentions pick who answers; otherwise it is the active AI as always.
+            const route = window.HorizonGroup ? HorizonGroup.route(text, currentChat()) : null;
+            const okT = [];
+            for (const t of (route ? route.targets : [{ id: state.active }])) {
+                const tp = PROVIDERS[t.id];
+                if (!keyOf(t.id)) {
+                    notice(`Add a ${tp.name} key in API PROVIDERS PLUS KEYS to chat.`, 'error');
+                    if (!route || route.targets.length === 1) openPanel('right', 'providers');
+                    continue;
+                }
+                if (window.HzAbout) { if (HzAbout.allow && !HzAbout.allow(t.id, tp.name)) continue; HzAbout.warn(t.id, tp.name, notice); }
+                okT.push(t);
             }
-
-            if (window.HzAbout) { if (HzAbout.allow && !HzAbout.allow(id, p.name)) return; HzAbout.warn(id, p.name, notice); }
+            if (!okT.length) return;
+            const id = okT[0].id;
+            const p = PROVIDERS[id];
             skipTyping();
             chatInput.value = '';
             lsDel(LS.draft);
@@ -5667,9 +5807,46 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             if (wl) wl.remove();
             clearTray();
             addUserMessage(text, userMsg.ts, atts, userMsg);
-            return runAiTurn(chat, id, p, key, text);
+            if (route && route.mention && !chat.group && !chat.multi) { chat.multi = true; saveChats(); }
+            return runTargets(chat, okT, text, docMode);
         }
 
+        // V1.60.0: run the chosen AIs one after another (one AI = the normal single reply). Each uses its own model for its turn only.
+        async function runTargets(chat, targets, text, dm, restore) {
+            groupAbort = false;
+            for (let i = 0; i < targets.length; i++) {
+                if (groupAbort) break;
+                const t = targets[i], tp = PROVIDERS[t.id], prev = state.models[t.id];
+                if (t.model) state.models[t.id] = t.model;
+                try { docMode = dm || ''; await runAiTurn(chat, t.id, tp, keyOf(t.id), text, i === 0 ? restore : undefined); }
+                finally { state.models[t.id] = prev; }
+            }
+        }
+        // V1.61.0: DEBATE. One tap: the group's AIs each critique the others' replies. Reuses the [Name said] history, so it is just one more round.
+        const DEBATE_TEXT = '\u2694\uFE0F Debate: read each other\u2019s replies above. Say what the others got right, what they got wrong or missed, and where you disagree. Short and specific. Do not agree just to be polite, and if someone changed your mind, say so.';
+        function debateRound() {
+            if (state.busy) { notice('Horizon is busy. Try again in a moment.', 'error'); return false; }
+            const chat = currentChat();
+            if (!chat || !chat.group || !chat.group.members || chat.group.members.length < 2) { notice('Debate needs a group chat with 2 or more AIs.', 'error'); return false; }
+            let lu = -1;
+            chat.messages.forEach((m, i) => { if (m.role === 'user') lu = i; });
+            const heard = new Set(chat.messages.slice(lu + 1).filter(m => m.role !== 'user' && m.prov && !m.img).map(m => m.prov));
+            if (heard.size < 2) { notice('Let at least two AIs answer first, then tap Debate.', 'error'); return false; }
+            const okT = [];
+            for (const m of chat.group.members) {
+                const tp = PROVIDERS[m.id];
+                if (!tp || !keyOf(m.id)) continue;
+                if (window.HzAbout) { if (HzAbout.allow && !HzAbout.allow(m.id, tp.name)) continue; HzAbout.warn(m.id, tp.name, notice); }
+                okT.push({ id: m.id, model: m.model });
+            }
+            if (okT.length < 2) { notice('Debate needs at least 2 AIs in the group with a key.', 'error'); return false; }
+            skipTyping();
+            docMode = '';
+            const userMsg = pushMessage(chat, 'user', DEBATE_TEXT);
+            addUserMessage(DEBATE_TEXT, userMsg.ts, [], userMsg);
+            runTargets(chat, okT, DEBATE_TEXT, '');
+            return true;
+        }
         // The AI half of a turn: everything after the user's message is in the chat. Send, Edit and Regenerate all run through here.
         async function runAiTurn(chat, id, p, key, text, restore) {
             // Regenerate passes the reply it replaced: if the new turn is stopped or fails, the old reply comes back.
@@ -5760,8 +5937,8 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
 
         // ===== V1.30.0: chat quality. Edit a sent message, regenerate a reply, continue a cut-off answer =====
         const pdfModeFor = (text, lastAi) => !state.pdfOn ? '' : ((wantsPdf(text) || (lastAi && /<artifact\b/i.test(lastAi.text) && PDF_FOLLOW.test(text))) ? 'auto' : '');
-        function turnSetup() {
-            const id = state.active, p = PROVIDERS[id], key = keyOf(id);
+        function turnSetup(pid) {
+            const id = pid || state.active, p = PROVIDERS[id], key = keyOf(id);
             if (!key) { notice(`Add a ${p.name} key in API PROVIDERS PLUS KEYS to chat.`, 'error'); openPanel('right', 'providers'); return null; }
             if (window.HzAbout) { if (HzAbout.allow && !HzAbout.allow(id, p.name)) return null; HzAbout.warn(id, p.name, notice); }
             skipTyping();
@@ -5831,13 +6008,16 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             const i = chat.messages.indexOf(m), um = chat.messages[i - 1];
             if (i < 1 || m.role === 'user' || m.img || !um || um.role !== 'user') return;
             if (i < chat.messages.length - 1 && !confirm('Regenerate this reply? Everything after it is removed first.')) return;
-            const s = turnSetup();
+            // V1.60.0: in a group the reply is redone by the AI that wrote it
+            const gp = (chat.group || chat.multi) && m.prov && PROVIDERS[m.prov] && keyOf(m.prov) ? m.prov : '';
+            const s = turnSetup(gp || undefined);
             if (!s) return;
             const tail = chat.messages.splice(i);
             chat.updated = Date.now();
             saveChats();
             renderMessages(chat);
             docMode = pdfModeFor(um.text, chat.messages.slice(0, -1).reverse().find(x => x.role !== 'user'));
+            if (gp) return runTargets(chat, [{ id: gp, model: m.model }], um.text, docMode, tail);
             return runAiTurn(chat, s.id, s.p, s.key, um.text, tail);
         }
         // Retry: rerun the last unanswered message, or redo the newest reply when the failure was a regenerate.
@@ -5847,6 +6027,14 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             if (!chat || !chat.messages.length) return;
             const msgs = chat.messages, last = msgs[msgs.length - 1];
             if (last.role !== 'user') return regenerateReply();
+            const rt = window.HorizonGroup ? HorizonGroup.route(last.text, chat) : null;
+            if (rt && rt.targets.length) {
+                const tg = rt.targets.filter(t => keyOf(t.id) && (!window.HzAbout || !HzAbout.allow || HzAbout.allow(t.id, PROVIDERS[t.id].name)));
+                if (!tg.length) { notice('No AI in this group has a key.', 'error'); return; }
+                skipTyping();
+                chatMessages.querySelectorAll('.retry-bar').forEach(n => n.remove());
+                return runTargets(chat, tg, last.text, pdfModeFor(last.text, msgs.slice(0, -1).reverse().find(x => x.role !== 'user')));
+            }
             const s = turnSetup();
             if (!s) return;
             chatMessages.querySelectorAll('.retry-bar').forEach(n => n.remove());
@@ -5950,7 +6138,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                     const started = await callNative('HorizonAI', 'beginTurn');
                     if (!started) throw new Error('Could not start background AI.' + nerr());
                 }
-                const base = buildHistory(chat.messages.slice(0, -1));
+                const base = buildHistory(chat.messages.slice(0, -1), chat);
                 const more = await raceStop(T, s.p.chat(s.key, model, base.concat({ role: 'assistant', text: m.text }, { role: 'user', text: CONT_ASK })));
                 m.text = mergeContinuation(m.text, cleanReply(more).text);
                 if (turnCut) m.cut = true; else delete m.cut;
@@ -7272,6 +7460,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         if (window.HorizonSlash) HorizonSlash.init({
             input: chatInput,
             anchor: toolMenu,
+            notice: (t, k) => notice(t, k),
             clear: () => { chatInput.value = ''; lsDel(LS.draft); },
             providers: () => PROVIDER_IDS.map(id => ({
                 id, name: PROVIDERS[id].name, ready: pkReady(id), active: id === state.active,
@@ -7325,10 +7514,36 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         });
 
 
+        // --- V1.60.0: group chat (header tile + @mentions) ---
+        if (window.HorizonGroup) HorizonGroup.init({
+            input: chatInput,
+            anchor: toolMenu,
+            button: $('#groupBtn'),
+            notice: (t, k) => notice(t, k),
+            providers: () => PROVIDER_IDS.map(id => ({ id, name: PROVIDERS[id].name, icon: PROVIDERS[id].icon, ready: pkReady(id), model: state.models[id] || PROVIDERS[id].defaultModel, models: orderModels(state.modelLists[id] || [], PROVIDERS[id].defaultModel) })),
+            current: () => currentChat(),
+            start: (members, see) => {
+                if (state.busy) { notice('Horizon is busy. Try again in a moment.', 'error'); return false; }
+                newChat();
+                const c = ensureChat();
+                c.group = { members, see: see !== false };
+                c.title = 'Group: ' + members.map(m => PROVIDERS[m.id].name).join(' + ');
+                saveChats(); renderChatList(); updateUI();
+                return true;
+            },
+            update: (chat, members) => { chat.group = { members, see: true }; chat.title = 'Group: ' + members.map(m => PROVIDERS[m.id].name).join(' + '); chat.updated = Date.now(); saveChats(); renderChatList(); },
+            ungroup: chat => { delete chat.group; delete chat.multi; chat.updated = Date.now(); saveChats(); },
+            debate: () => debateRound(),
+            openKeys: id => hzOpenKeys(id)
+        });
         // --- V1.10.0: music player ---
         if (window.HorizonMusic) {
             HorizonMusic.init({
                 lsGet, lsSet,
+                // V1.59.0: Gemini ears. Main key plus backup keys; the model is whichever Gemini model you picked in the app.
+                geminiKeys: () => [state.keys.gemini].concat(xKeys('gemini')),
+                geminiModel: () => state.models.gemini || PROVIDERS.gemini.defaultModel,
+                allowSend: (id, name) => (window.HzAbout && HzAbout.allow) ? HzAbout.allow(id, name) : true,
                 notice: (t, k) => notice(t, k),
                 onChange: () => updateToolMenu(),
                 openLeftTab: tab => { if (tab === 'music' && window.HorizonAddons) HorizonAddons.open('music'); else openPanel('left', tab); },
@@ -7424,11 +7639,12 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             permIntro: 'What Horizon is allowed to do on this phone.',
             ytCard: 'The servers Horizon uses to find and fetch music.',
             themeCard: 'Light, Dark or Neon cyan.',
-            ttsCard: 'Hear Horizon\'s replies read aloud. Natural Gemini, TTS.ai or Pollinations voices, or the free Android voice.',
+            ttsCard: 'Hear Horizon\'s replies read aloud. Natural Edge (no key), Gemini, TTS.ai or Pollinations voices, or the free Android voice.',
             'card-gemini': 'Google Gemini. Add a key, pick a model and switch it on.',
             'card-groq': 'Groq. Fast Llama and GPT-OSS models. Add a key and pick a model.',
             'card-cohere': 'Cohere Command models. Add a key (a free trial key works) and pick a model.',
             'card-mistral': 'Mistral Studio. Small, Medium, Large and Codestral models. Add a Studio API key and pick a model.',
+            'card-openrouter': 'OpenRouter. One key for hundreds of models, including free ones (names ending in :free). Add a key and pick a model.',
             'card-pollinations': 'Free chat, no key. One request at a time, about 30 seconds apart. Also draws images from the + menu.'
         };
         function enhanceCard(card) {
@@ -7638,7 +7854,8 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             android: $('#ttsAndroid'), nat: $('#ttsNat'), nVoice: $('#ttsNVoice'), nHint: $('#ttsNatHint'),
             aiRow: $('#ttsAiRow'), aiKey: $('#ttsAiKey'), aiSave: $('#ttsAiSave'), aiClear: $('#ttsAiClear'), nLbl: $('#ttsNVoiceLbl'),
             pollRow: $('#ttsPollRow'), pollKey: $('#ttsPollKey'), pollSave: $('#ttsPollSave'), pollClear: $('#ttsPollClear'),
-            nEngine: $('#ttsNEngine'), nEngineHint: $('#ttsNEngineHint')
+            nEngine: $('#ttsNEngine'), nEngineHint: $('#ttsNEngineHint'),
+            edgeRow: $('#ttsEdgeRow'), edgePreset: $('#ttsEdgePreset')
         };
         const fmtX = v => (+v).toFixed(2).replace(/\.?0+$/, '') + '\u00d7';
 
@@ -7653,6 +7870,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             vEl.nat.hidden = !cloud;
             vEl.pollRow.hidden = s.engine !== 'pollinations';
             vEl.aiRow.hidden = s.engine !== 'ttsai';
+            vEl.edgeRow.hidden = s.engine !== 'edge';
             if (!cloud) return;
             const eng = TTS.cloud[s.engine];
             vEl.nVoice.hidden = false; vEl.nLbl.hidden = false;
@@ -7662,8 +7880,15 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 o.value = v.id; o.textContent = v.name;
                 vEl.nVoice.appendChild(o);
             });
-            vEl.nVoice.value = s.engine === 'gemini' ? s.gvoice : s.engine === 'ttsai' ? s.avoice : s.pvoice;
-            if (s.engine === 'ttsai') {
+            vEl.nVoice.value = s.engine === 'gemini' ? s.gvoice : s.engine === 'ttsai' ? s.avoice : s.engine === 'edge' ? s.evoice : s.pvoice;
+            if (s.engine === 'edge') {
+                vEl.edgePreset.replaceChildren();
+                eng.presets.forEach(p => { const o = document.createElement('option'); o.value = p.id; o.textContent = p.name; vEl.edgePreset.appendChild(o); });
+                vEl.edgePreset.value = s.epreset;
+                vEl.nHint.textContent = eng.supported()
+                    ? 'No key, no account, no daily limit. These are the neural voices Microsoft Edge reads pages with. Your text is sent to Microsoft to make the audio. The tone preset plus your Speed and Pitch sliders shape how it speaks. It is an unofficial route, so if Microsoft changes it Horizon says so and uses the Android voice.'
+                    : 'This build of the app has no Edge voice. Install the latest Horizon APK.';
+            } else if (s.engine === 'ttsai') {
                 vEl.aiKey.placeholder = eng.hasKey() ? 'Key saved. Paste a new one to replace it' : 'sk-tts-... (leave empty to use the free tier)';
                 vEl.nHint.textContent = eng.hasKey()
                     ? 'TTS.ai key saved. Kokoro voices from tts.ai. If it fails or runs out, Horizon switches to the Android voice and tells you why. Speed and pitch both work.'
@@ -7798,8 +8023,13 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 ttsToast('Engine changed. Tap Test to hear it.');
             });
             vEl.nVoice.addEventListener('change', () => {
-                TTS.set(TTS.settings().engine === 'gemini' ? 'gvoice' : TTS.settings().engine === 'ttsai' ? 'avoice' : 'pvoice', vEl.nVoice.value);
+                TTS.set(TTS.settings().engine === 'gemini' ? 'gvoice' : TTS.settings().engine === 'ttsai' ? 'avoice' : TTS.settings().engine === 'edge' ? 'evoice' : 'pvoice', vEl.nVoice.value);
                 vEl.status.textContent = TTS.describe();
+            });
+            vEl.edgePreset.addEventListener('change', () => {
+                TTS.set('epreset', vEl.edgePreset.value);
+                vEl.status.textContent = TTS.describe();
+                ttsToast('Tone changed. Tap Test to hear it.');
             });
             vEl.aiSave.addEventListener('click', () => {
                 const v = vEl.aiKey.value.trim();
@@ -7858,7 +8088,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                     vEl.status.textContent = TTS.describe();
                 } else if (st.state === 'playing') {
                     vEl.status.classList.remove('error');
-                    vEl.status.textContent = 'Playing: ' + (st.engine === 'gemini' ? 'Gemini voice' : st.engine === 'pollinations' ? 'Pollinations voice' : st.engine === 'ttsai' ? 'TTS.ai voice' : st.engine === 'native' ? 'Android voice' : 'Browser voice');
+                    vEl.status.textContent = 'Playing: ' + (st.engine === 'gemini' ? 'Gemini voice' : st.engine === 'pollinations' ? 'Pollinations voice' : st.engine === 'ttsai' ? 'TTS.ai voice' : st.engine === 'edge' ? 'Edge voice' : st.engine === 'native' ? 'Android voice' : 'Browser voice');
                 } else if (st.state === 'idle' && !vEl.status.classList.contains('error')) {
                     vEl.status.textContent = TTS.describe();
                 }

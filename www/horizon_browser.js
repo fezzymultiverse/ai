@@ -457,8 +457,16 @@
         isOpen = false; root.classList.remove('open', 'full'); closePanel(true);
         if (native) cap.hide().catch(() => {});
     }
-    new ResizeObserver(() => syncBounds()).observe(el.stage);
-    window.addEventListener('resize', () => { setTimeout(syncBounds, 50); });
+    // V1.63.0: one native setBounds per frame at most, none while the keyboard slides, and one exact re-sync when it stops.
+    // Before, every resize event queued its own native call on the main thread, which froze the page as the keyboard lifted and collapsed.
+    let boundsRaf = 0;
+    function syncBoundsSoon() {
+        if (window.hzKbBusy || boundsRaf) return;
+        boundsRaf = requestAnimationFrame(() => { boundsRaf = 0; syncBounds(); });
+    }
+    new ResizeObserver(syncBoundsSoon).observe(el.stage);
+    window.addEventListener('resize', syncBoundsSoon);
+    window.addEventListener('hz-kb-settled', () => { setTimeout(syncBounds, 30); });
 
     // ---------- settings panel ----------
     const PANELS = [['search', 'SEARCH'], ['privacy', 'PRIVACY'], ['ai', 'AI & EYE'], ['tabs', 'TABS'], ['marks', 'BOOKMARKS'], ['hist', 'HISTORY'], ['look', 'DISPLAY']];
@@ -691,6 +699,15 @@
                 const r = await fetch('https://api.mistral.ai/v1/chat/completions', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + key }, signal: ctl.signal, body: JSON.stringify({ model: model || 'mistral-small-latest', messages: mm }) });
                 const j = await r.json().catch(() => ({}));
                 if (!r.ok) throw new Error(j.message || (j.error && j.error.message) || ('Mistral error ' + r.status));
+                const c = ((j.choices || [])[0] || {}).message;
+                return (c && (Array.isArray(c.content) ? c.content.map(p => p.text || '').join('') : c.content)) || '(empty reply)';
+            }
+            if (id === 'openrouter') {
+                if (!key) throw new Error('Add your OpenRouter key in Horizon settings, or switch provider.');
+                const om = [{ role: 'system', content: system }].concat(history_.map(m => ({ role: m.role === 'ai' ? 'assistant' : 'user', content: m.text })), [{ role: 'user', content: question }]);
+                const r = await fetch('https://openrouter.ai/api/v1/chat/completions', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + key, 'X-Title': 'Horizon' }, signal: ctl.signal, body: JSON.stringify({ model: model || 'openrouter/auto', messages: om }) });
+                const j = await r.json().catch(() => ({}));
+                if (!r.ok || (j.error && !(j.choices || []).length)) throw new Error((j.error && (j.error.message || j.error)) || ('OpenRouter error ' + r.status));
                 const c = ((j.choices || [])[0] || {}).message;
                 return (c && (Array.isArray(c.content) ? c.content.map(p => p.text || '').join('') : c.content)) || '(empty reply)';
             }

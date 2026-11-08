@@ -3,6 +3,7 @@
  * Engines. You pick one under Voice quality; Horizon always falls back to the Android voice if it fails:
  *   1. Gemini        natural voice, 30 voices, uses your Gemini key(s) from API PROVIDERS PLUS KEYS
  *   2. Pollinations  natural voice, 6 voices, uses a Pollinations key (enter.pollinations.ai)
+ *   1b. Edge          Microsoft Edge neural voices, NO key, unlimited (V1.62.0). Made natively on Android; speed/pitch/tone are SSML presets
  *   2b. TTS.ai       natural Kokoro voices (V1.48.0). Works with no key on their free tier; an optional key raises the limits
  *   3. Native        Android's own speech engine through the HorizonSpeech plugin (free, offline, unlimited)
  *   4. Web Speech    the WebView's speechSynthesis, as a last resort
@@ -43,8 +44,35 @@
             { id: 'onyx', name: 'Onyx · deep male' }
         ]
     };
-    const MAX_CHARS = { native: 3000, web: 180, gemini: 1200, pollinations: 1000, ttsai: 450 };
-    const ENGINES = ['standard', 'gemini', 'pollinations', 'ttsai'];
+    // V1.62.0: Microsoft Edge "Read Aloud" neural voices. No key, no account, no daily limit. The text goes to Microsoft.
+    // This is the service the Edge browser itself uses, reached the way the open-source edge-tts library does. It is unofficial,
+    // so Microsoft can change it; if it ever fails Horizon says why and falls back to the Android voice.
+    // Speed and pitch are applied by the voice itself (SSML), so they sound clean instead of stretched.
+    const EDGE = {
+        timeoutMs: 45000,
+        voices: [
+            ['en-US-AvaMultilingualNeural', 'Ava · warm US female, most natural'], ['en-US-AndrewMultilingualNeural', 'Andrew · warm US male, most natural'],
+            ['en-US-EmmaMultilingualNeural', 'Emma · bright US female'], ['en-US-BrianMultilingualNeural', 'Brian · calm US male'],
+            ['en-US-AriaNeural', 'Aria · expressive US female'], ['en-US-JennyNeural', 'Jenny · friendly US female'],
+            ['en-US-GuyNeural', 'Guy · clear US male'], ['en-US-ChristopherNeural', 'Christopher · deep US male'],
+            ['en-US-EricNeural', 'Eric · steady US male'], ['en-US-MichelleNeural', 'Michelle · soft US female'],
+            ['en-ZA-LeahNeural', 'Leah · South African female'], ['en-ZA-LukeNeural', 'Luke · South African male'],
+            ['en-GB-SoniaNeural', 'Sonia · British female'], ['en-GB-RyanNeural', 'Ryan · British male'],
+            ['en-GB-LibbyNeural', 'Libby · young British female'], ['en-GB-ThomasNeural', 'Thomas · British male'],
+            ['en-AU-NatashaNeural', 'Natasha · Australian female'], ['en-AU-WilliamNeural', 'William · Australian male']
+        ].map(v => ({ id: v[0], name: v[1] })),
+        // tone presets: rate in %, pitch in Hz, added to your Speed and Pitch sliders
+        presets: [
+            { id: 'natural', name: 'Natural · as the voice speaks', rate: 0, pitch: 0 },
+            { id: 'calm', name: 'Calm and warm · slower, a touch lower', rate: -8, pitch: -2 },
+            { id: 'upbeat', name: 'Upbeat · quicker, a touch higher', rate: 8, pitch: 3 },
+            { id: 'bright', name: 'Bright · lifted and lively', rate: 4, pitch: 6 },
+            { id: 'deep', name: 'Deep narrator · slow and low', rate: -4, pitch: -6 },
+            { id: 'fast', name: 'Fast reader · gets through it', rate: 22, pitch: 0 }
+        ]
+    };
+    const MAX_CHARS = { native: 3000, web: 180, gemini: 1200, pollinations: 1000, ttsai: 450, edge: 1200 };
+    const ENGINES = ['standard', 'gemini', 'pollinations', 'ttsai', 'edge'];
     // V1.48.0: TTS.ai (replaces FreeTTS.ai). POST /v1/tts/ queues a job, then /v1/speech/results/ is polled for the audio link.
     // No key needed for their free models (500 characters per request). Kokoro voice ids are the standard Kokoro set.
     const TTSAI = {
@@ -57,7 +85,7 @@
             ['bf_emma', 'Emma · UK female'], ['bf_isabella', 'Isabella · UK female'], ['bm_george', 'George · UK male'], ['bm_lewis', 'Lewis · UK male']
         ].map(v => ({ id: v[0], name: v[1] }))
     };
-    const CLOUD = ['gemini', 'pollinations', 'ttsai'];
+    const CLOUD = ['gemini', 'pollinations', 'ttsai', 'edge'];
     const KEYS = {
         engine: 'horizon_tts_engine',
         voice: 'horizon_tts_voice',
@@ -70,7 +98,9 @@
         pkey: 'horizon_tts_poll_key',
         akey: 'horizon_tts_ttsai_key',
         avoice: 'horizon_tts_ttsai_voice',
-        nengine: 'horizon_tts_native_engine'
+        nengine: 'horizon_tts_native_engine',
+        evoice: 'horizon_tts_edge_voice',
+        epreset: 'horizon_tts_edge_preset'
     };
 
     // ----------------------------------------------------------------- helpers
@@ -100,9 +130,10 @@
     }
     const pollKey = () => String(ls.get(KEYS.pkey) || '').trim();
     const aiIds = TTSAI.voices.map(v => v.id);
+    const edgeIds = EDGE.voices.map(v => v.id), edgePresetIds = EDGE.presets.map(v => v.id);
     const aiKey = () => String(ls.get(KEYS.akey) || '').trim();
     function settings() {
-        const gv = ls.get(KEYS.gvoice), pv = ls.get(KEYS.pvoice), av = ls.get(KEYS.avoice);
+        const gv = ls.get(KEYS.gvoice), pv = ls.get(KEYS.pvoice), av = ls.get(KEYS.avoice), ev = ls.get(KEYS.evoice), ep = ls.get(KEYS.epreset);
         let eng = ls.get(KEYS.engine);
         if (eng === 'freetts') eng = 'ttsai';     // V1.48.0: FreeTTS.ai was replaced by TTS.ai
         if (eng === 'sherpa') eng = 'standard';   // V1.47.0: Piper is gone, so an old Piper pick becomes the Android voice
@@ -116,6 +147,8 @@
             gvoice: geminiIds.indexOf(gv) >= 0 ? gv : geminiIds[0],
             pvoice: pollIds.indexOf(pv) >= 0 ? pv : pollIds[0],
             avoice: aiIds.indexOf(av) >= 0 ? av : aiIds[0],
+            evoice: edgeIds.indexOf(ev) >= 0 ? ev : edgeIds[0],
+            epreset: edgePresetIds.indexOf(ep) >= 0 ? ep : edgePresetIds[0],
             nengine: String(ls.get(KEYS.nengine) || '').trim()
         };
     }
@@ -131,6 +164,8 @@
             case 'pkey': ls.set(KEYS.pkey, String(value || '').trim()); break;
             case 'akey': ls.set(KEYS.akey, String(value || '').trim()); break;
             case 'avoice': if (aiIds.indexOf(value) >= 0) ls.set(KEYS.avoice, value); break;
+            case 'evoice': if (edgeIds.indexOf(value) >= 0) ls.set(KEYS.evoice, value); break;
+            case 'epreset': if (edgePresetIds.indexOf(value) >= 0) ls.set(KEYS.epreset, value); break;
             case 'nengine': ls.set(KEYS.nengine, String(value || '').trim()); voiceCache = null; break;
             default: return false;
         }
@@ -555,6 +590,26 @@
         return new Blob([u8], { type: (u8[0] === 0x52) ? 'audio/wav' : (u8[0] === 0x4F ? 'audio/ogg' : 'audio/mpeg') });
     }
 
+    // ---- Microsoft Edge neural voices (V1.62.0), made by the Android app over a native WebSocket
+    const clampI = (n, lo, hi) => Math.min(hi, Math.max(lo, Math.round(n)));
+    async function edgeSynth(text, s) {
+        const p = nativePlugin();
+        if (!p || typeof p.edgeSynth !== 'function') throw new Error('the Edge voice only works in the Horizon Android app, and this build does not have it. Update the app');
+        const pre = EDGE.presets.find(x => x.id === s.epreset) || EDGE.presets[0];
+        const rate = clampI(pre.rate + (s.rate - 1) * 100, -60, 100), pitch = clampI(pre.pitch + (s.pitch - 1) * 50, -50, 50);
+        const go = v => withTimeout(p.edgeSynth({ text, voice: v, rate, pitch }), EDGE.timeoutMs, 'the Edge voice took too long');
+        let r;
+        try { r = await go(s.evoice); }
+        catch (e) {
+            if (isMissing(e)) throw new Error('this build has no Edge voice yet. Update the app');
+            if (/Multilingual/.test(s.evoice)) r = await go(s.evoice.replace('Multilingual', ''));   // an older voice list: plain neural twin
+            else throw e;
+        }
+        const u8 = b64ToBytes(r && r.data);
+        if (!looksLikeAudio(u8)) throw new Error('the Edge voice did not return audio');
+        return new Blob([u8], { type: 'audio/mpeg' });
+    }
+
     async function runCloud(synth, chunks, tok, s, started) {
         let next = queued(tok, () => synth(chunks[0]));
         let first = true;
@@ -570,6 +625,8 @@
     const runGemini = (chunks, tok, s, started) => runCloud(t => geminiSynth(t, s.gvoice), chunks, tok, s, started);
     const runPollinations = (chunks, tok, s, started) => runCloud(t => pollSynth(t, s.pvoice), chunks, tok, s, started);
     const runTTSAI = (chunks, tok, s, started) => runCloud(t => ttsaiSynth(t, s.avoice), chunks, tok, s, started);
+    // speed and pitch are already inside the Edge audio, so it plays back untouched
+    const runEdge = (chunks, tok, s, started) => runCloud(t => edgeSynth(t, s), chunks, tok, { rate: 1, pitch: 1 }, started);
 
     // Android can refuse to start audio that was not triggered by a tap, and cloud voices take seconds to arrive,
     // so the tap is long gone by the time the sound is ready. A Web Audio context that was created and resumed
@@ -666,8 +723,8 @@
     }
 
     // ------------------------------------------------------------- orchestration
-    const RUN = { gemini: runGemini, pollinations: runPollinations, ttsai: runTTSAI, native: runNative, web: runWeb };
-    const LABEL = { gemini: 'Gemini voice', pollinations: 'Pollinations voice', ttsai: 'TTS.ai voice', native: 'Android voice', web: 'Browser voice' };
+    const RUN = { gemini: runGemini, pollinations: runPollinations, ttsai: runTTSAI, edge: runEdge, native: runNative, web: runWeb };
+    const LABEL = { gemini: 'Gemini voice', pollinations: 'Pollinations voice', ttsai: 'TTS.ai voice', edge: 'Edge voice', native: 'Android voice', web: 'Browser voice' };
 
     function stop(silent) {
         const c = cur;
@@ -826,6 +883,10 @@
             if (!cloudKeys('gemini').length) return 'Gemini voice needs a key. Using the Android voice for now.';
             return 'Natural voice (Gemini · ' + s.gvoice + ')';
         }
+        if (s.engine === 'edge') {
+            const v = EDGE.voices.find(x => x.id === s.evoice), pr = EDGE.presets.find(x => x.id === s.epreset);
+            return 'Natural voice (Edge · ' + (v ? v.name.split(' · ')[0] : s.evoice) + (pr && pr.id !== 'natural' ? ' · ' + pr.name.split(' · ')[0].toLowerCase() : '') + ')';
+        }
         if (s.engine === 'ttsai') {
             const v = TTSAI.voices.find(x => x.id === s.avoice);
             return 'Natural voice (TTS.ai · ' + (v ? v.name.split(' · ')[0] : s.avoice) + (aiKey() ? '' : ' · free tier') + ')';
@@ -861,7 +922,8 @@
         cloud: {
             gemini: { voices: GEMINI.voices, keyCount: () => cloudKeys('gemini').length },
             pollinations: { voices: POLL.voices, hasKey: () => !!pollKey() },
-            ttsai: { voices: TTSAI.voices, hasKey: () => !!aiKey() }
+            ttsai: { voices: TTSAI.voices, hasKey: () => !!aiKey() },
+            edge: { voices: EDGE.voices, presets: EDGE.presets, supported: () => !!(nativePlugin() && typeof nativePlugin().edgeSynth === 'function') }
         }
     };
 })(window);

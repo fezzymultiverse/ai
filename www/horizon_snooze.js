@@ -5,7 +5,7 @@
     var KEY = 'horizon_snooze', SNAP = 'horizon_snooze_snap';
     var AIS = [
         { id: 'gemini', name: 'Gemini' }, { id: 'groq', name: 'Groq' },
-        { id: 'cohere', name: 'Cohere' }, { id: 'mistral', name: 'Mistral' }, { id: 'pollinations', name: 'Pollinations' }
+        { id: 'cohere', name: 'Cohere' }, { id: 'mistral', name: 'Mistral' }, { id: 'openrouter', name: 'OpenRouter' }, { id: 'pollinations', name: 'Pollinations' }
     ];
     var NS = 'http://www.w3.org/2000/svg';
     var btn = document.getElementById('snoozeBtn'), bar = document.getElementById('hzSnoozeBar');

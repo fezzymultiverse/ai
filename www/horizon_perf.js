@@ -8,7 +8,7 @@
 (function () {
   'use strict';
   var de = document.documentElement;
-  var VERSION = 'V1.58.5';
+  var VERSION = 'V1.63.0';
   var LONG_MS = 50, KEY_MS = 40, KEEP = 60;
   var tasks = [], keys = [], slow = [], worst = [], kbMoves = 0, loafOk = false;
   var kbTimer = 0, isOpen = false, panel = null, pre = null, btnCopy = null, uiTimer = 0, rafId = 0;
@@ -27,7 +27,9 @@
     de.classList.remove('hz-kb-moving');
     try { window.dispatchEvent(new Event('hz-kb-settled')); } catch (e) { /* very old WebView */ }
   }
+  var nativeUntil = 0;   // while Android says the keyboard is sliding, resize events must not shorten the wait
   function kbCheck() {
+    if (Date.now() < nativeUntil) return;
     var h = vh();
     if (!window.hzKbBusy) {
       if (Math.abs(h - settledH) < 80) return;   // only keyboard-sized changes count
@@ -38,6 +40,26 @@
     kbTimer = setTimeout(kbSettle, 220);
   }
   window.hzKbCheck = kbCheck;
+
+  /* V1.63.0: Android tells us the exact start and end of the keyboard slide (MainActivity.watchKeyboard).
+     moving=true  -> busy now; a 1.2 s watchdog guarantees the page can never stay stuck if the end signal is lost.
+     moving=false -> settle right away (one re-fit), and if the keyboard is now hidden while the message box still has focus,
+                     drop that focus so the next tap on the box lifts the keyboard again instead of doing nothing. */
+  window.hzKbNative = function (moving, visible) {
+    clearTimeout(kbTimer);
+    if (moving) {
+      nativeUntil = Date.now() + 1200;
+      if (!window.hzKbBusy) { window.hzKbBusy = true; kbMoves++; de.classList.add('hz-kb-moving'); }
+      kbTimer = setTimeout(function () { nativeUntil = 0; kbSettle(); }, 1200);
+      return;
+    }
+    nativeUntil = 0;
+    kbTimer = setTimeout(function () {
+      kbSettle();
+      var a = document.activeElement;
+      if (!visible && a && a.tagName === 'TEXTAREA' && a.id === 'chatInput') { try { a.blur(); } catch (e) { /* ignore */ } }
+    }, 40);
+  };
   window.addEventListener('resize', kbCheck, { passive: true });
   if (window.visualViewport) window.visualViewport.addEventListener('resize', kbCheck, { passive: true });
 

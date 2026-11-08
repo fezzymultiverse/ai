@@ -1,6 +1,7 @@
 package __APPID__;
 
 import android.media.AudioAttributes;
+import android.util.Base64;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -150,6 +151,19 @@ public class HorizonSpeechPlugin extends Plugin {
         String id = call.getString("utteranceId", UUID.randomUUID().toString()); pending.put(id, call);
         if (tts.speak(text, TextToSpeech.QUEUE_FLUSH, params, id) == TextToSpeech.ERROR) finish(id, "Android rejected speech. Check installed voice data.");
     }); }
+    /** V1.62.0: Microsoft Edge neural voice (no key). Returns { data: base64 mp3 }. */
+    @PluginMethod public void edgeSynth(PluginCall call) {
+        final String text = call.getString("text", ""), voice = call.getString("voice", "en-US-AvaMultilingualNeural");
+        final int rate = call.getInt("rate", 0), pitch = call.getInt("pitch", 0);
+        if (text == null || text.trim().isEmpty()) { call.reject("Nothing to say"); return; }
+        new Thread(() -> {
+            try {
+                byte[] mp3 = HorizonEdgeTts.synth(text, voice, rate, pitch);
+                JSObject o = new JSObject(); o.put("data", Base64.encodeToString(mp3, Base64.NO_WRAP));
+                call.resolve(o);
+            } catch (Throwable e) { call.reject(e.getMessage() == null ? e.toString() : e.getMessage()); }
+        }).start();
+    }
     @PluginMethod public void stop(PluginCall call) { main.post(() -> { cancel(); call.resolve(); }); }
     @Override protected void handleOnDestroy() { main.post(() -> { cancel(); if (tts != null) tts.shutdown(); }); }
 }

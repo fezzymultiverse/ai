@@ -60,7 +60,42 @@
         return [{ glyph: '\u23F1\uFE0F', title: 'Open the lag detector', sub: 'Refresh rate, slow keys, what blocks typing. Copy the report to send it back.',
             run: function () { return !!(window.HorizonPerf && window.HorizonPerf.open() !== false); } }];
     }
+    // V1.63.0: pop-up + sound check and LeakCanary, both talk to the native HorizonAI plugin.
+    function ai() { var C = window.Capacitor; return C && C.Plugins && C.Plugins.HorizonAI ? C.Plugins.HorizonAI : null; }
+    function tell(t, k) { try { if (host && host.notice) host.notice(t, k); } catch (e) { /* ignore */ } }
+    function call(method, args, okMsg) {
+        var p = ai();
+        if (!p || typeof p[method] !== 'function') { tell('That needs the Android app.', 'error'); return false; }
+        p[method](args || {}).then(function (r) { if (okMsg) tell(typeof okMsg === 'function' ? okMsg(r || {}) : okMsg); })
+            .catch(function (e) { tell((e && e.message) || 'That did not work.', 'error'); });
+        return true;
+    }
+    function notifItems() {
+        return [
+            { glyph: '🔔', title: 'Send a test pop-up', sub: 'Drops a banner over the screen with a sound. Leave the app to see it as a real reply would show.',
+              run: function () { return call('notifyTest', {}, function (r) { return r.shown ? 'Test sent. Switch to your home screen if you saw nothing.' : 'Notifications are off for Horizon.'; }); } },
+            { glyph: '🔊', title: 'Check pop-up and sound', sub: 'Shows what Android will do with a reply right now.',
+              run: function () { return call('notifyStatus', {}, function (r) {
+                  return 'Pop-up banner: ' + (r.banner ? 'ON' : 'OFF') + ' | Sound: ' + (r.sound ? 'ON' : 'OFF') + ' | Over locked screen: ' + (r.fullScreen ? 'ON' : 'OFF') + ' | Permission: ' + (r.permission && r.appEnabled ? 'ON' : 'OFF'); }); } },
+            { glyph: '⚙️', title: 'Open the reply channel settings', sub: 'Set Importance to Urgent (pop up on screen) and Sound on, if Android turned them down.',
+              run: function () { return call('notifyOpenChannel', {}); } },
+            { glyph: '📱', title: 'Allow full-screen alerts', sub: 'Android 14 asks for this one by hand. It lets a reply open over a locked screen.',
+              run: function () { return call('notifyOpenFullScreen', {}); } }
+        ];
+    }
+    function canaryItems() {
+        return [
+            { glyph: '🐦', title: 'Open the leak list', sub: 'LeakCanary shows every object Horizon forgot to release, with the chain that holds it.',
+              run: function () { return call('canaryOpen', {}); } },
+            { glyph: '⏻', title: 'Turn the canary on', sub: 'Watch for leaks (the phone pauses a second or two each time it dumps memory).',
+              run: function () { return call('canarySet', { on: true }, 'LeakCanary is on.'); } },
+            { glyph: '⏻', title: 'Turn the canary off', sub: 'Stop watching and stop memory dumps.',
+              run: function () { return call('canarySet', { on: false }, 'LeakCanary is off.'); } }
+        ];
+    }
     var COMMANDS = [
+        { names: ['notif', 'notify', 'popup', 'sound'], glyph: '🔔', label: '/notif', desc: 'Test the pop-up and sound for replies', items: notifItems, onSend: true },
+        { names: ['canary', 'leak', 'leaks'], glyph: '🐦', label: '/canary', desc: 'LeakCanary: find memory leaks', items: canaryItems, onSend: true },
         { names: ['model', 'm', 'ai'], glyph: '\uD83E\uDD16', label: '/model', desc: 'Switch provider or model', items: modelItems },
         { names: ['recon', 'sweep'], glyph: '\uD83D\uDEF0\uFE0F', label: '/recon', desc: 'Web recon sweep on a target', items: reconItems, onSend: true },
         { names: ['music', 'song', 'find'], glyph: '\uD83C\uDFB5', label: '/music', desc: 'Search your music player', items: musicItems, onSend: true },

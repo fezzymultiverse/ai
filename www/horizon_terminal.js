@@ -99,7 +99,11 @@
         strip.querySelector('.hzt-st-x').addEventListener('click', exitTerm);
 
         if (window.visualViewport) {
-            var fit = function () { if (st.open) el.o.style.height = Math.round(window.visualViewport.height) + 'px'; };
+            var fitRaf = 0;   // V1.63.0: one height write per frame instead of one per resize/scroll event
+            var fit = function () {
+                if (fitRaf) return;
+                fitRaf = requestAnimationFrame(function () { fitRaf = 0; if (st.open) el.o.style.height = Math.round(window.visualViewport.height) + 'px'; });
+            };
             window.visualViewport.addEventListener('resize', fit); window.visualViewport.addEventListener('scroll', fit);
         }
         window.addEventListener('popstate', function () {

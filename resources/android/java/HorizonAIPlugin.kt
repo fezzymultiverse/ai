@@ -24,6 +24,12 @@ import com.getcapacitor.PluginCall
 import com.getcapacitor.PluginMethod
 import com.getcapacitor.annotation.CapacitorPlugin
 import java.io.IOException
+import java.util.concurrent.atomic.AtomicBoolean
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.launch
 import java.net.HttpURLConnection
 import java.net.URL
 
@@ -33,19 +39,11 @@ class HorizonAIPlugin : Plugin() {
     companion object {
         @JvmField @Volatile var foreground = true
         const val KEY_TEXT = "horizon_reply_text"
-        private const val CHANNEL = "horizon_ai_replies"
         @Volatile private var instance: HorizonAIPlugin? = null
 
         fun notificationId(chatId: String): Int = 5100 + (chatId.hashCode() and 0x7fff)
 
-        private fun canNotify(context: Context): Boolean =
-            Build.VERSION.SDK_INT < 33 || ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
-
-        private fun manager(context: Context): NotificationManager {
-            val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            if (Build.VERSION.SDK_INT >= 26) nm.createNotificationChannel(NotificationChannel(CHANNEL, "AI replies", NotificationManager.IMPORTANCE_DEFAULT))
-            return nm
-        }
+        private fun canNotify(context: Context): Boolean = HorizonNotify.canNotify(context)
 
         private fun openIntent(context: Context, chatId: String): PendingIntent {
             val open = Intent(context, MainActivity::class.java).apply {
@@ -66,18 +64,19 @@ class HorizonAIPlugin : Plugin() {
 
         /** Replaces the notification the user replied from (this also stops Android's reply spinner). */
         @JvmStatic fun postStatus(context: Context, chatId: String, title: String, text: String) {
-            if (!canNotify(context)) return
-            val extras = Bundle().apply { putBoolean("horizon_status", true) }
-            val n = NotificationCompat.Builder(context, CHANNEL)
-                .setSmallIcon(android.R.drawable.stat_notify_chat).setContentTitle(title).setContentText(text)
-                .setVisibility(NotificationCompat.VISIBILITY_PRIVATE).setOnlyAlertOnce(true).setAutoCancel(true)
-                .setContentIntent(openIntent(context, chatId)).addExtras(extras).build()
-            manager(context).notify(notificationId(chatId), n)
+            HorizonNotify.status(context, notificationId(chatId), title, text, openIntent(context, chatId))
         }
     }
 
+    // V1.63.0: everything this plugin launches belongs to this scope and is cancelled with the plugin (structured concurrency).
+    private val scope: CoroutineScope = HorizonScopes.child("horizon-ai-plugin", Dispatchers.IO)
+
     override fun load() { instance = this }
-    override fun handleOnDestroy() { if (instance === this) instance = null }
+    override fun handleOnDestroy() {
+        HorizonScopes.cancel(scope, "HorizonAIPlugin destroyed")
+        if (instance === this) instance = null
+        super.handleOnDestroy()
+    }
 
     @PluginMethod
     fun speechHold(call: PluginCall) {
@@ -123,12 +122,18 @@ class HorizonAIPlugin : Plugin() {
         val url = call.getString("url") ?: return call.reject("Missing request URL")
         // Only the existing AI provider endpoints may receive stored credentials.
         val host = try { URL(url).host } catch (_: Exception) { "" }
-        if (!url.startsWith("https://") || host !in setOf("generativelanguage.googleapis.com", "api.groq.com", "api.cohere.com", "api.mistral.ai", "text.pollinations.ai")) {
+        if (!url.startsWith("https://") || host !in setOf("generativelanguage.googleapis.com", "api.groq.com", "api.cohere.com", "api.mistral.ai", "openrouter.ai", "text.pollinations.ai")) {
             call.reject("Unsupported AI endpoint")
             return
         }
+        val settled = AtomicBoolean(false)
         try {
-            HorizonAIService.submit(context) {
+            HorizonAIService.submit(context, onFail = { e ->
+                // The job was cancelled or timed out before it answered: tell the page instead of leaving it waiting.
+                if (settled.compareAndSet(false, true)) {
+                    call.reject(if (e is CancellationException) "AI request cancelled" else "AI request timed out")
+                }
+            }) {
                 var connection: HttpURLConnection? = null
                 try {
                     connection = URL(url).openConnection() as HttpURLConnection
@@ -173,9 +178,9 @@ class HorizonAIPlugin : Plugin() {
                             }
                         } catch (_: Exception) { /* Rendering/parser failures never fail the provider request. */ }
                     }
-                    call.resolve(result)
+                    if (settled.compareAndSet(false, true)) call.resolve(result)
                 } catch (e: Exception) {
-                    call.reject("AI request failed: ${e.message}")
+                    if (settled.compareAndSet(false, true)) call.reject("AI request failed: ${e.message}")
                 } finally { connection?.disconnect() }
             }
         } catch (e: Exception) { call.reject("Could not start background AI job: ${e.message}") }
@@ -184,7 +189,7 @@ class HorizonAIPlugin : Plugin() {
     private fun publishReply(chatId: String, rawText: String): Boolean {
         if (foreground || !canNotify(context)) return false
         val text = rawText.take(3500)
-        val nm = manager(context)
+        val nm = HorizonNotify.manager(context)
         val nid = notificationId(chatId)
         // A "Horizon is thinking" status sits on this id after an inline reply. Remove it so the answer alerts.
         if (Build.VERSION.SDK_INT >= 23 && nm.activeNotifications.any { it.id == nid && it.notification.extras.getBoolean("horizon_status", false) }) nm.cancel(nid)
@@ -197,14 +202,8 @@ class HorizonAIPlugin : Plugin() {
         val reply = NotificationCompat.Action.Builder(android.R.drawable.ic_menu_send, "Reply", replyPending)
             .addRemoteInput(remote).setAllowGeneratedReplies(false)
             .setSemanticAction(NotificationCompat.Action.SEMANTIC_ACTION_REPLY).setShowsUserInterface(false).build()
-        val notification = NotificationCompat.Builder(context, CHANNEL)
-            .setSmallIcon(android.R.drawable.stat_notify_chat).setContentTitle("Horizon replied")
-            .setContentText(text.take(180)).setStyle(NotificationCompat.BigTextStyle().bigText(text))
-            .setVisibility(NotificationCompat.VISIBILITY_PRIVATE).setOnlyAlertOnce(true)
-            .setContentIntent(openIntent(context, chatId)).addAction(reply)
-            .setAutoCancel(true).build()
-        nm.notify(nid, notification)
-        return true
+        // V1.63.0: banner over the screen + sound + vibration (see HorizonNotify).
+        return HorizonNotify.alert(context, nid, "Horizon replied", text, openIntent(context, chatId), reply)
     }
 
     @PluginMethod
@@ -258,7 +257,7 @@ class HorizonAIPlugin : Plugin() {
         val video = call.getBoolean("video", false) == true
         // V1.23.0: optional kind = audio | video | image | file. Without it the old video flag decides, so older callers behave the same.
         val kind = (call.getString("kind") ?: (if (video) "video" else "audio")).lowercase().let { if (it == "audio" || it == "video" || it == "image" || it == "file") it else "file" }
-        Thread {
+        scope.launch {
             val resolver = context.contentResolver
             var target: Uri? = null
             try {
@@ -295,6 +294,7 @@ class HorizonAIPlugin : Plugin() {
                     (resolver.openOutputStream(out0) ?: throw IOException("could not open the new file")).use { out ->
                         val buf = ByteArray(65536)
                         while (true) {
+                            ensureActive()   // a cancelled scope stops the download here and the catch below deletes the half-written file
                             val n = input.read(buf)
                             if (n < 0) break
                             out.write(buf, 0, n)
@@ -314,9 +314,10 @@ class HorizonAIPlugin : Plugin() {
                 call.resolve(JSObject().put("path", "$rel/$filename").put("uri", out0.toString()).put("mime", mime).put("kind", kind))
             } catch (e: Exception) {
                 try { target?.let { resolver.delete(it, null, null) } } catch (_: Exception) { }
-                call.reject("Could not save the media: ${e.message ?: e.javaClass.simpleName}")
+                call.reject(if (e is CancellationException) "The save was cancelled" else "Could not save the media: ${e.message ?: e.javaClass.simpleName}")
+                if (e is CancellationException) throw e
             }
-        }.start()
+        }
     }
 
     /** V1.23.0: opens a saved file (the content:// uri saveMedia returned) in whatever app on the phone handles its type. */
@@ -346,5 +347,50 @@ class HorizonAIPlugin : Plugin() {
         } catch (e: android.content.ActivityNotFoundException) {
             call.reject(if (url.startsWith("magnet:")) "No torrent app is installed. Install one such as LibreTorrent or Flud, then try again" else "No app can open that link")
         } catch (e: Exception) { call.reject("Could not open the link: ${e.message ?: e.javaClass.simpleName}") }
+    }
+
+    // ---------- V1.63.0: notification diagnostics + LeakCanary controls ----------
+
+    /** What the phone will do with a reply: permission, banner (importance), sound, full-screen. */
+    @PluginMethod
+    fun notifyStatus(call: PluginCall) {
+        try { call.resolve(HorizonNotify.report(context)) } catch (e: Exception) { call.reject("Could not read notification state: ${e.message}") }
+    }
+
+    /** Fires a real heads-up now, even while the app is open, so the banner and sound can be checked. */
+    @PluginMethod
+    fun notifyTest(call: PluginCall) {
+        try {
+            if (!canNotify(context)) { call.resolve(JSObject().put("shown", false).put("why", "permission")); return }
+            val id = notificationId("horizon-test")
+            val ok = HorizonNotify.alert(context, id, "Horizon test", "If this dropped over your screen and made a sound, pop-ups are working.", openIntent(context, "horizon-test"))
+            call.resolve(JSObject().put("shown", ok))
+        } catch (e: Exception) { call.reject("Could not show the test: ${e.message}") }
+    }
+
+    @PluginMethod
+    fun notifyOpenChannel(call: PluginCall) {
+        try { HorizonNotify.openChannelSettings(context); call.resolve() } catch (e: Exception) { call.reject("Could not open settings: ${e.message}") }
+    }
+
+    @PluginMethod
+    fun notifyOpenFullScreen(call: PluginCall) {
+        try { HorizonNotify.openFullScreenSettings(context); call.resolve() } catch (e: Exception) { call.reject("Could not open settings: ${e.message}") }
+    }
+
+    @PluginMethod
+    fun canaryStatus(call: PluginCall) {
+        call.resolve(JSObject().put("on", HorizonCanary.isOn(context)))
+    }
+
+    @PluginMethod
+    fun canarySet(call: PluginCall) {
+        HorizonCanary.set(context, call.getBoolean("on", true) == true)
+        call.resolve(JSObject().put("on", HorizonCanary.isOn(context)))
+    }
+
+    @PluginMethod
+    fun canaryOpen(call: PluginCall) {
+        try { HorizonCanary.openLeaks(context); call.resolve() } catch (e: Exception) { call.reject("Could not open the leak list: ${e.message}") }
     }
 }

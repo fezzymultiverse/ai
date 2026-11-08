@@ -8,16 +8,17 @@
  * - Player: queue, shuffle, repeat (off / all / one), seek, previous / next, likes, recent, search, sort.
  * - AI: a MUSIC block in the system prompt (now playing, position, next up, recent) and tools
  *   [[music.search: q]] [[music.play: id or words]] [[music.queue: id]] [[music.pause]] [[music.resume]]
- *   [[music.next]] [[music.prev]] [[music.now]]. The AI only knows metadata, it cannot hear the audio.
+ *   [[music.next]] [[music.prev]] [[music.now]] [[music.listen: question]]. The chat AI only knows metadata; only Gemini can hear a clip
+ *   (V1.59.0 Gemini ears: the ear button on the now-playing bar, mini player and full player opens an ask sheet).
  *
  * Public API: window.HorizonMusic = { init, SRC, parse, run, block, seesAi, setAi, openTab, scan }
  */
 (function () {
     'use strict';
 
-    const LS = { ai: 'horizon_music_ai', liked: 'horizon_music_liked', recent: 'horizon_music_recent', last: 'horizon_music_last',
+    const LS = { ai: 'horizon_music_ai', hear: 'horizon_ears_hear', len: 'horizon_ears_len', from: 'horizon_ears_from', tool: 'horizon_ears_tool', liked: 'horizon_music_liked', recent: 'horizon_music_recent', last: 'horizon_music_last',
         shuffle: 'horizon_music_shuffle', repeat: 'horizon_music_repeat', all: 'horizon_music_all', sort: 'horizon_music_sort' };
-    const SRC = '\\[\\[music\\.(search|play|queue|pause|resume|next|prev|now)(?::\\s*((?:(?!\\]\\])[\\s\\S])*?))?\\s*\\]\\]';
+    const SRC = '\\[\\[music\\.(search|play|queue|pause|resume|next|prev|now|listen)(?::\\s*((?:(?!\\]\\])[\\s\\S])*?))?\\s*\\]\\]';
     const PAGE = 80;
 
     let host = { lsGet: () => null, lsSet() {}, notice() {}, onChange() {}, askAI() {}, openLeftTab() {}, nativeScan: null, srcFor: p => p };
@@ -320,6 +321,7 @@
                 <span class="mp-now-t"><b></b><span></span></span>
                 <span class="mp-wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></button>
                 <button class="mp-ctl" type="button" data-act="toggle" aria-label="${playing ? 'Pause' : 'Play'}">${ico(playing ? 'i-pause' : 'i-play')}</button>
+                <button class="mp-ctl mp-ear" type="button" data-act="ears" aria-label="Ask Gemini about this song" title="Ask Gemini about this song">${ico('i-ear')}</button>
                 ${eyeBtn()}<i class="mp-prog"></i>`;
             if (cur) { const nt = tile(cur); nt.classList.add('mp-now-ic'); strip.querySelector('.mp-now-main').prepend(nt); }
             strip.querySelector('.mp-now-t b').textContent = title;
@@ -329,7 +331,7 @@
         if (mini) {
             mini.classList.toggle('playing', playing);
             mini.innerHTML = `<div class="mp-mini-top"><span class="mp-mini-ic"></span><span class="mp-mini-t"><b></b><span></span></span>
-                ${eyeBtn()}<button class="mp-ctl" type="button" data-act="open" aria-label="Expand the music player">${ico('i-expand')}</button></div>
+                <button class="mp-ctl mp-ear" type="button" data-act="ears" aria-label="Ask Gemini about this song" title="Ask Gemini about this song">${ico('i-ear')}</button>${eyeBtn()}<button class="mp-ctl" type="button" data-act="open" aria-label="Expand the music player">${ico('i-expand')}</button></div>
                 <div class="mp-mini-ctl"><button class="mp-ctl" type="button" data-act="prev" aria-label="Previous">${ico('i-prev')}</button>
                 <button class="mp-ctl big" type="button" data-act="toggle" aria-label="${playing ? 'Pause' : 'Play'}">${ico(playing ? 'i-pause' : 'i-play')}</button>
                 <button class="mp-ctl" type="button" data-act="next" aria-label="Next">${ico('i-next')}</button></div><i class="mp-prog"></i>`;
@@ -354,6 +356,7 @@
                 <div class="mp-extra">
                     <button class="use-btn ${cur && liked.has(cur.id) ? 'on' : ''}" type="button" data-act="like" ${cur ? '' : 'disabled'}>${ico('i-heart')} ${cur && liked.has(cur.id) ? 'Liked' : 'Like'}</button>
                     <button class="use-btn" type="button" data-act="comment" ${cur ? '' : 'disabled'}>${ico('i-chat')} Ask AI</button>
+                    <button class="use-btn mp-ears-btn" type="button" data-act="ears" ${cur ? '' : 'disabled'}>${ico('i-ear')} Ask Gemini (he listens)</button>
                     ${eyeBtn('wide')}
                 </div>`;
             card.querySelector('.mp-card-art').appendChild(tile(cur, true));
@@ -367,6 +370,7 @@
         }
         document.querySelectorAll('#mpList .mp-row').forEach(r => r.classList.toggle('cur', !!cur && r.dataset.id === cur.id));
         paintProgress();
+        earsSync();
     }
     function rowFor(t) {
         const r = document.createElement('div');
@@ -479,6 +483,7 @@
             else if (a === 'eye') setAi(!seesAi());
             else if (a === 'open') openTab();
             else if (a === 'comment') comment();
+            else if (a === 'ears') openEars();
         });
     }
     function toggleLike(id) {
@@ -491,12 +496,300 @@
         host.notice(on ? 'The AI can see what is playing' : 'Music is hidden from the AI');
         host.onChange();
     }
-    document.addEventListener('horizon-media-command', e => { if (e.detail === 'next') next(false); else if (e.detail === 'prev') prev(); });
+    document.addEventListener('horizon-media-command', e => { if (e.detail === 'next') next(false); else if (e.detail === 'prev') prev(); else if (e.detail === 'identify') identify(); });
     function openTab() { host.openLeftTab('music'); }
     function comment() {
         if (!cur) return;
         if (!seesAi()) { host.notice('The AI cannot see your music. Tap the red eye first.', 'error'); return; }
         host.askAI(`What do you think of what's playing right now? "${cur.title}" by ${cur.artist}.`);
+    }
+
+
+    // ---------- V1.59.0: Gemini ears ----------
+    // Gemini can hear the song: a clip (30 s to 5 min, mono 16 kHz WAV, about 1 MB per 30 s) is cut on the phone and sent to Google only when you tap Ask.
+    // The chat AI can also ask for a listen with [[music.listen: question]], but only after you switch that on in the sheet.
+    const LENS = [30, 60, 120, 300];
+    const MAX_DUR = 1200;
+    const EARS_SYS = 'You are Gemini, listening to a song for Fezzy, a South African rapper, singer and self-taught producer who builds on a phone. ' +
+        'You get the song title, artist, album, length and, when he allows it, a short audio clip (the clip may be a slice from the middle of the track). ' +
+        'If an audio clip is attached, say what you actually hear: tempo feel, key if you can tell, drums and bass, instruments, vocal tone and delivery, mix balance, energy changes. ' +
+        'If no audio is attached, say plainly that you are working from the title and artist only and never claim you heard it. Never invent lyrics, timestamps or measurements. ' +
+        'Never quote more than a few words of lyrics. Be direct and specific. Plain text, short lines, no markdown headings, under 200 words unless he asks for more.';
+    const QUICK = ['What is the vibe?', 'Tempo and key?', 'How is the mix?', 'Break down the beat', 'Rate the vocals', 'What genre is this?'];
+    const clampN = (x, a, b) => Math.max(a, Math.min(b, x));
+    const toolOn = () => host.lsGet(LS.tool) === '1';
+    const gKeys = () => { try { return (host.geminiKeys ? host.geminiKeys() : []).map(k => String(k || '').trim()).filter(Boolean); } catch (_) { return []; } };
+    const earLen = () => clampN(Number(host.lsGet(LS.len)) || 1, 0, LENS.length - 1);
+    const earFromHere = () => host.lsGet(LS.from) !== 'start';
+    const earHear = () => host.lsGet(LS.hear) !== '0';
+    let ears = { el: null, tid: '', hist: [], busy: false, again: false, ctl: null, pending: null };
+
+    function wav16(f32, rate) {
+        const n = f32.length, buf = new ArrayBuffer(44 + n * 2), v = new DataView(buf);
+        const w = (o, t) => { for (let i = 0; i < t.length; i++) v.setUint8(o + i, t.charCodeAt(i)); };
+        w(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); w(8, 'WAVE'); w(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+        v.setUint32(24, rate, true); v.setUint32(28, rate * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); w(36, 'data'); v.setUint32(40, n * 2, true);
+        for (let i = 0, o = 44; i < n; i++, o += 2) { const x = Math.max(-1, Math.min(1, f32[i])); v.setInt16(o, x < 0 ? x * 0x8000 : x * 0x7fff, true); }
+        return new Uint8Array(buf);
+    }
+    function b64(u) { let s = ''; for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(s); }
+    async function makeClip(t, start, len) {
+        const src = withSrc(t).src;
+        if (!src) throw new Error('I cannot find the audio file for this song.');
+        if (t.dur && t.dur > MAX_DUR) throw new Error('This track is over 20 minutes. That is too long to open on the phone, try a normal-length song.');
+        const Ctx = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+        if (!Ctx) throw new Error('This device cannot decode audio here.');
+        let ab;
+        try { const r = await fetch(src); if (!r.ok) throw new Error('HTTP ' + r.status); ab = await r.arrayBuffer(); }
+        catch (e) { throw new Error('Could not open the song file (' + ((e && e.message) || e) + '). Is it still on the phone?'); }
+        const R = 16000;
+        let dec;
+        try { dec = await new Ctx(1, 1, R).decodeAudioData(ab); } catch (e) { throw new Error('Could not decode this audio format.'); }
+        ab = null;
+        const st = clampN(start, 0, Math.max(0, dec.duration - 1));
+        const dur = Math.max(1, Math.min(len, dec.duration - st));
+        const off = new Ctx(1, Math.ceil(dur * R), R), sn = off.createBufferSource();
+        sn.buffer = dec; sn.connect(off.destination); sn.start(0, st, dur);
+        const out = await off.startRendering();
+        const bytes = wav16(out.getChannelData(0), R);
+        return { data: b64(bytes), bytes: bytes.length, secs: Math.round(dur), from: Math.round(st) };
+    }
+    function gReply(j) {
+        const c = j && j.candidates && j.candidates[0];
+        const text = c && c.content && c.content.parts ? c.content.parts.filter(p => !p.thought).map(p => p.text || '').join('').trim() : '';
+        if (text) return text;
+        const why = (j && j.promptFeedback && j.promptFeedback.blockReason) || (c && c.finishReason);
+        throw new Error(why ? 'Gemini gave no answer (' + why + '). Try different words.' : 'Gemini sent back nothing. Try again.');
+    }
+    async function gOnce(key, model, contents) {
+        const ctl = typeof AbortController === 'function' ? new AbortController() : null;
+        ears.ctl = ctl;
+        const to = setTimeout(() => { if (ctl) ctl.abort(); }, 180000);
+        let r, j;
+        try {
+            r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(model) + ':generateContent', {
+                method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key }, signal: ctl ? ctl.signal : undefined,
+                body: JSON.stringify({ systemInstruction: { parts: [{ text: EARS_SYS }] }, contents, generationConfig: { temperature: 0.6, maxOutputTokens: 4096 } })
+            });
+            j = await r.json().catch(() => ({}));
+        } catch (e) {
+            const err = new Error(e && e.name === 'AbortError' ? 'Stopped, or Gemini took too long.' : 'No connection to Gemini. Check your internet and try again.');
+            err.stopped = true; throw err;
+        } finally { clearTimeout(to); }
+        if (r.ok) return gReply(j);
+        const m = (j && j.error && j.error.message) || ('HTTP ' + r.status);
+        const err = new Error(r.status === 400 && /api key/i.test(m) ? 'Gemini does not accept this key.' : r.status === 413 ? 'The clip is too big for Gemini. Pick a shorter clip.' : 'Gemini: ' + String(m).slice(0, 160));
+        err.status = r.status;
+        err.limit = r.status === 429 || /quota|rate.?limit|exhaust/i.test(m);
+        throw err;
+    }
+    async function gAsk(contents) {
+        const keys = gKeys();
+        if (!keys.length) throw new Error('Add a Gemini key first (Settings > API providers).');
+        if (host.allowSend && !host.allowSend('gemini', 'Gemini')) throw new Error('Not sent. You chose not to send to Gemini.');
+        let model = (host.geminiModel && host.geminiModel()) || 'gemini-2.5-flash';
+        let last = null;
+        for (const key of keys) {
+            try { return await gOnce(key, model, contents); }
+            catch (e) {
+                last = e;
+                if (e.status === 404 && model !== 'gemini-2.5-flash') { model = 'gemini-2.5-flash'; try { return await gOnce(key, model, contents); } catch (e2) { last = e2; } }
+                if (!last.limit) break;
+            }
+        }
+        throw last || new Error('Gemini failed.');
+    }
+    function earsStart(t) {
+        const here = earFromHere() && loadedId === t.id ? Math.max(0, (au.currentTime || 0) - 2) : 0;
+        return Math.floor(here);
+    }
+    // one listen: cut the clip (if wanted), ask, return { text, secs, from, bytes, heard }
+    async function listen(t, q, hist, forceHear) {
+        const hear = forceHear === undefined ? earHear() : forceHear;
+        let clip = null, text = 'SONG: ' + line(t) + '\n';
+        if (hear) { clip = await makeClip(t, earsStart(t), LENS[earLen()]); text += 'An audio clip is attached: ' + clip.secs + ' s, starting at ' + fmt(clip.from) + ' in the track.\n'; }
+        else text += 'No audio is attached. You only have the title, artist, album and length.\n';
+        text += 'QUESTION: ' + q;
+        const parts = [{ text }];
+        if (clip) parts.push({ inlineData: { mimeType: 'audio/wav', data: clip.data } });
+        const ans = await gAsk((hist || []).concat([{ role: 'user', parts }]));
+        return { text: ans, secs: clip ? clip.secs : 0, from: clip ? clip.from : 0, bytes: clip ? clip.bytes : 0, heard: !!clip, asked: 'SONG: ' + line(t) + '\nQUESTION: ' + q };
+    }
+
+    // V1.61.0: SAVE TO VAULT. Gemini's song notes (beat, mix, vibe) can be filed as an encrypted Vault note so they survive closing the sheet.
+    function saveToVault(t, q, r) {
+        const V = window.HorizonVault;
+        if (!V || !V.add) { host.notice('The Vault is not available.', 'error'); return false; }
+        if (V.isLocked && V.isLocked()) { host.notice('Unlock the Vault first (Settings > Horizon Vault), then tap Save again.', 'error'); return false; }
+        const value = 'SONG: ' + line(t) + '\nASKED: ' + q + '\n' + (r.heard ? 'HEARD: ' + r.secs + ' s from ' + fmt(r.from) : 'HEARD: title and artist only, no audio') + '\n\n' + r.text;
+        const it = V.add({ type: 'note', title: 'Gemini on ' + t.title + (t.artist ? ' \u00b7 ' + t.artist : ''), value });
+        if (!it) { host.notice('Could not save to the Vault. Is it set up and unlocked?', 'error'); return false; }
+        host.notice('Saved to your Vault');
+        return true;
+    }
+    function ansFoot(t, q, r) {
+        const h = document.createElement('div'); h.className = 'mpe-hint mpe-foot';
+        const sp = document.createElement('span');
+        sp.textContent = r.heard ? 'He heard ' + r.secs + ' s from ' + fmt(r.from) + ' (' + Math.round(r.bytes / 1024) + ' KB).' : 'He worked from the title and artist only, no audio was sent.';
+        const b = document.createElement('button'); b.type = 'button'; b.className = 'mpe-save'; b.textContent = 'Save to Vault';
+        b.addEventListener('click', () => { if (saveToVault(t, q, r)) { b.textContent = 'Saved \u2713'; b.disabled = true; b.classList.add('done'); } });
+        h.appendChild(sp); h.appendChild(b);
+        return h;
+    }
+
+    // V1.61.0: WHAT'S THIS SONG? The music notification has a button that sends a clip to Gemini and posts his answer as a notification, without opening the app.
+    const IDENT_Q = 'What is this song? Name it if you recognise it from the sound, then give the vibe, tempo feel, key if you can tell, and a quick read on the beat and the mix. Short lines.';
+    let idBusy = false;
+    function mediaPlug() {
+        try { const cap = window.Capacitor; if (cap && cap.isNativePlatform && cap.isNativePlatform()) return (cap.Plugins && cap.Plugins.HorizonMedia) || (cap.registerPlugin && cap.registerPlugin('HorizonMedia')); } catch (_) { /* web build */ }
+        return null;
+    }
+    function songNote(title, text, busy) {
+        const p = mediaPlug();
+        if (p && p.songNote) { try { p.songNote({ title, text, busy: !!busy }).catch(() => {}); } catch (_) { /* optional */ } }
+    }
+    async function identify() {
+        if (idBusy || ears.busy) return;
+        const t = cur, T = 'What\u2019s this song?';
+        if (!t) { songNote(T, 'Nothing is playing in Horizon.'); return; }
+        if (!seesAi()) { songNote(T, 'The AI cannot see your music. Open Horizon and tap the red eye in the player first.'); return; }
+        if (!gKeys().length) { songNote(T, 'Add a Gemini key first (Settings > API providers).'); return; }
+        idBusy = true;
+        const head = t.title + (t.artist ? ' \u00b7 ' + t.artist : '');
+        songNote('Listening to ' + head, 'Gemini is listening\u2026', true);
+        try {
+            const r = await listen(t, IDENT_Q, [], undefined);
+            ears.pending = { tid: t.id, q: T, r };
+            songNote(head, r.text.length > 900 ? r.text.slice(0, 899) + '\u2026' : r.text);
+        } catch (e) { songNote('Could not identify ' + head, (e && e.message) || 'Something went wrong.'); }
+        idBusy = false;
+    }
+    // the answer from the notification waits for you in the sheet, with its Save to Vault button
+    function earsShowPending() {
+        const pd = ears.pending;
+        if (!pd || !cur || pd.tid !== cur.id) return;
+        ears.pending = null;
+        logAdd('me', pd.q);
+        logAdd('ai', pd.r.text);
+        document.getElementById('mpeLog').appendChild(ansFoot(cur, pd.q, pd.r));
+        ears.hist.push({ role: 'user', parts: [{ text: 'SONG: ' + line(cur) + '\nQUESTION: ' + pd.q }] }, { role: 'model', parts: [{ text: pd.r.text }] });
+        document.getElementById('mpeLog').scrollTop = 1e6;
+    }
+
+    function earsNote() {
+        const n = document.getElementById('mpeNote'); if (!n) return;
+        const t = byId.get(ears.tid) || cur;
+        const hear = document.getElementById('mpeHear').checked;
+        if (!gKeys().length) { n.textContent = 'No Gemini key saved yet. Add one in Settings > API providers so he can answer.'; n.className = 'mpe-note bad'; return; }
+        n.className = 'mpe-note';
+        n.textContent = hear
+            ? 'When you tap Ask, a ' + LENS[earLen()] + ' s clip' + (earFromHere() && t && loadedId === t.id ? ' from ' + fmt(earsStart(t)) : ' from the start') + ' is cut on this phone and sent to Google Gemini.'
+            : 'Hearing is off. Only the song title, artist and length are sent.';
+    }
+    function earsPaintOpts() {
+        const el = ears.el; if (!el) return;
+        el.querySelector('#mpeHear').checked = earHear();
+        el.querySelector('#mpeTool').checked = toolOn();
+        el.querySelectorAll('#mpeLen [data-i]').forEach(b => b.classList.toggle('on', Number(b.dataset.i) === earLen()));
+        el.querySelectorAll('#mpeFrom [data-f]').forEach(b => b.classList.toggle('on', (b.dataset.f === 'here') === earFromHere()));
+        earsNote();
+    }
+    function logAdd(cls, text) {
+        const log = document.getElementById('mpeLog');
+        const d = document.createElement('div'); d.className = 'mpe-b ' + cls; d.textContent = text;
+        log.appendChild(d); log.scrollTop = log.scrollHeight;
+        return d;
+    }
+    function earsBusy(on) {
+        ears.busy = on;
+        const g = document.getElementById('mpeGo'); if (g) { g.disabled = false; g.textContent = on ? 'Stop' : 'Ask'; g.classList.toggle('stop', on); }
+        const q = document.getElementById('mpeQ'); if (q) q.disabled = on;
+    }
+    async function earsAsk(q) {
+        if (ears.busy) { if (ears.ctl) { try { ears.ctl.abort(); } catch (_) { /* already done */ } } return; }
+        q = String(q || '').trim().slice(0, 600);
+        const t = byId.get(ears.tid) || cur;
+        if (!t) { host.notice('Play a song first.', 'error'); return; }
+        if (!seesAi()) { host.notice('The AI cannot see your music. Tap the red eye first.', 'error'); return; }
+        if (!q) q = 'Tell me what you hear and what stands out.';
+        logAdd('me', q);
+        const wait = logAdd('ai wait', document.getElementById('mpeHear').checked ? 'Cutting the clip and listening...' : 'Thinking...');
+        earsBusy(true);
+        try {
+            const again = !ears.hist.length || ears.again;
+            const r = await listen(t, q, ears.hist, again ? undefined : false);
+            ears.again = false;
+            ears.hist.push({ role: 'user', parts: [{ text: r.asked }] }, { role: 'model', parts: [{ text: r.text }] });
+            if (ears.hist.length > 12) ears.hist.splice(0, ears.hist.length - 12);
+            wait.className = 'mpe-b ai'; wait.textContent = r.text;
+            document.getElementById('mpeLog').appendChild(ansFoot(t, q, r));
+            document.getElementById('mpeLog').scrollTop = 1e6;
+            const q2 = document.getElementById('mpeQ'); q2.value = '';
+        } catch (e) {
+            wait.className = 'mpe-b err'; wait.textContent = (e && e.message) || String(e);
+        }
+        earsBusy(false);
+    }
+    function earsBuild() {
+        if (ears.el) return ears.el;
+        const d = document.createElement('div');
+        d.className = 'mp-ears'; d.id = 'mpEars'; d.hidden = true;
+        d.setAttribute('role', 'dialog'); d.setAttribute('aria-modal', 'true'); d.setAttribute('aria-label', 'Ask Gemini about this song');
+        d.innerHTML = `<div class="mpe-bg" data-e="close"></div><div class="mpe-sheet">
+            <div class="mpe-top"><span class="mpe-ic">${ico('i-ear')}</span><div class="mpe-ttl"><b>Ask Gemini about this song</b><span id="mpeSong"></span></div><button class="mp-ctl" type="button" data-e="close" aria-label="Close">${ico('i-x')}</button></div>
+            <div class="mpe-opts">
+                <label class="mpe-sw"><input type="checkbox" id="mpeHear"><span>Let him hear it</span></label>
+                <div class="mpe-row"><span>Clip</span><div class="mpe-chips" id="mpeLen">${LENS.map((n, i) => `<button type="button" data-i="${i}">${n < 60 ? n + ' s' : (n / 60) + ' min'}</button>`).join('')}</div></div>
+                <div class="mpe-row"><span>Start</span><div class="mpe-chips" id="mpeFrom"><button type="button" data-f="here">From here</button><button type="button" data-f="start">From the start</button></div></div>
+                <label class="mpe-sw sub"><input type="checkbox" id="mpeTool"><span>Let the chat AI ask him to listen</span></label>
+            </div>
+            <p class="mpe-note" id="mpeNote"></p>
+            <div class="mpe-log" id="mpeLog" aria-live="polite"></div>
+            <div class="mpe-quick" id="mpeQuick">${QUICK.map(x => `<button type="button" data-q="${x}">${x}</button>`).join('')}<button type="button" data-again="1">Listen again</button></div>
+            <div class="mpe-in"><textarea id="mpeQ" rows="2" maxlength="600" placeholder="Ask about the beat, the vocals, the mix, the vibe..."></textarea><button class="use-btn mpe-go" id="mpeGo" type="button">Ask</button></div>
+        </div>`;
+        document.body.appendChild(d);
+        d.addEventListener('click', e => {
+            if (e.target.closest('[data-e="close"]')) { closeEars(); return; }
+            const li = e.target.closest('#mpeLen [data-i]'); if (li) { host.lsSet(LS.len, li.dataset.i); earsPaintOpts(); return; }
+            const fr = e.target.closest('#mpeFrom [data-f]'); if (fr) { host.lsSet(LS.from, fr.dataset.f); earsPaintOpts(); return; }
+            const qk = e.target.closest('[data-q]'); if (qk) { earsAsk(qk.dataset.q); return; }
+            if (e.target.closest('[data-again]')) { ears.again = true; host.notice('The next question sends a fresh clip.'); return; }
+            if (e.target.closest('#mpeGo')) earsAsk(document.getElementById('mpeQ').value);
+        });
+        d.querySelector('#mpeHear').addEventListener('change', e => { host.lsSet(LS.hear, e.target.checked ? '1' : '0'); earsNote(); });
+        d.querySelector('#mpeTool').addEventListener('change', e => {
+            host.lsSet(LS.tool, e.target.checked ? '1' : '0'); host.onChange();
+            host.notice(e.target.checked ? 'The chat AI can now ask Gemini to listen to a clip of what is playing' : 'The chat AI can no longer ask Gemini to listen');
+        });
+        d.querySelector('#mpeQ').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); earsAsk(e.target.value); } });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape' && ears.el && !ears.el.hidden) closeEars(); });
+        ears.el = d;
+        return d;
+    }
+    function earsReset() {
+        ears.hist = []; ears.again = false; ears.tid = cur ? cur.id : '';
+        const log = document.getElementById('mpeLog'); if (log) log.textContent = '';
+        const s = document.getElementById('mpeSong'); if (s) s.textContent = cur ? cur.title + ' · ' + cur.artist : '';
+    }
+    function earsSync() {
+        if (!ears.el || ears.el.hidden || ears.busy) return;
+        if (cur && cur.id !== ears.tid) { earsReset(); earsNote(); }
+    }
+    function openEars() {
+        if (!cur) { host.notice('Play a song first.', 'error'); return; }
+        if (!seesAi()) { host.notice('The AI cannot see your music. Tap the red eye first.', 'error'); return; }
+        const el = earsBuild();
+        if (cur.id !== ears.tid) earsReset();
+        earsPaintOpts();
+        el.hidden = false;
+        const s = document.getElementById('mpeSong'); if (s) s.textContent = cur.title + ' · ' + cur.artist;
+        earsShowPending();
+    }
+    function closeEars() {
+        if (!ears.el) return;
+        if (ears.busy && ears.ctl) { try { ears.ctl.abort(); } catch (_) { /* already done */ } }
+        ears.el.hidden = true;
     }
 
     // ---------- AI side ----------
@@ -515,8 +808,9 @@
         const rc = recent.filter(r => !cur || r.id !== cur.id).slice(0, 5).map(r => byId.get(r.id)).filter(Boolean);
         if (rc.length) out.push('Recently played: ' + rc.map(t => t.title + ' - ' + t.artist).join(' | '));
         if (liked.size) out.push(`Liked songs: ${liked.size}.`);
-        out.push('TOOLS (tag alone in your reply, up to 3 per turn; the result comes back to you before you answer): [[music.now]]  [[music.search: words]] returns up to 10 songs with ids  [[music.play: id or words]]  [[music.queue: id]]  [[music.pause]]  [[music.resume]]  [[music.next]]  [[music.prev]].');
-        out.push('You only know metadata (title, artist, album, length, position). You cannot hear the audio and cannot see lyrics here: talk about the song from what you genuinely know, say so when you do not, and never paste long lyrics. Comment on what is playing like a friend when he asks or it fits, do not interrupt unprompted. Never say you played something until the tool result confirms it.');
+        const canListen = toolOn() && gKeys().length > 0;
+        out.push('TOOLS (tag alone in your reply, up to 3 per turn; the result comes back to you before you answer): [[music.now]]  [[music.search: words]] returns up to 10 songs with ids  [[music.play: id or words]]  [[music.queue: id]]  [[music.pause]]  [[music.resume]]  [[music.next]]  [[music.prev]]' + (canListen ? '  [[music.listen: your question about the sound]] sends a short clip of what is playing to Gemini, who listens and answers (slow, use it only when he asks what the song sounds like).' : '.'));
+        out.push('You only know metadata (title, artist, album, length, position). You cannot hear the audio yourself' + (canListen ? ' (only the listen tool can, through Gemini)' : '') + ' and cannot see lyrics here: talk about the song from what you genuinely know, say so when you do not, and never paste long lyrics. Comment on what is playing like a friend when he asks or it fits, do not interrupt unprompted. Never say you played something until the tool result confirms it.');
         return out.join('\n');
     }
     function parse(text) {
@@ -538,6 +832,13 @@
         if (!seesAi()) return { text: 'ERROR: music is hidden from you. Tell Fezzy to tap the red eye.' };
         try {
             if (kind === 'music.now') return { text: cur ? `${state()}: ${line(cur)} at ${fmt(au.currentTime)} id=${cur.id}` : 'Nothing is playing.' };
+            if (kind === 'music.listen') {
+                if (!cur) return { text: 'Nothing is playing.' };
+                if (!toolOn()) return { text: 'ERROR: Fezzy has not allowed the chat AI to ask Gemini to listen. He can switch it on in the Ask Gemini sheet (ear button).' };
+                if (!gKeys().length) return { text: 'ERROR: no Gemini key is saved, so nobody can listen. Tell Fezzy to add one in Settings > API providers.' };
+                const r = await listen(cur, arg || 'Describe what you hear: vibe, tempo, instruments, vocals and the mix.', [], true);
+                return { text: 'GEMINI LISTENED to ' + r.secs + ' s starting at ' + fmt(r.from) + ' and says:\n' + r.text };
+            }
             if (kind === 'music.pause') { au.pause(); return { text: cur ? 'Paused.' : 'Nothing was playing.' }; }
             if (kind === 'music.resume') { if (!cur) return { text: 'ERROR: nothing is loaded. Use music.play first.' }; if (au.paused) toggle(); return { text: 'Playing: ' + line(cur) }; }
             if (kind === 'music.next') { if (!next(false)) return { text: 'ERROR: nothing queued.' }; return { text: 'Now playing: ' + line(cur) }; }
@@ -630,5 +931,5 @@
         host.onChange();
     }
 
-    window.HorizonMusic = { init, SRC, parse, run, block, seesAi, setAi, openTab, scan };
+    window.HorizonMusic = { init, SRC, parse, run, block, seesAi, setAi, openTab, scan, openEars };
 })();
