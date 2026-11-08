@@ -33,17 +33,6 @@
   }
   function click(sel) { var b = typeof sel === 'string' ? document.querySelector(sel) : sel; if (b) b.click(); }
 
-  /* tiles: label, icon, colour, action. Each action calls the real thing. */
-  var TOOLS = [
-    ['Browser', 'globe', '#3d8bff', function () { click('#hzbOpen'); }],
-    ['AI Group Chat', 'users', '#2bff88', function () { click('#groupBtn'); }]
-  ];
-  var PAIR = [['Settings', 'sl', function () { click('#settingsBtn'); }], ['Menu', 'menu', function () { click('#menuBtn'); }]];
-  function tile(t, c, i, pair) {
-    var b = document.createElement('button'); b.type = 'button'; b.className = 'hzd-t'; b.style.setProperty('--c', c);
-    b.innerHTML = '<span class="ch">' + ic(i) + '</span>' + t; b.setAttribute('aria-label', t); return b;
-  }
-
   /* move the provider pill into the header so the header is one row */
   var pill = $('hzPill'), prow = document.querySelector('.hz-prow');
   /* provider pill and usage badge sit side by side in the header (the badge used to live in the bottom row) */
@@ -55,71 +44,6 @@
   }
   root.classList.add('hzd-on');
 
-  var scr = document.createElement('div'); scr.className = 'hzd-scrim';
-  var dw = document.createElement('div'); dw.className = 'hzd-dw';
-  var drw = document.createElement('div'); drw.className = 'hzd-drw'; drw.setAttribute('role', 'dialog'); drw.setAttribute('aria-label', 'Horizon menu');
-  var brand = document.createElement('div'); brand.className = 'hzd-brand';
-  brand.innerHTML = '<div><b>HORIZON</b><small>STRATEGY OVER IMPULSE</small></div>';
-  var pair = document.createElement('div'); pair.className = 'hzd-pair';
-  PAIR.forEach(function (p) { var b = tile(p[0], '#ff3b4e', p[1], true); b.addEventListener('click', function () { run(p[2]); }); pair.appendChild(b); });
-  var sec = document.createElement('div'); sec.className = 'hzd-sec'; sec.textContent = 'Tools';
-  TOOLS.forEach(function (t) {
-    var b = tile(t[0], t[2], t[1]); b.addEventListener('click', function () { run(t[3]); }); drw.appendChild(b);
-  });
-  drw.appendChild(pair);   // Menu + Settings sit at the bottom
-  var door = document.createElement('button'); door.type = 'button'; door.className = 'hzd-door';
-  door.setAttribute('aria-label', 'Open menu'); door.innerHTML = ic('menu');
-  dw.appendChild(drw); dw.appendChild(door);
-  document.body.appendChild(scr); document.body.appendChild(dw);
-
-  var W = 0, cur = 0, isOpen = false, after = null, popTimer = 0;
-  function paint(x) {
-    W = dw.offsetWidth; x = Math.max(0, Math.min(W, x)); cur = x;
-    dw.style.setProperty('--x', x + 'px'); scr.style.opacity = W ? x / W : 0;
-    var o = x > W * 0.5; scr.classList.toggle('on', o); dw.classList.toggle('open', o);
-    door.setAttribute('aria-label', o ? 'Close menu' : 'Open menu');
-  }
-  function doOpen() {
-    paint(dw.offsetWidth);
-    if (!isOpen) { isOpen = true; var old = history.state || {}; history.pushState(Object.assign({}, old, { hzDoor: 1 }), ''); }
-  }
-  function visualClose() { dw.classList.remove('drag'); paint(0); isOpen = false; }
-  function doClose(fn) {
-    after = fn || null;
-    if (isOpen && history.state && history.state.hzDoor) {
-      visualClose(); history.back();
-      popTimer = setTimeout(flush, 350);   // popstate normally gets there first
-    } else { visualClose(); flush(); }
-  }
-  function flush() { clearTimeout(popTimer); var f = after; after = null; if (f) setTimeout(f, 0); }
-  function run(fn) { doClose(fn); }
-  window.addEventListener('popstate', function () { if (isOpen && !(history.state && history.state.hzDoor)) visualClose(); flush(); });
-  scr.addEventListener('click', function () { doClose(); });
-
-  /* drag: the door and the open drawer follow the finger; the Back swipe is not touched */
-  var x0 = null, c0 = 0, moved = 0, fromDoor = false, grabbed = false;
-  dw.addEventListener('pointerdown', function (e) {
-    fromDoor = !!e.target.closest('.hzd-door');
-    if (!fromDoor && cur <= 0) return;
-    x0 = e.clientX; c0 = cur; moved = 0; grabbed = false;
-  });
-  dw.addEventListener('pointermove', function (e) {
-    if (x0 === null) return; var dx = e.clientX - x0; moved = Math.max(moved, Math.abs(dx));
-    if (moved < 6) return;
-    if (!grabbed) {   // capture only once it is a real drag, so a plain tap on a tile still clicks the tile
-      grabbed = true; dw.classList.add('drag');
-      try { dw.setPointerCapture(e.pointerId); } catch (er) { /* no capture */ }
-    }
-    paint(c0 - dx);
-  });
-  function end() {
-    if (x0 === null) return; x0 = null; dw.classList.remove('drag');
-    if (moved < 6) { if (fromDoor) { cur < W * 0.5 ? doOpen() : doClose(); } }
-    else if (cur > W * 0.4) doOpen(); else if (isOpen) doClose(); else paint(0);
-  }
-  dw.addEventListener('pointerup', end); dw.addEventListener('pointercancel', end);
-  window.addEventListener('resize', function () { paint(isOpen ? dw.offsetWidth : 0); });
-
-  paint(0);
-  window.HorizonDoor = { open: doOpen, close: function () { doClose(); }, isOpen: function () { return isOpen; } };
+  /* V1.67.0: the edge drawer is gone. Menu, Settings, Browser and Group chat are buttons in the header (horizon_v2.js). */
+  window.HorizonDoor = { open: function () {}, close: function () {}, isOpen: function () { return false; } };
 })();

@@ -1,61 +1,53 @@
-/* HORIZON V1.66.0 · header capsule, edge handle in the middle, red glowing Menu + Settings, cyan + menu with green dots.
-   Loads last. Scoped so the old header (long-press the logo) keeps working. */
-
-/* ---- header: logo, Github Push, then one diamond capsule ---- */
-html.hzd-on .app-header { padding-right: 12px; gap: 8px; }
+/* HORIZON V1.67.0 · header: hamburger Menu, Browser, Group, pill, vertical hamburger Settings. Green light round the pill.
+   Loads last. Scoped to html.hzd-on so the old header (long-press the logo) keeps working. */
+html.hzd-on .app-header { padding: calc(10px + env(safe-area-inset-top, 0px)) 10px 8px 10px; gap: 6px; }
 html.hzd-on .hzd-top > #hzPill, html.hzd-on .hzd-top > #hzBadge { display: none !important; }
 html.hzd-on .hzd-top { flex: 1 1 auto; min-width: 0; display: flex; }
-.hzc-gh { flex: 0 0 auto; width: 38px; height: 38px; display: grid; place-items: center; padding: 0; border-radius: 11px; border: 1px solid #b388ff; background: color-mix(in srgb, #b388ff 12%, var(--surface, #0b1117)); box-shadow: 0 0 10px rgba(179,136,255,.4); -webkit-tap-highlight-color: transparent; }
-.hzc-gh svg { width: 19px; height: 19px; fill: none; stroke: #b388ff; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 4px rgba(179,136,255,.8)); }
-.hzc-gh:active { transform: scale(.94); }
-.hzc-cap { flex: 1 1 0; min-width: 0; height: 48px; padding: 1px; background: #00e5ff; filter: drop-shadow(0 0 6px rgba(0,229,255,.45));
-  clip-path: polygon(24px 0, calc(100% - 24px) 0, 100% 50%, calc(100% - 24px) 100%, 24px 100%, 0 50%); }
-.hzc-in { height: 100%; display: flex; align-items: center; gap: 6px; padding: 0 26px 0 22px; background: var(--surface, #0b1117);
-  clip-path: polygon(23px 0, calc(100% - 23px) 0, 100% 50%, calc(100% - 23px) 100%, 23px 100%, 0 50%); }
-.hzc-spin { flex: 0 0 auto; position: relative; width: 24px; height: 24px; }
-.hzc-spin i { position: absolute; inset: 6px; border: 1.5px solid #00e5ff; transform: rotate(45deg); box-shadow: 0 0 8px rgba(0,229,255,.6); animation: hzcBreath 2.4s ease-in-out infinite; }
-.hzc-spin b { position: absolute; inset: 0; animation: hzcOrbit 3.2s linear infinite; }
-.hzc-spin b::after { content: ""; position: absolute; top: 0; left: 50%; margin-left: -2px; width: 4px; height: 4px; border-radius: 50%; background: #00e5ff; box-shadow: 0 0 6px #00e5ff; }
-.hzc-cap.busy .hzc-spin b { animation-duration: .9s; }
-@keyframes hzcOrbit { to { transform: rotate(360deg); } }
-@keyframes hzcBreath { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
-.hzc-tt { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; align-items: flex-start; }
-.hzc-main, .hzc-st { all: unset; box-sizing: border-box; max-width: 100%; display: flex; align-items: center; gap: 6px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
-.hzc-main { font: 800 14px/1.1 system-ui, sans-serif; color: var(--text-main, #f2f6fa); white-space: nowrap; }
-.hzc-nm { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
-.hzc-md { font-weight: 500; font-size: 11px; color: var(--text-muted, #9fb0bd); overflow: hidden; text-overflow: ellipsis; min-width: 0; }
-.hzc-main::after { content: ""; flex: 0 0 auto; border: 4px solid transparent; border-top-color: var(--text-muted, #9fb0bd); border-bottom: 0; }
-.hzc-st { font: 11.5px/1 ui-monospace, Menlo, monospace; color: var(--text-muted, #9fb0bd); white-space: nowrap; height: 14px; }
-.hzc-rd { overflow: hidden; text-overflow: ellipsis; min-width: 0; color: var(--text-main, #f2f6fa); }
-.hzc-dot { flex: 0 0 auto; width: 7px; height: 7px; border-radius: 50%; background: #9ca3af; }
-.hzc-dot.live { background: #22c55e; box-shadow: 0 0 6px #22c55e; }
-.hzc-dot.idle { background: #eab308; } .hzc-dot.warn { background: #f97316; box-shadow: 0 0 6px #f97316; }
-.hzc-dot.bad { background: #ef4444; box-shadow: 0 0 6px #ef4444; }
-.hzc-dot.run { background: var(--pc, #00e5ff); animation: hzuPulse .9s ease-in-out infinite; }
-.hzc-wv { display: none; align-items: flex-end; gap: 2px; height: 12px; flex: 0 0 auto; }
-.hzc-cap.busy .hzc-wv { display: inline-flex; }
-.hzc-wv u { display: block; width: 2px; height: 12px; border-radius: 1px; background: #00e5ff; transform-origin: bottom; transform: scaleY(.3); }
+html.hzd-on #leftTrigger, html.hzd-on #rightTrigger { display: none !important; }
+html.hzd-on .app-header .chip-logo { width: 36px; height: 36px; border-radius: 10px; border: 1px solid #00e5ff; background: var(--surface, #0b1117); cursor: pointer; box-shadow: 0 0 10px rgba(0,229,255,.4); }
+.hzc-bars { width: 20px; height: 20px; fill: none; stroke: #00e5ff; stroke-width: 2.4; stroke-linecap: round; filter: drop-shadow(0 0 4px rgba(0,229,255,.8)); }
+.hzc-sq { flex: 0 0 auto; width: 36px; height: 36px; display: grid; place-items: center; padding: 0; border-radius: 10px; border: 1px solid var(--c); background: color-mix(in srgb, var(--c) 12%, var(--surface, #0b1117)); box-shadow: 0 0 10px color-mix(in srgb, var(--c) 45%, transparent); -webkit-tap-highlight-color: transparent; }
+.hzc-sq svg { width: 18px; height: 18px; fill: none; stroke: var(--c); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 4px var(--c)); }
+.hzc-sq:active, html.hzd-on .app-header .chip-logo:active { transform: scale(.94); }
+.hzc-sq.vert { width: 26px; border-radius: 9px; --c: #00e5ff; }
+.hzc-sq.vert svg { width: 14px; height: 18px; stroke-width: 2.4; }
 
-/* ---- edge drawer: small, tall, centred on the right edge; hamburger handle ---- */
-html.hzd-on #rightTrigger { display: none !important; }
-html .hzd-dw { top: 0; bottom: 0; width: min(30vw, 112px); display: flex; align-items: center; pointer-events: none; }
-html .hzd-dw .hzd-drw { pointer-events: auto; width: 100%; padding: 10px 8px; gap: 8px; border-radius: 16px 0 0 16px; max-height: calc(100vh - 24px - env(safe-area-inset-top, 0px)); }
-html .hzd-door { pointer-events: auto; left: -17px; top: 50%; margin-top: -17px; width: 16px; height: 34px; border-radius: 10px 0 0 10px; }
-html .hzd-door svg { width: 10px; height: 10px; stroke-width: 2.6; transform: none !important; }
-html .hzd-drw .hzd-t { flex-direction: column; gap: 4px; min-height: 62px; padding: 8px 4px; text-align: center; font-size: 11.5px; line-height: 1.15; border-radius: 14px; }
-html .hzd-drw .hzd-t .ch { width: 30px; height: 30px; border-radius: 50%; }
-html .hzd-drw .hzd-t .ch svg { width: 17px; height: 17px; }
-html .hzd-pair { grid-template-columns: 1fr; gap: 8px; margin-top: 0; padding-top: 0; border-top: 0; }
-html .hzd-pair .hzd-t { box-shadow: 0 0 14px color-mix(in srgb, var(--c) 55%, transparent), inset 0 0 8px color-mix(in srgb, var(--c) 18%, transparent); border-color: var(--c); }
-html .hzd-pair .hzd-t .ch { box-shadow: 0 0 8px var(--c); }
+/* the pill, with a green light running round its edge */
+@property --hza { syntax: "<angle>"; initial-value: 0deg; inherits: false; }
+.hzc-cap { position: relative; flex: 1 1 0; min-width: 0; height: 40px; border-radius: 20px; background: var(--surface, #0b1117); isolation: isolate;
+  box-shadow: 0 0 12px rgba(34,197,94,.45), 0 0 2px rgba(34,197,94,.9); }
+.hzc-cap::before { content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1.5px; z-index: -1;
+  background: conic-gradient(from var(--hza), rgba(0,229,255,.35) 0 55%, #22c55e 80%, #b8ffd0 88%, #22c55e 94%, rgba(0,229,255,.35));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; animation: hzcSpin 3.2s linear infinite; }
+.hzc-cap.busy::before { animation-duration: 1.1s; }
+@keyframes hzcSpin { to { --hza: 360deg; } }
+.hzc-in { height: 100%; display: flex; align-items: center; gap: 6px; padding: 0 12px 0 11px; border-radius: inherit; overflow: hidden; white-space: nowrap; }
+.hzc-in > button { all: unset; box-sizing: border-box; display: flex; align-items: center; gap: 6px; cursor: pointer; -webkit-tap-highlight-color: transparent; min-width: 0; }
+.hzc-main { flex: 1 1 auto; font: 800 14px/1 system-ui, sans-serif; color: var(--text-main, #f2f6fa); }
+.hzc-nm { flex: 0 0 auto; }
+.hzc-md { flex: 1 1 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; font-weight: 500; font-size: 11px; color: var(--text-muted, #9fb0bd); }
+.hzc-st { flex: 0 0 auto; font: 11.5px/1 ui-monospace, Menlo, monospace; color: var(--text-main, #f2f6fa); }
+.hzc-dot { flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; background: #9ca3af; }
+.hzc-dot.live, .hzc-dot.idle { background: #22c55e; box-shadow: 0 0 7px #22c55e; }
+.hzc-dot.warn { background: #f97316; box-shadow: 0 0 6px #f97316; } .hzc-dot.bad { background: #ef4444; box-shadow: 0 0 6px #ef4444; }
+.hzc-dot.run { background: var(--pc, #22c55e); animation: hzuPulse .9s ease-in-out infinite; }
+.hzc-spk { display: none; flex: 0 0 auto; color: #00e5ff; } .hzc-cap.busy .hzc-spk { display: inline-flex; }
+.hzc-spk svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
-/* ---- AI reply "now reading" bar: thin, cyan blended into dark grey ---- */
-.message.ai.hz-reading { border-left: 2px solid color-mix(in srgb, #00e5ff 35%, #2a3238); padding-left: 9px; margin-left: -2px; background: linear-gradient(90deg, rgba(0,229,255,.05), transparent 70%); }
+/* ---- reading bar on AI replies: green, thin, pulsing ---- */
+.message.ai.hz-reading { border-left: 2px solid #22c55e; padding-left: 9px; margin-left: -2px; background: linear-gradient(90deg, rgba(34,197,94,.08), transparent 70%); animation: hzGp 1.4s ease-in-out infinite; }
+@keyframes hzGp { 0%, 100% { border-left-color: rgba(34,197,94,.35); box-shadow: -2px 0 0 rgba(34,197,94,0); } 50% { border-left-color: #22c55e; box-shadow: -3px 0 10px rgba(34,197,94,.55); } }
 
-/* ---- connected-tool pills above the input: gone (the + menu shows a green dot instead) ---- */
+/* ---- Github Push row, first thing in the Menu panel ---- */
+.hz-lgh { display: grid; grid-template-columns: auto 1fr; column-gap: 10px; align-items: center; width: calc(100% - 24px); margin: 8px 12px 4px; padding: 8px 12px; text-align: left; border-radius: 14px; border: 1px solid #b388ff; background: color-mix(in srgb, #b388ff 10%, var(--surface, #0b1117)); color: var(--text-main, #f2f6fa); font: 700 14px system-ui, sans-serif; box-shadow: 0 0 12px rgba(179,136,255,.35); }
+.hz-lgh .ic { grid-row: 1 / 3; width: 22px; height: 22px; color: #b388ff; stroke: #b388ff; }
+.hz-lgh small { font-weight: 400; font-size: 11px; color: var(--text-muted, #9fb0bd); }
+.hz-lgh:active { transform: scale(.98); }
+
+/* ---- connected-tool pills above the input: gone ---- */
 #hzStrip { display: none !important; }
 
-/* ---- + menu: option A, all cyan, pill tiles, green dot only when a tool is on ---- */
+/* ---- + menu: all cyan, pill tiles, green dot only when a tool is on ---- */
 #toolMenu.hzg .hzcr-bar, #toolMenu.hzg > .tm-grp:has(+ .hzcr-bar) { display: none; }
 #toolMenu.hzg > .tm-grp { color: #00e5ff; font-size: 11px; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase; }
 #toolMenu.hzg .tm-row { height: 46px; border-radius: 24px; padding: 0 12px 0 8px; border-color: rgba(0,229,255,.3); }
