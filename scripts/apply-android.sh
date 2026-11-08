@@ -8,9 +8,11 @@ DEST="android/app/src/main/res"
 
 if [ ! -d "$DEST" ]; then
     echo "Android platform not found. Run: npx cap add android" >&2
+    exit 1
 fi
 if [ ! -d "$SRC" ]; then
     echo "Missing $SRC. Run: python3 scripts/make_icons.py" >&2
+    exit 1
 fi
 
 # Remove the default Capacitor launcher + splash assets so nothing stale survives.
@@ -23,14 +25,17 @@ cp -R "$SRC"/. "$DEST"/
 # Fail loudly if the icon did not land, so a default Android icon can never ship silently.
 for d in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
     for f in ic_launcher.png ic_launcher_round.png ic_launcher_foreground.png; do
+        cmp -s "$SRC/mipmap-$d/$f" "$DEST/mipmap-$d/$f" || { echo "Icon check failed: mipmap-$d/$f" >&2; exit 1; }
     done
 done
+[ ! -e "$DEST/drawable-v24/ic_launcher_foreground.xml" ] || { echo "Stale default icon still present" >&2; exit 1; }
 echo "Horizon icons and splash applied (verified)."
 
 # ---- V1.3.0: manifest permissions + native Permissions plugin ----
 MANIFEST="android/app/src/main/AndroidManifest.xml"
 if [ ! -f "$MANIFEST" ]; then
     echo "Missing $MANIFEST" >&2
+    exit 1
 fi
 
 add_perm() {
@@ -62,16 +67,19 @@ add_perm USE_FULL_SCREEN_INTENT   # V1.63.0: lets a reply open over a locked scr
 if ! grep -q "HorizonBgService" "$MANIFEST"; then
     sed -i 's#</application>#        <service android:name=".HorizonBgService" android:exported="false" android:foregroundServiceType="dataSync" />\n    </application>#' "$MANIFEST"
 fi
+grep -q "HorizonBgService" "$MANIFEST" || { echo "Could not add the background service to the manifest" >&2; exit 1; }
 
 # V1.7.0: let the app see Android's text-to-speech service (required on Android 11+ to list voices)
 if ! grep -q "android.intent.action.TTS_SERVICE" "$MANIFEST"; then
     sed -i 's#</manifest>#    <queries>\n        <intent>\n            <action android:name="android.intent.action.TTS_SERVICE" />\n        </intent>\n    </queries>\n</manifest>#' "$MANIFEST"
 fi
+grep -q "android.intent.action.TTS_SERVICE" "$MANIFEST" || { echo "Could not add the text-to-speech query to the manifest" >&2; exit 1; }
 
 APPID="$(node -p "require('./capacitor.config.json').appId")"
 JAVA_DIR="android/app/src/main/java/${APPID//./\/}"
 if [ ! -d "$JAVA_DIR" ]; then
     echo "Missing $JAVA_DIR (appId mismatch?)" >&2
+    exit 1
 fi
 for f in HorizonPermsPlugin.java HorizonBgService.java HorizonMediaPlugin.java HorizonMediaService.java HorizonArt.java HorizonSpeechPlugin.java HorizonEdgeTts.java HorizonLensPlugin.java HorizonStatsPlugin.java HorizonBrowserPlugin.java MainActivity.java; do
     sed "s/__APPID__/${APPID}/" "resources/android/java/$f" > "$JAVA_DIR/$f"
@@ -117,7 +125,16 @@ echo "Horizon Kotlin AI jobs and reply notifications applied."
 # Fail the build loudly if any native plugin source did not land (a missing plugin only shows up at
 # runtime as "unable to find plugin : HorizonAI").
 for f in HorizonPermsPlugin.java HorizonBgService.java HorizonMediaPlugin.java HorizonMediaService.java HorizonArt.java HorizonSpeechPlugin.java HorizonEdgeTts.java HorizonLensPlugin.java HorizonStatsPlugin.java HorizonBrowserPlugin.java MainActivity.java HorizonAIPlugin.kt HorizonAIService.kt HorizonReplyReceiver.kt HorizonSpeakService.kt HorizonShellPlugin.kt HorizonLockPlugin.kt HorizonNotify.kt HorizonScopes.kt HorizonCanary.kt; do
+    [ -s "$JAVA_DIR/$f" ] || { echo "Native source missing after apply: $f" >&2; exit 1; }
 done
+grep -q "registerPlugin(HorizonAIPlugin.class)" "$JAVA_DIR/MainActivity.java" || { echo "MainActivity does not register HorizonAIPlugin" >&2; exit 1; }
+grep -q "registerPlugin(HorizonLensPlugin.class)" "$JAVA_DIR/MainActivity.java" || { echo "MainActivity does not register HorizonLensPlugin" >&2; exit 1; }
+grep -q "registerPlugin(HorizonStatsPlugin.class)" "$JAVA_DIR/MainActivity.java" || { echo "MainActivity does not register HorizonStatsPlugin" >&2; exit 1; }
+grep -q "registerPlugin(HorizonShellPlugin.class)" "$JAVA_DIR/MainActivity.java" || { echo "MainActivity does not register HorizonShellPlugin" >&2; exit 1; }
+grep -q "registerPlugin(HorizonBrowserPlugin.class)" "$JAVA_DIR/MainActivity.java" || { echo "MainActivity does not register HorizonBrowserPlugin" >&2; exit 1; }
+grep -q 'android:name=".HorizonReplyReceiver"' "$MANIFEST" || { echo "Reply receiver missing from the manifest" >&2; exit 1; }
+grep -q 'android:name=".HorizonSpeakService"' "$MANIFEST" || { echo "Speak service missing from the manifest" >&2; exit 1; }
+grep -q 'org.jetbrains.kotlin.android' android/app/build.gradle || { echo "Kotlin plugin not applied to app/build.gradle" >&2; exit 1; }
 echo "Native plugin sources verified."
 
 # ---- V1.47.0: Piper / sherpa-onnx removed (no native voice libraries, no commons-compress) ----
@@ -140,9 +157,16 @@ if 'com.squareup.okhttp3:okhttp' not in s:
     s = s.replace('dependencies {', "dependencies {\n    implementation 'com.squareup.okhttp3:okhttp:4.12.0'", 1)
 app.write_text(s)
 PY
+grep -q "com.squareup.okhttp3:okhttp" android/app/build.gradle || { echo "okhttp library missing from app/build.gradle" >&2; exit 1; }
+[ -s "$JAVA_DIR/HorizonEdgeTts.java" ] || { echo "Native source missing after apply: HorizonEdgeTts.java" >&2; exit 1; }
+grep -q "androidx.biometric:biometric" android/app/build.gradle || { echo "biometric library missing from app/build.gradle" >&2; exit 1; }
+grep -q "registerPlugin(HorizonLockPlugin.class)" "$JAVA_DIR/MainActivity.java" || { echo "MainActivity does not register HorizonLockPlugin" >&2; exit 1; }
+[ -s "$JAVA_DIR/HorizonLockPlugin.kt" ] || { echo "Native source missing after apply: HorizonLockPlugin.kt" >&2; exit 1; }
 echo "App lock (biometric) applied."
 
 # ---- V1.44.0: window + WebView background follows the theme (no white flash when leaving the app) ----
+grep -q "setBackdrop" "$JAVA_DIR/HorizonPermsPlugin.java" || { echo "HorizonPermsPlugin has no setBackdrop" >&2; exit 1; }
+grep -q "paintBackdrop" "$JAVA_DIR/MainActivity.java" || { echo "MainActivity does not paint the backdrop" >&2; exit 1; }
 echo "Theme backdrop applied."
 
 # ---- V1.58.2: keyboard resize mode pinned in the manifest + native 90 Hz request ----
@@ -157,6 +181,8 @@ else:
     s = s.replace('<activity ', '<activity android:windowSoftInputMode="adjustResize" ', 1)
 m.write_text(s)
 PY
+grep -q 'android:windowSoftInputMode="adjustResize"' "$MANIFEST" || { echo "Could not pin the keyboard resize mode (skipped)" >&2; exit 1; }
+grep -q "requestHighRefresh" "$JAVA_DIR/MainActivity.java" || { echo "MainActivity has no 90 Hz request" >&2; exit 1; }
 echo "Keyboard resize mode and 90 Hz request applied."
 
 # ---- V1.63.0: Kotlin coroutines (structured concurrency) + LeakCanary + pop-up notifications ----
@@ -176,4 +202,10 @@ for dep in (
         s = s.replace('dependencies {', 'dependencies {\n    ' + dep, 1)
 app.write_text(s)
 PY
+grep -q "kotlinx-coroutines-android" android/app/build.gradle || { echo "coroutines library missing from app/build.gradle" >&2; exit 1; }
+grep -q "leakcanary-android" android/app/build.gradle || { echo "LeakCanary library missing from app/build.gradle" >&2; exit 1; }
+grep -q "android.permission.USE_FULL_SCREEN_INTENT" "$MANIFEST" || { echo "Full-screen intent permission missing from the manifest" >&2; exit 1; }
+grep -q "HorizonCanary.init" "$JAVA_DIR/MainActivity.java" || { echo "MainActivity does not start LeakCanary" >&2; exit 1; }
+grep -q "watchKeyboard" "$JAVA_DIR/MainActivity.java" || { echo "MainActivity has no keyboard watcher" >&2; exit 1; }
+grep -q "HorizonNotify.alert" "$JAVA_DIR/HorizonAIPlugin.kt" || { echo "Replies do not use the pop-up notification channel" >&2; exit 1; }
 echo "Coroutines, LeakCanary and pop-up notifications applied."
