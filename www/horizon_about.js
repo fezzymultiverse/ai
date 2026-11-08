@@ -1,10 +1,13 @@
 /* Horizon V1.26.0: ABOUT & UPDATES page: version, release check, backup export/import, changelog, privacy awareness + reminder switch. */
 (function () {
     'use strict';
-    var VERSION = 'V1.65.2';
+    var VERSION = 'V1.65.4';
     var LSK = 'horizon_privacy_notice';
     var REPO_API = 'https://api.github.com/repos/fezzymultiverse/ai';
     var LOG = [
+        ['V1.65.4', ['VOICE IN THE REPLY SPEAKER: the Voice pill at the bottom is gone. The waveform now replaces the speaker icon on the reply being read. Tap it to pause or resume, long-press to stop.', 'TOP PANEL: the usage badge moved up next to the provider pill, side by side. The arrow tab on the right middle is a little smaller.']],
+        ['V1.66.0', ['NEW HEADER: Github Push sits next to the logo, then one diamond capsule with a spinning diamond, the provider, the status and the reply timer. A small wave runs beside the timer only while the AI is writing. EDGE: a small hamburger handle in the middle of the right edge opens a narrow, tall panel: Browser (blue), AI Group Chat (green), Settings and Menu (red, glowing). SNOOZE IS GONE. Downloads moved under Usage & Engine in Settings. Apps dock keeps Music, Terminal, Lens and YouTube. The + menu is all cyan with a green dot when a tool is on. The reading bar on AI replies is thin and soft. The connected-tool pills above the input are removed.']],
+        ['V1.65.3', ['CYAN EDGE: the edge door and the right-middle settings tab are cyan now. The door drawer shrinks to its tiles instead of running the full height, and Menu and Settings sit at the bottom of it.']],
         ['V1.65.2', ['TERMINAL IS MORE ALIVE: the prompt has colours (user purple, host cyan, folder pink, $ green) and the first word of each command is bold white. Lines fade in, a colour sweep runs under the title bar and speeds up while a command runs, and the key rows are grouped by colour (arrows cyan, Ctrl purple, Esc and Tab amber, ^C and ^D red). Messages that start with an error, warning or ok are coloured. Opening the terminal shows three boot lines before the banner. Commands run exactly as before.']],
         ['V1.65.1', ['ABOUT FIX: About scrolls and taps again. Two settings added in V1.63.1 that could freeze it on some phones are removed.', 'GITHUB PUSH: the GitHub app is now called Github Push in the Apps panel, the Settings dock, the app window and the edge drawer, and the name fits its tile.']],
         ['V1.65.0', ['EDGE DOOR: the five header buttons moved into a drawer on the right edge. Menu and Settings sit side by side, then Snooze, Group, Browser, Terminal, Github Push and Downloads, each with its own colour. Drag the green door or tap it. Long-press the logo chip to switch back to the old header.']],

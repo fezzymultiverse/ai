@@ -1,0 +1,69 @@
+/* HORIZON V1.66.0 · header capsule, edge handle in the middle, red glowing Menu + Settings, cyan + menu with green dots.
+   Loads last. Scoped so the old header (long-press the logo) keeps working. */
+
+/* ---- header: logo, Github Push, then one diamond capsule ---- */
+html.hzd-on .app-header { padding-right: 12px; gap: 8px; }
+html.hzd-on .hzd-top > #hzPill, html.hzd-on .hzd-top > #hzBadge { display: none !important; }
+html.hzd-on .hzd-top { flex: 1 1 auto; min-width: 0; display: flex; }
+.hzc-gh { flex: 0 0 auto; width: 38px; height: 38px; display: grid; place-items: center; padding: 0; border-radius: 11px; border: 1px solid #b388ff; background: color-mix(in srgb, #b388ff 12%, var(--surface, #0b1117)); box-shadow: 0 0 10px rgba(179,136,255,.4); -webkit-tap-highlight-color: transparent; }
+.hzc-gh svg { width: 19px; height: 19px; fill: none; stroke: #b388ff; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 4px rgba(179,136,255,.8)); }
+.hzc-gh:active { transform: scale(.94); }
+.hzc-cap { flex: 1 1 0; min-width: 0; height: 48px; padding: 1px; background: #00e5ff; filter: drop-shadow(0 0 6px rgba(0,229,255,.45));
+  clip-path: polygon(24px 0, calc(100% - 24px) 0, 100% 50%, calc(100% - 24px) 100%, 24px 100%, 0 50%); }
+.hzc-in { height: 100%; display: flex; align-items: center; gap: 6px; padding: 0 26px 0 22px; background: var(--surface, #0b1117);
+  clip-path: polygon(23px 0, calc(100% - 23px) 0, 100% 50%, calc(100% - 23px) 100%, 23px 100%, 0 50%); }
+.hzc-spin { flex: 0 0 auto; position: relative; width: 24px; height: 24px; }
+.hzc-spin i { position: absolute; inset: 6px; border: 1.5px solid #00e5ff; transform: rotate(45deg); box-shadow: 0 0 8px rgba(0,229,255,.6); animation: hzcBreath 2.4s ease-in-out infinite; }
+.hzc-spin b { position: absolute; inset: 0; animation: hzcOrbit 3.2s linear infinite; }
+.hzc-spin b::after { content: ""; position: absolute; top: 0; left: 50%; margin-left: -2px; width: 4px; height: 4px; border-radius: 50%; background: #00e5ff; box-shadow: 0 0 6px #00e5ff; }
+.hzc-cap.busy .hzc-spin b { animation-duration: .9s; }
+@keyframes hzcOrbit { to { transform: rotate(360deg); } }
+@keyframes hzcBreath { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
+.hzc-tt { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; align-items: flex-start; }
+.hzc-main, .hzc-st { all: unset; box-sizing: border-box; max-width: 100%; display: flex; align-items: center; gap: 6px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.hzc-main { font: 800 14px/1.1 system-ui, sans-serif; color: var(--text-main, #f2f6fa); white-space: nowrap; }
+.hzc-nm { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.hzc-md { font-weight: 500; font-size: 11px; color: var(--text-muted, #9fb0bd); overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.hzc-main::after { content: ""; flex: 0 0 auto; border: 4px solid transparent; border-top-color: var(--text-muted, #9fb0bd); border-bottom: 0; }
+.hzc-st { font: 11.5px/1 ui-monospace, Menlo, monospace; color: var(--text-muted, #9fb0bd); white-space: nowrap; height: 14px; }
+.hzc-rd { overflow: hidden; text-overflow: ellipsis; min-width: 0; color: var(--text-main, #f2f6fa); }
+.hzc-dot { flex: 0 0 auto; width: 7px; height: 7px; border-radius: 50%; background: #9ca3af; }
+.hzc-dot.live { background: #22c55e; box-shadow: 0 0 6px #22c55e; }
+.hzc-dot.idle { background: #eab308; } .hzc-dot.warn { background: #f97316; box-shadow: 0 0 6px #f97316; }
+.hzc-dot.bad { background: #ef4444; box-shadow: 0 0 6px #ef4444; }
+.hzc-dot.run { background: var(--pc, #00e5ff); animation: hzuPulse .9s ease-in-out infinite; }
+.hzc-wv { display: none; align-items: flex-end; gap: 2px; height: 12px; flex: 0 0 auto; }
+.hzc-cap.busy .hzc-wv { display: inline-flex; }
+.hzc-wv u { display: block; width: 2px; height: 12px; border-radius: 1px; background: #00e5ff; transform-origin: bottom; transform: scaleY(.3); }
+
+/* ---- edge drawer: small, tall, centred on the right edge; hamburger handle ---- */
+html.hzd-on #rightTrigger { display: none !important; }
+html .hzd-dw { top: 0; bottom: 0; width: min(30vw, 112px); display: flex; align-items: center; pointer-events: none; }
+html .hzd-dw .hzd-drw { pointer-events: auto; width: 100%; padding: 10px 8px; gap: 8px; border-radius: 16px 0 0 16px; max-height: calc(100vh - 24px - env(safe-area-inset-top, 0px)); }
+html .hzd-door { pointer-events: auto; left: -17px; top: 50%; margin-top: -17px; width: 16px; height: 34px; border-radius: 10px 0 0 10px; }
+html .hzd-door svg { width: 10px; height: 10px; stroke-width: 2.6; transform: none !important; }
+html .hzd-drw .hzd-t { flex-direction: column; gap: 4px; min-height: 62px; padding: 8px 4px; text-align: center; font-size: 11.5px; line-height: 1.15; border-radius: 14px; }
+html .hzd-drw .hzd-t .ch { width: 30px; height: 30px; border-radius: 50%; }
+html .hzd-drw .hzd-t .ch svg { width: 17px; height: 17px; }
+html .hzd-pair { grid-template-columns: 1fr; gap: 8px; margin-top: 0; padding-top: 0; border-top: 0; }
+html .hzd-pair .hzd-t { box-shadow: 0 0 14px color-mix(in srgb, var(--c) 55%, transparent), inset 0 0 8px color-mix(in srgb, var(--c) 18%, transparent); border-color: var(--c); }
+html .hzd-pair .hzd-t .ch { box-shadow: 0 0 8px var(--c); }
+
+/* ---- AI reply "now reading" bar: thin, cyan blended into dark grey ---- */
+.message.ai.hz-reading { border-left: 2px solid color-mix(in srgb, #00e5ff 35%, #2a3238); padding-left: 9px; margin-left: -2px; background: linear-gradient(90deg, rgba(0,229,255,.05), transparent 70%); }
+
+/* ---- connected-tool pills above the input: gone (the + menu shows a green dot instead) ---- */
+#hzStrip { display: none !important; }
+
+/* ---- + menu: option A, all cyan, pill tiles, green dot only when a tool is on ---- */
+#toolMenu.hzg .hzcr-bar, #toolMenu.hzg > .tm-grp:has(+ .hzcr-bar) { display: none; }
+#toolMenu.hzg > .tm-grp { color: #00e5ff; font-size: 11px; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase; }
+#toolMenu.hzg .tm-row { height: 46px; border-radius: 24px; padding: 0 12px 0 8px; border-color: rgba(0,229,255,.3); }
+#toolMenu.hzg .tm-row.is-on, #toolMenu.hzg .tm-row[aria-checked="true"] { border-color: #00e5ff; }
+#toolMenu.hzg .tm-row .tm-ic { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 50%; border: 1px solid #00e5ff; background: rgba(0,229,255,.1); color: #00e5ff; }
+#toolMenu.hzg .tm-row .tm-ic .ic, #toolMenu.hzg .tm-row .tm-ic svg { color: #00e5ff; stroke: #00e5ff; }
+#toolMenu.hzg .tm-row[role="switch"]:not(.is-on):not([aria-checked="true"]):not(.needs)::after { display: none; }
+
+/* ---- apps dock: four tiles (Music, Terminal, Lens, YouTube) ---- */
+#rightPanel .hz-dock-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+#hzDlRow .set-ic { color: #00e5ff; }

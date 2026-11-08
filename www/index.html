@@ -6,7 +6,6 @@
     <meta name="theme-color" content="#000000">
     <title>HORIZON · AI Interface</title>
     <link rel="icon" type="image/png" href="icon.png">
-    <script src="horizon_snooze_net.js"></script>
     <script>(function(){try{var t=localStorage.getItem('horizon_theme');if(t!=='green'&&t!=='purple')t='cyan';document.documentElement.setAttribute('data-theme','neon');document.documentElement.setAttribute('data-accent',t);var m=document.querySelector('meta[name=theme-color]');if(m)m.setAttribute('content',t==='green'?'#000a05':t==='purple'?'#05030a':'#000000');}catch(e){}})();</script>
     <style>
         :root {
@@ -1441,7 +1440,6 @@
     <link rel="stylesheet" href="horizon_downloads.css">
     <link rel="stylesheet" href="horizon_terminal.css">
     <link rel="stylesheet" href="horizon_termai.css">
-    <link rel="stylesheet" href="horizon_snooze.css">
     <link rel="stylesheet" href="horizon_slash.css">
     <link rel="stylesheet" href="horizon_dash.css">
     <link rel="stylesheet" href="horizon_browser.css">
@@ -1455,14 +1453,15 @@
     <link rel="stylesheet" href="horizon_setai.css">
     <link rel="stylesheet" href="horizon_operator.css">
     <link rel="stylesheet" href="horizon_lock.css">
-    <link rel="stylesheet" href="horizon_voicepill.css">
     <link rel="stylesheet" href="horizon_fold.css">
     <link rel="stylesheet" href="horizon_autoread.css">
     <link rel="stylesheet" href="horizon_hdr2.css">
     <link rel="stylesheet" href="horizon_perf.css">
     <link rel="stylesheet" href="horizon_toolgrid.css">
     <link rel="stylesheet" href="horizon_door.css">
+    <link rel="stylesheet" href="horizon_speakwave.css">
     <link rel="stylesheet" href="horizon_termlive.css">
+    <link rel="stylesheet" href="horizon_v2.css">
 </head>
 <body>
 
@@ -1587,7 +1586,6 @@
             <span class="hz-sub">Strategy Over Impulse</span>
         </div>
         <div class="header-actions">
-            <button class="header-btn" id="snoozeBtn" data-lbl="Snooze" type="button" aria-pressed="false" aria-label="Snooze: turn network and permissions off"><svg class="ic" aria-hidden="true"><use href="#i-snooze"/></svg><span class="zz" aria-hidden="true">z</span></button>
             <button class="header-btn" id="groupBtn" data-lbl="Group" type="button" aria-haspopup="dialog" aria-label="Group chat: start a chat with several AIs at once"><svg class="ic" aria-hidden="true"><use href="#i-users"/></svg></button>
             <button class="header-btn" id="pickBtn" data-lbl="AI" type="button" aria-haspopup="dialog" aria-label="Choose AI provider and model"><svg class="hz-robot" viewBox="0 0 64 64" aria-hidden="true"><use href="#i-robot"/></svg><i class="pk-dot" id="pkDot"></i></button>
             <button class="header-btn" id="menuBtn" data-lbl="Menu" type="button" aria-label="Open menu"><svg class="ic" aria-hidden="true"><use href="#i-menu"/></svg></button>
@@ -1595,7 +1593,6 @@
         </div>
     </header>
     <div class="mp-now" id="mpNow" hidden></div>
-    <button class="hz-snooze-bar" id="hzSnoozeBar" type="button" aria-label="Horizon is offline. Tap to wake">💤 Horizon Offline <span>tap to wake</span></button>
 
     <!-- V1.11.0: provider + model picker (robot button, top right) -->
     <div class="pk-overlay" id="pkSheet" hidden>
@@ -1723,7 +1720,6 @@
                 <button class="status-text" id="statusText" type="button"></button>
                 <div class="hz-bottom" id="hzBottom">
                     <button class="hz-badge" id="hzBadge" type="button" aria-label="Open usage and engine dashboard"></button>
-                    <button class="hz-voice" id="hzVoice" type="button" aria-label="Voice: idle. Tap to open voice settings"><svg class="ic" aria-hidden="true"><use href="#i-volume"/></svg><span class="hzv-name">Voice</span><span class="hzv-wave" aria-hidden="true"><i style="--i:0"></i><i style="--i:1"></i><i style="--i:2"></i><i style="--i:3"></i><i style="--i:4"></i><i style="--i:5"></i><i style="--i:6"></i><i style="--i:7"></i><i style="--i:8"></i><i style="--i:9"></i><i style="--i:10"></i><i style="--i:11"></i><i style="--i:12"></i><i style="--i:13"></i><i style="--i:14"></i><i style="--i:15"></i></span></button>
                 </div>
             </div>
         </main>
@@ -1867,6 +1863,11 @@
                 <button class="set-row" role="tab" data-tab="usage" aria-selected="false" type="button">
                     <svg class="ic set-ic" aria-hidden="true"><use href="#i-pulse"/></svg>
                     <span class="set-text"><h3>USAGE &amp; ENGINE</h3><p>Tokens and response time per provider, requests per day, key health, plus your IP, place and coordinates.</p></span>
+                    <svg class="ic set-chev" aria-hidden="true"><use href="#i-chev-r"/></svg>
+                </button>
+                <button class="set-row" id="hzDlRow" type="button">
+                    <svg class="ic set-ic" aria-hidden="true"><use href="#i-dl"/></svg>
+                    <span class="set-text"><h3>DOWNLOADS</h3><p>Songs and files Horizon saved to this phone.</p></span>
                     <svg class="ic set-chev" aria-hidden="true"><use href="#i-chev-r"/></svg>
                 </button>
             </div>
@@ -2066,12 +2067,11 @@
                 <button type="button" class="hz-usage-row" id="hzDockRow" data-page="about" aria-label="Open About and Updates"><svg class="ic" aria-hidden="true"><use href="#i-info"/></svg><span class="hz-usage-text"><b>ABOUT &amp; UPDATES</b><small>Version, changelog, release check</small></span><svg class="ic hz-usage-chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
                 <div class="hz-dock-title">APPS</div>
                 <div class="hz-dock-grid">
-                    <button type="button" class="hz-app" data-addon="github"><svg class="ic hz-gh-logo" aria-hidden="true"><use href="#i-gh"/></svg><span>Github Push</span></button>
-                    <button type="button" class="hz-app" data-addon="youtube"><svg class="ic" aria-hidden="true"><use href="#i-yt"/></svg><span>YouTube</span></button>
                     <button type="button" class="hz-app" data-addon="music"><svg class="ic" aria-hidden="true"><use href="#i-music"/></svg><span>Music</span></button>
-                    <button type="button" class="hz-app" data-addon="lens"><svg class="ic" aria-hidden="true"><use href="#i-lens"/></svg><span>Lens</span></button>
-                    <button type="button" class="hz-app" data-addon="downloads"><svg class="ic" aria-hidden="true"><use href="#i-dl"/></svg><span>Downloads</span></button>
                     <button type="button" class="hz-app hz-app-term" data-term-open aria-label="Open terminal"><svg class="hzt-logo" viewBox="0 0 24 24" aria-hidden="true"><rect x="1" y="1" width="22" height="22" rx="6" fill="#fff" stroke="#000" stroke-width="1"/><text x="4.4" y="16.6" font-family="monospace" font-size="12.5" font-weight="700" fill="#000">$_</text></svg><span>Terminal</span></button>
+                    <button type="button" class="hz-app" data-addon="lens"><svg class="ic" aria-hidden="true"><use href="#i-lens"/></svg><span>Lens</span></button>
+                    <button type="button" class="hz-app" data-addon="youtube"><svg class="ic" aria-hidden="true"><use href="#i-yt"/></svg><span>YouTube</span></button>
+                    <span hidden><button type="button" class="hz-app" data-addon="github"><svg class="ic hz-gh-logo" aria-hidden="true"><use href="#i-gh"/></svg><span>Github Push</span></button><button type="button" class="hz-app" data-addon="downloads"><svg class="ic" aria-hidden="true"><use href="#i-dl"/></svg><span>Downloads</span></button></span>
                 </div>
             </nav>
         </aside>
@@ -2084,12 +2084,11 @@
       <div class="hz-addon-head"><div><h2 id="hzAddonsTitle">HORIZON APPS</h2></div><button type="button" id="hzAddonsClose" class="use-btn" aria-label="Close apps">✕</button></div>
       <p class="hint">Tap an app to open it full screen.</p>
       <div class="hz-addon-grid hz-dock-grid">
-        <button type="button" class="hz-app" data-addon="github"><svg class="ic hz-gh-logo" aria-hidden="true"><use href="#i-gh"/></svg><span>Github Push</span></button>
-        <button type="button" class="hz-app" data-addon="youtube"><svg class="ic" aria-hidden="true"><use href="#i-yt"/></svg><span>YouTube</span></button>
         <button type="button" class="hz-app" data-addon="music"><svg class="ic" aria-hidden="true"><use href="#i-music"/></svg><span>Music</span></button>
-                    <button type="button" class="hz-app" data-addon="lens"><svg class="ic" aria-hidden="true"><use href="#i-lens"/></svg><span>Lens</span></button>
-        <button type="button" class="hz-app" data-addon="downloads"><svg class="ic" aria-hidden="true"><use href="#i-dl"/></svg><span>Downloads</span></button>
         <button type="button" class="hz-app hz-app-term" data-term-open aria-label="Open terminal"><svg class="hzt-logo" viewBox="0 0 24 24" aria-hidden="true"><rect x="1" y="1" width="22" height="22" rx="6" fill="#fff" stroke="#000" stroke-width="1"/><text x="4.4" y="16.6" font-family="monospace" font-size="12.5" font-weight="700" fill="#000">$_</text></svg><span>Terminal</span></button>
+        <button type="button" class="hz-app" data-addon="lens"><svg class="ic" aria-hidden="true"><use href="#i-lens"/></svg><span>Lens</span></button>
+        <button type="button" class="hz-app" data-addon="youtube"><svg class="ic" aria-hidden="true"><use href="#i-yt"/></svg><span>YouTube</span></button>
+        <span hidden><button type="button" class="hz-app" data-addon="github"><svg class="ic hz-gh-logo" aria-hidden="true"><use href="#i-gh"/></svg><span>Github Push</span></button><button type="button" class="hz-app" data-addon="downloads"><svg class="ic" aria-hidden="true"><use href="#i-dl"/></svg><span>Downloads</span></button></span>
       </div>
       <section class="hz-addon-tile hz-addon-mini"><div class="mp-mini" id="mpMini" aria-label="Music widget"></div></section>
     </aside>
@@ -3861,7 +3860,24 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             b.dataset.speakId = id;
             b.setAttribute('aria-label', 'Read this reply aloud');
             b.appendChild(icon('i-volume'));
+            // V1.65.3: the voice waveform lives in the reply speaker now. It replaces the speaker icon while this reply is read.
+            const wv = document.createElement('span');
+            wv.className = 'spk-wave'; wv.setAttribute('aria-hidden', 'true');
+            for (let k = 0; k < 5; k++) wv.appendChild(document.createElement('i'));
+            b.appendChild(wv);
+            const live = () => b.classList.contains('playing') || b.classList.contains('loading') || b.classList.contains('paused');
+            let lpTimer = 0, lpFired = false;
+            const lpClear = () => { if (lpTimer) { clearTimeout(lpTimer); lpTimer = 0; } };
+            b.addEventListener('pointerdown', () => {
+                lpFired = false; lpClear();
+                if (!live()) return;
+                lpTimer = setTimeout(() => { lpTimer = 0; lpFired = true; try { if (navigator.vibrate) navigator.vibrate(18); } catch (_) { /* optional */ } T.stop(); }, 480);
+            });
+            ['pointerup', 'pointercancel', 'pointerleave'].forEach(ev => b.addEventListener(ev, lpClear));
+            b.addEventListener('contextmenu', e => e.preventDefault());
             b.addEventListener('click', () => {
+                if (lpFired) { lpFired = false; return; }               // the long-press already stopped it
+                if (live()) { T.togglePause(); return; }                // tap while reading = pause / resume
                 // V1.64.0: in a group each AI reads in its own voice (the next one along on the engine picked in Settings)
                 const pv = wrap._msg && wrap._msg.prov;
                 T.toggle(id, text, { slot: window.HorizonGroup && HorizonGroup.voiceSlot && pv ? HorizonGroup.voiceSlot(pv) : 0 });
@@ -7926,24 +7942,6 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', closeAllPanels));
         $('#newChatBtn').addEventListener('click', newChat);
         statusText.addEventListener('click', () => openPanel('right', 'providers'));
-        // V1.64.0: VOICE pill. Tap while it is speaking = pause / resume. Long-press (any time) = voice settings. Idle tap still opens settings.
-        {
-            const hv = $('#hzVoice');
-            const openVoiceSettings = () => { if (!rightPanel.classList.contains('open')) openPanel('right'); rightPage('personalisation'); };
-            let lpTimer = 0, lpFired = false;
-            const lpClear = () => { if (lpTimer) { clearTimeout(lpTimer); lpTimer = 0; } };
-            hv.addEventListener('pointerdown', () => {
-                lpFired = false; lpClear();
-                lpTimer = setTimeout(() => { lpTimer = 0; lpFired = true; try { if (navigator.vibrate) navigator.vibrate(18); } catch (_) { /* optional */ } openVoiceSettings(); }, 480);
-            });
-            ['pointerup', 'pointercancel', 'pointerleave'].forEach(ev => hv.addEventListener(ev, lpClear));
-            hv.addEventListener('contextmenu', e => e.preventDefault());
-            hv.addEventListener('click', () => {
-                if (lpFired) { lpFired = false; return; }               // the long-press already opened settings
-                if (hv.classList.contains('playing') || hv.classList.contains('loading')) { if (window.HorizonTTS) HorizonTTS.togglePause(); return; }
-                openVoiceSettings();
-            });
-        }
         sendBtn.addEventListener('click', async () => {
             if (window.HorizonVoice && HorizonVoice.recording()) { if (await HorizonVoice.finish()) sendMessage(); return; }
             if (state.busy) stopTurn(); else sendMessage();
@@ -8045,25 +8043,16 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         }
 
         function paintSpeakButtons(st) {
-            const hv = document.getElementById('hzVoice');
-            if (hv) {
-                hv.classList.toggle('loading', st.state === 'loading');
-                hv.classList.toggle('playing', st.state === 'playing');
-                // V1.64.0: paused keeps the 'playing' state underneath, so the pill shows a pause icon and the word Paused
-                const pz = !!(st.paused && st.state !== 'idle');
-                hv.classList.toggle('paused', pz);
-                const hu = hv.querySelector('use'), hn = hv.querySelector('.hzv-name');
-                if (hu) hu.setAttribute('href', pz ? '#i-pause' : '#i-volume');
-                if (hn) hn.textContent = pz ? 'Paused' : 'Voice';
-                hv.setAttribute('aria-label', st.state === 'idle' ? 'Voice: idle. Tap to open voice settings' : (pz ? 'Voice: paused. Tap to resume, long-press for voice settings' : 'Voice: ' + st.state + '. Tap to pause, long-press for voice settings'));
-            }
             document.querySelectorAll('.speak-btn').forEach(b => {
-                const s = st.id === b.dataset.speakId ? st.state : 'idle';
+                const mine = st.id === b.dataset.speakId;
+                const s = mine ? st.state : 'idle';
+                const pz = !!(mine && st.paused && s !== 'idle');
                 b.classList.toggle('loading', s === 'loading');
                 b.classList.toggle('playing', s === 'playing');
+                b.classList.toggle('paused', pz);
                 const use = b.querySelector('use');
-                if (use) use.setAttribute('href', s === 'idle' ? '#i-volume' : '#i-stop');
-                b.setAttribute('aria-label', s === 'idle' ? 'Read this reply aloud' : 'Stop reading');
+                if (use) use.setAttribute('href', pz ? '#i-pause' : '#i-volume');
+                b.setAttribute('aria-label', s === 'idle' ? 'Read this reply aloud' : (pz ? 'Paused. Tap to resume, long-press to stop' : 'Reading aloud. Tap to pause, long-press to stop'));
             });
         }
 
@@ -8430,14 +8419,14 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
     <script src="horizon_htmlview.js"></script>
     <script src="horizon_mdview.js"></script>
     <script src="horizon_setai.js"></script>
-    <script src="horizon_snooze.js"></script>
     <script src="horizon_operator.js"></script>
     <script src="horizon_lock.js"></script>
-    <script src="horizon_voicepill.js"></script>
     <script src="horizon_hdr2.js"></script>
     <script src="horizon_fold.js"></script>
     <script src="horizon_autoread.js"></script>
     <script src="horizon_door.js"></script>
+    <script src="horizon_speakwave.js"></script>
     <script src="horizon_termlive.js"></script>
+    <script src="horizon_v2.js"></script>
 </body>
 </html>

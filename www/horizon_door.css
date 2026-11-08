@@ -1,11 +1,10 @@
-/* HORIZON V1.65.0 · edge door. The five header buttons move into a drawer on the right edge.
+/* HORIZON V1.65.3 · edge door (cyan, compact, Menu + Settings at the bottom). The five header buttons move into a drawer on the right edge.
    Loads last. Everything is scoped to html.hzd-on, so removing that class brings the old header back. */
 html.hzd-on .app-header { display: flex; align-items: center; gap: 10px; position: relative; padding: calc(10px + env(safe-area-inset-top, 0px)) 34px 8px 12px; }
 html.hzd-on .app-header .brand,
 html.hzd-on .app-header .hz-subrow,
 html.hzd-on .app-header .header-actions { display: none !important; }
 html.hzd-on .app-header .logo-area { flex: 0 0 auto; }
-html.hzd-on .app-header #hzPill { flex: 1 1 auto; min-width: 0; justify-content: center; margin: 0; }
 html.hzd-on .app-header #hzPill .hz-nm,
 html.hzd-on .app-header #hzPill .hz-md { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 html.hzd-on .hz-prow { display: none; }
@@ -14,27 +13,27 @@ html.hzd-on #leftTrigger { display: none !important; }
 /* the door and drawer are one piece */
 .hzd-scrim { position: fixed; inset: 0; background: rgba(0,0,0,.6); opacity: 0; pointer-events: none; z-index: 205; }
 .hzd-scrim.on { pointer-events: auto; }
-.hzd-dw { --x: 0px; position: fixed; top: 0; bottom: 0; right: 0; width: min(82vw, 330px); z-index: 30; touch-action: pan-y;
+.hzd-dw { --x: 0px; position: fixed; top: calc(env(safe-area-inset-top, 0px) + 6px); bottom: auto; right: 0; width: min(68vw, 240px); z-index: 30; touch-action: pan-y;
   transform: translateX(calc(100% - var(--x))); transition: transform .26s cubic-bezier(.2,.8,.2,1); }
 .hzd-dw.drag { transition: none; }
 .hzd-dw.open, .hzd-dw.drag { z-index: 210; }
-.hzd-drw { position: absolute; inset: 0; background: var(--surface, #0b1117); border-left: 1px solid var(--border-highlight, #12303a); padding: calc(14px + env(safe-area-inset-top, 0px)) 10px calc(14px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; gap: 8px; overflow-y: auto; color: var(--text-main, #f2f6fa); }
-.hzd-door { position: absolute; left: -22px; top: calc(env(safe-area-inset-top, 0px) + 10px); width: 22px; height: 40px; border: 1px solid #2bff88; border-right: 0; border-radius: 14px 0 0 14px; background: var(--surface, #0b1117); display: grid; place-items: center; padding: 0; cursor: grab; touch-action: none; box-shadow: -6px 0 16px rgba(43,255,136,.25); }
-.hzd-door svg { width: 16px; height: 16px; fill: none; stroke: #2bff88; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; transform: rotate(180deg); transition: transform .26s; filter: drop-shadow(0 0 4px rgba(43,255,136,.8)); }
+.hzd-drw { position: relative; background: var(--surface, #0b1117); border: 1px solid #00e5ff; border-right: 0; border-radius: 18px 0 0 18px; padding: 14px 10px 12px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; max-height: calc(100vh - 20px - env(safe-area-inset-top, 0px)); color: var(--text-main, #f2f6fa); box-shadow: -8px 0 24px rgba(0,229,255,.18); }
+.hzd-door { position: absolute; left: -23px; top: 4px; width: 22px; height: 40px; border: 1px solid #00e5ff; border-right: 0; border-radius: 14px 0 0 14px; background: var(--surface, #0b1117); display: grid; place-items: center; padding: 0; cursor: grab; touch-action: none; box-shadow: -6px 0 16px rgba(0,229,255,.35); }
+.hzd-door svg { width: 16px; height: 16px; fill: none; stroke: #00e5ff; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; transform: rotate(180deg); transition: transform .26s; filter: drop-shadow(0 0 4px rgba(0,229,255,.85)); }
 .hzd-dw.open .hzd-door svg { transform: none; }
 .hzd-door em { position: absolute; top: 4px; left: 4px; width: 7px; height: 7px; border-radius: 50%; background: #b388ff; box-shadow: 0 0 6px #b388ff; display: none; }
 .hzd-dw.snz .hzd-door em { display: block; }
-.hzd-brand { display: flex; align-items: center; gap: 10px; padding: 0 2px 6px; }
+.hzd-brand { display: flex; align-items: center; gap: 10px; padding: 0 2px 2px; min-height: 36px; }
 .hzd-brand b { display: block; font-size: 16px; letter-spacing: 1.5px; line-height: 1.1; }
 .hzd-brand small { display: block; font-size: 9px; letter-spacing: 1.2px; color: var(--accent-cyan, #00e5ff); }
-.hzd-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.hzd-sec { font-size: 11px; color: var(--text-muted, #9fb0bd); margin: 6px 2px 0; }
-.hzd-t { --c: #00e5ff; display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 6px 10px 6px 6px; border-radius: 14px; border: 1px solid color-mix(in srgb, var(--c) 35%, transparent); background: color-mix(in srgb, var(--c) 8%, var(--surface, #0b1117)); color: inherit; font: 600 14px system-ui, sans-serif; cursor: pointer; text-align: left; }
-.hzd-t .ch { width: 36px; height: 36px; border-radius: 11px; display: grid; place-items: center; color: var(--c); background: color-mix(in srgb, var(--c) 18%, transparent); border: 1px solid color-mix(in srgb, var(--c) 55%, transparent); flex: 0 0 auto; }
+.hzd-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px; padding-top: 10px; border-top: 1px solid color-mix(in srgb, #00e5ff 30%, transparent); }
+.hzd-sec { font-size: 11px; color: var(--text-muted, #9fb0bd); margin: 2px 2px 0; }
+.hzd-t { --c: #00e5ff; display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 4px 10px 4px 5px; border-radius: 14px; border: 1px solid color-mix(in srgb, var(--c) 35%, transparent); background: color-mix(in srgb, var(--c) 8%, var(--surface, #0b1117)); color: inherit; font: 600 14px system-ui, sans-serif; cursor: pointer; text-align: left; }
+.hzd-t .ch { width: 34px; height: 34px; border-radius: 11px; display: grid; place-items: center; color: var(--c); background: color-mix(in srgb, var(--c) 18%, transparent); border: 1px solid color-mix(in srgb, var(--c) 55%, transparent); flex: 0 0 auto; }
 .hzd-t .ch svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .hzd-t.on { border-color: var(--c); box-shadow: 0 0 14px color-mix(in srgb, var(--c) 45%, transparent); }
 .hzd-t.on .ch { background: var(--c); color: #001014; }
-.hzd-pair .hzd-t { flex-direction: column; gap: 6px; padding: 10px 6px; text-align: center; font-size: 13px; }
+.hzd-pair .hzd-t { flex-direction: column; gap: 4px; min-height: 0; padding: 8px 4px; text-align: center; font-size: 13px; }
 /* the door hides while anything bigger is on screen */
 html.hz-kb-open .hzd-dw:not(.open), html.hzt-on .hzd-dw:not(.open),
 body:has(#leftPanel.open) .hzd-dw:not(.open), body:has(#rightPanel.open) .hzd-dw:not(.open) { visibility: hidden; }
@@ -43,3 +42,27 @@ body:has(#leftPanel.open) .hzd-dw:not(.open), body:has(#rightPanel.open) .hzd-dw
 /* V1.65.1: Github Push fits its tile (Apps panel, Settings dock) */
 .hz-app[data-addon="github"] span { max-width: 100%; font-size: 11.5px; letter-spacing: -.2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 #rightPanel .hz-app[data-addon="github"] span { font-size: 8.8px; letter-spacing: -.3px; }
+
+/* V1.65.3: right-middle edge tab (opens Settings) is cyan too */
+html .side-trigger.right { color: #00e5ff; border-color: #00e5ff; box-shadow: -4px 0 14px rgba(0,229,255,.3); background: var(--surface, #0b1117); }
+html .side-trigger.right:hover { color: #7df3ff; background: var(--surface, #0b1117); }
+
+/* V1.65.3: provider pill + usage badge side by side in the header; the bottom row is empty now (the voice pill moved into the reply speaker) */
+html.hzd-on .hz-bottom { display: none; }
+.hz-bottom > .hz-badge:only-child { flex: 1 1 100%; width: 100%; }
+html.hzd-on .hzd-top { flex: 1 1 auto; min-width: 0; display: flex; align-items: stretch; gap: 8px; }
+html.hzd-on .hzd-top #hzPill { flex: 1 1 0; min-width: 0; height: 40px; margin: 0; padding: 0 10px 0 8px; gap: 6px; justify-content: flex-start; box-sizing: border-box; }
+html.hzd-on .hzd-top #hzPill .hz-st,
+html.hzd-on .hzd-top #hzPill .hz-md { display: none; }
+html.hzd-on .hzd-top #hzPill .hz-nm { flex: 1 1 auto; font-size: 13.5px; }
+html.hzd-on .hzd-top .hz-badge { flex: 1 1 0; min-width: 0; width: auto; max-width: none; height: 40px; margin: 0; padding: 0; display: flex; align-self: stretch; }
+html.hzd-on .hzd-top .hzb-pill { flex: 1 1 auto; width: 100%; height: 100%; max-width: none; padding: 0 10px; border-radius: 20px; flex-wrap: wrap; align-content: center; justify-content: flex-start; row-gap: 2px; column-gap: 6px; box-sizing: border-box; }
+html.hzd-on .hzd-top .hzb-name { font-size: 13px; }
+html.hzd-on .hzd-top .hzb-model { flex: 1 1 0; min-width: 0; max-width: none; font-size: 12px; }
+html.hzd-on .hzd-top .hzb-bars { display: none; }
+html.hzd-on .hzd-top .hzb-sep { display: none; }
+html.hzd-on .hzd-top .hzb-read { flex: 0 0 100%; min-width: 0; font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; }
+
+/* V1.65.3: right-middle arrow tab, a little smaller */
+html .side-trigger.right { width: 19px; height: 38px; }
+html .side-trigger.right .ic { width: 13px; height: 13px; }

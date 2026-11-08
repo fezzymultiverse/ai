@@ -1,0 +1,12 @@
+/* HORIZON V1.65.3 · the voice waveform lives in the reply speaker button.
+   Reading = the speaker icon is replaced by moving bars. Paused = amber, pause icon. Loading keeps the pulsing ring.
+   The bars are moved by horizon_speakwave.js, so Android's "remove animations" setting cannot freeze them. */
+.speak-btn { -webkit-touch-callout: none; user-select: none; -webkit-user-select: none; }
+.speak-btn .spk-wave { display: none; align-items: center; justify-content: center; gap: 2px; width: 16px; height: 14px; }
+.speak-btn .spk-wave i { display: block; width: 2.4px; height: 100%; border-radius: 2px; background: currentColor; transform: scaleY(.25); transform-origin: center; }
+html .speak-btn.playing .ic { display: none; }
+html .speak-btn.playing .spk-wave { display: inline-flex; }
+html .speak-btn.playing.paused .ic { display: block; }
+html .speak-btn.playing.paused .spk-wave { display: none; }
+html .speak-btn.paused, html .act-row .speak-btn.playing.paused { background: transparent; border-color: #f59e0b; color: #f59e0b; box-shadow: none; }
+html .act-row .speak-btn.playing .spk-wave { width: 16px; }

@@ -71,64 +71,8 @@
     body.insertBefore(n, body.firstChild);
   })();
 
-  /* ---------- 3) snooze screen ---------- */
-  var MOON = 'M20 14.5A8 8 0 1 1 9.5 4a6.2 6.2 0 0 0 10.5 10.5z';
-  var snz = el('div', 'hz-snz'); snz.id = 'hzSnz';
-  snz.setAttribute('role', 'button'); snz.setAttribute('tabindex', '0');
-  snz.setAttribute('aria-label', 'Horizon is offline. Tap anywhere to wake');
-
-  var stars = el('div', 'hz-stars'); stars.setAttribute('aria-hidden', 'true');
-  for (var i = 0; i < 26; i++) {
-    var st = document.createElement('i');
-    st.style.left = (Math.random() * 100).toFixed(1) + '%';
-    st.style.top = (Math.random() * 100).toFixed(1) + '%';
-    st.style.animationDelay = (Math.random() * 3).toFixed(2) + 's';
-    stars.appendChild(st);
-  }
-  snz.appendChild(stars);
-
-  var moon = el('div', 'hz-snz-moon');
-  var ms = document.createElementNS(NS, 'svg'); ms.setAttribute('viewBox', '0 0 24 24'); ms.setAttribute('aria-hidden', 'true');
-  var mp = document.createElementNS(NS, 'path'); mp.setAttribute('d', MOON); ms.appendChild(mp); moon.appendChild(ms);
-  snz.appendChild(moon);
-
-  var bot = el('div', 'hz-snz-bot');
-  bot.appendChild(svgUse('i-robot', '', '0 0 64 64'));
-  var zz = el('span', 'zzr', '💤'); zz.setAttribute('aria-hidden', 'true'); bot.appendChild(zz);
-  snz.appendChild(bot);
-
-  var prov = el('div', 'hz-snz-prov'); prov.setAttribute('role', 'group'); prov.setAttribute('aria-label', 'AI providers');
-  snz.appendChild(prov);
-  snz.appendChild(el('h2', '', 'HORIZON OFFLINE'));
-  snz.appendChild(el('div', 'tg', 'Strategy Over Impulse'));
-  var stt = el('div', 'stt');
-  [['Network'], ['Permissions']].forEach(function (a) {
-    var s = el('span', '', a[0] + ' '); s.appendChild(el('b', '', 'OFF')); stt.appendChild(s);
-  });
-  snz.appendChild(stt);
-  var wake = el('button', 'wake', 'TAP TO WAKE'); wake.type = 'button'; snz.appendChild(wake);
-  document.body.appendChild(snz);
-
-  function paintProv() {
-    var list = window.HzProviders || [], act = window.HzPick && window.HzPick.id;
-    prov.replaceChildren();
-    list.forEach(function (p) {
-      var s = svgUse(p.icon, p.id === act ? 'on' : '');
-      var t = document.createElementNS(NS, 'title'); t.textContent = p.name; s.insertBefore(t, s.firstChild);
-      prov.appendChild(s);
-    });
-  }
-
-  function wakeUp(e) {
-    if (e) e.preventDefault();
-    var b = $('snoozeBtn');
-    if (b && !b.disabled) b.click();
-  }
-  snz.addEventListener('click', wakeUp);
-  snz.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') wakeUp(e); });
-
   /* ---------- sync ---------- */
-  function sync() { paintPill(); paintProv(); }
+  function sync() { paintPill(); }
   document.addEventListener('hz:pick', sync);
   sync();
 })();

@@ -12,6 +12,16 @@
   <img alt="Capacitor 6" src="https://img.shields.io/badge/Capacitor-6-00e5ff">
 </p>
 
+## What's new in V1.65.4
+
+- **Voice in the reply speaker.** The Voice pill is gone. The waveform replaces the speaker icon on the reply being read. Tap = pause / resume, long-press = stop.
+- **Top panel.** The usage badge sits next to the provider pill in the header. The right-middle arrow tab is smaller.
+
+## What's new in V1.65.3
+
+- **Cyan edge.** The edge door and the right-middle settings tab are cyan.
+- **Compact drawer.** The door drawer is only as tall as its tiles, with Menu and Settings at the bottom.
+
 ## What's new in V1.65.2
 
 - **Terminal is more alive.** The prompt is colour-coded (user purple, host cyan, folder pink, `$` green) and the first word of each command you run is bold white. New lines fade in, and a colour sweep under the title bar speeds up while a command runs. The key rows are grouped by colour: arrows cyan, Ctrl purple, Esc and Tab amber, Home/End/PgUp/PgDn green, `^C` and `^D` red.

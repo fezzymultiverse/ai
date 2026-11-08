@@ -1,6 +1,6 @@
-/* HORIZON V1.65.0 · edge door.
-   A green door on the right edge of the header opens one drawer: Menu + Settings as a pair, then Snooze, Group, Browser,
-   Terminal, Github Push and Downloads. The drawer never re-implements anything: each tile clicks the real button or calls the
+/* HORIZON V1.65.3 · edge door.
+   A cyan door on the right edge of the header opens one compact drawer: Snooze, Group, Browser, Terminal,
+   Github Push and Downloads, then Menu + Settings as a pair at the bottom. The drawer never re-implements anything: each tile clicks the real button or calls the
    real opener, so every existing handler keeps working. Tap the door or drag it; drag the drawer right (or tap outside) to close.
    Hardware Back closes it. Long-press the Horizon logo chip to switch between this layout and the old header (reloads). */
 (function () {
@@ -35,14 +35,10 @@
 
   /* tiles: label, icon, colour, action. Each action calls the real thing. */
   var TOOLS = [
-    ['Snooze', 'moon', '#b388ff', function () { click('#snoozeBtn'); }],
-    ['Group', 'users', '#ff5ca8', function () { click('#groupBtn'); }],
-    ['Browser', 'globe', '#00e5ff', function () { click('#hzbOpen'); }],
-    ['Terminal', 'term', '#2bff88', function () { if (window.HorizonTerminal) window.HorizonTerminal.open(); }],
-    ['Github Push', 'gh', '#ff6b6b', function () { click('[data-addon="github"]'); }],
-    ['Downloads', 'dl', '#ffb020', function () { click('[data-addon="downloads"]'); }]
+    ['Browser', 'globe', '#3d8bff', function () { click('#hzbOpen'); }],
+    ['AI Group Chat', 'users', '#2bff88', function () { click('#groupBtn'); }]
   ];
-  var PAIR = [['Menu', 'menu', function () { click('#menuBtn'); }], ['Settings', 'sl', function () { click('#settingsBtn'); }]];
+  var PAIR = [['Settings', 'sl', function () { click('#settingsBtn'); }], ['Menu', 'menu', function () { click('#menuBtn'); }]];
   function tile(t, c, i, pair) {
     var b = document.createElement('button'); b.type = 'button'; b.className = 'hzd-t'; b.style.setProperty('--c', c);
     b.innerHTML = '<span class="ch">' + ic(i) + '</span>' + t; b.setAttribute('aria-label', t); return b;
@@ -50,7 +46,13 @@
 
   /* move the provider pill into the header so the header is one row */
   var pill = $('hzPill'), prow = document.querySelector('.hz-prow');
-  if (pill) { header.appendChild(pill); if (prow) prow.hidden = true; }
+  /* provider pill and usage badge sit side by side in the header (the badge used to live in the bottom row) */
+  var badge = $('hzBadge');
+  if (pill) {
+    var top = document.createElement('div'); top.className = 'hzd-top';
+    top.appendChild(pill); if (badge) top.appendChild(badge);
+    header.appendChild(top); if (prow) prow.hidden = true;
+  }
   root.classList.add('hzd-on');
 
   var scr = document.createElement('div'); scr.className = 'hzd-scrim';
@@ -59,16 +61,14 @@
   var brand = document.createElement('div'); brand.className = 'hzd-brand';
   brand.innerHTML = '<div><b>HORIZON</b><small>STRATEGY OVER IMPULSE</small></div>';
   var pair = document.createElement('div'); pair.className = 'hzd-pair';
-  PAIR.forEach(function (p) { var b = tile(p[0], '#5b8cff', p[1], true); b.addEventListener('click', function () { run(p[2]); }); pair.appendChild(b); });
+  PAIR.forEach(function (p) { var b = tile(p[0], '#ff3b4e', p[1], true); b.addEventListener('click', function () { run(p[2]); }); pair.appendChild(b); });
   var sec = document.createElement('div'); sec.className = 'hzd-sec'; sec.textContent = 'Tools';
-  drw.appendChild(brand); drw.appendChild(pair); drw.appendChild(sec);
-  var snzTile = null;
   TOOLS.forEach(function (t) {
     var b = tile(t[0], t[2], t[1]); b.addEventListener('click', function () { run(t[3]); }); drw.appendChild(b);
-    if (t[0] === 'Snooze') snzTile = b;
   });
+  drw.appendChild(pair);   // Menu + Settings sit at the bottom
   var door = document.createElement('button'); door.type = 'button'; door.className = 'hzd-door';
-  door.setAttribute('aria-label', 'Open menu'); door.innerHTML = ic('arr') + '<em></em>';
+  door.setAttribute('aria-label', 'Open menu'); door.innerHTML = ic('menu');
   dw.appendChild(drw); dw.appendChild(door);
   document.body.appendChild(scr); document.body.appendChild(dw);
 
@@ -120,18 +120,6 @@
   dw.addEventListener('pointerup', end); dw.addEventListener('pointercancel', end);
   window.addEventListener('resize', function () { paint(isOpen ? dw.offsetWidth : 0); });
 
-  /* Snooze state shows as a glow on its tile and a purple dot on the door */
-  var snz = $('snoozeBtn'), bar = $('hzSnoozeBar');
-  function syncSnz() {
-    var on = !!snz && snz.getAttribute('aria-pressed') === 'true';
-    if (!on && bar && !bar.hidden && getComputedStyle(bar).display !== 'none') on = true;
-    if (snzTile) snzTile.classList.toggle('on', on); dw.classList.toggle('snz', on);
-  }
-  try {
-    var mo = new MutationObserver(syncSnz);
-    if (snz) mo.observe(snz, { attributes: true, attributeFilter: ['aria-pressed', 'class'] });
-    if (bar) mo.observe(bar, { attributes: true, attributeFilter: ['hidden', 'class', 'style'] });
-  } catch (e) { /* no observer */ }
-  syncSnz(); paint(0);
+  paint(0);
   window.HorizonDoor = { open: doOpen, close: function () { doClose(); }, isOpen: function () { return isOpen; } };
 })();
