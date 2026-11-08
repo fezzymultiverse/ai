@@ -1,7 +1,7 @@
 /* HORIZON V1.46.0 · HTML preview + Save as for code blocks in chat.
    Any code block that is an HTML page (```html, or text starting with <!doctype / <html) or an SVG gets two buttons in its header:
    PREVIEW opens it full screen in a sandboxed frame (scripts run, but it cannot touch Horizon's data); SAVE AS writes the file
-   to Documents/Horizon (or downloads it in a browser). Nothing is sent anywhere. */
+   to Downloads/Horizon (falls back to Documents/Horizon) (or downloads it in a browser). Nothing is sent anywhere. */
 (function () {
   'use strict';
   var NATIVE = !!(window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform());
@@ -43,6 +43,14 @@
     var fname = String(name || '').replace(/[\\/:*?"<>|]+/g, '_').trim() || 'horizon-page.html';
     if (!/\.(html?|svg)$/i.test(fname)) fname += '.html';
     var FSP = plug('Filesystem');
+    // V1.67.6: Downloads first. MediaStore puts the file in Download/Horizon, which is what the phone's Downloads app shows.
+    var HAI = plug('HorizonAI');
+    if (NATIVE && HAI && typeof HAI.saveText === 'function') {
+      try {
+        var r = await HAI.saveText({ filename: fname, data: btoa(unescape(encodeURIComponent(text))) });
+        if (r && r.path) return r.path.replace(/^Download\//, 'Downloads/');
+      } catch (e) { /* older build or Android 9: fall through to Documents */ }
+    }
     if (NATIVE && FSP) {
       var data = btoa(unescape(encodeURIComponent(text)));
       var targets = [{ d: 'DOCUMENTS', p: 'Horizon/' + fname, l: 'Documents/Horizon/' + fname }, { d: 'EXTERNAL', p: 'Horizon/' + fname, l: 'app storage/Horizon/' + fname }];

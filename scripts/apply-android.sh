@@ -91,6 +91,10 @@ add_perm ACCESS_COARSE_LOCATION
 add_perm ACCESS_FINE_LOCATION
 add_perm USE_BIOMETRIC
 add_perm VIBRATE
+add_perm RECEIVE_BOOT_COMPLETED       # V1.68.0: re-arm alarms after a reboot
+add_perm SET_ALARM                    # V1.68.0: add the alarm to the phone's Clock app
+add_perm SCHEDULE_EXACT_ALARM ' android:maxSdkVersion="32"'
+add_perm USE_EXACT_ALARM              # V1.68.0: exact alarms for a calendar / alarm app (Android 13+)
 add_perm USE_FULL_SCREEN_INTENT   # V1.63.0: lets a reply open over a locked screen (Android 14 asks the user once)
 say "Manifest permissions applied (verified)."
 
@@ -137,8 +141,8 @@ put_sources() {
     done
 }
 
-JAVA_SOURCES="HorizonPermsPlugin.java HorizonBgService.java HorizonMediaPlugin.java HorizonMediaService.java HorizonArt.java HorizonSpeechPlugin.java HorizonEdgeTts.java HorizonLensPlugin.java HorizonStatsPlugin.java HorizonBrowserPlugin.java MainActivity.java"
-KOTLIN_SOURCES="HorizonAIPlugin.kt HorizonAIService.kt HorizonReplyReceiver.kt HorizonSpeakService.kt HorizonShellPlugin.kt HorizonLockPlugin.kt HorizonNotify.kt HorizonScopes.kt HorizonCanary.kt"
+JAVA_SOURCES="HorizonPermsPlugin.java HorizonBgService.java HorizonMediaPlugin.java HorizonMediaService.java HorizonArt.java HorizonSpeechPlugin.java HorizonLensPlugin.java HorizonStatsPlugin.java HorizonBrowserPlugin.java MainActivity.java"
+KOTLIN_SOURCES="HorizonAlarms.kt HorizonAlarmReceiver.kt HorizonAlarmBootReceiver.kt HorizonAlarmService.kt HorizonAlarmPlugin.kt HorizonAIPlugin.kt HorizonAIService.kt HorizonReplyReceiver.kt HorizonSpeakService.kt HorizonShellPlugin.kt HorizonLockPlugin.kt HorizonNotify.kt HorizonScopes.kt HorizonCanary.kt"
 
 # shellcheck disable=SC2086
 put_sources $JAVA_SOURCES
@@ -179,6 +183,14 @@ if 'android:name=".HorizonSpeakService"' not in s:
     s = s.replace('</application>', '    <service android:name=".HorizonSpeakService" android:exported="false" android:foregroundServiceType="mediaPlayback" />\n    </application>')
 if 'android:name=".HorizonReplyReceiver"' not in s:
     s = s.replace('</application>', '    <receiver android:name=".HorizonReplyReceiver" android:exported="false" />\n    </application>')
+if 'android:name=".HorizonAlarmReceiver"' not in s:
+    s = s.replace('</application>', '    <receiver android:name=".HorizonAlarmReceiver" android:exported="false" />\n    </application>')
+if 'android:name=".HorizonAlarmBootReceiver"' not in s:
+    s = s.replace('</application>', '    <receiver android:name=".HorizonAlarmBootReceiver" android:exported="true">\n            <intent-filter>\n                <action android:name="android.intent.action.BOOT_COMPLETED" />\n                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />\n                <action android:name="android.intent.action.TIME_SET" />\n                <action android:name="android.intent.action.TIMEZONE_CHANGED" />\n            </intent-filter>\n        </receiver>\n    </application>')
+if 'android:name=".HorizonAlarmService"' not in s:
+    s = s.replace('</application>', '    <service android:name=".HorizonAlarmService" android:exported="false" android:foregroundServiceType="mediaPlayback" />\n    </application>')
+if 'android.intent.action.SET_ALARM' not in s:
+    s = s.replace('</manifest>', '    <queries>\n        <intent>\n            <action android:name="android.intent.action.SET_ALARM" />\n        </intent>\n    </queries>\n</manifest>')
 manifest.write_text(s)
 PY
 # shellcheck disable=SC2086
@@ -196,6 +208,10 @@ done
 need "$MANIFEST" 'android:name=".HorizonReplyReceiver"' "Reply receiver missing from the manifest"
 need "$MANIFEST" 'android:name=".HorizonSpeakService"' "Speak service missing from the manifest"
 need "$MANIFEST" 'android:name=".HorizonAIService"'    "AI service missing from the manifest"
+need "$MANIFEST" 'android:name=".HorizonAlarmReceiver"' "Alarm receiver missing from the manifest"
+need "$MANIFEST" 'android:name=".HorizonAlarmBootReceiver"' "Alarm boot receiver missing from the manifest"
+need "$MANIFEST" 'android:name=".HorizonAlarmService"' "Alarm service missing from the manifest"
+need "$JAVA_DIR/MainActivity.java" "registerPlugin(HorizonAlarmPlugin.class)" "MainActivity does not register HorizonAlarmPlugin"
 need "$APP_GRADLE" 'org.jetbrains.kotlin.android' "Kotlin plugin not applied to app/build.gradle"
 say "Native plugin sources verified."
 

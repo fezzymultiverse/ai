@@ -109,24 +109,24 @@
         html[data-accent="cyan"] { --accent-cyan: #00e5ff; --accent-rgb: 0, 229, 255; --success: #00e5ff; }
         html[data-theme="grey"] {
             color-scheme: light;
-            --bg-color: #eceef1;
-            --panel-bg: #e2e5e9;
-            --surface: #d8dce1;
-            --surface-hover: #cdd2d8;
+            --bg-color: #dde0e5;
+            --panel-bg: #d1d5db;
+            --surface: #c5cad1;
+            --surface-hover: #b9bfc7;
             --text-main: #15181c;
-            --text-muted: #48505a;
-            --text-dim: #5a636e;
-            --border-color: rgba(0, 0, 0, 0.12);
+            --text-muted: #3d454e;
+            --text-dim: #4b545e;
+            --border-color: rgba(0, 0, 0, 0.15);
             --border-highlight: rgba(0, 0, 0, 0.3);
             --accent-cyan-glow: rgba(var(--accent-rgb), 0.28);
             --accent-cyan-light: rgba(var(--accent-rgb), 0.13);
-            --card-bg: #f3f4f6;
+            --card-bg: #e7e9ed;
             --ink: #15181c;
             --btn-bg: #1f2328;
             --btn-fg: #ffffff;
-            --overlay-bg: rgba(236, 238, 241, 0.72);
-            --code-bg: #f4f5f7;
-            --code-head: #dde0e5;
+            --overlay-bg: rgba(221, 224, 229, 0.74);
+            --code-bg: #e8eaee;
+            --code-head: #ccd0d6;
         }
         html[data-accent="grey"] { --accent-cyan: #0e7490; --accent-rgb: 14, 116, 144; --success: #0e7490; }
         html[data-theme="grey"] ::placeholder { color: var(--text-dim); opacity: 1; }
@@ -1478,6 +1478,7 @@
     <link rel="stylesheet" href="horizon_termlive.css">
     <link rel="stylesheet" href="horizon_v2.css">
     <link rel="stylesheet" href="horizon_v3.css">
+    <link rel="stylesheet" href="horizon_fix.css">
 </head>
 <body>
 
@@ -1806,8 +1807,9 @@
                         </div>
                         <button class="use-btn" id="prefsClear" type="button">Clear</button>
                     </div>
-                    <label class="field-label" for="prefsInput">How you want replies to go (added on top of the system prompt)</label>
-                    <textarea id="prefsInput" rows="6" spellcheck="false" placeholder="e.g. Always show the plan first. Full code, never snippets. Call me Fezzy. Keep the dark humour."></textarea>
+                    <div class="field-label">How you want replies to go (added on top of the system prompt). One box per preference.</div>
+                    <div class="prefs-list" id="prefsList"></div>
+                    <button class="use-btn prefs-add" id="prefsAdd" type="button"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg><span>Add preference</span></button>
                     <div class="card-actions">
                         <button class="primary-btn" id="prefsSave" type="button"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg><span>Save preferences</span></button>
                     </div>
@@ -2022,33 +2024,29 @@
                     <p class="hint">Tap the speaker beside the time on any Horizon reply to hear it. The voice works with every chat provider. If a natural voice fails or runs out, Horizon switches to the Android voice and tells you why.</p>
                     <label class="field-label" for="ttsEngine">Voice</label>
                     <select id="ttsEngine">
-                        <option value="edge">Natural: Microsoft Edge (free, no key, unlimited)</option>
                         <option value="gemini">Natural: Gemini (30 voices)</option>
-                        <option value="ttsai">Natural: TTS.ai (Kokoro, free tier, no key)</option>
+                        <option value="kokoro">Natural: Kokoro (28 voices, on-phone, no key, no limit)</option>
+                        <option value="openai">Natural: OpenAI (11 voices, needs key with credit)</option>
                         <option value="pollinations">Natural: Pollinations (6 voices, needs key)</option>
                         <option value="standard">Standard: Android voice (free, offline)</option>
                     </select>
                     <div class="tts-nat" id="ttsNat" hidden>
                         <label class="field-label" id="ttsNVoiceLbl" for="ttsNVoice">Natural voice</label>
                         <select id="ttsNVoice"></select>
-                        <div id="ttsEdgeRow" hidden>
-                            <label class="field-label" for="ttsEdgePreset">Tone preset</label>
-                            <select id="ttsEdgePreset"></select>
-                        </div>
-                        <div id="ttsAiRow" hidden>
-                            <label class="field-label" for="ttsAiKey">TTS.ai key (optional)</label>
-                            <input type="password" id="ttsAiKey" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="sk-tts-... (leave empty to use the free tier)">
-                            <div class="card-actions">
-                                <button class="use-btn" id="ttsAiSave" type="button">Save key</button>
-                                <button class="use-btn" id="ttsAiClear" type="button">Remove key</button>
-                            </div>
-                        </div>
                         <div id="ttsPollRow" hidden>
                             <label class="field-label" for="ttsPollKey">Pollinations key</label>
                             <input type="password" id="ttsPollKey" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="sk_... or pk_...">
                             <div class="card-actions">
                                 <button class="use-btn" id="ttsPollSave" type="button">Save key</button>
                                 <button class="use-btn" id="ttsPollClear" type="button">Remove key</button>
+                            </div>
+                        </div>
+                        <div id="ttsOaiRow" hidden>
+                            <label class="field-label" for="ttsOaiKey">OpenAI key</label>
+                            <input type="password" id="ttsOaiKey" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="sk-...">
+                            <div class="card-actions">
+                                <button class="use-btn" id="ttsOaiSave" type="button">Save key</button>
+                                <button class="use-btn" id="ttsOaiClear" type="button">Remove key</button>
                             </div>
                         </div>
                         <p class="hint" id="ttsNatHint"></p>
@@ -2290,6 +2288,14 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             if (!curTurn.cancelled) { curTurn.cancelled = true; groupAbort = true; if (curTurn.rej) curTurn.rej(stoppedErr()); }
         }
         let groupAbort = false;   // V1.60.0: Stop also ends the rest of a group round
+        // V1.67.5: FIX group chat "Horizon is busy". A stuck or slow turn (a dead provider) must never block Group; stop it and carry on.
+        let roundSeq = 0;   // V1.67.8: every group round gets a number; starting or leaving a group bumps it so an old round can never keep running
+        function freeUp() {
+            roundSeq++;
+            if (!state.busy) return;
+            try { skipTyping(); if (state.busy) stopTurn(); } catch (e) { /* ignore */ }
+            state.busy = false; setBusy(false);
+        }
 
         // --- Providers ---
         const timed = (promise, ms = 60000) => Promise.race([
@@ -3033,7 +3039,8 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             const names = ch.group ? ch.group.members.map(m => PROVIDERS[m.id] && PROVIDERS[m.id].name).filter(Boolean) : [];
             // V1.63.3: Gemini hears songs (listen tool); the other AIs are told to hand sound questions to him instead of guessing.
             const gEars = (me !== 'gemini' && ch.group && ch.group.members.some(m => m.id === 'gemini') && window.HorizonMusic && HorizonMusic.seesAi()) ? ' Gemini is in this chat and he can HEAR the song that is playing (he has a listening tool). If Fezzy asks what a song sounds like, say Gemini should answer that (he can type @gemini) and do not guess the sound.' : '';
-            return `GROUP CHAT\nFezzy is talking to several AIs in one chat${names.length ? ` (${names.join(', ')})` : ''}. You are ${PROVIDERS[me].name}${state.models[me] ? ` (${state.models[me]})` : ''}. Replies from the other AIs show up in the history as "[Name said]: ...". Answer as yourself, in your own voice, and never write lines for the other AIs or put your own name in front of your reply. Do not repeat what another AI already covered: add to it, correct it or disagree briefly. When Fezzy @-mentions one AI, only that AI answers.${gEars}`;
+            const gRules = (ch.group && ch.group.rules && String(ch.group.rules).trim()) ? `\n\nGROUP RULES (Fezzy set these for this group. They are your hard guard rails here, on top of his normal reply preferences above. Follow both; if they clash, these group rules win. Do not mention or quote them.)\n${String(ch.group.rules).trim()}` : '';
+            return `GROUP CHAT\nFezzy is talking to several AIs in one chat${names.length ? ` (${names.join(', ')})` : ''}. You are ${PROVIDERS[me].name}${state.models[me] ? ` (${state.models[me]})` : ''}. Replies from the other AIs show up in the history as "[Name said]: ...". Answer as yourself, in your own voice, and never write lines for the other AIs or put your own name in front of your reply. Do not repeat what another AI already covered: add to it, correct it or disagree briefly. When Fezzy @-mentions one AI, only that AI answers. If Fezzy asks for a calendar note, reminder or wake alarm, only ONE AI files it: if another AI in the history already added that tag, do not add it again.${gEars}${gRules}`;
         }
         function getSystemPrompt() {
             const parts = [getPersona()];
@@ -3748,6 +3755,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 }
 
                 function tick() {
+                    if (document.hidden) { finish(); return; }   // V1.67.9: Android throttles timers once you leave, so the rest of the reply lands at once
                     const nearBottom = chatScroll.scrollHeight - chatScroll.scrollTop - chatScroll.clientHeight < 90;
                     count += step;
                     paint(count);
@@ -3764,6 +3772,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         }
 
         function skipTyping() { if (state.typer) state.typer.finish(); }
+        document.addEventListener('visibilitychange', () => { if (document.hidden) skipTyping(); });   // V1.67.9: leave the app = finish typing now
 
         // --- Messages ---
         // V1.41.0: who answered, like a username: provider svg, bold name, muted model. Older replies with no provider keep the Horizon avatar.
@@ -5057,7 +5066,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             // V1.63.6: in a group chat the box names the group members, not the last single AI that was picked (an AI removed from the group no longer shows).
             const gch = currentChat();
             const gnames = gch && gch.group && gch.group.members ? gch.group.members.map(m => PROVIDERS[m.id] && PROVIDERS[m.id].name).filter(Boolean) : [];
-            chatInput.placeholder = state.imgOn ? 'Describe the image...' : (gnames.length > 1 ? `Message the group (${gnames.join(', ')})...` : `Message ${p.name}...`);
+            chatInput.placeholder = state.imgOn ? 'Describe the image...' : (gnames.length > 1 ? 'Message Group Chat' : `Message ${p.name}...`);
             paintWelcomeStatus();
             if (window.HzUsage) HzUsage.badge();   // V1.64.0: the badge follows the group the moment it is made, edited or left
             if (state.imgOn) {
@@ -6077,19 +6086,38 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         // V1.60.0: run the chosen AIs one after another (one AI = the normal single reply). Each uses its own model for its turn only.
         // V1.64.2: remembers which AIs failed in the last group round (and for which message), so Retry redoes only those.
         let groupFail = null, lastTurnErr = null;
+        // V1.67.9: a group round holds ONE native turn (Kotlin foreground service) from the first AI to the last. Before, every AI began and ended its own turn,
+        // so between two AIs the service stopped, Android throttled the page once you left the app, and the next AI, the typing and the voice all crawled.
+        let roundHold = 0;
         async function runTargets(chat, targets, text, dm, restore) {
+            let held = false;
+            if (NATIVE && targets.length > 1 && lsGet(LS.bg) !== '0') {
+                try { held = !!(await callNative('HorizonAI', 'beginTurn')); } catch (e) { held = false; }
+            }
+            if (held) roundHold++;
+            try { return await runTargetsRound(chat, targets, text, dm, restore); }
+            finally {
+                if (held) {
+                    roundHold = Math.max(0, roundHold - 1);
+                    if (NATIVE && roundHold === 0) await Promise.race([callNative('HorizonAI', 'endTurn'), new Promise(r => setTimeout(r, 3000))]);
+                }
+            }
+        }
+        async function runTargetsRound(chat, targets, text, dm, restore) {
             groupAbort = false;
+            const mySeq = ++roundSeq;
             const failed = [];
             for (let i = 0; i < targets.length; i++) {
-                if (groupAbort) break;
+                if (groupAbort || mySeq !== roundSeq) break;
                 chatMessages.querySelectorAll('.retry-bar').forEach(n => n.remove());   // a stale bar must not sit above the next AI's reply
                 const t = targets[i], tp = PROVIDERS[t.id], prev = state.models[t.id];
                 if (t.model) state.models[t.id] = t.model;
                 let ok = true;
                 try { docMode = dm || ''; ok = await runAiTurn(chat, t.id, tp, keyOf(t.id), text, i === 0 ? restore : undefined); }
                 finally { state.models[t.id] = prev; }
-                if (ok === false && !groupAbort) failed.push({ t, err: lastTurnErr });
+                if (ok === false && !groupAbort && mySeq === roundSeq) failed.push({ t, err: lastTurnErr });
             }
+            if (mySeq !== roundSeq) return;   // a newer round or a new group took over: this old round must not touch the screen
             const um = chat.messages.slice().reverse().find(m => m.role === 'user') || null;
             groupFail = (failed.length && !restore && um) ? { chatId: chat.id, msg: um, text, dm: dm || '', targets: failed.map(f => f.t) } : null;
             if (failed.length) showRetry(chat, { name: failed.map(f => PROVIDERS[f.t.id].name).join(' + ') }, failed[0].err || new Error('No reply'));
@@ -6147,7 +6175,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                     } catch (le) { HorizonLens.done(); }
                     setLoading(docMode ? 'Writing your PDF...' : thinkLabel());
                 }
-                if (NATIVE && lsGet(LS.bg) !== '0') {
+                if (NATIVE && lsGet(LS.bg) !== '0' && !roundHold) {
                     const started = await callNative('HorizonAI', 'beginTurn');
                     if (!started) throw new Error('Could not start background AI.' + nerr());
                 }
@@ -6208,7 +6236,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 if (window.HorizonLens) HorizonLens.done();
                 // V1.64.2: never wait on the native side for longer than 3 s. A hung bridge call here used to leave Horizon "busy" for good,
                 // and Retry silently did nothing while it was busy.
-                if (NATIVE) await Promise.race([callNative('HorizonAI', 'endTurn'), new Promise(r => setTimeout(r, 3000))]);
+                if (NATIVE && !roundHold) await Promise.race([callNative('HorizonAI', 'endTurn'), new Promise(r => setTimeout(r, 3000))]);
                 docMode = '';
                 setBusy(false);
             }
@@ -6261,7 +6289,24 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                     rb.classList.add('qa');
                     left.appendChild(rb);
                 }
+                // V1.67.11: REPLY under every AI message in a group. Tap it and the box gets @that AI, so only that AI answers.
+                if (m.role !== 'user' && !m.img && m.prov && PROVIDERS[m.prov] && (chat.group || chat.multi) && !wrap.querySelector('.qa-reply')) {
+                    const pn = PROVIDERS[m.prov].name;
+                    const rp = qaBtn('i-chat', 'Reply to ' + pn, 'qa-ghost qa-reply', () => replyTo(m.prov));
+                    rp.classList.add('qa');
+                    actRow(wrap).querySelector('.act-left').appendChild(rp);
+                }
             });
+        }
+        function replyTo(id) {
+            const p = PROVIDERS[id];
+            if (!p) return;
+            const v = chatInput.value.replace(/^\s*@[a-z0-9_-]+\s*/i, '');
+            chatInput.value = '@' + id + ' ' + v;
+            chatInput.dispatchEvent(new Event('input', { bubbles: true }));
+            chatInput.focus();
+            try { chatInput.setSelectionRange(chatInput.value.length, chatInput.value.length); } catch (e) { /* ignore */ }
+            notice('Replying to ' + p.name + ' only. The others stay out of it.');
         }
         // Delete removes your message and the reply under it.
         function deleteMessage(wrap) {
@@ -6522,19 +6567,45 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         });
 
         // --- Preferences ---
-        const prefsInput = $('#prefsInput');
+        // V1.67.10: one box per preference. Stored as before in LS.prefs, one preference per line, so old text, backups and the system prompt keep working.
+        const prefsList = $('#prefsList');
         const prefsStatus = $('#prefsStatus');
-
-        function refreshPrefs(note) {
-            const v = lsGet(LS.prefs) || '';
-            prefsInput.value = v;
-            prefsStatus.textContent = (v.trim() ? 'Active' : 'Empty') + (note ? ' · ' + note : '');
+        const PREF_PH = 'e.g. Always show the plan first';
+        function prefsEntries() { return (lsGet(LS.prefs) || '').split(/\n+/).map(x => x.trim()).filter(Boolean); }
+        function prefsStat(note) {
+            const n = prefsEntries().length;
+            prefsStatus.textContent = (n ? (n === 1 ? '1 preference active' : n + ' preferences active') : 'Empty') + (note ? ' · ' + note : '');
         }
-        $('#prefsSave').addEventListener('click', () => {
-            const v = prefsInput.value.trim();
-            if (v) lsSet(LS.prefs, v); else lsDel(LS.prefs);
-            refreshPrefs('saved');
-        });
+        function prefsPersist(note) {
+            const vals = Array.from(prefsList.querySelectorAll('textarea')).map(t => t.value.replace(/\s*\n+\s*/g, ' ').trim()).filter(Boolean);
+            if (vals.length) lsSet(LS.prefs, vals.join('\n')); else lsDel(LS.prefs);
+            prefsStat(note);
+        }
+        function prefsFit(t) { t.style.height = 'auto'; t.style.height = Math.min(220, t.scrollHeight + 2) + 'px'; }
+        function prefsBox(text) {
+            const box = document.createElement('div');
+            box.className = 'pref-box';
+            const t = document.createElement('textarea');
+            t.rows = 1; t.value = text || ''; t.spellcheck = false; t.placeholder = PREF_PH;
+            t.setAttribute('aria-label', 'Preference');
+            t.addEventListener('input', () => prefsFit(t));
+            t.addEventListener('change', () => prefsPersist());
+            const del = document.createElement('button');
+            del.type = 'button'; del.className = 'icon-btn pref-del'; del.setAttribute('aria-label', 'Delete this preference');
+            del.appendChild(icon('i-trash'));
+            del.addEventListener('click', () => { box.remove(); prefsPersist('removed'); });
+            box.appendChild(t); box.appendChild(del);
+            prefsList.appendChild(box);
+            prefsFit(t);
+            return t;
+        }
+        function refreshPrefs(note) {
+            prefsList.replaceChildren();
+            prefsEntries().forEach(v => prefsBox(v));
+            prefsStat(note);
+        }
+        $('#prefsAdd').addEventListener('click', () => { const t = prefsBox(''); t.focus(); });
+        $('#prefsSave').addEventListener('click', () => { prefsPersist('saved'); refreshPrefs('saved'); });
         $('#prefsClear').addEventListener('click', () => {
             lsDel(LS.prefs);
             refreshPrefs('cleared');
@@ -7839,7 +7910,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             providers: () => PROVIDER_IDS.map(id => ({ id, name: PROVIDERS[id].name, icon: PROVIDERS[id].icon, ready: pkReady(id), model: state.models[id] || PROVIDERS[id].defaultModel, models: orderModels(state.modelLists[id] || [], PROVIDERS[id].defaultModel) })),
             current: () => currentChat(),
             start: (members, see) => {
-                if (state.busy) { notice('Horizon is busy. Try again in a moment.', 'error'); return false; }
+                freeUp();
                 newChat();
                 const c = ensureChat();
                 c.group = { members, see: see !== false };
@@ -7847,12 +7918,12 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 saveChats(); renderChatList(); updateUI();
                 return true;
             },
-            update: (chat, members) => { chat.group = { members, see: true }; chat.title = 'Group: ' + members.map(m => PROVIDERS[m.id].name).join(' + '); chat.updated = Date.now(); saveChats(); renderChatList(); updateComposer(); },
+            update: (chat, members) => { chat.group = { members, see: true, rules: chat.group && chat.group.rules ? chat.group.rules : '' }; chat.title = 'Group: ' + members.map(m => PROVIDERS[m.id].name).join(' + '); chat.updated = Date.now(); saveChats(); renderChatList(); updateComposer(); },
             // V1.63.3: LEAVE GROUP. The chat becomes a normal one-AI conversation (history kept). `pid` = the member to carry on with.
             // If other AIs already spoke, chat.multi stays so their old replies still reach the AI as "[Name said]" and are not mistaken for its own.
             leave: (chat, pid) => {
                 if (!chat || !chat.group) return false;
-                if (state.busy) { notice('Horizon is busy. Try again in a moment.', 'error'); return false; }
+                freeUp();
                 const g = chat.group;
                 const heard = new Set(chat.messages.filter(m => m.role !== 'user' && m.prov).map(m => m.prov));
                 delete chat.group;
@@ -7871,6 +7942,8 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             },
             ungroup: chat => { delete chat.group; delete chat.multi; chat.updated = Date.now(); saveChats(); updateComposer(); },
             debate: () => debateRound(),
+            // V1.69.0: group rules (Options > Preferences). Saved on the group; every AI in it gets them as hard guard rails.
+            rules: (chat, text) => { if (!chat || !chat.group) return; chat.group.rules = String(text || '').slice(0, 1500); chat.updated = Date.now(); saveChats(); },
             openKeys: id => hzOpenKeys(id)
         });
         // --- V1.10.0: music player ---
@@ -7976,7 +8049,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             permIntro: 'What Horizon is allowed to do on this phone.',
             ytCard: 'The servers Horizon uses to find and fetch music.',
             themeCard: 'Dark cyan or Light grey.',
-            ttsCard: 'Hear Horizon\'s replies read aloud. Natural Edge (no key), Gemini, TTS.ai or Pollinations voices, or the free Android voice.',
+            ttsCard: 'Hear Horizon\'s replies read aloud. Kokoro voices that run on the phone (no key, no limit), OpenAI, Gemini or Pollinations voices, or the free Android voice.',
             'card-gemini': 'Google Gemini. Add a key, pick a model and switch it on.',
             'card-groq': 'Groq. Fast Llama and GPT-OSS models. Add a key and pick a model.',
             'card-cohere': 'Cohere Command models. Add a key (a free trial key works) and pick a model.',
@@ -8179,10 +8252,10 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             status: $('#ttsStatus'), test: $('#ttsTest'), engine: $('#ttsEngine'), voice: $('#ttsVoice'), lang: $('#ttsLang'), diag: $('#ttsDiag'), more: $('#ttsMore'),
             rate: $('#ttsRate'), rateVal: $('#ttsRateVal'), pitch: $('#ttsPitch'), pitchVal: $('#ttsPitchVal'), pitchWrap: $('#ttsPitchWrap'),
             android: $('#ttsAndroid'), nat: $('#ttsNat'), nVoice: $('#ttsNVoice'), nHint: $('#ttsNatHint'),
-            aiRow: $('#ttsAiRow'), aiKey: $('#ttsAiKey'), aiSave: $('#ttsAiSave'), aiClear: $('#ttsAiClear'), nLbl: $('#ttsNVoiceLbl'),
+            nLbl: $('#ttsNVoiceLbl'),
+            oaiRow: $('#ttsOaiRow'), oaiKey: $('#ttsOaiKey'), oaiSave: $('#ttsOaiSave'), oaiClear: $('#ttsOaiClear'),
             pollRow: $('#ttsPollRow'), pollKey: $('#ttsPollKey'), pollSave: $('#ttsPollSave'), pollClear: $('#ttsPollClear'),
-            nEngine: $('#ttsNEngine'), nEngineHint: $('#ttsNEngineHint'),
-            edgeRow: $('#ttsEdgeRow'), edgePreset: $('#ttsEdgePreset')
+            nEngine: $('#ttsNEngine'), nEngineHint: $('#ttsNEngineHint')
         };
         const fmtX = v => (+v).toFixed(2).replace(/\.?0+$/, '') + '\u00d7';
 
@@ -8196,8 +8269,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             vEl.pitchWrap.hidden = false;
             vEl.nat.hidden = !cloud;
             vEl.pollRow.hidden = s.engine !== 'pollinations';
-            vEl.aiRow.hidden = s.engine !== 'ttsai';
-            vEl.edgeRow.hidden = s.engine !== 'edge';
+            vEl.oaiRow.hidden = s.engine !== 'openai';
             if (!cloud) return;
             const eng = TTS.cloud[s.engine];
             vEl.nVoice.hidden = false; vEl.nLbl.hidden = false;
@@ -8207,19 +8279,14 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 o.value = v.id; o.textContent = v.name;
                 vEl.nVoice.appendChild(o);
             });
-            vEl.nVoice.value = s.engine === 'gemini' ? s.gvoice : s.engine === 'ttsai' ? s.avoice : s.engine === 'edge' ? s.evoice : s.pvoice;
-            if (s.engine === 'edge') {
-                vEl.edgePreset.replaceChildren();
-                eng.presets.forEach(p => { const o = document.createElement('option'); o.value = p.id; o.textContent = p.name; vEl.edgePreset.appendChild(o); });
-                vEl.edgePreset.value = s.epreset;
-                vEl.nHint.textContent = eng.supported()
-                    ? 'No key, no account, no daily limit. These are the neural voices Microsoft Edge reads pages with. Your text is sent to Microsoft to make the audio. The tone preset plus your Speed and Pitch sliders shape how it speaks. It is an unofficial route, so if Microsoft changes it Horizon says so and uses the Android voice.'
-                    : 'This build of the app has no Edge voice. Install the latest Horizon APK.';
-            } else if (s.engine === 'ttsai') {
-                vEl.aiKey.placeholder = eng.hasKey() ? 'Key saved. Paste a new one to replace it' : 'sk-tts-... (leave empty to use the free tier)';
+            vEl.nVoice.value = s.engine === 'gemini' ? s.gvoice : s.engine === 'kokoro' ? s.kvoice : s.engine === 'openai' ? s.ovoice : s.pvoice;
+            if (s.engine === 'kokoro') {
+                vEl.nHint.textContent = 'No key, no account, no limit. 28 voices that run on your phone, so nothing you read aloud leaves it. The first time, the voice model (about 90 MB) downloads once, then it works offline. On a slow phone the first sentence takes a few seconds. Speed and pitch both work.';
+            } else if (s.engine === 'openai') {
                 vEl.nHint.textContent = eng.hasKey()
-                    ? 'TTS.ai key saved. Kokoro voices from tts.ai. If it fails or runs out, Horizon switches to the Android voice and tells you why. Speed and pitch both work.'
-                    : 'Works with no key on the TTS.ai free tier (about 5,000 characters a day, 10 requests a minute). A free account from tts.ai/account gives a key with higher limits. Speed and pitch both work.';
+                    ? 'Key saved. OpenAI voices are paid by use, about 1 US cent for a few thousand characters, with no daily cap. If the credit runs out, Horizon switches to the Android voice.'
+                    : 'Paste an OpenAI API key (platform.openai.com/api-keys). Your account needs a few dollars of credit under Billing, or voices will be refused.';
+                vEl.oaiKey.placeholder = eng.hasKey() ? 'Key saved. Paste a new one to replace it' : 'sk-...';
             } else if (s.engine === 'gemini') {
                 const n = eng.keyCount();
                 vEl.nHint.textContent = n
@@ -8236,7 +8303,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         async function paintVoice() {
             if (!TTS) {
                 vEl.status.textContent = 'The voice engine did not load. Install the latest build.';
-                [vEl.test, vEl.engine, vEl.voice, vEl.lang, vEl.more, vEl.rate, vEl.pitch, vEl.nVoice, vEl.pollSave, vEl.pollClear, vEl.nEngine].forEach(x => { x.disabled = true; });
+                [vEl.test, vEl.engine, vEl.voice, vEl.lang, vEl.more, vEl.rate, vEl.pitch, vEl.nVoice, vEl.oaiSave, vEl.oaiClear, vEl.pollSave, vEl.pollClear, vEl.nEngine].forEach(x => { x.disabled = true; });
                 return;
             }
             const s = TTS.settings();
@@ -8350,29 +8417,8 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 ttsToast('Engine changed. Tap Test to hear it.');
             });
             vEl.nVoice.addEventListener('change', () => {
-                TTS.set(TTS.settings().engine === 'gemini' ? 'gvoice' : TTS.settings().engine === 'ttsai' ? 'avoice' : TTS.settings().engine === 'edge' ? 'evoice' : 'pvoice', vEl.nVoice.value);
+                TTS.set(TTS.settings().engine === 'gemini' ? 'gvoice' : TTS.settings().engine === 'kokoro' ? 'kvoice' : TTS.settings().engine === 'openai' ? 'ovoice' : 'pvoice', vEl.nVoice.value);
                 vEl.status.textContent = TTS.describe();
-            });
-            vEl.edgePreset.addEventListener('change', () => {
-                TTS.set('epreset', vEl.edgePreset.value);
-                vEl.status.textContent = TTS.describe();
-                ttsToast('Tone changed. Tap Test to hear it.');
-            });
-            vEl.aiSave.addEventListener('click', () => {
-                const v = vEl.aiKey.value.trim();
-                if (!v) { ttsToast('Paste your TTS.ai key first, or just use the free tier without one.', true); return; }
-                TTS.set('akey', v);
-                vEl.aiKey.value = '';
-                paintEngine();
-                vEl.status.textContent = TTS.describe();
-                ttsToast('TTS.ai key saved. Tap Test to hear it.');
-            });
-            vEl.aiClear.addEventListener('click', () => {
-                TTS.set('akey', '');
-                vEl.aiKey.value = '';
-                paintEngine();
-                vEl.status.textContent = TTS.describe();
-                ttsToast('TTS.ai key removed. The free tier still works.');
             });
             vEl.pollSave.addEventListener('click', () => {
                 const v = vEl.pollKey.value.trim();
@@ -8382,6 +8428,22 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 paintEngine();
                 vEl.status.textContent = TTS.describe();
                 ttsToast('Pollinations key saved. Tap Test to hear it.');
+            });
+            vEl.oaiSave.addEventListener('click', () => {
+                const v = vEl.oaiKey.value.trim();
+                if (!v) { ttsToast('Paste your OpenAI key first.', true); return; }
+                TTS.set('okey', v);
+                vEl.oaiKey.value = '';
+                paintEngine();
+                vEl.status.textContent = TTS.describe();
+                ttsToast('OpenAI key saved. Tap Test to hear it.');
+            });
+            vEl.oaiClear.addEventListener('click', () => {
+                TTS.set('okey', '');
+                vEl.oaiKey.value = '';
+                paintEngine();
+                vEl.status.textContent = TTS.describe();
+                ttsToast('OpenAI key removed.');
             });
             vEl.pollClear.addEventListener('click', () => {
                 TTS.set('pkey', '');
@@ -8415,7 +8477,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                     vEl.status.textContent = TTS.describe();
                 } else if (st.state === 'playing') {
                     vEl.status.classList.remove('error');
-                    vEl.status.textContent = 'Playing: ' + (st.engine === 'gemini' ? 'Gemini voice' : st.engine === 'pollinations' ? 'Pollinations voice' : st.engine === 'ttsai' ? 'TTS.ai voice' : st.engine === 'edge' ? 'Edge voice' : st.engine === 'native' ? 'Android voice' : 'Browser voice');
+                    vEl.status.textContent = 'Playing: ' + (st.engine === 'gemini' ? 'Gemini voice' : st.engine === 'pollinations' ? 'Pollinations voice' : st.engine === 'openai' ? 'OpenAI voice' : st.engine === 'kokoro' ? 'Kokoro voice' : st.engine === 'native' ? 'Android voice' : 'Browser voice');
                 } else if (st.state === 'idle' && !vEl.status.classList.contains('error')) {
                     vEl.status.textContent = TTS.describe();
                 }

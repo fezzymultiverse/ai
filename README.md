@@ -12,6 +12,30 @@
   <img alt="Capacitor 6" src="https://img.shields.io/badge/Capacitor-6-00e5ff">
 </p>
 
+## What's new in V1.67.11
+
+- **Group reply.** Every AI message in a group has a Reply button. It fills the box with @that AI so only that one answers.
+
+## What's new in V1.67.10
+
+- **Chat box.** The text starts at the top left and uses the full width. The icons sit on a row of their own under it, and the box grows upward.
+- **Chat list.** Pin and bin fit on screen, no sliding right.
+- **Preferences.** One box per preference, each with its own bin, plus Add preference. Stored the same way as before (one per line), so old preferences load as separate boxes.
+
+## What's new in V1.67.9
+
+- **Top pill.** Group chat shows only the words GROUP CHAT. One on one shows only the provider name; the model is on the reply. The words are centred and spread evenly.
+- **Group in the background.** One Kotlin background service now stays up for the whole group round (and 8 s after it), so leaving the app no longer slows the next AI, the typing or the voice. Typing finishes at once when you leave. Files: `HorizonAIService.kt`, `index.html`, `horizon_usage.js`, `horizon_hdr2.js`, `horizon_fix.css`.
+- *Not tested:* on a phone (no Android build here).
+
+## What's new in V1.67.5
+
+- **Group chat fix.** Starting or leaving a group no longer says "Horizon is busy". A stuck or slow reply (for example a dead provider) is stopped for you and the group starts.
+- **Chat box.** The text runs the full width, left to right, on its own row. The buttons sit under it: plus and clip on the left, speaker, mic and send on the right. New file: `horizon_fix.css`.
+- **Light grey.** A bit darker (not too dark). Tool tiles and their icons are soft grey and soft green instead of hard black. Dark cyan is untouched.
+- **Voices.** Microsoft Edge and TTS.ai are removed (the Edge Java file and its plugin method are gone too). **Kokoro** is new: 28 natural English voices (US and UK, female and male), no key, no account, no limit. It runs on the phone with the open-source kokoro-js library. The first use downloads the voice model once (about 90 MB), then it works offline. Old Edge and TTS.ai picks become Kokoro. Gemini, Pollinations and the Android voice stay.
+- *Not tested:* on a phone. The Kokoro library loads from jsDelivr the first time (versions 1.2.1, then 1.2.0, then 1.1.1 are tried).
+
 ## What's new in V1.67.4
 
 - **Fold all stays right.** The Fold all / Unfold all button is pinned to the right of the action row (next to the speaker button) instead of sitting in the middle.
@@ -137,7 +161,7 @@
 
 ## Earlier: V1.62.0
 
-- **Edge voice (keyless).** Settings > Voice > *Natural: Microsoft Edge*. No key, no account, no limit. 18 neural voices incl. South African, six tone presets, native Android WebSocket (needs OkHttp, added by `apply-android.sh`).
+- **Edge voice (keyless).** Settings > Voice > *Natural: Kokoro*. No key, no account, no limit. 18 neural voices incl. South African, six tone presets, native Android WebSocket (needs OkHttp, added by `apply-android.sh`).
 
 ## What's new in V1.61.0
 

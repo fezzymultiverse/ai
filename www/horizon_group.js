@@ -6,6 +6,7 @@
     var host = null, input = null, pal = null, sheet = null, bar = null;
     var rows = [], sel = 0, isOpen = false, dismissed = false, tok = null;
     var draft = {};   // id -> { on, model } while the sheet is open
+    var draftReady = false, fresh = false;   // V1.69.0: fresh = the sheet was opened from Create new group
     var leaving = false;   // V1.63.3: the bar shows the Continue-with chips after Leave is tapped
 
     function el(t, c, x) { var n = document.createElement(t); if (c) n.className = c; if (x != null) n.textContent = x; return n; }
@@ -100,58 +101,199 @@
         else if ((e.key === 'Enter' || e.key === 'Tab') && !e.shiftKey && !e.isComposing) { e.preventDefault(); e.stopImmediatePropagation(); choose(rows[sel]); }
     }
 
-    // ---------- members bar (shows in a group chat) ----------
+    // ---------- V1.69.0: the green "i" and the Options cascade menu (replaces the scrolling pill bar) ----------
+    var menu = null, openKey = null;
     function paintBar() {
         if (!bar) return;
         var chat = curChat(), g = chat && chat.group;
         var btn = host.button; if (btn) btn.classList.toggle('hgp-on', !!g);
-        if (!g || !g.members || !g.members.length) { bar.hidden = true; bar.replaceChildren(); return; }
-        var ps = provs(), by = {}; ps.forEach(function (p) { by[p.id] = p; });
-        bar.replaceChildren();
-        // V1.63.3: LEAVE GROUP. Tap Leave, then pick which AI carries on as a normal one-on-one chat (history stays).
-        if (leaving && leaving !== chat.id) leaving = false;
-        if (leaving) {
-            bar.appendChild(el('span', 'hgp-lbl', 'CONTINUE WITH'));
-            g.members.forEach(function (m) {
-                var p = by[m.id]; if (!p) return;
-                var c = el('button', 'hgp-chip hgp-pick' + (p.ready ? '' : ' off')); c.type = 'button'; c.title = 'Leave the group and keep chatting with ' + p.name;
-                c.appendChild(ico(p.icon)); c.appendChild(document.createTextNode(' ' + p.name));
-                c.addEventListener('click', function () {
-                    if (host.leave && host.leave(chat, m.id)) { leaving = false; host.notice('Left the group. Now a normal chat with ' + p.name + '.'); paintBar(); }
-                });
-                bar.appendChild(c);
-            });
-            var cx = el('button', 'hgp-edit', 'Cancel'); cx.type = 'button'; cx.addEventListener('click', function () { leaving = false; paintBar(); }); bar.appendChild(cx);
-            bar.hidden = false;
-            return;
-        }
-        bar.appendChild(el('span', 'hgp-lbl', 'GROUP'));
-        g.members.forEach(function (m) {
-            var p = by[m.id]; if (!p) return;
-            var c = el('button', 'hgp-chip' + (p.ready ? '' : ' off')); c.type = 'button'; c.title = m.model || '';
-            c.appendChild(ico(p.icon)); c.appendChild(document.createTextNode(' ' + p.name));
-            c.addEventListener('click', function () { input.focus(); input.value = ('@' + p.name.toLowerCase() + ' ') + input.value.replace(/^@\w+\s*/, ''); input.dispatchEvent(new Event('input', { bubbles: true })); });
-            bar.appendChild(c);
-        });
-        // V1.61.0: DEBATE. One tap and every AI in the group critiques the others' replies.
-        if (g.members.length > 1 && host.debate) {
-            var db = el('button', 'hgp-debate', '\u2694\uFE0F Debate'); db.type = 'button'; db.title = 'Each AI critiques the others\u2019 replies';
-            db.addEventListener('click', function () { host.debate(); });
-            bar.appendChild(db);
-        }
-        var ed = el('button', 'hgp-edit', 'Edit'); ed.type = 'button'; ed.addEventListener('click', openSheet); bar.appendChild(ed);
-        if (host.leave) {
-            var lv = el('button', 'hgp-leave', 'Leave group'); lv.type = 'button'; lv.title = 'Turn this into a normal chat with one AI (history stays)';
-            lv.addEventListener('click', function () { leaving = chat.id; paintBar(); });
-            bar.appendChild(lv);
+        if (!g || !g.members || !g.members.length) { bar.hidden = true; bar.replaceChildren(); closeMenu(); return; }
+        if (!bar.querySelector('.hgp-i')) {
+            bar.replaceChildren();
+            var b = el('button', 'hgp-i', 'i'); b.type = 'button';
+            b.setAttribute('aria-label', 'Group options: tag an AI, edit the group, preferences'); b.setAttribute('aria-haspopup', 'menu');
+            b.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); toggleMenu(b, 'above'); });
+            bar.appendChild(b);
         }
         bar.hidden = false;
     }
+    function closeMenu() {
+        if (menu) { menu.remove(); menu = null; }
+        openKey = null; draftReady = false;
+        document.removeEventListener('pointerdown', outside, true);
+    }
+    function outside(e) {
+        if (!menu) return;
+        var t = e.target;
+        if (menu.contains(t) || (t.closest && t.closest('.hgp-i, #hzBadge'))) return;
+        closeMenu();
+    }
+    function toggleMenu(anchor, where) {
+        if (menu) { closeMenu(); return; }
+        var chat = curChat();
+        if (!(chat && chat.group && chat.group.members && chat.group.members.length)) return;
+        menu = el('div', 'hgp-menu'); menu.setAttribute('role', 'menu');
+        menu._anchor = anchor; menu._where = where;
+        document.body.appendChild(menu);
+        paintMenu(true);
+        document.addEventListener('pointerdown', outside, true);
+    }
+    function place() {
+        if (!menu) return;
+        var a = menu._anchor && menu._anchor.getBoundingClientRect ? menu._anchor.getBoundingClientRect() : null;
+        var vw = window.innerWidth, vh = window.innerHeight, w = Math.min(344, vw - 16);
+        menu.style.width = w + 'px';
+        var left = a ? (menu._where === 'above' ? a.right - w : a.left + a.width / 2 - w / 2) : (vw - w) / 2;
+        left = Math.max(8, Math.min(vw - w - 8, left));
+        menu.style.left = left + 'px';
+        if (a && menu._where === 'above') {
+            menu.style.top = 'auto'; menu.style.bottom = Math.max(8, vh - a.top + 8) + 'px';
+            menu.style.maxHeight = Math.max(160, a.top - 20) + 'px';
+        } else {
+            var top = a ? a.bottom + 8 : 70;
+            menu.style.bottom = 'auto'; menu.style.top = top + 'px';
+            menu.style.maxHeight = Math.max(160, vh - top - 12) + 'px';
+        }
+    }
+    function mrow(i, glyph, title, hint, cls, fn) {
+        var b = el('button', 'hgp-mi' + (cls ? ' ' + cls : '')); b.type = 'button'; b.setAttribute('role', 'menuitem');
+        b.style.setProperty('--i', i);
+        b.appendChild(el('span', 'hgp-mg', glyph));
+        var tx = el('span', 'hgp-mt'); tx.appendChild(el('b', null, title)); if (hint) tx.appendChild(el('small', null, hint)); b.appendChild(tx);
+        b.addEventListener('click', function (e) { e.preventDefault(); fn(); });
+        return b;
+    }
+    function section(key, i, glyph, title, hint, cls, build) {
+        var open = openKey === key;
+        var frag = document.createDocumentFragment();
+        var h = mrow(i, glyph, title, hint, (cls || '') + (open ? ' open' : ''), function () { openKey = openKey === key ? null : key; paintMenu(false); });
+        h.appendChild(el('span', 'hgp-mc', open ? '\u2212' : '+'));
+        h.setAttribute('aria-expanded', String(open));
+        frag.appendChild(h);
+        if (open) { var body = el('div', 'hgp-mb'); build(body); frag.appendChild(body); }
+        return frag;
+    }
+    function mchip(i, p, sub, fn) {
+        var c = el('button', 'hgp-mc2'); c.type = 'button'; c.style.setProperty('--i', i);
+        c.appendChild(ico(p.icon)); var t = el('span', 'hgp-mt'); t.appendChild(el('b', null, p.name)); if (sub) t.appendChild(el('small', null, sub)); c.appendChild(t);
+        c.addEventListener('click', function (e) { e.preventDefault(); fn(); });
+        return c;
+    }
+    function paintMenu(first) {
+        if (!menu) return;
+        var chat = curChat(), g = chat && chat.group;
+        if (!g || !g.members) { closeMenu(); return; }
+        var ps = provs(), by = {}; ps.forEach(function (p) { by[p.id] = p; });
+        var scroll = menu.scrollTop;
+        menu.replaceChildren();
+        menu.classList.toggle('first', !!first);
+        var head = el('div', 'hgp-mh');
+        head.appendChild(el('b', null, 'Options'));
+        head.appendChild(el('small', null, g.members.length + ' AIs in this group'));
+        var x = el('button', 'hgp-mx', '\u2715'); x.type = 'button'; x.setAttribute('aria-label', 'Close'); x.addEventListener('click', closeMenu);
+        head.appendChild(x);
+        menu.appendChild(head);
+        var n = 0;
+        // 1. TAG A PROVIDER
+        menu.appendChild(section('tag', n++, '@', 'Tag a provider', 'Send one message to just that AI', '', function (b) {
+            var k = 0;
+            g.members.forEach(function (m) {
+                var p = by[m.id]; if (!p) return;
+                b.appendChild(mchip(k++, p, m.model || '', function () { tagInput('@' + p.name.toLowerCase() + ' '); }));
+            });
+            if (g.members.length > 1) b.appendChild(mchip(k++, { icon: 'i-users', name: 'Everyone' }, '@all: the whole group answers', function () { tagInput('@all '); }));
+        }));
+        // 2. EDIT GROUP
+        menu.appendChild(section('edit', n++, '\u270E', 'Edit group', 'Pick the AIs and their models', '', function (b) { editBody(b); }));
+        // 3. CREATE NEW GROUP
+        menu.appendChild(mrow(n++, '\uFF0B', 'Create new group', 'Start a fresh group chat', '', function () { closeMenu(); openSheet(true); }));
+        // 4. ADD AN AI TO THIS GROUP
+        var spare = ps.filter(function (p) { return p.ready && !memberOf(g, p.id); });
+        menu.appendChild(section('add', n++, '\u2795', 'Add AI', spare.length ? 'Bring another AI into this group' : 'Every ready AI is already in', '', function (b) {
+            if (!spare.length) { b.appendChild(el('p', 'hgp-mn', 'Add a key for another provider in Settings to bring it in.')); return; }
+            spare.forEach(function (p, k) {
+                b.appendChild(mchip(k, p, p.model || '', function () {
+                    var members = g.members.map(function (m) { return { id: m.id, model: m.model }; }); members.push({ id: p.id, model: p.model });
+                    host.update(chat, members); host.notice(p.name + ' joined the group'); paintBar(); paintMenu(false);
+                }));
+            });
+        }));
+        // 5. DEBATE (was a pill in the bar)
+        if (g.members.length > 1 && host.debate) menu.appendChild(mrow(n++, '\u2694\uFE0F', 'Debate', 'Each AI critiques the others\u2019 replies', '', function () { closeMenu(); host.debate(); }));
+        // 6. PREFERENCES (group rules)
+        menu.appendChild(section('prefs', n++, '\u2699', 'Preferences', 'Group rules: the hard guard rails', '', function (b) { prefsBody(b, chat); }));
+        // 7. LEAVE GROUP
+        menu.appendChild(section('leave', n++, '\u21AA', 'Leave group', 'Keep chatting with one AI (history stays)', 'hgp-danger', function (b) {
+            b.appendChild(el('p', 'hgp-mn', 'Continue with:'));
+            g.members.forEach(function (m, k) {
+                var p = by[m.id]; if (!p) return;
+                b.appendChild(mchip(k, p, m.model || '', function () {
+                    if (host.leave && host.leave(chat, m.id)) { host.notice('Left the group. Now a normal chat with ' + p.name + '.'); closeMenu(); paintBar(); }
+                }));
+            });
+        }));
+        // 8. USAGE (the header pill used to open this)
+        var badge = document.getElementById('hzBadge');
+        if (badge) menu.appendChild(mrow(n++, '\u25D4', 'Usage dashboard', 'Engine, speed and keys', '', function () { closeMenu(); badge.dataset.pass = '1'; badge.click(); delete badge.dataset.pass; }));
+        place();
+        menu.scrollTop = scroll;
+    }
+    function tagInput(txt) {
+        closeMenu();
+        input.focus();
+        input.value = txt + input.value.replace(/^@\w+\s*/, '');
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        try { input.setSelectionRange(input.value.length, input.value.length); } catch (e) { /* not selectable */ }
+    }
+    function editBody(b) {
+        var chat = curChat(), g = chat && chat.group;
+        if (!draftReady || !Object.keys(draft).length) initDraft(false);
+        var list = el('div', 'hgp-list hgp-mlist');
+        provs().forEach(function (p, k) {
+            var d = draft[p.id] || (draft[p.id] = { on: false, model: p.model });
+            var row = el('div', 'hgp-row' + (p.ready ? '' : ' off')); row.style.setProperty('--i', k);
+            var cb = el('input'); cb.type = 'checkbox'; cb.checked = !!d.on && p.ready; cb.disabled = !p.ready; cb.setAttribute('aria-label', 'Include ' + p.name);
+            cb.addEventListener('change', function () { d.on = cb.checked; cnt(); });
+            var nm = el('span', 'hgp-nm'); nm.appendChild(ico(p.icon)); nm.appendChild(el('b', null, p.name));
+            row.appendChild(cb); row.appendChild(nm);
+            if (p.ready) {
+                var s = el('select', 'hgp-sel'); s.setAttribute('aria-label', p.name + ' model');
+                var ms = p.models.slice(); if (d.model && ms.indexOf(d.model) < 0) ms.unshift(d.model);
+                ms.forEach(function (m) { var o = el('option', null, m); o.value = m; if (m === d.model) o.selected = true; s.appendChild(o); });
+                s.addEventListener('change', function () { d.model = s.value; });
+                row.appendChild(s);
+            } else {
+                var kb = el('button', 'hgp-key', 'Add key'); kb.type = 'button'; kb.addEventListener('click', function () { closeMenu(); host.openKeys(p.id); }); row.appendChild(kb);
+            }
+            list.appendChild(row);
+        });
+        b.appendChild(list);
+        var c = el('div', 'hgp-count'); b.appendChild(c);
+        function cnt() { var k = chosen().length; c.textContent = k + ' selected' + (k < 2 ? ' (pick at least 2)' : ''); c.classList.toggle('bad', k < 2); }
+        cnt();
+        var go = el('button', 'use-btn hgp-go hgp-wide', 'Update this group'); go.type = 'button';
+        go.addEventListener('click', function () { var m = chosen(); if (m.length < 2) { host.notice('Pick at least 2 AIs for a group chat.', 'error'); return; } host.update(chat, m); host.notice('Group updated: ' + m.length + ' AIs'); closeMenu(); paintBar(); });
+        b.appendChild(go);
+    }
+    function prefsBody(b, chat) {
+        b.appendChild(el('p', 'hgp-mn', 'Group rules sit on top of your normal reply preferences. Every AI here still follows those, and these are their harder guard rails: if the two clash, the group rules win.'));
+        var ta = el('textarea', 'hgp-rules'); ta.rows = 5; ta.maxLength = 1500;
+        ta.placeholder = 'e.g. Keep replies under 5 lines. No code unless I ask. Do not repeat what another AI said. Disagree politely and say why.';
+        ta.value = (chat.group && chat.group.rules) || '';
+        ta.setAttribute('aria-label', 'Group rules');
+        b.appendChild(ta);
+        var row = el('div', 'hgp-acts');
+        var sv = el('button', 'use-btn hgp-go', 'Save rules'); sv.type = 'button';
+        sv.addEventListener('click', function () { if (host.rules) host.rules(chat, ta.value.trim()); host.notice(ta.value.trim() ? 'Group rules saved. All AIs here follow them.' : 'Group rules cleared.'); });
+        var cl = el('button', 'use-btn hgp-alt', 'Clear'); cl.type = 'button';
+        cl.addEventListener('click', function () { ta.value = ''; if (host.rules) host.rules(chat, ''); host.notice('Group rules cleared.'); });
+        row.appendChild(sv); row.appendChild(cl); b.appendChild(row);
+    }
 
     // ---------- sheet ----------
-    function closeSheet() { if (sheet) sheet.hidden = true; }
+    function closeSheet() { if (sheet) sheet.hidden = true; draftReady = false; }
     function paintSheet() {
-        var chat = curChat(), g = chat && chat.group;
+        var chat = curChat(), g = fresh ? null : (chat && chat.group);
         var list = sheet.querySelector('.hgp-list'); list.replaceChildren();
         provs().forEach(function (p) {
             var d = draft[p.id] || (draft[p.id] = { on: false, model: p.model });
@@ -216,12 +358,17 @@
         document.body.appendChild(sheet);
         document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && sheet && !sheet.hidden) closeSheet(); });
     }
-    function openSheet() {
-        if (!sheet) buildSheet();
-        var chat = curChat(), g = chat && chat.group;
+    function initDraft(blank) {
+        var chat = curChat(), g = blank ? null : (chat && chat.group);
         draft = {};
         provs().forEach(function (p) { draft[p.id] = { on: false, model: p.model }; });
         if (g) g.members.forEach(function (m) { if (draft[m.id]) { draft[m.id].on = true; draft[m.id].model = m.model || draft[m.id].model; } });
+        draftReady = true;
+    }
+    function openSheet(blank) {
+        if (!sheet) buildSheet();
+        fresh = blank === true;
+        initDraft(fresh);
         paintSheet();
         sheet.hidden = false;
     }
@@ -240,7 +387,7 @@
         input.addEventListener('keyup', function (e) { if (e.key.indexOf('Arrow') === 0 && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) refresh(); });
         input.addEventListener('blur', function () { setTimeout(function () { if (document.activeElement !== input) hide(); }, 150); });
         input.addEventListener('keydown', onKey, true);
-        if (h.button) h.button.addEventListener('click', openSheet);
+        if (h.button) h.button.addEventListener('click', function () { openSheet(false); });
         var cm = document.getElementById('chatMessages');
         if (cm && window.MutationObserver) new MutationObserver(function () { paintBar(); }).observe(cm, { childList: true });
         document.addEventListener('hz:pick', paintBar);
@@ -259,5 +406,5 @@
         return i > 0 ? i : 0;
     }
 
-    window.HorizonGroup = { init: init, route: route, open: openSheet, voiceSlot: voiceSlot };
+    window.HorizonGroup = { init: init, route: route, open: function () { openSheet(false); }, menu: toggleMenu, voiceSlot: voiceSlot };
 })();

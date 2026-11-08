@@ -323,6 +323,42 @@ class HorizonAIPlugin : Plugin() {
         }
     }
 
+    /** V1.67.6: saves text the app already holds (an HTML page or SVG from a chat code block) into Download/Horizon through MediaStore,
+     *  so it shows up in the phone's Downloads app. `data` is base64 of the UTF-8 text. No storage permission needed on Android 10+. */
+    @PluginMethod
+    fun saveText(call: PluginCall) {
+        val b64 = call.getString("data")
+        if (b64 == null) { call.reject("Nothing to save"); return }
+        val filename = (call.getString("filename") ?: "horizon-page.html").replace(Regex("[\\\\/:*?\"<>|\\p{Cntrl}]"), "_").take(120)
+        scope.launch {
+            val resolver = context.contentResolver
+            var target: Uri? = null
+            try {
+                if (Build.VERSION.SDK_INT < 29) throw IllegalStateException("needs Android 10 or newer")
+                val bytes = android.util.Base64.decode(b64, android.util.Base64.DEFAULT)
+                if (bytes.isEmpty()) throw IOException("the page was empty")
+                val ext = filename.substringAfterLast('.', "").lowercase()
+                val mime = MimeTypeMap.getSingleton().getMimeTypeFromExtension(ext) ?: "text/plain"
+                val rel = "Download/Horizon"
+                val cv = ContentValues().apply {
+                    put(MediaStore.MediaColumns.DISPLAY_NAME, filename)
+                    put(MediaStore.MediaColumns.MIME_TYPE, mime)
+                    put(MediaStore.MediaColumns.RELATIVE_PATH, rel)
+                    put(MediaStore.MediaColumns.IS_PENDING, 1)
+                }
+                val out0 = resolver.insert(MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY), cv)
+                    ?: throw IOException("Android refused to create the file in $rel")
+                target = out0
+                (resolver.openOutputStream(out0) ?: throw IOException("could not open the new file")).use { it.write(bytes) }
+                resolver.update(out0, ContentValues().apply { put(MediaStore.MediaColumns.IS_PENDING, 0) }, null, null)
+                call.resolve(JSObject().put("path", "$rel/$filename").put("uri", out0.toString()).put("mime", mime))
+            } catch (e: Exception) {
+                try { target?.let { resolver.delete(it, null, null) } } catch (_: Exception) { }
+                call.reject("Could not save the file: ${e.message ?: e.javaClass.simpleName}")
+            }
+        }
+    }
+
     /** V1.23.0: opens a saved file (the content:// uri saveMedia returned) in whatever app on the phone handles its type. */
     @PluginMethod
     fun openMedia(call: PluginCall) {

@@ -38,7 +38,7 @@
     pill.appendChild(el('i', 'hz-st'));
     pill.appendChild(svgUse(p.icon, 'hz-lg'));
     pill.appendChild(el('span', 'hz-nm', p.name));
-    if (p.model) pill.appendChild(el('span', 'hz-md', p.model));
+    /* V1.67.9: provider name only. The model shows on the reply. */
     pill.appendChild(svgUse('i-chev-d', 'hz-cv'));
     var lbl = 'Choose AI provider and model. Now: ' + p.name + (p.model ? ', ' + p.model : '') + (p.ready ? '' : '. No API key yet');
     pill.setAttribute('aria-label', lbl); pill.title = lbl;

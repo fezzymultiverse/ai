@@ -3,8 +3,8 @@
  * Engines. You pick one under Voice quality; Horizon always falls back to the Android voice if it fails:
  *   1. Gemini        natural voice, 30 voices, uses your Gemini key(s) from API PROVIDERS PLUS KEYS
  *   2. Pollinations  natural voice, 6 voices, uses a Pollinations key (enter.pollinations.ai)
- *   1b. Edge          Microsoft Edge neural voices, NO key, unlimited (V1.62.0). Made natively on Android; speed/pitch/tone are SSML presets
- *   2b. TTS.ai       natural Kokoro voices (V1.48.0). Works with no key on their free tier; an optional key raises the limits
+ *   2a. OpenAI       natural voice, 11 voices, uses an OpenAI key with a little credit (V1.67.6)
+ *   2b. Kokoro        natural on-device voices, 28 of them, NO key, NO limit (V1.67.5). Replaces Microsoft Edge and TTS.ai
  *   3. Native        Android's own speech engine through the HorizonSpeech plugin (free, offline, unlimited)
  *   4. Web Speech    the WebView's speechSynthesis, as a last resort
  * V1.47.0: Piper (sherpa-onnx) is removed. The Android voice can now use any speech engine installed on the phone (Google, Samsung, a Kokoro engine app...).
@@ -44,48 +44,51 @@
             { id: 'onyx', name: 'Onyx · deep male' }
         ]
     };
-    // V1.62.0: Microsoft Edge "Read Aloud" neural voices. No key, no account, no daily limit. The text goes to Microsoft.
-    // This is the service the Edge browser itself uses, reached the way the open-source edge-tts library does. It is unofficial,
-    // so Microsoft can change it; if it ever fails Horizon says why and falls back to the Android voice.
-    // Speed and pitch are applied by the voice itself (SSML), so they sound clean instead of stretched.
-    const EDGE = {
-        timeoutMs: 45000,
-        voices: [
-            ['en-US-AvaMultilingualNeural', 'Ava · warm US female, most natural'], ['en-US-AndrewMultilingualNeural', 'Andrew · warm US male, most natural'],
-            ['en-US-EmmaMultilingualNeural', 'Emma · bright US female'], ['en-US-BrianMultilingualNeural', 'Brian · calm US male'],
-            ['en-US-AriaNeural', 'Aria · expressive US female'], ['en-US-JennyNeural', 'Jenny · friendly US female'],
-            ['en-US-GuyNeural', 'Guy · clear US male'], ['en-US-ChristopherNeural', 'Christopher · deep US male'],
-            ['en-US-EricNeural', 'Eric · steady US male'], ['en-US-MichelleNeural', 'Michelle · soft US female'],
-            ['en-ZA-LeahNeural', 'Leah · South African female'], ['en-ZA-LukeNeural', 'Luke · South African male'],
-            ['en-GB-SoniaNeural', 'Sonia · British female'], ['en-GB-RyanNeural', 'Ryan · British male'],
-            ['en-GB-LibbyNeural', 'Libby · young British female'], ['en-GB-ThomasNeural', 'Thomas · British male'],
-            ['en-AU-NatashaNeural', 'Natasha · Australian female'], ['en-AU-WilliamNeural', 'William · Australian male']
-        ].map(v => ({ id: v[0], name: v[1] })),
-        // tone presets: rate in %, pitch in Hz, added to your Speed and Pitch sliders
-        presets: [
-            { id: 'natural', name: 'Natural · as the voice speaks', rate: 0, pitch: 0 },
-            { id: 'calm', name: 'Calm and warm · slower, a touch lower', rate: -8, pitch: -2 },
-            { id: 'upbeat', name: 'Upbeat · quicker, a touch higher', rate: 8, pitch: 3 },
-            { id: 'bright', name: 'Bright · lifted and lively', rate: 4, pitch: 6 },
-            { id: 'deep', name: 'Deep narrator · slow and low', rate: -4, pitch: -6 },
-            { id: 'fast', name: 'Fast reader · gets through it', rate: 22, pitch: 0 }
-        ]
-    };
-    const MAX_CHARS = { native: 3000, web: 180, gemini: 1200, pollinations: 1000, ttsai: 450, edge: 1200 };
-    const ENGINES = ['standard', 'gemini', 'pollinations', 'ttsai', 'edge'];
-    // V1.48.0: TTS.ai (replaces FreeTTS.ai). POST /v1/tts/ queues a job, then /v1/speech/results/ is polled for the audio link.
-    // No key needed for their free models (500 characters per request). Kokoro voice ids are the standard Kokoro set.
-    const TTSAI = {
-        base: 'https://api.tts.ai/v1/',
-        model: 'kokoro',
+    // V1.67.6: OPENAI. Natural voices through OpenAI's own speech endpoint. Needs an OpenAI API key with a little credit (about 1 US cent
+    // per few thousand characters). No free tier, but no daily cap either, only the normal account rate limit.
+    const OPENAI = {
+        url: 'https://api.openai.com/v1/audio/speech',
+        models: ['gpt-4o-mini-tts', 'tts-1'],
         timeoutMs: 90000,
         voices: [
-            ['af_bella', 'Bella · US female'], ['af_nicole', 'Nicole · US female'], ['af_sarah', 'Sarah · US female'], ['af_sky', 'Sky · US female'],
-            ['am_adam', 'Adam · US male'], ['am_michael', 'Michael · US male'],
-            ['bf_emma', 'Emma · UK female'], ['bf_isabella', 'Isabella · UK female'], ['bm_george', 'George · UK male'], ['bm_lewis', 'Lewis · UK male']
+            { id: 'coral', name: 'Coral \u00b7 warm female' },
+            { id: 'nova', name: 'Nova \u00b7 bright female' },
+            { id: 'shimmer', name: 'Shimmer \u00b7 clear female' },
+            { id: 'sage', name: 'Sage \u00b7 calm female' },
+            { id: 'onyx', name: 'Onyx \u00b7 deep male' },
+            { id: 'echo', name: 'Echo \u00b7 male' },
+            { id: 'ash', name: 'Ash \u00b7 male' },
+            { id: 'verse', name: 'Verse \u00b7 male' },
+            { id: 'ballad', name: 'Ballad \u00b7 expressive' },
+            { id: 'fable', name: 'Fable \u00b7 British' },
+            { id: 'alloy', name: 'Alloy \u00b7 neutral' }
+        ]
+    };
+    const MAX_CHARS = { native: 3000, web: 180, gemini: 1200, pollinations: 1000, openai: 1500, kokoro: 320 };
+    const ENGINES = ['standard', 'gemini', 'pollinations', 'openai', 'kokoro'];
+    // V1.67.5: KOKORO. Free, no key, no account, no limit. The open Kokoro 82M model (Apache 2.0) runs ON THE PHONE inside the app through the
+    // open-source kokoro-js library (WASM). The model (about 90 MB) downloads once from Hugging Face the first time, is cached, then works offline.
+    // 28 English voices (US + UK, female + male). Nothing you read aloud leaves the phone. Replaces Microsoft Edge and TTS.ai.
+    const KOKORO = {
+        model: 'onnx-community/Kokoro-82M-v1.0-ONNX',
+        libs: [
+            'https://cdn.jsdelivr.net/npm/kokoro-js@1.2.1/dist/kokoro.web.js',
+            'https://cdn.jsdelivr.net/npm/kokoro-js@1.2.0/dist/kokoro.web.js',
+            'https://cdn.jsdelivr.net/npm/kokoro-js@1.1.1/dist/kokoro.web.js'
+        ],
+        loadMs: 600000,
+        genMs: 120000,
+        voices: [
+            ['af_heart', 'Heart · warm US female, best'], ['af_bella', 'Bella · US female'], ['af_nicole', 'Nicole · soft US female'], ['af_sarah', 'Sarah · US female'],
+            ['af_sky', 'Sky · light US female'], ['af_nova', 'Nova · US female'], ['af_river', 'River · calm US female'], ['af_jessica', 'Jessica · US female'],
+            ['af_kore', 'Kore · US female'], ['af_aoede', 'Aoede · US female'], ['af_alloy', 'Alloy · US female'],
+            ['am_adam', 'Adam · deep US male'], ['am_michael', 'Michael · US male'], ['am_eric', 'Eric · US male'], ['am_liam', 'Liam · US male'],
+            ['am_onyx', 'Onyx · deep US male'], ['am_echo', 'Echo · US male'], ['am_fenrir', 'Fenrir · US male'], ['am_puck', 'Puck · playful US male'], ['am_santa', 'Santa · jolly US male'],
+            ['bf_emma', 'Emma · UK female'], ['bf_isabella', 'Isabella · UK female'], ['bf_alice', 'Alice · UK female'], ['bf_lily', 'Lily · UK female'],
+            ['bm_george', 'George · UK male'], ['bm_lewis', 'Lewis · UK male'], ['bm_daniel', 'Daniel · UK male'], ['bm_fable', 'Fable · UK male']
         ].map(v => ({ id: v[0], name: v[1] }))
     };
-    const CLOUD = ['gemini', 'pollinations', 'ttsai', 'edge'];
+    const CLOUD = ['gemini', 'pollinations', 'openai', 'kokoro'];
     const KEYS = {
         engine: 'horizon_tts_engine',
         voice: 'horizon_tts_voice',
@@ -96,11 +99,10 @@
         gmodel: 'horizon_tts_gemini_model',
         pvoice: 'horizon_tts_poll_voice',
         pkey: 'horizon_tts_poll_key',
-        akey: 'horizon_tts_ttsai_key',
-        avoice: 'horizon_tts_ttsai_voice',
-        nengine: 'horizon_tts_native_engine',
-        evoice: 'horizon_tts_edge_voice',
-        epreset: 'horizon_tts_edge_preset'
+        ovoice: 'horizon_tts_openai_voice',
+        okey: 'horizon_tts_openai_key',
+        kvoice: 'horizon_tts_kokoro_voice',
+        nengine: 'horizon_tts_native_engine'
     };
 
     // ----------------------------------------------------------------- helpers
@@ -123,19 +125,19 @@
     let keysFn = null;                     // (providerId) => [key, ...backup keys], supplied by the app
     const geminiIds = GEMINI.voices.map(v => v.id);
     const pollIds = POLL.voices.map(v => v.id);
+    const openaiIds = OPENAI.voices.map(v => v.id);
     function cloudKeys(id) {
         let list = [];
         try { list = keysFn ? keysFn(id) || [] : []; } catch (e) { list = []; }
         return list.filter((k, i, a) => typeof k === 'string' && k.trim() && k !== 'free' && a.indexOf(k) === i).map(k => k.trim());
     }
     const pollKey = () => String(ls.get(KEYS.pkey) || '').trim();
-    const aiIds = TTSAI.voices.map(v => v.id);
-    const edgeIds = EDGE.voices.map(v => v.id), edgePresetIds = EDGE.presets.map(v => v.id);
-    const aiKey = () => String(ls.get(KEYS.akey) || '').trim();
+    const openaiKey = () => String(ls.get(KEYS.okey) || '').trim();
+    const kokIds = KOKORO.voices.map(v => v.id);
     function settings() {
-        const gv = ls.get(KEYS.gvoice), pv = ls.get(KEYS.pvoice), av = ls.get(KEYS.avoice), ev = ls.get(KEYS.evoice), ep = ls.get(KEYS.epreset);
+        const gv = ls.get(KEYS.gvoice), pv = ls.get(KEYS.pvoice), kv = ls.get(KEYS.kvoice), ov = ls.get(KEYS.ovoice);
         let eng = ls.get(KEYS.engine);
-        if (eng === 'freetts') eng = 'ttsai';     // V1.48.0: FreeTTS.ai was replaced by TTS.ai
+        if (eng === 'freetts' || eng === 'ttsai' || eng === 'edge') eng = 'kokoro';   // V1.67.5: Edge and TTS.ai were removed; Kokoro replaces both
         if (eng === 'sherpa') eng = 'standard';   // V1.47.0: Piper is gone, so an old Piper pick becomes the Android voice
         if (ENGINES.indexOf(eng) < 0) eng = cloudKeys('gemini').length ? 'gemini' : 'standard';   // first run
         return {
@@ -146,9 +148,8 @@
             pitch: clamp(ls.get(KEYS.pitch), 0.5, 2, 1),
             gvoice: geminiIds.indexOf(gv) >= 0 ? gv : geminiIds[0],
             pvoice: pollIds.indexOf(pv) >= 0 ? pv : pollIds[0],
-            avoice: aiIds.indexOf(av) >= 0 ? av : aiIds[0],
-            evoice: edgeIds.indexOf(ev) >= 0 ? ev : edgeIds[0],
-            epreset: edgePresetIds.indexOf(ep) >= 0 ? ep : edgePresetIds[0],
+            kvoice: kokIds.indexOf(kv) >= 0 ? kv : kokIds[0],
+            ovoice: openaiIds.indexOf(ov) >= 0 ? ov : openaiIds[0],
             nengine: String(ls.get(KEYS.nengine) || '').trim()
         };
     }
@@ -166,8 +167,8 @@
         if (!s.slot) return s;
         if (s.engine === 'gemini') s.gvoice = slotPick(geminiIds, s.gvoice, s.slot);
         else if (s.engine === 'pollinations') s.pvoice = slotPick(pollIds, s.pvoice, s.slot);
-        else if (s.engine === 'ttsai') s.avoice = slotPick(aiIds, s.avoice, s.slot);
-        else if (s.engine === 'edge') s.evoice = slotPick(edgeIds, s.evoice, s.slot);
+        else if (s.engine === 'kokoro') s.kvoice = slotPick(kokIds, s.kvoice, s.slot);
+        else if (s.engine === 'openai') s.ovoice = slotPick(openaiIds, s.ovoice, s.slot);
         return s;
     }
     // the Android / browser voice list loads later, so those engines resolve the slot where the list is in hand
@@ -181,7 +182,7 @@
         return pool[(at + slot) % pool.length] || null;
     }
     // for the app: which voice a slot would use right now (used for labels)
-    function voiceFor(slot) { const s = applySlot(settings(), slot); return { engine: s.engine, gemini: s.gvoice, pollinations: s.pvoice, ttsai: s.avoice, edge: s.evoice }; }
+    function voiceFor(slot) { const s = applySlot(settings(), slot); return { engine: s.engine, gemini: s.gvoice, pollinations: s.pvoice, openai: s.ovoice, kokoro: s.kvoice }; }
     function set(key, value) {
         switch (key) {
             case 'engine': ls.set(KEYS.engine, ENGINES.indexOf(value) >= 0 ? value : 'standard'); break;
@@ -192,10 +193,9 @@
             case 'gvoice': if (geminiIds.indexOf(value) >= 0) ls.set(KEYS.gvoice, value); break;
             case 'pvoice': if (pollIds.indexOf(value) >= 0) ls.set(KEYS.pvoice, value); break;
             case 'pkey': ls.set(KEYS.pkey, String(value || '').trim()); break;
-            case 'akey': ls.set(KEYS.akey, String(value || '').trim()); break;
-            case 'avoice': if (aiIds.indexOf(value) >= 0) ls.set(KEYS.avoice, value); break;
-            case 'evoice': if (edgeIds.indexOf(value) >= 0) ls.set(KEYS.evoice, value); break;
-            case 'epreset': if (edgePresetIds.indexOf(value) >= 0) ls.set(KEYS.epreset, value); break;
+            case 'ovoice': if (openaiIds.indexOf(value) >= 0) ls.set(KEYS.ovoice, value); break;
+            case 'okey': ls.set(KEYS.okey, String(value || '').trim()); break;
+            case 'kvoice': if (kokIds.indexOf(value) >= 0) ls.set(KEYS.kvoice, value); break;
             case 'nengine': ls.set(KEYS.nengine, String(value || '').trim()); voiceCache = null; break;
             default: return false;
         }
@@ -639,68 +639,76 @@
         return new Blob([u8], { type: (u8[0] === 0x52) ? 'audio/wav' : 'audio/mpeg' });
     }
 
-    // ---- TTS.ai (V1.48.0)
-    const sleep = ms => new Promise(r => setTimeout(r, ms));
-    async function ttsaiSynth(text, voice) {
-        const key = aiKey();
-        const headers = { 'Content-Type': 'application/json' };
-        if (key) headers.Authorization = 'Bearer ' + key;
-        const res = await withTimeout(root.fetch(TTSAI.base + 'tts/', {
-            method: 'POST', headers,
-            body: JSON.stringify({ model: TTSAI.model, text, voice, format: 'mp3' })
-        }), TTSAI.timeoutMs, 'TTS.ai took too long to accept the text');
-        if (!res.ok) {
-            const m = await errText(res);
-            if (res.status === 401 || res.status === 403) throw new Error('the TTS.ai key was rejected (' + (m || res.status) + ')');
-            if (res.status === 402 || res.status === 429) throw limitErr('TTS.ai limit reached (' + (m || res.status) + '). Free tier is 5,000 characters a day and 10 requests a minute', res.status);
-            throw new Error('TTS.ai error ' + res.status + (m ? ': ' + m : ''));
-        }
-        let u8 = new Uint8Array(await res.arrayBuffer());
-        if (!looksLikeAudio(u8)) {
-            let j = null;
-            try { j = JSON.parse(new TextDecoder().decode(u8)); } catch (e) { j = null; }
-            if (!j || !j.uuid) throw new Error('TTS.ai did not return a job' + (j && (j.error || j.detail) ? ' (' + String(j.error || j.detail).slice(0, 120) + ')' : ''));
-            const t0 = Date.now();
-            let url = '';
-            while (!url) {
-                if (Date.now() - t0 > TTSAI.timeoutMs) throw new Error('TTS.ai took too long to make the audio');
-                await sleep(1200);
-                const r = await withTimeout(root.fetch(TTSAI.base + 'speech/results/?uuid=' + encodeURIComponent(j.uuid)), 20000, 'TTS.ai status check timed out');
-                if (!r.ok) { if (r.status >= 500 || r.status === 404) continue; throw new Error('TTS.ai status error ' + r.status); }
-                let pj = null;
-                try { pj = await r.json(); } catch (e) { pj = null; }
-                if (pj && pj.status === 'failed') throw new Error('TTS.ai could not make the audio' + (pj.error ? ': ' + String(pj.error).slice(0, 120) : ''));
-                if (pj && pj.status === 'completed' && pj.result_url) url = String(pj.result_url);
+    // ---- Kokoro (V1.67.5): on-device, no key. The library and model load once, then every sentence is made on the phone.
+    let kokTts = null, kokPromise = null, kokLastPct = -1;
+    function kokNote(p) {
+        try {
+            if (!p || p.status !== 'progress' || !isFinite(p.progress)) return;
+            const pct = Math.round(p.progress);
+            if (pct === kokLastPct || pct % 5) return;
+            kokLastPct = pct;
+            emit({ note: 'Downloading the Kokoro voice, first time only: ' + pct + '%' });
+        } catch (e) { /* progress is only a nicety */ }
+    }
+    function kokLoad() {
+        if (kokTts) return Promise.resolve(kokTts);
+        if (kokPromise) return kokPromise;
+        kokPromise = (async () => {
+            let mod = null, last = null;
+            for (const u of KOKORO.libs) {
+                try { mod = await withTimeout(import(u), 90000, 'the Kokoro library took too long to download'); if (mod && mod.KokoroTTS) break; mod = null; }
+                catch (e) { last = e; mod = null; }
             }
-            if (!/^https:\/\//i.test(url)) throw new Error('TTS.ai gave an audio link that is not https');
-            const a = await withTimeout(root.fetch(url), TTSAI.timeoutMs, 'TTS.ai audio download took too long');
-            if (!a.ok) throw new Error('TTS.ai audio link gave HTTP ' + a.status);
-            u8 = new Uint8Array(await a.arrayBuffer());
-            if (!looksLikeAudio(u8)) throw new Error('TTS.ai audio file was not readable');
+            if (!mod) throw new Error('could not load the Kokoro library (' + msg(last) + '). It needs the internet once, the first time');
+            const t = await withTimeout(mod.KokoroTTS.from_pretrained(KOKORO.model, { dtype: 'q8', device: 'wasm', progress_callback: kokNote }), KOKORO.loadMs, 'the Kokoro voice model took too long to download');
+            kokTts = t;
+            return t;
+        })();
+        kokPromise.catch(() => { kokPromise = null; });   // a failed load can be tried again
+        return kokPromise;
+    }
+    // ---- OpenAI (V1.67.6)
+    async function openaiSynth(text, voice) {
+        const key = openaiKey();
+        if (!key) throw new Error('add your OpenAI key under Voice first');
+        let last = null;
+        for (let mi = 0; mi < OPENAI.models.length; mi++) {
+            const model = OPENAI.models[mi];
+            const res = await withTimeout(root.fetch(OPENAI.url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+                body: JSON.stringify({ model, input: text, voice, response_format: 'mp3' })
+            }), OPENAI.timeoutMs, 'OpenAI voice took too long');
+            if (!res.ok) {
+                const m = await errText(res);
+                if (res.status === 401) throw new Error('the OpenAI key was rejected (' + (m || 401) + ')');
+                if (res.status === 403) throw new Error('this OpenAI key may not use voices (' + (m || 403) + ')');
+                if (res.status === 429) {
+                    if (/quota|billing|credit|balance/i.test(m)) throw limitErr('OpenAI has no credit left. Add a few dollars at platform.openai.com/settings/organization/billing (' + (m || '429') + ')', 429);
+                    throw limitErr('OpenAI rate limit (' + (m || '429') + ')', 429);
+                }
+                // a key without the newer model: try the older one before giving up
+                if ((res.status === 404 || res.status === 400) && /model|not found|access|does not exist/i.test(m) && mi < OPENAI.models.length - 1) { last = new Error(m); continue; }
+                throw new Error('OpenAI error ' + res.status + (m ? ': ' + m : ''));
+            }
+            let u8 = new Uint8Array(await res.arrayBuffer());
+            if (!looksLikeAudio(u8)) {
+                try { const dec = b64ToBytes(new TextDecoder().decode(u8)); if (looksLikeAudio(dec)) u8 = dec; } catch (e) { /* not base64 */ }
+            }
+            if (!looksLikeAudio(u8)) throw new Error('OpenAI did not return audio');
+            return new Blob([u8], { type: (u8[0] === 0x52) ? 'audio/wav' : 'audio/mpeg' });
         }
-        return new Blob([u8], { type: (u8[0] === 0x52) ? 'audio/wav' : (u8[0] === 0x4F ? 'audio/ogg' : 'audio/mpeg') });
+        throw last || new Error('OpenAI voice failed');
     }
 
-    // ---- Microsoft Edge neural voices (V1.62.0), made by the Android app over a native WebSocket
-    const clampI = (n, lo, hi) => Math.min(hi, Math.max(lo, Math.round(n)));
-    // V1.63.8: Microsoft sometimes rotates the Edge token or version. If it does, set localStorage horizon_edge_token / horizon_edge_ver (no rebuild needed).
-    function lsv(k) { try { return String(root.localStorage.getItem(k) || '').trim(); } catch (e) { return ''; } }
-    async function edgeSynth(text, s) {
-        const p = nativePlugin();
-        if (!p || typeof p.edgeSynth !== 'function') throw new Error('the Edge voice only works in the Horizon Android app, and this build does not have it. Update the app');
-        const pre = EDGE.presets.find(x => x.id === s.epreset) || EDGE.presets[0];
-        const rate = clampI(pre.rate + (s.rate - 1) * 100, -60, 100), pitch = clampI(pre.pitch + (s.pitch - 1) * 50, -50, 50);
-        const go = v => withTimeout(p.edgeSynth({ text, voice: v, rate, pitch, token: lsv('horizon_edge_token'), ver: lsv('horizon_edge_ver') }), EDGE.timeoutMs, 'the Edge voice took too long');
-        let r;
-        try { r = await go(s.evoice); }
-        catch (e) {
-            if (isMissing(e)) throw new Error('this build has no Edge voice yet. Update the app');
-            if (/Multilingual/.test(s.evoice)) r = await go(s.evoice.replace('Multilingual', ''));   // an older voice list: plain neural twin
-            else throw e;
-        }
-        const u8 = b64ToBytes(r && r.data);
-        if (!looksLikeAudio(u8)) throw new Error('the Edge voice did not return audio');
-        return new Blob([u8], { type: 'audio/mpeg' });
+    async function kokoroSynth(text, voice) {
+        const t = await kokLoad();
+        const a = await withTimeout(t.generate(text, { voice }), KOKORO.genMs, 'the Kokoro voice took too long to speak');
+        let blob = null;
+        if (a && typeof a.toBlob === 'function') blob = a.toBlob();
+        else if (a && typeof a.toWav === 'function') blob = new Blob([a.toWav()], { type: 'audio/wav' });
+        if (!blob || !blob.size) throw new Error('the Kokoro voice made no sound');
+        return blob;
     }
 
     async function runCloud(synth, chunks, tok, s, started) {
@@ -717,9 +725,8 @@
     }
     const runGemini = (chunks, tok, s, started) => runCloud(t => geminiSynth(t, s.gvoice), chunks, tok, s, started);
     const runPollinations = (chunks, tok, s, started) => runCloud(t => pollSynth(t, s.pvoice), chunks, tok, s, started);
-    const runTTSAI = (chunks, tok, s, started) => runCloud(t => ttsaiSynth(t, s.avoice), chunks, tok, s, started);
-    // speed and pitch are already inside the Edge audio, so it plays back untouched
-    const runEdge = (chunks, tok, s, started) => runCloud(t => edgeSynth(t, s), chunks, tok, { rate: 1, pitch: 1 }, started);
+    const runOpenAI = (chunks, tok, s, started) => runCloud(t => openaiSynth(t, s.ovoice), chunks, tok, s, started);
+    const runKokoro = (chunks, tok, s, started) => runCloud(t => kokoroSynth(t, s.kvoice), chunks, tok, s, started);
 
     // Android can refuse to start audio that was not triggered by a tap, and cloud voices take seconds to arrive,
     // so the tap is long gone by the time the sound is ready. A Web Audio context that was created and resumed
@@ -820,8 +827,8 @@
     }
 
     // ------------------------------------------------------------- orchestration
-    const RUN = { gemini: runGemini, pollinations: runPollinations, ttsai: runTTSAI, edge: runEdge, native: runNative, web: runWeb };
-    const LABEL = { gemini: 'Gemini voice', pollinations: 'Pollinations voice', ttsai: 'TTS.ai voice', edge: 'Edge voice', native: 'Android voice', web: 'Browser voice' };
+    const RUN = { gemini: runGemini, pollinations: runPollinations, openai: runOpenAI, kokoro: runKokoro, native: runNative, web: runWeb };
+    const LABEL = { gemini: 'Gemini voice', pollinations: 'Pollinations voice', openai: 'OpenAI voice', kokoro: 'Kokoro voice', native: 'Android voice', web: 'Browser voice' };
 
     function stop(silent) {
         if (paused) {
@@ -981,7 +988,7 @@
             langCount: l.langs.length,
             geminiKeys: cloudKeys('gemini').length,
             pollKey: !!pollKey(),
-            ttsaiKey: !!aiKey(),
+            openaiKey: !!openaiKey(),
             audio
         };
     }
@@ -991,13 +998,14 @@
             if (!cloudKeys('gemini').length) return 'Gemini voice needs a key. Using the Android voice for now.';
             return 'Natural voice (Gemini · ' + s.gvoice + ')';
         }
-        if (s.engine === 'edge') {
-            const v = EDGE.voices.find(x => x.id === s.evoice), pr = EDGE.presets.find(x => x.id === s.epreset);
-            return 'Natural voice (Edge · ' + (v ? v.name.split(' · ')[0] : s.evoice) + (pr && pr.id !== 'natural' ? ' · ' + pr.name.split(' · ')[0].toLowerCase() : '') + ')';
+        if (s.engine === 'kokoro') {
+            const v = KOKORO.voices.find(x => x.id === s.kvoice);
+            return 'Natural voice (Kokoro · ' + (v ? v.name.split(' · ')[0] : s.kvoice) + ' · on this phone)';
         }
-        if (s.engine === 'ttsai') {
-            const v = TTSAI.voices.find(x => x.id === s.avoice);
-            return 'Natural voice (TTS.ai · ' + (v ? v.name.split(' · ')[0] : s.avoice) + (aiKey() ? '' : ' · free tier') + ')';
+        if (s.engine === 'openai') {
+            if (!openaiKey()) return 'OpenAI voice needs a key. Using the Android voice for now.';
+            const v = OPENAI.voices.find(x => x.id === s.ovoice);
+            return 'Natural voice (OpenAI \u00b7 ' + (v ? v.name.split(' \u00b7 ')[0] : s.ovoice) + ')';
         }
         if (s.engine === 'pollinations') {
             if (!pollKey()) return 'Pollinations voice needs a key. Using the Android voice for now.';
@@ -1034,8 +1042,8 @@
         cloud: {
             gemini: { voices: GEMINI.voices, keyCount: () => cloudKeys('gemini').length },
             pollinations: { voices: POLL.voices, hasKey: () => !!pollKey() },
-            ttsai: { voices: TTSAI.voices, hasKey: () => !!aiKey() },
-            edge: { voices: EDGE.voices, presets: EDGE.presets, supported: () => !!(nativePlugin() && typeof nativePlugin().edgeSynth === 'function') }
+            openai: { voices: OPENAI.voices, hasKey: () => !!openaiKey() },
+            kokoro: { voices: KOKORO.voices },
         }
     };
 })(window);

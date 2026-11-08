@@ -112,22 +112,21 @@
         var key = ['G', ids.join(','), running ? 'run:' + live.id : 'idle'].join('|');
         if (running && b._hzKey === key && b.firstChild) {
             var rd0 = b.querySelector('.hzb-read');
-            if (rd0) { rd0.textContent = (cfg.providers[live.id] ? cfg.providers[live.id].name + ' ' : '') + fmtMs(Date.now() - live.t0); return; }
+            if (rd0) { rd0.textContent = fmtMs(Date.now() - live.t0); return; }
         }
         b._hzKey = key;
         var lead = running ? live.id : ids[0];
         var pill = el('span', 'hzb-pill' + (running ? ' busy' : ''));
-        pill.style.setProperty('--pc', colorOf(lead));
+        pill.classList.add('hzb-opt');   // V1.69.0: a green OPTIONS pill. Tapping it opens the group menu (the usage dashboard is inside it)
+        pill.style.setProperty('--pc', '#39ff14');
         b.replaceChildren(pill);
-        var dot = el('i', 'hzu-dot ' + (running ? 'run' : status(lead).c));
-        dot.style.setProperty('--pc', colorOf(lead));
+        var dot = el('i', 'hzu-dot ' + (running ? 'run' : 'ok'));
+        dot.style.setProperty('--pc', '#39ff14');
         pill.appendChild(dot);
-        pill.appendChild(el('span', 'hzb-name', 'GROUP'));
+        pill.appendChild(el('span', 'hzb-name', 'Options'));
         var joined = names.join(' + ');
-        pill.appendChild(el('span', 'hzb-model', joined.length > 16 ? joined.slice(0, 15) + '\u2026' : joined));
-        pill.appendChild(el('span', 'hzb-sep'));
-        var out = running ? (cfg.providers[live.id] ? cfg.providers[live.id].name + ' ' : '') + fmtMs(Date.now() - live.t0) : ids.length + ' AIs';
-        pill.appendChild(el('span', 'hzb-read', out));
+        var out = running ? fmtMs(Date.now() - live.t0) : 'Options';
+        if (running) { pill.appendChild(el('span', 'hzb-sep')); pill.appendChild(el('span', 'hzb-read', out)); }
         b.title = 'Group chat: ' + joined + (running ? ' \u00b7 ' + (cfg.providers[live.id] ? cfg.providers[live.id].name : '') + ' is answering' : '');
         b.setAttribute('aria-label', 'Usage and engine dashboard. Group chat with ' + joined + '. ' + (running ? 'Answering ' : '') + out);
     }
@@ -154,11 +153,7 @@
         dot.style.setProperty('--pc', colorOf(id));
         pill.appendChild(dot);
         pill.appendChild(el('span', 'hzb-name', p.name));
-        var md = cfg.model(id);
-        if (md) {
-            var sm = md.replace(/^models\//i, '').replace(/^(?:gemini|command)-/i, '');
-            pill.appendChild(el('span', 'hzb-model', sm.length > 14 ? sm.slice(0, 13) + '\u2026' : sm));
-        }
+        var md = cfg.model(id);   // V1.67.9: the model is not drawn in the pill any more (the reply shows provider + model)
         var lat = s && s.lat ? s.lat.slice(-6) : [];
         if (lat.length > 1) {
             var hi = Math.max.apply(null, lat), lo = Math.min.apply(null, lat), span = Math.max(1, hi - lo);
@@ -455,7 +450,11 @@
     function bind(c) {
         cfg = c;
         var b = badgeEl();
-        if (b && !b.dataset.bound) { b.dataset.bound = '1'; b.addEventListener('click', function () { cfg.openDash(); }); }
+        if (b && !b.dataset.bound) { b.dataset.bound = '1'; b.addEventListener('click', function () {
+            var gids = typeof cfg.group === 'function' ? cfg.group() : null;
+            if (gids && gids.length > 1 && !b.dataset.pass && window.HorizonGroup && HorizonGroup.menu) { HorizonGroup.menu(b, 'below'); return; }
+            cfg.openDash();
+        }); }
         paintBadge();
     }
 

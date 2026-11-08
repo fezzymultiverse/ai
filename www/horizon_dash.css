@@ -129,3 +129,8 @@ html:not([data-theme]) .hzd-net{background:rgba(255,255,255,.55)}
 .hzd-date{background:#000;color:#fff;border:1px solid rgba(255,255,255,.28)}
 .hzd-date .ic{color:#fff}
 .hzd-date:active{background:#26282c}
+
+/* V1.68.0 wake alarm row */
+.hzc-arow{margin-top:6px;gap:8px}
+.hzc-song,.hzc-fix{flex:1;height:36px;border:1px solid rgba(127,127,127,.4);border-radius:18px;background:none;color:inherit;font:inherit;font-size:13px;font-weight:700;cursor:pointer}
+.hzc-song:active,.hzc-fix:active{background:rgba(127,127,127,.25)}

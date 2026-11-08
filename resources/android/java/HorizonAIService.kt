@@ -33,7 +33,7 @@ import java.util.concurrent.ConcurrentHashMap
 class HorizonAIService : Service() {
     companion object {
         @Volatile private var instance: HorizonAIService? = null
-        fun releaseTurn() { instance?.let { service -> service.main.post { service.releaseHold() } } }
+        fun releaseTurn() { instance?.let { service -> service.main.post { service.releaseHoldSoon() } } }
         private const val JOB_TIMEOUT_MS = 300_000L
         private class Pending(val block: () -> Unit, val onFail: (Throwable) -> Unit)
         private val jobs = ConcurrentHashMap<String, Pending>()
@@ -54,6 +54,13 @@ class HorizonAIService : Service() {
     private var held = false
     private var turnLock: PowerManager.WakeLock? = null
     private val watchdog = Runnable { releaseHold() }
+    // V1.67.9: the service lingers 8 s after a turn ends. The next AI in a group, a retry, or the read-aloud service that starts when the reply lands
+    // all begin inside that window, so the app never drops out of the foreground between replies while you are away from it.
+    private val graceStop = Runnable { releaseHold() }
+    private fun releaseHoldSoon() {
+        main.removeCallbacks(graceStop)
+        main.postDelayed(graceStop, 8_000L)
+    }
     private fun releaseHold() {
         held = false
         main.removeCallbacks(watchdog)
@@ -75,6 +82,7 @@ class HorizonAIService : Service() {
         else startForeground(4108, notification)
         if (intent?.action == "hold") {
             held = true
+            main.removeCallbacks(graceStop)
             if (turnLock == null) {
                 val pm = getSystemService(POWER_SERVICE) as PowerManager
                 turnLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "$packageName:ai-turn").apply { acquire(900000L) }
@@ -114,6 +122,7 @@ class HorizonAIService : Service() {
     override fun onDestroy() {
         instance = null
         main.removeCallbacks(watchdog)
+        main.removeCallbacks(graceStop)
         turnLock?.let { if (it.isHeld) it.release() }
         turnLock = null
         HorizonScopes.cancel(scope, "HorizonAIService destroyed")   // every running job is cancelled with its service

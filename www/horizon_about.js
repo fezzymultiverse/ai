@@ -1,10 +1,17 @@
 /* Horizon V1.26.0: ABOUT & UPDATES page: version, release check, backup export/import, changelog, privacy awareness + reminder switch. */
 (function () {
     'use strict';
-    var VERSION = 'V1.67.4';
+    var VERSION = 'V1.67.11';
     var LSK = 'horizon_privacy_notice';
     var REPO_API = 'https://api.github.com/repos/fezzymultiverse/ai';
     var LOG = [
+        ['V1.67.11', ['GROUP REPLY: every AI message in a group chat has a Reply button at the end. Tap it, the box gets @that AI, and only that AI answers. The others stay out of it.']],
+        ['V1.67.10', ['CHAT BOX: the text now starts at the top left and runs the full width. The icons sit on their own row at the bottom, with a gap, and the box grows upward. CHAT LIST: the pin and bin fit on screen, no sliding right. PREFERENCES: every preference has its own box with its own bin. Add preference makes a new box.']],
+        ['V1.67.9', ['TOP PILL: in a group chat it reads GROUP CHAT and nothing else (no AI names). In a one on one chat it shows only the provider name, the model is on the reply. The words are spread evenly. GROUP IN THE BACKGROUND: a group round now keeps one Kotlin background service alive from the first AI to the last, so leaving the app no longer slows the next reply, the typing or the voice. Typing finishes at once when you leave the app.']],
+        ['V1.67.8', ['GROUP CHAT FIX: an old group round can no longer keep running in the background after you start a new group or leave one. Before, it could grab the busy state again, so sending in the new group did nothing, and its retry bar could appear in the wrong chat.']],
+        ['V1.67.7', ['OPENAI VOICE: a new natural voice engine with 11 male and female voices. Settings > Voice > pick Natural: OpenAI, paste your OpenAI key, Save, then Test. It needs a little credit on your OpenAI account (about 1 cent per few thousand characters) and has no daily cap. If it fails, Horizon falls back to the Android voice.']],
+        ['V1.67.6', ['HTML SAVE: Save on an HTML page or SVG now puts the file in your phone\u2019s Downloads (Download/Horizon). It used to go to Documents/Horizon, so it never showed in Downloads. Needs the Android app rebuilt once.']],
+        ['V1.67.5', ['GROUP CHAT FIX: starting or leaving a group no longer says "Horizon is busy". A stuck or slow reply (a dead provider) is stopped for you and the group starts.', 'CHAT BOX: your text now runs the full width, left to right, on its own row, with the buttons under it (plus and clip on the left, speaker, mic and send on the right).', 'LIGHT GREY: a bit darker, not too dark. Tool tiles and their icons are soft grey and soft green instead of hard black.', 'VOICES: Microsoft Edge and TTS.ai are removed. New Kokoro voices: 28 natural voices, no key, no limit, made on the phone itself. The first use downloads the voice model once (about 90 MB), then it works offline.']],
         ['V1.67.4', ['FOLD ALL: the Fold all and Unfold all button now stays on the right side of the action row, next to the speaker button, instead of sitting in the middle. Its label changes, but its right edge stays put.']],
         ['V1.67.3', ['TWO THEMES: Dark green and Dark purple are gone. Dark cyan stays as the main theme and Light grey is new. Pick one in Settings > PERSONALISATION > Theme or with the two dots under the Settings title. Old green and purple choices become Dark cyan.']],
         ['V1.67.2', ['FOLD ALL: a folded reply is now a small scroll window instead of a clipped one. Fold all keeps every long reply short in the chat, and you can still swipe inside one to read the whole thing. At its top or bottom the swipe carries on into the chat.']],

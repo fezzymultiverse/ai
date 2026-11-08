@@ -28,7 +28,9 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(HorizonBrowserPlugin.class);
         registerPlugin(HorizonShellPlugin.class);
         registerPlugin(HorizonLockPlugin.class);
+        registerPlugin(HorizonAlarmPlugin.class);   // V1.68.0: calendar wake-up alarms
         super.onCreate(savedInstanceState);
+        handleAlarmIntent(getIntent());           // V1.68.0: opened by a ringing alarm: show over the lock screen
         showLastCrash();                          // V1.63.2: a saved crash report from the last run, if any
         HorizonPermsPlugin.paintBackdrop(this);   // V1.44.0: theme colour behind the page, no white flash
         // V1.58.2: pin the keyboard behaviour (the page shrinks above the keyboard) instead of leaving it to the device default.
@@ -121,6 +123,29 @@ public class MainActivity extends BridgeActivity {
                 .show();
         } catch (Throwable ignored) {
             // the report is already cleared; nothing else to do
+        }
+    }
+
+
+    // V1.68.0: a ringing alarm opens Horizon over the lock screen with Stop and Snooze buttons.
+    private void handleAlarmIntent(android.content.Intent i) {
+        if (i == null || !i.getBooleanExtra("hz_alarm", false)) return;
+        i.removeExtra("hz_alarm");
+        try {
+            if (Build.VERSION.SDK_INT >= 27) { setShowWhenLocked(true); setTurnScreenOn(true); }
+            else getWindow().addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED | WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON);
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+            if (!HorizonAlarmService.ringing) return;   // already stopped from the notification
+            String title = i.getStringExtra("hz_title"), body = i.getStringExtra("hz_body");
+            new android.app.AlertDialog.Builder(this)
+                .setTitle(title == null ? "Alarm" : title)
+                .setMessage(body == null ? "" : body)
+                .setCancelable(false)
+                .setPositiveButton("Stop", (d, w) -> startService(new android.content.Intent(this, HorizonAlarmService.class).setAction(HorizonAlarmService.ACT_STOP)))
+                .setNegativeButton("Snooze 10 min", (d, w) -> startService(new android.content.Intent(this, HorizonAlarmService.class).setAction(HorizonAlarmService.ACT_SNOOZE)))
+                .show();
+        } catch (Throwable ignored) {
+            // the notification buttons still stop it
         }
     }
 
@@ -293,6 +318,7 @@ public class MainActivity extends BridgeActivity {
     protected void onNewIntent(android.content.Intent intent) {
         super.onNewIntent(intent);
         setIntent(intent);
+        handleAlarmIntent(intent);
         if (getBridge() != null && getBridge().getWebView() != null) {
             getBridge().getWebView().post(() -> getBridge().getWebView().evaluateJavascript(
                 "window.dispatchEvent(new Event('horizon-reply'))", null));

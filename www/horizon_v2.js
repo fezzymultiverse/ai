@@ -61,7 +61,7 @@
     var q = function (s) { return badge.querySelector(s); };
     var p = window.HzPick || {}, n = q('.hzb-name'), m = q('.hzb-model'), r = q('.hzb-read'), d = q('.hzu-dot');
     nm.textContent = n ? n.textContent : (p.name || 'Horizon');
-    md.textContent = m ? m.textContent : (p.model ? String(p.model).replace(/^models\//i, '') : '');
+    md.textContent = '';   // V1.67.10: the pill never shows the model or the group's AI names. The reply carries provider + model.
     st.textContent = r ? r.textContent : 'ready';
     dot.className = 'hzc-dot ' + (d ? d.className.replace('hzu-dot', '').trim() : ''); dot.style.setProperty('--pc', d ? d.style.getPropertyValue('--pc') : '');
     var busy = !!(q('.hzb-pill.busy') || (d && /\brun\b/.test(d.className)));
