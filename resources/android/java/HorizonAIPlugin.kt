@@ -81,6 +81,9 @@ class HorizonAIPlugin : Plugin() {
     @PluginMethod
     fun speechHold(call: PluginCall) {
         try {
+            // V1.63.7: the app says whether it is paused so the notification button reads Pause or Resume
+            HorizonSpeakService.paused = call.getBoolean("paused", false) == true
+            HorizonSpeakService.queued = (call.getInt("queued", 0) ?: 0).coerceIn(0, 99)
             ContextCompat.startForegroundService(context, Intent(context, HorizonSpeakService::class.java).setAction("hold"))
             call.resolve()
         } catch (e: Exception) { call.reject("Could not start the read-aloud service: ${e.message}") }

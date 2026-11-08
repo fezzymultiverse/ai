@@ -12,6 +12,93 @@
   <img alt="Capacitor 6" src="https://img.shields.io/badge/Capacitor-6-00e5ff">
 </p>
 
+## What's new in V1.65.2
+
+- **Terminal is more alive.** The prompt is colour-coded (user purple, host cyan, folder pink, `$` green) and the first word of each command you run is bold white. New lines fade in, and a colour sweep under the title bar speeds up while a command runs. The key rows are grouped by colour: arrows cyan, Ctrl purple, Esc and Tab amber, Home/End/PgUp/PgDn green, `^C` and `^D` red.
+- **Coloured messages.** A line that starts with an error, a warning, `ok`, `done` and so on is coloured. Files you `cat` are left alone. A very long dump appears at once, with no fades.
+- **Boot lines.** The first time you open the terminal, three short lines appear before the banner (Bojack online, shell ready, private folder, no root).
+- Commands run exactly as before. New files: `horizon_termlive.css` and `horizon_termlive.js`; `horizon_terminal.js` gained two one-line hooks.
+
+## What's new in V1.65.1
+
+- **About scrolls and taps again.** V1.63.1 made the Settings panel a pan-y scroller and let the browser skip painting changelog entries. On some phones that left About stuck, with nothing tappable. Both are removed, so the panel is a plain vertical scroller again.
+- **Github Push.** The GitHub app is now named Github Push in the Apps panel, the Settings dock, the app window and the edge drawer. The label is sized so it fits its tile.
+- About shows V1.65.1 and the newest changelog entries.
+
+## What's new in V1.65.0
+
+- **Edge door.** The five header buttons are gone. A green door on the right edge of the header opens one drawer: **Menu** and **Settings** side by side at the top, then **Snooze, Group, Browser, Terminal, GitHub and Downloads**, each with its own colour. Tap the door or drag it: the drawer follows your finger. Drag it right, tap outside, or press Back to close.
+- **One-row header.** Header = logo + provider pill. The tagline moved into the drawer. The left-edge chevron is hidden because the door takes its place.
+- **Snooze shows on the door.** A purple dot appears on the door and the Snooze tile glows while Snooze is on.
+- **Nothing was rewritten.** The tiles click your real buttons and call the real openers, so every existing handler keeps working. New files: `horizon_door.css` and `horizon_door.js`. `index.html` only gained two include lines.
+- **Old header fallback.** Long-press the Horizon logo chip for about a second to switch between the new header and the old one (the app reloads).
+
+## What's new in V1.64.2
+
+- **Group Retry works.** In a group, if some AIs fail and others answer, the Retry bar now names the AIs that failed (`Groq + Cohere`) and redoes only those, for the message they failed on. Before, Retry ran "regenerate the last reply", which in a group needs a user message right before it, so it quietly did nothing (or would have redone the wrong AI). If the app was reopened and nothing is remembered, Retry finds the group members that never answered the last message.
+- **No more dead Retry.** Retry used to return silently while Horizon was "busy". It now says "Horizon is still working. Tap Stop first, then Retry." And the end of every turn no longer waits on the Android side for more than 3 seconds, so a hung bridge call can no longer leave Horizon stuck as busy.
+- A stale Retry bar no longer sits above the next AI's reply during a group round.
+- Known gap, not changed: in a group, the small Regenerate button only shows on the first AI reply after your message.
+
+## What's new in V1.64.1
+
+- **Group chat looks like a group.** In a group chat the pill at the top of the chat (on the welcome card) now reads `GROUP · Gemini + Groq + ... ready` with a group icon, the card title becomes "Group chat" with group instructions, and the message box and the note under it name the group instead of one AI. The bottom-left badge already followed the group (V1.64.0). Leaving the group, or ungrouping, puts everything back to the normal single-AI wording at once.
+
+## What's new in V1.64.0
+
+- **Lock-screen and notification controls for read-aloud.** Reading aloud now has a MediaSession, so the lock screen and Bluetooth/headset buttons get Play, Pause and Next. The notification gains a **Next** button between Pause and Stop, and shows "N more waiting". Next drops the reply being read and moves to the next queued one. Stop clears the whole queue. The notification no longer disappears for a moment between two queued replies.
+- **Voice pill.** Tap while it speaks = pause or resume (amber "Paused" state). Long-press = voice settings. Idle tap still opens settings.
+- **Group chat token trim.** In a group the newest 4 messages go to every AI in full; older ones lose code blocks and artifacts and are cut short, and the history stops at a size budget (about 3.5k tokens). No extra summary call.
+- **Group voices.** In a group each AI reads in its own voice: the next voice along on the engine already picked in Settings (the Android voice steps through voices of the same language). Works for auto read and for the speaker button.
+- **Group badge.** In a group chat the bottom-left badge shows GROUP, the member names, and whichever AI is answering with its timer.
+- **Fold all / Unfold all.** A button in the action row under the newest reply, shown once two or more replies are long enough to fold.
+- Kotlin changes: `HorizonSpeakService` (MediaSession, Next action, queued text), `HorizonReplyReceiver` (NEXT_SPEECH), `HorizonAIPlugin.speechHold` (queued). Not compiled or tested on a phone yet; the CI build is the first compile.
+
+## What's new in V1.63.9
+
+- **Now-reading highlight.** With auto read aloud on, the reply being read gets a green edge and a green "Reading aloud" tag. Replies waiting their turn show **Next · 1**, **Next · 2**, **Next · 3** in the order they will play, so a group chat's order is visible at a glance.
+- **Auto-read button states.** It pulses green while speaking (drawn from JavaScript, so Android's "remove animations" does not stop it) and turns amber while paused.
+- Not tested on a phone yet.
+
+## What's new in V1.63.8
+
+- **Edge voice 403, now readable.** When Microsoft refuses the Edge voice, the error now includes the server time and the start of its reply (for example `HTTP 403, server time Sun, 08 Nov 2026 ..., <reply>`), so the real cause shows in the red text under Voice.
+- **Fix without a rebuild.** If Microsoft rotates the Edge token or version, set `horizon_edge_token` and `horizon_edge_ver` in the app's local storage and the native voice uses them instead of the built-in values. The built-in ones are unchanged.
+- Not a fix for the 403 itself: it cannot be tested without a network, so the cause is still unknown. Kotlin/Java not compiled or tested on a phone yet.
+
+## What's new in V1.63.7
+
+- **Pause and Resume in the notification.** While Horizon reads aloud, the notification shows **Pause** (turns into **Resume**) and **Stop**. Cloud voices (Gemini, Edge, Pollinations, TTS.ai) freeze and carry on from the exact spot. The Android voice cannot freeze, so Resume says the sentence it was on again. `HorizonTTS.pause()`, `.resume()` and `.togglePause()` are available too.
+- **Faster start.** A cloud voice that fails (for example the Edge 403) is skipped for 5 minutes in replies, so the voice that works starts straight away instead of waiting for the broken one first. The Voice **Test** button still tries the voice you picked every time. For the quickest start of all, pick the **Android voice**: it needs no download, cloud voices must fetch the audio first.
+- Kotlin changes: `HorizonSpeakService` (Pause/Resume action), `HorizonReplyReceiver` (PAUSE_SPEECH), `HorizonAIPlugin.speechHold` (paused flag). Not compiled or tested on a phone yet; the CI build is the first compile.
+
+## What's new in V1.63.6
+
+- **Group chat box name.** In a group chat the message box now reads "Message the group (Gemini, Groq, Cohere)..." and updates the moment you add or remove an AI. Before, it kept showing the last single AI you had picked (for example OpenRouter) even after it was taken out of the group.
+- Not tested on a phone yet.
+
+## What's new in V1.63.5
+
+- **Auto read aloud.** New speaker button beside the mic. Turn it on (it goes green) and every new AI reply is read aloud on its own, one after the other. In a group chat, three replies play in the order they arrived; a small number on the button shows how many are waiting. Turn it off and the queue clears and speech stops. It uses the voice from Settings > Voice, with the usual fallback to the Android voice. Old messages are never read when you open a chat. The setting is remembered.
+- Not tested on a phone yet.
+
+## What's new in V1.63.4
+
+- **Fold arrow.** A tiny green arrow now shows at the right end of the name/time line on any long AI reply. Tap it to fold the reply down to a few lines, tap again to open it. Nothing is saved or sent.
+- **OpenRouter free by default.** New `openrouter/free` model (free models only) is now the default and sits first in the list. If the picked model cannot be served for you (`No endpoints found...`, HTTP 402 or 404), Horizon switches once to `openrouter/free` and carries on. `openrouter/auto` can pick paid models, so it needs credits.
+- **Settings AI waits.** Asking the Settings AI while the chat is answering now waits up to 25 seconds instead of saying "Wait a moment".
+- **Music note.** The music block tells every AI that only the NOW PLAYING line is current, so Gemini stops repeating an old song name from earlier replies.
+- Not changed: the Edge voice 403 (Microsoft side, cannot be tested without network). Use the Gemini voice in Settings > Voice meanwhile.
+- Not tested on a phone yet.
+
+## What's new in V1.63.3
+
+- **Gemini listens in the chat.** When Gemini is the AI answering (alone or in a group chat) he is told he can hear and uses the existing `[[music.listen: question]]` tool himself, no switch needed. The other AIs still need *Let the chat AI ask him to listen*; in a group they are told to hand sound questions to `@gemini`.
+- **Listen fix.** The listening step only uses a real Gemini model that takes audio. If the picked model cannot (Gemma, image, TTS, live), or Google answers 400/404, it retries once on `gemini-2.5-flash`. Same path for the player ear sheet.
+- **Leave group.** New red **Leave group** button in the group bar. Tap it, pick which AI carries on, and the chat becomes a normal one-AI conversation. History stays; if several AIs had spoken, their old replies keep the `[Name said]` tag so nobody mistakes them for their own words. The sheet's Ungroup uses the same logic.
+- **Group model pick.** Picking a model in the AI sheet while in a group chat also sets that AI's model in the group (before, the group kept its saved one).
+- Not tested on a phone yet.
+
 ## What's new in V1.63.0
 
 - Replies pop up as a banner over the screen with a sound (new channel, `/notif` to test).

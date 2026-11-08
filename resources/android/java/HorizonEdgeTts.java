@@ -29,6 +29,10 @@ final class HorizonEdgeTts {
     private static final String ORIGIN = "chrome-extension://jdiccldimpdaibmpdkjnbmckianbfold";
     private static final String UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0";
     private static final long WIN_EPOCH = 11644473600L;
+    private static volatile String tokenOverride = "", verOverride = "";   // V1.63.8: set from the app when Microsoft rotates them
+    private static volatile String lastDiag = "";
+    private static String token() { return tokenOverride.isEmpty() ? TOKEN : tokenOverride; }
+    private static String ver() { return verOverride.isEmpty() ? GEC_VERSION : verOverride; }
     private static volatile long skewSecs = 0;   // server clock minus phone clock, learned from a 403 Date header
     private static final OkHttpClient CLIENT = new OkHttpClient.Builder()
         .connectTimeout(15, TimeUnit.SECONDS).readTimeout(30, TimeUnit.SECONDS).writeTimeout(15, TimeUnit.SECONDS).build();
@@ -40,7 +44,7 @@ final class HorizonEdgeTts {
     private static String gec() throws Exception {
         long t = System.currentTimeMillis() / 1000 + skewSecs + WIN_EPOCH;
         t -= t % 300;
-        byte[] h = MessageDigest.getInstance("SHA-256").digest(((t * 10000000L) + TOKEN).getBytes("US-ASCII"));
+        byte[] h = MessageDigest.getInstance("SHA-256").digest(((t * 10000000L) + token()).getBytes("US-ASCII"));
         StringBuilder sb = new StringBuilder();
         for (byte b : h) sb.append(String.format(Locale.US, "%02X", b & 0xff));
         return sb.toString();
@@ -71,7 +75,9 @@ final class HorizonEdgeTts {
         return "Microsoft Server Speech Text to Speech Voice (" + p[0] + "-" + p[1] + ", " + p[2] + ")";
     }
 
-    static byte[] synth(String text, String voice, int rate, int pitch) throws Exception {
+    static byte[] synth(String text, String voice, int rate, int pitch, String tok, String ver) throws Exception {
+        tokenOverride = tok == null ? "" : tok.trim(); verOverride = ver == null ? "" : ver.trim();
+        lastDiag = "";
         if (!voice.matches("^[A-Za-z]{2,3}-[A-Za-z]{2,4}-[A-Za-z0-9-]+$")) throw new IllegalArgumentException("Bad voice name");
         rate = Math.max(-90, Math.min(200, rate)); pitch = Math.max(-100, Math.min(100, pitch));
         Skew last = null;
@@ -79,7 +85,7 @@ final class HorizonEdgeTts {
             try { return once(text, voice, rate, pitch); }
             catch (Skew s) { skewSecs = s.secs; last = s; }   // the phone's clock is off: retry once with the server's time
         }
-        throw new Exception("Edge voice refused the connection (HTTP 403). Microsoft may have changed the service.");
+        throw new Exception("Edge voice refused the connection (HTTP 403" + (lastDiag.isEmpty() ? "" : ", " + lastDiag) + "). Microsoft may have changed the service.");
     }
 
     private static byte[] once(String text, String voice, int rate, int pitch) throws Exception {
@@ -88,7 +94,7 @@ final class HorizonEdgeTts {
         final Throwable[] fail = new Throwable[1];
         final long[] skew = new long[] { Long.MIN_VALUE };
         final String reqId = UUID.randomUUID().toString().replace("-", "");
-        String url = BASE + "?TrustedClientToken=" + TOKEN + "&ConnectionId=" + reqId + "&Sec-MS-GEC=" + gec() + "&Sec-MS-GEC-Version=" + GEC_VERSION;
+        String url = BASE + "?TrustedClientToken=" + token() + "&ConnectionId=" + reqId + "&Sec-MS-GEC=" + gec() + "&Sec-MS-GEC-Version=" + ver();
         Request req = new Request.Builder().url(url)
             .header("Pragma", "no-cache").header("Cache-Control", "no-cache").header("Origin", ORIGIN)
             .header("User-Agent", UA).header("Accept-Language", "en-US,en;q=0.9").header("Cookie", "muid=" + hex(32) + ";").build();
@@ -111,6 +117,10 @@ final class HorizonEdgeTts {
             @Override public void onFailure(WebSocket w, Throwable t, Response r) {
                 if (r != null && r.code() == 403) {
                     String date = r.header("Date");
+                    String body = "";
+                    try { if (r.body() != null) body = r.body().string(); } catch (Exception ignored) { }
+                    if (body.length() > 80) body = body.substring(0, 80);
+                    lastDiag = "server time " + date + (body.isEmpty() ? "" : ", " + body.replaceAll("[\\r\\n]+", " "));
                     try {
                         SimpleDateFormat f = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz", Locale.US);
                         skew[0] = f.parse(date).getTime() / 1000 - System.currentTimeMillis() / 1000;

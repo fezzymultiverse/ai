@@ -104,9 +104,38 @@
 
     /* ---------- badge ---------- */
     function badgeEl() { return document.getElementById('hzBadge'); }
+    // V1.64.0: in a group chat the badge follows the GROUP (names of every AI in it, and whichever one is answering right now),
+    // not the last single AI that was picked.
+    function paintGroupBadge(b, ids) {
+        var running = !!(live && ids.indexOf(live.id) >= 0);
+        var names = ids.map(function (i) { return cfg.providers[i] ? cfg.providers[i].name : i; });
+        var key = ['G', ids.join(','), running ? 'run:' + live.id : 'idle'].join('|');
+        if (running && b._hzKey === key && b.firstChild) {
+            var rd0 = b.querySelector('.hzb-read');
+            if (rd0) { rd0.textContent = (cfg.providers[live.id] ? cfg.providers[live.id].name + ' ' : '') + fmtMs(Date.now() - live.t0); return; }
+        }
+        b._hzKey = key;
+        var lead = running ? live.id : ids[0];
+        var pill = el('span', 'hzb-pill' + (running ? ' busy' : ''));
+        pill.style.setProperty('--pc', colorOf(lead));
+        b.replaceChildren(pill);
+        var dot = el('i', 'hzu-dot ' + (running ? 'run' : status(lead).c));
+        dot.style.setProperty('--pc', colorOf(lead));
+        pill.appendChild(dot);
+        pill.appendChild(el('span', 'hzb-name', 'GROUP'));
+        var joined = names.join(' + ');
+        pill.appendChild(el('span', 'hzb-model', joined.length > 16 ? joined.slice(0, 15) + '\u2026' : joined));
+        pill.appendChild(el('span', 'hzb-sep'));
+        var out = running ? (cfg.providers[live.id] ? cfg.providers[live.id].name + ' ' : '') + fmtMs(Date.now() - live.t0) : ids.length + ' AIs';
+        pill.appendChild(el('span', 'hzb-read', out));
+        b.title = 'Group chat: ' + joined + (running ? ' \u00b7 ' + (cfg.providers[live.id] ? cfg.providers[live.id].name : '') + ' is answering' : '');
+        b.setAttribute('aria-label', 'Usage and engine dashboard. Group chat with ' + joined + '. ' + (running ? 'Answering ' : '') + out);
+    }
     function paintBadge() {
         var b = badgeEl();
         if (!b || !cfg) return;
+        var gids = typeof cfg.group === 'function' ? cfg.group() : null;
+        if (gids && gids.length > 1) { paintGroupBadge(b, gids.filter(function (i) { return cfg.providers[i]; })); return; }
         var id = cfg.active(), p = cfg.providers[id];
         if (!p) return;
         var st = status(id), running = !!(live && live.id === id), s = store.p[id];

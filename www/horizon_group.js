@@ -6,6 +6,7 @@
     var host = null, input = null, pal = null, sheet = null, bar = null;
     var rows = [], sel = 0, isOpen = false, dismissed = false, tok = null;
     var draft = {};   // id -> { on, model } while the sheet is open
+    var leaving = false;   // V1.63.3: the bar shows the Continue-with chips after Leave is tapped
 
     function el(t, c, x) { var n = document.createElement(t); if (c) n.className = c; if (x != null) n.textContent = x; return n; }
     function safe(fn, d) { try { return fn(); } catch (e) { return d; } }
@@ -107,6 +108,23 @@
         if (!g || !g.members || !g.members.length) { bar.hidden = true; bar.replaceChildren(); return; }
         var ps = provs(), by = {}; ps.forEach(function (p) { by[p.id] = p; });
         bar.replaceChildren();
+        // V1.63.3: LEAVE GROUP. Tap Leave, then pick which AI carries on as a normal one-on-one chat (history stays).
+        if (leaving && leaving !== chat.id) leaving = false;
+        if (leaving) {
+            bar.appendChild(el('span', 'hgp-lbl', 'CONTINUE WITH'));
+            g.members.forEach(function (m) {
+                var p = by[m.id]; if (!p) return;
+                var c = el('button', 'hgp-chip hgp-pick' + (p.ready ? '' : ' off')); c.type = 'button'; c.title = 'Leave the group and keep chatting with ' + p.name;
+                c.appendChild(ico(p.icon)); c.appendChild(document.createTextNode(' ' + p.name));
+                c.addEventListener('click', function () {
+                    if (host.leave && host.leave(chat, m.id)) { leaving = false; host.notice('Left the group. Now a normal chat with ' + p.name + '.'); paintBar(); }
+                });
+                bar.appendChild(c);
+            });
+            var cx = el('button', 'hgp-edit', 'Cancel'); cx.type = 'button'; cx.addEventListener('click', function () { leaving = false; paintBar(); }); bar.appendChild(cx);
+            bar.hidden = false;
+            return;
+        }
         bar.appendChild(el('span', 'hgp-lbl', 'GROUP'));
         g.members.forEach(function (m) {
             var p = by[m.id]; if (!p) return;
@@ -122,6 +140,11 @@
             bar.appendChild(db);
         }
         var ed = el('button', 'hgp-edit', 'Edit'); ed.type = 'button'; ed.addEventListener('click', openSheet); bar.appendChild(ed);
+        if (host.leave) {
+            var lv = el('button', 'hgp-leave', 'Leave group'); lv.type = 'button'; lv.title = 'Turn this into a normal chat with one AI (history stays)';
+            lv.addEventListener('click', function () { leaving = chat.id; paintBar(); });
+            bar.appendChild(lv);
+        }
         bar.hidden = false;
     }
 
@@ -153,7 +176,7 @@
         btn(g ? 'New group chat' : 'Start group chat', 'hgp-go', function () { commit('start'); });
         if (g) {
             btn('Update this group', 'hgp-alt', function () { commit('update'); });
-            btn('Ungroup', 'hgp-alt', function () { host.ungroup(chat); host.notice('This chat is a normal chat again'); closeSheet(); paintBar(); });
+            btn('Ungroup', 'hgp-alt', function () { if (host.leave) { if (!host.leave(chat)) return; } else host.ungroup(chat); host.notice('This chat is a normal chat again'); closeSheet(); paintBar(); });
         }
         paintCount();
     }
@@ -224,5 +247,17 @@
         paintBar();
     }
 
-    window.HorizonGroup = { init: init, route: route, open: openSheet };
+    // V1.64.0: which voice slot an AI takes when replies are read aloud. Group members count in group order; a one-off @mention chat counts
+    // AIs in the order they first spoke. Slot 0 is the voice picked in Settings, then each slot steps to the next voice on the same engine.
+    function voiceSlot(provId) {
+        var chat = curChat();
+        if (!chat || !provId) return 0;
+        var order = [];
+        if (chat.group && chat.group.members && chat.group.members.length) order = chat.group.members.map(function (m) { return m.id; });
+        else if (chat.multi && chat.messages) chat.messages.forEach(function (m) { if (m.role !== 'user' && m.prov && order.indexOf(m.prov) < 0) order.push(m.prov); });
+        var i = order.indexOf(provId);
+        return i > 0 ? i : 0;
+    }
+
+    window.HorizonGroup = { init: init, route: route, open: openSheet, voiceSlot: voiceSlot };
 })();

@@ -7,7 +7,7 @@ import androidx.core.app.RemoteInput
 import org.json.JSONArray
 import org.json.JSONObject
 
-/** V1.17.0: handles the notification Reply box and the Stop button of the read-aloud notification. */
+/** V1.17.0: handles the notification Reply box and the Pause / Next / Stop buttons of the read-aloud notification. */
 class HorizonReplyReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val pkg = context.packageName
@@ -26,6 +26,14 @@ class HorizonReplyReceiver : BroadcastReceiver() {
                 val delivered = HorizonAIPlugin.dispatchToJs("horizon-inline-reply", detail.toString())
                 if (delivered) HorizonAIPlugin.postStatus(context, chatId, "You: ${text.take(60)}", "Horizon is thinking...")
                 else HorizonAIPlugin.postStatus(context, chatId, "Reply saved", "Open Horizon and it will send: ${text.take(80)}")
+            }
+            "$pkg.PAUSE_SPEECH" -> {
+                // V1.63.7: the app owns the pause state and repaints the notification through speechHold
+                HorizonAIPlugin.dispatchToJs("horizon-tts-pause", "{}")
+            }
+            "$pkg.NEXT_SPEECH" -> {
+                // V1.64.0: skip to the next queued reply (the page decides what "next" is)
+                HorizonAIPlugin.dispatchToJs("horizon-tts-next", "{}")
             }
             "$pkg.STOP_SPEECH" -> {
                 HorizonAIPlugin.dispatchToJs("horizon-tts-stop", "{}")

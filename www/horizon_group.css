@@ -35,3 +35,9 @@
 .hgp-debate:active { background: rgba(0, 229, 255, 0.12); }
 .header-btn.hgp-on { box-shadow: 0 0 0 1px var(--accent-cyan) inset, 0 0 10px var(--accent-cyan-glow, rgba(0, 229, 255, 0.4)); color: var(--accent-cyan); }
 .hz-mention .hzs-g .ic { width: 22px; height: 22px; font-size: 22px; }
+
+/* V1.63.3: Leave group button and the Continue-with chips */
+.hgp-leave { flex: 0 0 auto; display: inline-flex; align-items: center; height: 26px; padding: 0 10px; border-radius: 13px; border: 1px solid #ff4d6d; background: none; color: #ff4d6d; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+.hgp-leave:active { background: rgba(255, 77, 109, 0.14); }
+.hgp-pick { border-color: var(--accent-cyan); font-weight: 700; }
+.hgp-pick:active { background: rgba(0, 229, 255, 0.12); }

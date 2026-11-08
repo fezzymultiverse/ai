@@ -1456,9 +1456,13 @@
     <link rel="stylesheet" href="horizon_operator.css">
     <link rel="stylesheet" href="horizon_lock.css">
     <link rel="stylesheet" href="horizon_voicepill.css">
+    <link rel="stylesheet" href="horizon_fold.css">
+    <link rel="stylesheet" href="horizon_autoread.css">
     <link rel="stylesheet" href="horizon_hdr2.css">
     <link rel="stylesheet" href="horizon_perf.css">
     <link rel="stylesheet" href="horizon_toolgrid.css">
+    <link rel="stylesheet" href="horizon_door.css">
+    <link rel="stylesheet" href="horizon_termlive.css">
 </head>
 <body>
 
@@ -2062,7 +2066,7 @@
                 <button type="button" class="hz-usage-row" id="hzDockRow" data-page="about" aria-label="Open About and Updates"><svg class="ic" aria-hidden="true"><use href="#i-info"/></svg><span class="hz-usage-text"><b>ABOUT &amp; UPDATES</b><small>Version, changelog, release check</small></span><svg class="ic hz-usage-chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
                 <div class="hz-dock-title">APPS</div>
                 <div class="hz-dock-grid">
-                    <button type="button" class="hz-app" data-addon="github"><svg class="ic hz-gh-logo" aria-hidden="true"><use href="#i-gh"/></svg><span>GitHub</span></button>
+                    <button type="button" class="hz-app" data-addon="github"><svg class="ic hz-gh-logo" aria-hidden="true"><use href="#i-gh"/></svg><span>Github Push</span></button>
                     <button type="button" class="hz-app" data-addon="youtube"><svg class="ic" aria-hidden="true"><use href="#i-yt"/></svg><span>YouTube</span></button>
                     <button type="button" class="hz-app" data-addon="music"><svg class="ic" aria-hidden="true"><use href="#i-music"/></svg><span>Music</span></button>
                     <button type="button" class="hz-app" data-addon="lens"><svg class="ic" aria-hidden="true"><use href="#i-lens"/></svg><span>Lens</span></button>
@@ -2080,7 +2084,7 @@
       <div class="hz-addon-head"><div><h2 id="hzAddonsTitle">HORIZON APPS</h2></div><button type="button" id="hzAddonsClose" class="use-btn" aria-label="Close apps">✕</button></div>
       <p class="hint">Tap an app to open it full screen.</p>
       <div class="hz-addon-grid hz-dock-grid">
-        <button type="button" class="hz-app" data-addon="github"><svg class="ic hz-gh-logo" aria-hidden="true"><use href="#i-gh"/></svg><span>GitHub</span></button>
+        <button type="button" class="hz-app" data-addon="github"><svg class="ic hz-gh-logo" aria-hidden="true"><use href="#i-gh"/></svg><span>Github Push</span></button>
         <button type="button" class="hz-app" data-addon="youtube"><svg class="ic" aria-hidden="true"><use href="#i-yt"/></svg><span>YouTube</span></button>
         <button type="button" class="hz-app" data-addon="music"><svg class="ic" aria-hidden="true"><use href="#i-music"/></svg><span>Music</span></button>
                     <button type="button" class="hz-app" data-addon="lens"><svg class="ic" aria-hidden="true"><use href="#i-lens"/></svg><span>Lens</span></button>
@@ -2455,6 +2459,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                     const sys = getSystemPrompt();
                     let cap = docMode ? 8000 : 0;
                     let lastWhy = 'Request failed';
+                    let fellBack = false;   // V1.63.4: one switch to the free router when the picked model cannot be served
                     const sleep = ms => new Promise(r => setTimeout(r, ms));
                     for (let attempt = 0; attempt < 4; attempt++) {
                         turnCheck(T);
@@ -2562,8 +2567,8 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 icon: 'i-b-openrouter',
                 placeholder: 'sk-or-v1-...',
                 keyUrl: 'https://openrouter.ai/settings/keys',
-                defaultModel: 'openrouter/auto',
-                fallbackModels: ['openrouter/auto', 'google/gemini-2.5-flash', 'openai/gpt-4o-mini', 'anthropic/claude-3.5-haiku', 'meta-llama/llama-3.3-70b-instruct:free', 'deepseek/deepseek-chat-v3.1:free'],
+                defaultModel: 'openrouter/free',
+                fallbackModels: ['openrouter/free', 'openrouter/auto', 'google/gemini-2.5-flash', 'openai/gpt-4o-mini', 'anthropic/claude-3.5-haiku', 'meta-llama/llama-3.3-70b-instruct:free', 'deepseek/deepseek-chat-v3.1:free'],
                 modelsUrl: 'https://openrouter.ai/api/v1/models',
                 headers: k => ({ Authorization: `Bearer ${k}` }),
                 parseModels: d => {
@@ -2572,7 +2577,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                         .map(m => m.id)
                         .filter(id => !/embed|moderation|whisper|tts|image-preview|-image\b/i.test(id))));
                     ids.sort((a, b) => (/:free$/.test(b) ? 1 : 0) - (/:free$/.test(a) ? 1 : 0) || a.localeCompare(b));
-                    return ['openrouter/auto'].concat(ids.filter(id => id !== 'openrouter/auto'));
+                    return ['openrouter/free', 'openrouter/auto'].concat(ids.filter(id => id !== 'openrouter/auto' && id !== 'openrouter/free'));
                 },
                 wrongKey: k => /^gsk_/.test(k) ? 'That looks like a Groq key.' : /^AIza/.test(k) ? 'That looks like a Gemini key.' : '',
                 async chat(key, model, history) {
@@ -2613,6 +2618,11 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                         const why = await errorText(res.clone());
                         lastWhy = `${why} (HTTP ${res.status})`;
                         if (cap > 4000 && /max_?tokens|context|output/i.test(why)) { cap = 4000; continue; }
+                        if (!fellBack && model !== 'openrouter/free' && (res.status === 402 || res.status === 404 || /no endpoints found|provider keys|requires more credits|can only afford/i.test(why))) {
+                            fellBack = true; model = 'openrouter/free';
+                            setLoading('That OpenRouter model is not free for you, switching to openrouter/free');
+                            continue;
+                        }
                         if ((res.status === 429 || res.status === 502 || res.status === 503) && attempt < 3) {
                             const h = Number(res.headers && res.headers.get ? res.headers.get('retry-after') : 0);
                             const w = h > 0 ? h : 4 * (attempt + 1);
@@ -2623,7 +2633,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                             }
                         }
                         if (res.status === 401) throw new Error('OpenRouter rejected the key. Check it at openrouter.ai/settings/keys.');
-                        if (res.status === 402) throw new Error('OpenRouter says this model needs credits. Pick a model ending in :free or top up your balance.');
+                        if (res.status === 402) throw new Error('OpenRouter says this model needs credits. Pick openrouter/free or a model ending in :free, or top up your balance.');
                         throw new Error(lastWhy);
                     }
                     throw new Error(lastWhy);
@@ -3007,7 +3017,9 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             const ch = currentChat(), me = liveCtx && liveCtx.prov;
             if (!ch || !me || !PROVIDERS[me] || !(ch.group || ch.multi)) return '';
             const names = ch.group ? ch.group.members.map(m => PROVIDERS[m.id] && PROVIDERS[m.id].name).filter(Boolean) : [];
-            return `GROUP CHAT\nFezzy is talking to several AIs in one chat${names.length ? ` (${names.join(', ')})` : ''}. You are ${PROVIDERS[me].name}${state.models[me] ? ` (${state.models[me]})` : ''}. Replies from the other AIs show up in the history as "[Name said]: ...". Answer as yourself, in your own voice, and never write lines for the other AIs or put your own name in front of your reply. Do not repeat what another AI already covered: add to it, correct it or disagree briefly. When Fezzy @-mentions one AI, only that AI answers.`;
+            // V1.63.3: Gemini hears songs (listen tool); the other AIs are told to hand sound questions to him instead of guessing.
+            const gEars = (me !== 'gemini' && ch.group && ch.group.members.some(m => m.id === 'gemini') && window.HorizonMusic && HorizonMusic.seesAi()) ? ' Gemini is in this chat and he can HEAR the song that is playing (he has a listening tool). If Fezzy asks what a song sounds like, say Gemini should answer that (he can type @gemini) and do not guess the sound.' : '';
+            return `GROUP CHAT\nFezzy is talking to several AIs in one chat${names.length ? ` (${names.join(', ')})` : ''}. You are ${PROVIDERS[me].name}${state.models[me] ? ` (${state.models[me]})` : ''}. Replies from the other AIs show up in the history as "[Name said]: ...". Answer as yourself, in your own voice, and never write lines for the other AIs or put your own name in front of your reply. Do not repeat what another AI already covered: add to it, correct it or disagree briefly. When Fezzy @-mentions one AI, only that AI answers.${gEars}`;
         }
         function getSystemPrompt() {
             const parts = [getPersona()];
@@ -3018,7 +3030,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             parts.push(toolsBlock());
             parts.push(ytBlock());
             parts.push(ghBlock());
-            if (window.HorizonMusic) parts.push(HorizonMusic.block());
+            if (window.HorizonMusic) parts.push(HorizonMusic.block(liveCtx && liveCtx.prov));
             if (window.Horizon && Horizon.Shell) { const shb = Horizon.Shell.block(); if (shb) parts.push(shb); }
             parts.push(pdfBlock());
             parts.push('MARKDOWN FILES\nWhen you write a Markdown document, notes, README or any text Fezzy will copy or keep, put the WHOLE thing inside ONE fenced block that starts with ```markdown and ends with ```, so the app shows it with Copy, Raw/Converted and Save. Inside that block, if you need a code fence, use ~~~ instead of ```. Normal chat replies are not wrapped.');
@@ -3849,7 +3861,11 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             b.dataset.speakId = id;
             b.setAttribute('aria-label', 'Read this reply aloud');
             b.appendChild(icon('i-volume'));
-            b.addEventListener('click', () => T.toggle(id, text));
+            b.addEventListener('click', () => {
+                // V1.64.0: in a group each AI reads in its own voice (the next one along on the engine picked in Settings)
+                const pv = wrap._msg && wrap._msg.prov;
+                T.toggle(id, text, { slot: window.HorizonGroup && HorizonGroup.voiceSlot && pv ? HorizonGroup.voiceSlot(pv) : 0 });
+            });
             meta.appendChild(b);
         }
         // --- V1.12.0: copy button on every Horizon reply ---
@@ -4136,14 +4152,32 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             { id: 'plan', ic: 'i-layers', t: 'Plan a build', d: 'Phases, risks and the first move. Strategy over impulse', p: 'Give me a phased plan, with risks and the first move, to build ' }
         ];
 
+        // V1.64.1: the members of the group chat that is open, or null in a normal chat
+        function groupIds() {
+            const gc = currentChat();
+            const ids = gc && gc.group && gc.group.members ? gc.group.members.map(m => m.id).filter(id => PROVIDERS[id]) : [];
+            return ids.length > 1 ? ids : null;
+        }
         function paintWelcomeStatus() {
             const b = $('#wlStatus');
             if (!b) return;
+            const gids = groupIds();
+            // the welcome card follows the chat: group wording and a group pill inside a group chat, the normal ones the moment it is left
+            const wh = document.querySelector('.welcome h2'), ws = document.querySelector('.welcome .wl-sub'), wm = document.querySelector('.welcome .wl-mark');
+            if (wh) wh.textContent = gids ? 'Group chat' : 'Welcome to Horizon';
+            if (ws) ws.textContent = gids ? 'Everyone answers, one after another, and reads the others. Type @name to single one out, @all to wake the whole group.' : 'Strategy over impulse. Pick a starter or just type.';
+            if (wm) wm.replaceChildren(icon(gids ? 'i-users' : 'i-cpu'));
             const id = state.active, p = PROVIDERS[id];
             b.replaceChildren();
             const txt = document.createElement('span');
             txt.className = 'txt';
-            if (hasKey(id)) {
+            if (gids) {
+                const ready = gids.filter(g => hasKey(g));
+                const names = gids.map(g => PROVIDERS[g].name).join(' + ');
+                b.classList.toggle('warn', !ready.length);
+                b.appendChild(icon(ready.length ? 'i-users' : 'i-key'));
+                txt.textContent = ready.length ? `GROUP · ${names}${ready.length < gids.length ? ` · ${ready.length} of ${gids.length} ready` : ' ready'}` : 'Add a key for the AIs in this group';
+            } else if (hasKey(id)) {
                 b.classList.remove('warn');
                 b.appendChild(avatarEl(id));
                 txt.textContent = `${p.name} · ${state.models[id]} ready`;
@@ -4192,7 +4226,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             st.type = 'button';
             st.className = 'wl-status';
             st.id = 'wlStatus';
-            st.addEventListener('click', () => openPanel('right', 'providers'));
+            st.addEventListener('click', () => { if (groupIds() && window.HorizonGroup && HorizonGroup.open) HorizonGroup.open(); else openPanel('right', 'providers'); });
             const grid = document.createElement('div');
             grid.className = 'starters';
             const pdfIc = document.querySelector('#pdfBtn .pdf-ic');
@@ -4262,14 +4296,35 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             const out = [];
             const me = liveCtx && liveCtx.prov;
             const multi = !!(chat && (chat.group || chat.multi) && me);
-            const win = messages.slice(-MAX_HISTORY);
+            let win = messages.slice(-MAX_HISTORY);
+            // V1.64.0: GROUP TOKEN TRIM. Every AI in a group is sent the whole history, so the cost is multiplied by the number of AIs.
+            // No extra summary call: the newest few messages go in full; older ones lose code blocks and artifacts and are cut to a short
+            // head; and the history stops at a size budget, so a long group chat stays about the same size however long it runs.
+            const KEEP_FULL = 4, BUDGET = 14000, CAP_AI = 700, CAP_USER = 1000;
+            const lite = (m, i) => {
+                const t0 = String(m.text || '');
+                if (!multi || i >= win.length - KEEP_FULL) return t0;
+                let t = t0.replace(/<artifact\b[\s\S]*?<\/artifact>/gi, '[artifact omitted]').replace(/```[\s\S]*?```/g, '[code omitted]');
+                const cap = m.role === 'user' ? CAP_USER : CAP_AI;
+                if (t.length > cap) t = t.slice(0, cap).replace(/\s+\S*$/, '') + ' ... [older message shortened]';
+                return t;
+            };
+            if (multi && win.length > KEEP_FULL) {
+                let used = 0, cut = 0;
+                for (let k = win.length - 1; k >= 0; k--) {
+                    used += lite(win[k], k).length;
+                    if (used > BUDGET && win.length - k > KEEP_FULL) { cut = k + 1; break; }
+                }
+                if (cut > 0) win = win.slice(cut);
+            }
             let lastAtt = -1;
             win.forEach((m, i) => { if (m.att && m.att.length) lastAtt = i; });
             win.forEach((m, i) => {
                 const other = multi && m.role !== 'user' && m.prov && m.prov !== me && PROVIDERS[m.prov];
                 const role = (m.role === 'user' || other) ? 'user' : 'assistant';
                 const hasAtt = window.HorizonAttach && m.att && m.att.length;
-                let text = other ? `[${PROVIDERS[m.prov].name} said]: ${m.text}` : m.text;
+                const body = lite(m, i);
+                let text = other ? `[${PROVIDERS[m.prov].name} said]: ${body}` : body;
                 if (hasAtt) text += '\n\n' + HorizonAttach.block(m.att, i === lastAtt);
                 const imgs = hasAtt && i === lastAtt ? HorizonAttach.images(m.att) : [];
                 const last = out[out.length - 1];
@@ -4743,7 +4798,8 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 return 'Mistral model for general chat.';
             }
             if (prov === 'openrouter') {
-                if (n === 'openrouter/auto') return 'OpenRouter picks the best model for each message for you.';
+                if (n === 'openrouter/free') return 'Picks a free model for each message. Costs nothing, but free models are slow or busy at times.';
+                if (n === 'openrouter/auto') return 'OpenRouter picks the best model for each message for you. Can use paid models, so it may need credits.';
                 const free = /:free$/.test(n) ? ' Free to use, with daily limits.' : '';
                 if (has(/gemini/)) return 'Google Gemini through OpenRouter. Sees pictures, long chats.' + free;
                 if (has(/claude/)) return 'Anthropic Claude through OpenRouter. Careful, clear writing and strong code.' + free;
@@ -4836,6 +4892,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                     row.addEventListener('click', () => {
                         state.models[id] = m;
                         lsSet(LS.model(id), m);
+                        { const gc = currentChat(); const gmem = gc && gc.group && gc.group.members && gc.group.members.find(x => x.id === id); if (gmem) { gmem.model = m; saveChats(); } }   // V1.63.3: in a group the pick also sets that member's model
                         setActive(id);
                         notice(`Using ${p.name} \u00b7 ${m}`);
                         pkHide();
@@ -4877,11 +4934,21 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         function updateComposer() {
             const id = state.active;
             const p = PROVIDERS[id];
-            chatInput.placeholder = state.imgOn ? 'Describe the image...' : `Message ${p.name}...`;
+            // V1.63.6: in a group chat the box names the group members, not the last single AI that was picked (an AI removed from the group no longer shows).
+            const gch = currentChat();
+            const gnames = gch && gch.group && gch.group.members ? gch.group.members.map(m => PROVIDERS[m.id] && PROVIDERS[m.id].name).filter(Boolean) : [];
+            chatInput.placeholder = state.imgOn ? 'Describe the image...' : (gnames.length > 1 ? `Message the group (${gnames.join(', ')})...` : `Message ${p.name}...`);
             paintWelcomeStatus();
+            if (window.HzUsage) HzUsage.badge();   // V1.64.0: the badge follows the group the moment it is made, edited or left
             if (state.imgOn) {
                 statusText.textContent = 'Image mode · Pollinations draws what you type';
                 statusText.classList.remove('warn');
+            } else if (groupIds() && groupIds().some(g => hasKey(g))) {
+                statusText.textContent = '';   // V1.64.1: in a group, any member with a key is enough, the box names the group
+                statusText.classList.remove('warn');
+            } else if (groupIds()) {
+                statusText.textContent = 'No key for any AI in this group. Open API PROVIDERS PLUS KEYS';
+                statusText.classList.add('warn');
             } else if (hasKey(id)) {
                 const live = enabledWeb().length;
                 statusText.textContent = '';   // V1.41.0: provider, model and tokens are in the badge below; tools show as chips above the box
@@ -5565,7 +5632,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                     }
                     if (c.mu) {
                         setLoading(`Music: ${shortTxt(c.kind.slice(6) + ' ' + c.arg, 60)}`);
-                        const mres = await HorizonMusic.run(c.kind, c.arg);
+                        const mres = await HorizonMusic.run(c.kind, c.arg, liveCtx && liveCtx.prov);
                         const mbad = /^ERROR/i.test(mres.text);
                         thoughtAdd(mbad ? 'i-x' : 'i-check', mbad ? 'Music step failed' : 'Music step done', true, shortTxt(mres.text.replace(/^ERROR:\s*/i, '').split('\n')[0], 160), mbad);
                         parts.push(`[TOOL RESULT \u00b7 ${c.kind}: ${c.arg}]\n${mres.text}`);
@@ -5887,15 +5954,25 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         }
 
         // V1.60.0: run the chosen AIs one after another (one AI = the normal single reply). Each uses its own model for its turn only.
+        // V1.64.2: remembers which AIs failed in the last group round (and for which message), so Retry redoes only those.
+        let groupFail = null, lastTurnErr = null;
         async function runTargets(chat, targets, text, dm, restore) {
             groupAbort = false;
+            const failed = [];
             for (let i = 0; i < targets.length; i++) {
                 if (groupAbort) break;
+                chatMessages.querySelectorAll('.retry-bar').forEach(n => n.remove());   // a stale bar must not sit above the next AI's reply
                 const t = targets[i], tp = PROVIDERS[t.id], prev = state.models[t.id];
                 if (t.model) state.models[t.id] = t.model;
-                try { docMode = dm || ''; await runAiTurn(chat, t.id, tp, keyOf(t.id), text, i === 0 ? restore : undefined); }
+                let ok = true;
+                try { docMode = dm || ''; ok = await runAiTurn(chat, t.id, tp, keyOf(t.id), text, i === 0 ? restore : undefined); }
                 finally { state.models[t.id] = prev; }
+                if (ok === false && !groupAbort) failed.push({ t, err: lastTurnErr });
             }
+            const um = chat.messages.slice().reverse().find(m => m.role === 'user') || null;
+            groupFail = (failed.length && !restore && um) ? { chatId: chat.id, msg: um, text, dm: dm || '', targets: failed.map(f => f.t) } : null;
+            if (failed.length) showRetry(chat, { name: failed.map(f => PROVIDERS[f.t.id].name).join(' + ') }, failed[0].err || new Error('No reply'));
+            else chatMessages.querySelectorAll('.retry-bar').forEach(n => n.remove());
         }
         // V1.61.0: DEBATE. One tap: the group's AIs each critique the others' replies. Reuses the [Name said] history, so it is just one more round.
         const DEBATE_TEXT = '\u2694\uFE0F Debate: read each other\u2019s replies above. Say what the others got right, what they got wrong or missed, and where you disagree. Short and specific. Do not agree just to be polite, and if someone changed your mind, say so.';
@@ -5926,6 +6003,8 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         async function runAiTurn(chat, id, p, key, text, restore) {
             // Regenerate passes the reply it replaced: if the new turn is stopped or fails, the old reply comes back.
             const restoreOld = () => { if (!restore) return; [].concat(restore).forEach(r => chat.messages.push(r)); chat.updated = Date.now(); saveChats(); if (state.currentId === chat.id) renderMessages(chat); };
+            let turnOk = false;   // V1.64.2: runTargets needs to know which AIs failed, so a group Retry can redo only those
+            lastTurnErr = null;
             resetUsage();
             liveCtx = { prov: id, name: p.name, model: state.models[id], chatId: chat.id };
             const T = newTurn();
@@ -5977,6 +6056,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 const steps = hideLoading();
                 if (steps.length > 1) info.thought = steps;
                 const aiMsg = pushMessage(chat, 'ai', reply, ms, info);
+                turnOk = true;
                 if (NATIVE && lsGet(LS.notifOn) !== '0') {
                     await callNative('HorizonAI', 'notifyReply', { chatId: chat.id, text: reply });
                 }
@@ -5998,16 +6078,20 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                     if (state.currentId === chat.id) notice('Stopped');
                 } else {
                     thoughtAdd('i-x', `${p.name} failed`, true, friendlyError(e), true);
+                    lastTurnErr = e;
                     hideLoading();
                     restoreOld();
                     showRetry(chat, p, e);
                 }
             } finally {
                 if (window.HorizonLens) HorizonLens.done();
-                if (NATIVE) await callNative('HorizonAI', 'endTurn');
+                // V1.64.2: never wait on the native side for longer than 3 s. A hung bridge call here used to leave Horizon "busy" for good,
+                // and Retry silently did nothing while it was busy.
+                if (NATIVE) await Promise.race([callNative('HorizonAI', 'endTurn'), new Promise(r => setTimeout(r, 3000))]);
                 docMode = '';
                 setBusy(false);
             }
+            return turnOk;
         }
 
         // ===== V1.30.0: chat quality. Edit a sent message, regenerate a reply, continue a cut-off answer =====
@@ -6097,10 +6181,29 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         }
         // Retry: rerun the last unanswered message, or redo the newest reply when the failure was a regenerate.
         function retryLast() {
-            if (state.busy) return;
+            if (state.busy) { notice('Horizon is still working. Tap Stop first, then Retry.', 'error'); return; }
             const chat = currentChat();
             if (!chat || !chat.messages.length) return;
             const msgs = chat.messages, last = msgs[msgs.length - 1];
+            // V1.64.2: GROUP RETRY. If some AIs in the last round failed, redo only those, for the message they failed on.
+            let lu = -1;
+            msgs.forEach((m, i) => { if (m.role === 'user') lu = i; });
+            const redo = (targets, txt, dm) => {
+                const tg = targets.filter(t => keyOf(t.id) && (!window.HzAbout || !HzAbout.allow || HzAbout.allow(t.id, PROVIDERS[t.id].name)));
+                if (!tg.length) { notice('No AI that failed has a key.', 'error'); return true; }
+                skipTyping();
+                chatMessages.querySelectorAll('.retry-bar').forEach(n => n.remove());
+                runTargets(chat, tg, txt, dm);
+                return true;
+            };
+            if (groupFail && groupFail.chatId === chat.id && lu >= 0 && groupFail.msg === msgs[lu] && groupFail.targets.length) return redo(groupFail.targets, groupFail.text, groupFail.dm);
+            if (last.role !== 'user' && lu >= 0 && chat.group && chat.group.members) {
+                // no record (the app was reopened): any member that has not answered the last message yet
+                const heard = new Set(msgs.slice(lu + 1).filter(m => m.role !== 'user' && m.prov).map(m => m.prov));
+                const rt0 = window.HorizonGroup ? HorizonGroup.route(msgs[lu].text, chat) : null;
+                const missing = rt0 ? rt0.targets.filter(t => !heard.has(t.id)) : [];
+                if (missing.length) return redo(missing, msgs[lu].text, pdfModeFor(msgs[lu].text, msgs.slice(0, lu).reverse().find(x => x.role !== 'user')));
+            }
             if (last.role !== 'user') return regenerateReply();
             const rt = window.HorizonGroup ? HorizonGroup.route(last.text, chat) : null;
             if (rt && rt.targets.length) {
@@ -6227,7 +6330,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 if (e && e.stopped) { if (state.currentId === chat.id) notice('Stopped'); }
                 else if (state.currentId === chat.id) notice(`${s.p.name} error: ${friendlyError(e)}`, 'error');
             } finally {
-                if (NATIVE) await callNative('HorizonAI', 'endTurn');
+                if (NATIVE) await Promise.race([callNative('HorizonAI', 'endTurn'), new Promise(r => setTimeout(r, 3000))]);   // V1.64.2: never hang here
                 setBusy(false);
             }
         }
@@ -6376,7 +6479,9 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
 
         // V1.46.0: one-shot ask for the floating AI box in the terminal. Not saved in any chat. It only returns text; nothing is ever run.
         window.HorizonAskAI = async function (msgs) {
-            if (state.busy) throw new Error('Horizon is answering in the chat. Wait a moment.');
+            // V1.63.4: wait up to 25s for the chat to finish instead of refusing.
+            for (let w = 0; state.busy && w < 100; w++) await new Promise(r => setTimeout(r, 250));
+            if (state.busy) throw new Error('Horizon is still answering in the chat. Try again in a moment.');
             const id = state.active, p = PROVIDERS[id], key = keyOf(id);
             if (!key) throw new Error('Add a ' + p.name + ' key in API PROVIDERS PLUS KEYS first.');
             if (window.HzAbout && HzAbout.allow && !HzAbout.allow(id, p.name)) throw new Error(p.name + ' is switched off.');
@@ -7606,8 +7711,29 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 saveChats(); renderChatList(); updateUI();
                 return true;
             },
-            update: (chat, members) => { chat.group = { members, see: true }; chat.title = 'Group: ' + members.map(m => PROVIDERS[m.id].name).join(' + '); chat.updated = Date.now(); saveChats(); renderChatList(); },
-            ungroup: chat => { delete chat.group; delete chat.multi; chat.updated = Date.now(); saveChats(); },
+            update: (chat, members) => { chat.group = { members, see: true }; chat.title = 'Group: ' + members.map(m => PROVIDERS[m.id].name).join(' + '); chat.updated = Date.now(); saveChats(); renderChatList(); updateComposer(); },
+            // V1.63.3: LEAVE GROUP. The chat becomes a normal one-AI conversation (history kept). `pid` = the member to carry on with.
+            // If other AIs already spoke, chat.multi stays so their old replies still reach the AI as "[Name said]" and are not mistaken for its own.
+            leave: (chat, pid) => {
+                if (!chat || !chat.group) return false;
+                if (state.busy) { notice('Horizon is busy. Try again in a moment.', 'error'); return false; }
+                const g = chat.group;
+                const heard = new Set(chat.messages.filter(m => m.role !== 'user' && m.prov).map(m => m.prov));
+                delete chat.group;
+                if (heard.size > 1) chat.multi = true; else delete chat.multi;
+                if (/^Group: /.test(chat.title || '')) {
+                    const fu = chat.messages.find(m => m.role === 'user');
+                    chat.title = fu && fu.text ? fu.text.replace(/\s+/g, ' ').slice(0, 42) : 'New chat';
+                }
+                if (pid && PROVIDERS[pid]) {
+                    const gm = (g.members || []).find(m => m.id === pid);
+                    if (gm && gm.model) { state.models[pid] = gm.model; lsSet(LS.model(pid), gm.model); }
+                    setActive(pid);
+                }
+                chat.updated = Date.now(); saveChats(); renderChatList(); updateUI();
+                return true;
+            },
+            ungroup: chat => { delete chat.group; delete chat.multi; chat.updated = Date.now(); saveChats(); updateComposer(); },
             debate: () => debateRound(),
             openKeys: id => hzOpenKeys(id)
         });
@@ -7800,12 +7926,24 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', closeAllPanels));
         $('#newChatBtn').addEventListener('click', newChat);
         statusText.addEventListener('click', () => openPanel('right', 'providers'));
-        $('#hzVoice').addEventListener('click', () => {
+        // V1.64.0: VOICE pill. Tap while it is speaking = pause / resume. Long-press (any time) = voice settings. Idle tap still opens settings.
+        {
             const hv = $('#hzVoice');
-            if (hv.classList.contains('playing') || hv.classList.contains('loading')) { if (window.HorizonTTS) HorizonTTS.stop(); return; }
-            if (!rightPanel.classList.contains('open')) openPanel('right');
-            rightPage('personalisation');
-        });
+            const openVoiceSettings = () => { if (!rightPanel.classList.contains('open')) openPanel('right'); rightPage('personalisation'); };
+            let lpTimer = 0, lpFired = false;
+            const lpClear = () => { if (lpTimer) { clearTimeout(lpTimer); lpTimer = 0; } };
+            hv.addEventListener('pointerdown', () => {
+                lpFired = false; lpClear();
+                lpTimer = setTimeout(() => { lpTimer = 0; lpFired = true; try { if (navigator.vibrate) navigator.vibrate(18); } catch (_) { /* optional */ } openVoiceSettings(); }, 480);
+            });
+            ['pointerup', 'pointercancel', 'pointerleave'].forEach(ev => hv.addEventListener(ev, lpClear));
+            hv.addEventListener('contextmenu', e => e.preventDefault());
+            hv.addEventListener('click', () => {
+                if (lpFired) { lpFired = false; return; }               // the long-press already opened settings
+                if (hv.classList.contains('playing') || hv.classList.contains('loading')) { if (window.HorizonTTS) HorizonTTS.togglePause(); return; }
+                openVoiceSettings();
+            });
+        }
         sendBtn.addEventListener('click', async () => {
             if (window.HorizonVoice && HorizonVoice.recording()) { if (await HorizonVoice.finish()) sendMessage(); return; }
             if (state.busy) stopTurn(); else sendMessage();
@@ -7911,7 +8049,13 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             if (hv) {
                 hv.classList.toggle('loading', st.state === 'loading');
                 hv.classList.toggle('playing', st.state === 'playing');
-                hv.setAttribute('aria-label', st.state === 'idle' ? 'Voice: idle. Tap to open voice settings' : 'Voice: ' + st.state + '. Tap to stop');
+                // V1.64.0: paused keeps the 'playing' state underneath, so the pill shows a pause icon and the word Paused
+                const pz = !!(st.paused && st.state !== 'idle');
+                hv.classList.toggle('paused', pz);
+                const hu = hv.querySelector('use'), hn = hv.querySelector('.hzv-name');
+                if (hu) hu.setAttribute('href', pz ? '#i-pause' : '#i-volume');
+                if (hn) hn.textContent = pz ? 'Paused' : 'Voice';
+                hv.setAttribute('aria-label', st.state === 'idle' ? 'Voice: idle. Tap to open voice settings' : (pz ? 'Voice: paused. Tap to resume, long-press for voice settings' : 'Voice: ' + st.state + '. Tap to pause, long-press for voice settings'));
             }
             document.querySelectorAll('.speak-btn').forEach(b => {
                 const s = st.id === b.dataset.speakId ? st.state : 'idle';
@@ -8235,6 +8379,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             providers: PROVIDERS, ids: PROVIDER_IDS,
             hasKey: id => hasKey(id), keyOf: id => keyOf(id),
             active: () => state.active, model: id => state.models[id] || '',
+            group: () => { const gc = currentChat(); return gc && gc.group && gc.group.members && gc.group.members.length > 1 ? gc.group.members.map(m => m.id) : null; },   // V1.64.0
             fetchModels: (id, key) => fetchModels(id, key),
             openKeys: () => { openPanel('right', 'providers'); },
             openDash: () => { openPanel('right', 'usage'); }
@@ -8290,5 +8435,9 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
     <script src="horizon_lock.js"></script>
     <script src="horizon_voicepill.js"></script>
     <script src="horizon_hdr2.js"></script>
+    <script src="horizon_fold.js"></script>
+    <script src="horizon_autoread.js"></script>
+    <script src="horizon_door.js"></script>
+    <script src="horizon_termlive.js"></script>
 </body>
 </html>

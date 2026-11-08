@@ -10,7 +10,7 @@
     var bars = [].slice.call(pill.querySelectorAll('.hzv-wave i'));
     var raf = 0;
 
-    function mode() { return pill.classList.contains('playing') ? 'playing' : pill.classList.contains('loading') ? 'loading' : 'idle'; }
+    function mode() { return pill.classList.contains('paused') ? 'paused' : pill.classList.contains('playing') ? 'playing' : pill.classList.contains('loading') ? 'loading' : 'idle'; }
     function rest() {
         bars.forEach(function (b) { b.style.transform = ''; b.style.opacity = ''; });
         if (wave) wave.style.removeProperty('--hzv-line');
@@ -23,7 +23,7 @@
     function frame(ms) {
         raf = 0;
         var m = mode();
-        if (m === 'idle') { rest(); return; }
+        if (m === 'idle' || m === 'paused') { rest(); return; }       // V1.64.0: paused = flat, still
         var t = ms / 1000;
         ring(t);
         if (m === 'playing') {
@@ -41,7 +41,7 @@
         }
         raf = requestAnimationFrame(frame);
     }
-    function kick() { if (!raf && mode() !== 'idle') raf = requestAnimationFrame(frame); else if (mode() === 'idle') rest(); }
+    function kick() { var m = mode(); if (!raf && m !== 'idle' && m !== 'paused') raf = requestAnimationFrame(frame); else if (m === 'idle' || m === 'paused') rest(); }
 
     if (window.MutationObserver) new MutationObserver(kick).observe(pill, { attributes: true, attributeFilter: ['class'] });
     kick();

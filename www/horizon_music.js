@@ -11,7 +11,7 @@
  *   [[music.next]] [[music.prev]] [[music.now]] [[music.listen: question]]. The chat AI only knows metadata; only Gemini can hear a clip
  *   (V1.59.0 Gemini ears: the ear button on the now-playing bar, mini player and full player opens an ask sheet).
  *
- * Public API: window.HorizonMusic = { init, SRC, parse, run, block, seesAi, setAi, openTab, scan }
+ * Public API: window.HorizonMusic = { init, SRC, parse, run(kind, arg, byProviderId), block(byProviderId), seesAi, setAi, openTab, scan }
  */
 (function () {
     'use strict';
@@ -587,13 +587,17 @@
         const keys = gKeys();
         if (!keys.length) throw new Error('Add a Gemini key first (Settings > API providers).');
         if (host.allowSend && !host.allowSend('gemini', 'Gemini')) throw new Error('Not sent. You chose not to send to Gemini.');
-        let model = (host.geminiModel && host.geminiModel()) || 'gemini-2.5-flash';
+        // V1.63.3: only a real Gemini model that takes audio is used for listening (Gemma, image, TTS, live and embedding models do not),
+        // and a 400 or 404 from the picked model retries once on gemini-2.5-flash.
+        const SAFE = 'gemini-2.5-flash';
+        let model = (host.geminiModel && host.geminiModel()) || SAFE;
+        if (!/^(models\/)?gemini-/i.test(model) || /image|tts|live|embed|robotics|computer|native-audio|learnlm/i.test(model)) model = SAFE;
         let last = null;
         for (const key of keys) {
             try { return await gOnce(key, model, contents); }
             catch (e) {
                 last = e;
-                if (e.status === 404 && model !== 'gemini-2.5-flash') { model = 'gemini-2.5-flash'; try { return await gOnce(key, model, contents); } catch (e2) { last = e2; } }
+                if ((e.status === 404 || (e.status === 400 && !/api key|this key/i.test(e.message))) && model !== SAFE) { model = SAFE; try { return await gOnce(key, model, contents); } catch (e2) { last = e2; } }
                 if (!last.limit) break;
             }
         }
@@ -795,7 +799,9 @@
     // ---------- AI side ----------
     function state() { return !cur ? 'stopped' : au.paused ? 'paused' : 'playing'; }
     function line(t) { return `${t.title} - ${t.artist}${t.album && t.album !== 'Unknown album' ? ' (' + t.album + ')' : ''}${t.dur ? ' [' + fmt(t.dur) + ']' : ''}`; }
-    function block() {
+    // V1.63.3: `by` is the id of the AI that is about to answer. Gemini is the one who listens, so when he is the chat AI
+    // (alone or in a group) the listen tool is his without the switch; other AIs still need "Let the chat AI ask him to listen".
+    function block(by) {
         if (!seesAi()) return 'MUSIC PLAYER\nHidden by Fezzy (the red eye in the music widget). You cannot see what is playing and you have no music tools. If he asks about his music, tell him to tap the eye to show it.';
         const out = ['MUSIC PLAYER (Fezzy\'s own player, live; the red eye is on so you can see it)'];
         out.push(lib.length ? `Library: ${visible().length} songs.` : 'Library: not scanned yet (Music tab, Scan storage).');
@@ -808,9 +814,13 @@
         const rc = recent.filter(r => !cur || r.id !== cur.id).slice(0, 5).map(r => byId.get(r.id)).filter(Boolean);
         if (rc.length) out.push('Recently played: ' + rc.map(t => t.title + ' - ' + t.artist).join(' | '));
         if (liked.size) out.push(`Liked songs: ${liked.size}.`);
-        const canListen = toolOn() && gKeys().length > 0;
+        const isG = by === 'gemini';
+        const canListen = (toolOn() || isG) && gKeys().length > 0;
         out.push('TOOLS (tag alone in your reply, up to 3 per turn; the result comes back to you before you answer): [[music.now]]  [[music.search: words]] returns up to 10 songs with ids  [[music.play: id or words]]  [[music.queue: id]]  [[music.pause]]  [[music.resume]]  [[music.next]]  [[music.prev]]' + (canListen ? '  [[music.listen: your question about the sound]] sends a short clip of what is playing to Gemini, who listens and answers (slow, use it only when he asks what the song sounds like).' : '.'));
-        out.push('You only know metadata (title, artist, album, length, position). You cannot hear the audio yourself' + (canListen ? ' (only the listen tool can, through Gemini)' : '') + ' and cannot see lyrics here: talk about the song from what you genuinely know, say so when you do not, and never paste long lyrics. Comment on what is playing like a friend when he asks or it fits, do not interrupt unprompted. Never say you played something until the tool result confirms it.');
+        if (isG && canListen) out.push('YOU CAN HEAR THE SONG. You are Gemini, and the app listens through you: when Fezzy asks how a song sounds (vibe, beat, vocals, mix, tempo, key, what song it is), put [[music.listen: his question]] alone in your reply. The app cuts a clip of what is playing, sends it to you as audio, and the answer comes back before you reply. Never tell him you cannot listen or that you have no ears. If the tool returns an ERROR, say what it says in one line.');
+        else if (isG) out.push('You are Gemini and you can hear songs, but no Gemini key is saved, so the listen tool is off. Tell Fezzy to add one in Settings > API providers.');
+        out.push('Older replies in this chat may name songs that played earlier. Only the NOW PLAYING line above is true right now, so never repeat a song name from earlier messages as the current one.');
+        out.push('You only know metadata (title, artist, album, length, position). ' + (isG ? 'Without the listen tool you cannot hear the audio' : 'You cannot hear the audio yourself') + (canListen && !isG ? ' (only the listen tool can, through Gemini)' : '') + ' and cannot see lyrics here: talk about the song from what you genuinely know, say so when you do not, and never paste long lyrics. Comment on what is playing like a friend when he asks or it fits, do not interrupt unprompted. Never say you played something until the tool result confirms it.');
         return out.join('\n');
     }
     function parse(text) {
@@ -828,13 +838,13 @@
         return l.map(t => { const h = (t.title + ' ' + t.artist + ' ' + t.album).toLowerCase(); let s = 0; words.forEach(w => { if (h.indexOf(w) !== -1) s++; if (t.title.toLowerCase().indexOf(w) !== -1) s += 0.5; }); return { t, s }; })
             .filter(x => x.s >= words.length).sort((a, b) => b.s - a.s).slice(0, n).map(x => x.t);
     }
-    async function run(kind, arg) {
+    async function run(kind, arg, by) {
         if (!seesAi()) return { text: 'ERROR: music is hidden from you. Tell Fezzy to tap the red eye.' };
         try {
             if (kind === 'music.now') return { text: cur ? `${state()}: ${line(cur)} at ${fmt(au.currentTime)} id=${cur.id}` : 'Nothing is playing.' };
             if (kind === 'music.listen') {
                 if (!cur) return { text: 'Nothing is playing.' };
-                if (!toolOn()) return { text: 'ERROR: Fezzy has not allowed the chat AI to ask Gemini to listen. He can switch it on in the Ask Gemini sheet (ear button).' };
+                if (!toolOn() && by !== 'gemini') return { text: 'ERROR: Fezzy has not allowed the chat AI to ask Gemini to listen. He can switch it on in the Ask Gemini sheet (ear button), or @gemini can listen on his own.' };
                 if (!gKeys().length) return { text: 'ERROR: no Gemini key is saved, so nobody can listen. Tell Fezzy to add one in Settings > API providers.' };
                 const r = await listen(cur, arg || 'Describe what you hear: vibe, tempo, instruments, vocals and the mix.', [], true);
                 return { text: 'GEMINI LISTENED to ' + r.secs + ' s starting at ' + fmt(r.from) + ' and says:\n' + r.text };

@@ -14,7 +14,7 @@
         const dv = $('hzDownloadsView'); if (dv) dv.hidden = mode !== 'downloads';
         if (active) {
             $('hzExtensionTitle').replaceChildren();
-            if (mode === 'github') $('hzExtensionTitle').insertAdjacentHTML('beforeend', '<svg class="ic" aria-hidden="true"><use href="#i-gh"/></svg> GitHub');
+            if (mode === 'github') $('hzExtensionTitle').insertAdjacentHTML('beforeend', '<svg class="ic" aria-hidden="true"><use href="#i-gh"/></svg> Github Push');
             else if (mode === 'lens') { $('hzExtensionTitle').textContent = 'Lens'; if (window.HorizonLens) window.HorizonLens.show(); }
             else if (mode === 'downloads') { $('hzExtensionTitle').textContent = '⬇ Downloads'; if (window.HorizonDownloads) window.HorizonDownloads.show(); }
             else $('hzExtensionTitle').textContent = mode === 'youtube' ? '▶ YouTube · Terminal' : '🎵 Music Player';

@@ -110,6 +110,7 @@
             var s = history.state;
             if (st.open && !(s && s.hzt)) minimize(true);
         });
+        if (window.HorizonTermLive) { try { window.HorizonTermLive.attach(el); } catch (e) { /* colour only */ } }   // V1.65.2
         st.built = true;
     }
 
@@ -181,7 +182,7 @@
         if (!st.alive) {
             st.alive = true; el.out.textContent = '';
             if (native()) { try { plugin().cwd().then(function (r) { st.cwd = st.home = r.cwd || ''; paintPs(); }, function () { }); } catch (e) { /* ignore */ } }
-            welcome();
+            if (window.HorizonTermLive) { try { window.HorizonTermLive.boot(el.out, native(), welcome); } catch (e) { welcome(); } } else welcome();   // V1.65.2: boot lines, then the banner
         }
         paintPs(); paintStrip();
         setTimeout(function () { try { el.inp.focus(); } catch (e) { /* ignore */ } }, 60);

@@ -158,7 +158,7 @@ public class HorizonSpeechPlugin extends Plugin {
         if (text == null || text.trim().isEmpty()) { call.reject("Nothing to say"); return; }
         new Thread(() -> {
             try {
-                byte[] mp3 = HorizonEdgeTts.synth(text, voice, rate, pitch);
+                byte[] mp3 = HorizonEdgeTts.synth(text, voice, rate, pitch, call.getString("token", ""), call.getString("ver", ""));
                 JSObject o = new JSObject(); o.put("data", Base64.encodeToString(mp3, Base64.NO_WRAP));
                 call.resolve(o);
             } catch (Throwable e) { call.reject(e.getMessage() == null ? e.toString() : e.getMessage()); }

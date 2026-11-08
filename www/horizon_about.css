@@ -44,8 +44,11 @@
 
 /* V1.63.1: About scrolls smoothly. The panel is the scroller; keep it a plain vertical scroller whenever a settings
    page is open, and let the browser skip painting log entries that are far off screen. */
-#rightPanel:has(#settingsBack:not([hidden])) { overflow-x: hidden; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; touch-action: pan-y; }
+#rightPanel:has(#settingsBack:not([hidden])) { overflow-x: hidden; overflow-y: auto; overscroll-behavior-y: contain; }
 .tab-body[data-tab="about"], .tab-body[data-tab="security"] { flex: 0 0 auto; min-height: 0; }
 #hzAbout { flex: 0 0 auto; padding-bottom: calc(28px + env(safe-area-inset-bottom, 0px)); }
-.hza-log { content-visibility: auto; contain-intrinsic-size: auto 120px; }
+.hza-log { content-visibility: visible; }
 .hza-log ul { overflow-wrap: anywhere; }
+
+/* V1.65.1: V1.63.1 made the panel a pan-y scroller and let the browser skip painting changelog entries. On some phones that left
+   About stuck and untappable, so both are removed. The panel is a plain vertical scroller again. */

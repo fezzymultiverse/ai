@@ -152,6 +152,36 @@
             nengine: String(ls.get(KEYS.nengine) || '').trim()
         };
     }
+
+    // V1.64.0: GROUP VOICES. In a group chat each AI takes the next voice along on the engine already picked in Settings, so you hear who is
+    // talking. Slot 0 is your own pick; slot 1, 2, 3 step through that engine's voice list, wrapping round. Nothing is saved.
+    function slotPick(ids, cur, slot) {
+        if (!ids.length) return cur;
+        const at = Math.max(0, ids.indexOf(cur));
+        return ids[(at + slot * 3) % ids.length];       // a step of 3 skips the near-twin neighbours in the lists
+    }
+    function applySlot(s, slot) {
+        slot = slot | 0;
+        s.slot = slot > 0 ? slot : 0;
+        if (!s.slot) return s;
+        if (s.engine === 'gemini') s.gvoice = slotPick(geminiIds, s.gvoice, s.slot);
+        else if (s.engine === 'pollinations') s.pvoice = slotPick(pollIds, s.pvoice, s.slot);
+        else if (s.engine === 'ttsai') s.avoice = slotPick(aiIds, s.avoice, s.slot);
+        else if (s.engine === 'edge') s.evoice = slotPick(edgeIds, s.evoice, s.slot);
+        return s;
+    }
+    // the Android / browser voice list loads later, so those engines resolve the slot where the list is in hand
+    function slotVoice(list, wantId, lang, slot) {
+        if (!slot || !list.length) return null;
+        const cur = list.find(x => x.id === wantId) || null;
+        const base = String((cur && cur.lang) || lang || (root.navigator && root.navigator.language) || 'en').slice(0, 2).toLowerCase();
+        const same = list.filter(x => String(x.lang || '').slice(0, 2).toLowerCase() === base);
+        const pool = same.length > 1 ? same : list;
+        const at = Math.max(0, pool.findIndex(x => cur && x.id === cur.id));
+        return pool[(at + slot) % pool.length] || null;
+    }
+    // for the app: which voice a slot would use right now (used for labels)
+    function voiceFor(slot) { const s = applySlot(settings(), slot); return { engine: s.engine, gemini: s.gvoice, pollinations: s.pvoice, ttsai: s.avoice, edge: s.evoice }; }
     function set(key, value) {
         switch (key) {
             case 'engine': ls.set(KEYS.engine, ENGINES.indexOf(value) >= 0 ? value : 'standard'); break;
@@ -258,17 +288,40 @@
         hold(status.state === 'loading' || status.state === 'playing');
     }
     // V1.17.0: while speaking, an Android foreground service (with a Stop button) keeps the app alive in the background
-    let held = false;
+    let held = false, relTimer = 0, queuedN = 0;
+    // V1.64.0: the service is let go 1.2 s after speech ends, not at once, so between two queued replies the lock-screen controls
+    // and the notification stay put instead of vanishing and coming back.
     function hold(on) {
-        if (!NATIVE || !plugFn || held === on) return;
-        held = on;
-        try {
-            const p = plugFn('HorizonAI');
-            const f = p && (on ? p.speechHold : p.speechRelease);
-            if (typeof f === 'function') Promise.resolve(f.call(p)).catch(() => { held = false; });
-        } catch (e) { held = false; }
+        if (!NATIVE || !plugFn) return;
+        if (on) {
+            if (relTimer) { clearTimeout(relTimer); relTimer = 0; }
+            if (held) return;
+            held = true;
+            try {
+                const p = plugFn('HorizonAI');
+                if (p && typeof p.speechHold === 'function') Promise.resolve(p.speechHold({ paused: !!paused, queued: queuedN })).catch(() => { held = false; });
+            } catch (e) { held = false; }
+        } else {
+            if (!held || relTimer) return;
+            relTimer = setTimeout(() => {
+                relTimer = 0;
+                if (!held) return;
+                held = false;
+                try {
+                    const p = plugFn('HorizonAI');
+                    if (p && typeof p.speechRelease === 'function') Promise.resolve(p.speechRelease()).catch(() => {});
+                } catch (e) { /* ignore */ }
+            }, 1200);
+        }
     }
     function onState(fn) { listeners.add(fn); return () => listeners.delete(fn); }
+    // V1.63.7: tell the notification whether it should show Pause or Resume
+    function holdPaint() {
+        if (!NATIVE || !plugFn || !held) return;
+        try { const p = plugFn('HorizonAI'); if (p && typeof p.speechHold === 'function') Promise.resolve(p.speechHold({ paused: !!paused, queued: queuedN })).catch(() => {}); } catch (e) { /* ignore */ }
+    }
+    // V1.64.0: auto-read tells the notification how many replies are waiting behind the one being read
+    function setQueued(n) { n = Math.max(0, Math.min(99, n | 0)); if (n === queuedN) return; queuedN = n; holdPaint(); }
 
     // ------------------------------------------------------------ engine: native
     function nativePlugin() {
@@ -331,7 +384,7 @@
         await applyEngine(p);                         // throws a readable error if the picked engine will not start
         const voices = await nativeVoices();
         if (tok.cancelled) return;
-        const v = voices.find(x => x.id === s.voice) || null;
+        const v = (s.slot ? slotVoice(voices, s.voice, s.lang, s.slot) : null) || voices.find(x => x.id === s.voice) || null;
         const langs = [v && v.lang, s.lang, root.navigator && root.navigator.language, 'en-US']
             .filter(Boolean).filter((x, i, a) => a.indexOf(x) === i);
         let li = 0, first = true;
@@ -355,6 +408,7 @@
                     done = true;
                 } catch (e) {
                     if (tok.cancelled) return;
+                    if (paused) { await waitResume(); if (tok.cancelled) return; await nativeStop; continue; }   // V1.63.7: paused mid-sentence, say it again on Resume
                     if (isMissing(e)) { nativeMissing = true; throw e; }
                     if (/timed out/i.test(msg(e))) { try { await p.stop(); } catch (x) { /* ignore */ } }
                     if (/not supported|language/i.test(msg(e)) && li < langs.length - 1) { li++; continue; }
@@ -385,7 +439,12 @@
             const synth = root.speechSynthesis;
             if (!synth) { reject(new Error('No browser voice is available')); return; }
             const voices = synth.getVoices() || [];
-            const pick = voices.find(v => (v.voiceURI || v.name) === s.voice) || null;
+            let pick = voices.find(v => (v.voiceURI || v.name) === s.voice) || null;
+            if (s.slot) {
+                const wl = voices.map(v => ({ id: v.voiceURI || v.name, lang: v.lang || '', v }));
+                const sp = slotVoice(wl, pick && (pick.voiceURI || pick.name), s.lang, s.slot);
+                if (sp) pick = sp.v;
+            }
             let i = 0, begun = false;
             const next = () => {
                 if (tok.cancelled) { resolve(); return; }
@@ -416,6 +475,38 @@
     // cannot burst through a free-tier rate limit, and the next chunk is fetched while the current one plays.
     let cloudQ = Promise.resolve();
     const cool = {};                       // engine -> time until which it is skipped after a limit error
+    // V1.63.7: a voice that FAILED (not just hit a limit) is skipped for 5 minutes in replies, so a dead voice no longer
+    // costs seconds before the working one starts. The Test button ignores this and tries the picked voice every time.
+    const bad = {};
+    let paused = false, resumeWaiters = [], curEl = null;
+    function waitResume() { return new Promise(res => { if (!paused) res(); else resumeWaiters.push(res); }); }
+    function flushWaiters() { const w = resumeWaiters; resumeWaiters = []; w.forEach(f => { try { f(); } catch (e) { /* ignore */ } }); }
+    // Pause keeps the place for cloud voices (the audio is frozen and carries on). The Android voice cannot freeze,
+    // so it stops and Resume starts the sentence it was on again.
+    function setPaused(on) {
+        on = !!on;
+        if (on === paused) return paused;
+        if (on && !(cur && (status.state === 'playing' || status.state === 'loading'))) return false;
+        paused = on;
+        try {
+            if (on) {
+                if (actx && actx.state === 'running') actx.suspend();
+                if (curEl) curEl.pause();
+                if (webUsable()) root.speechSynthesis.pause();
+                const p = nativePlugin();
+                if (p && typeof p.stop === 'function') nativeStop = Promise.resolve(p.stop()).catch(() => {});
+            } else {
+                if (actx && actx.state === 'suspended') actx.resume();
+                if (curEl) { const r = curEl.play(); if (r && typeof r.catch === 'function') r.catch(() => {}); }
+                if (webUsable()) root.speechSynthesis.resume();
+                flushWaiters();
+            }
+        } catch (e) { /* pause is best effort */ }
+        emit({ paused });
+        holdPaint();
+        return paused;
+    }
+    const togglePause = () => setPaused(!paused);
     let gModel = ls.get(KEYS.gmodel) || '';
 
     function queued(tok, fn) {
@@ -592,12 +683,14 @@
 
     // ---- Microsoft Edge neural voices (V1.62.0), made by the Android app over a native WebSocket
     const clampI = (n, lo, hi) => Math.min(hi, Math.max(lo, Math.round(n)));
+    // V1.63.8: Microsoft sometimes rotates the Edge token or version. If it does, set localStorage horizon_edge_token / horizon_edge_ver (no rebuild needed).
+    function lsv(k) { try { return String(root.localStorage.getItem(k) || '').trim(); } catch (e) { return ''; } }
     async function edgeSynth(text, s) {
         const p = nativePlugin();
         if (!p || typeof p.edgeSynth !== 'function') throw new Error('the Edge voice only works in the Horizon Android app, and this build does not have it. Update the app');
         const pre = EDGE.presets.find(x => x.id === s.epreset) || EDGE.presets[0];
         const rate = clampI(pre.rate + (s.rate - 1) * 100, -60, 100), pitch = clampI(pre.pitch + (s.pitch - 1) * 50, -50, 50);
-        const go = v => withTimeout(p.edgeSynth({ text, voice: v, rate, pitch }), EDGE.timeoutMs, 'the Edge voice took too long');
+        const go = v => withTimeout(p.edgeSynth({ text, voice: v, rate, pitch, token: lsv('horizon_edge_token'), ver: lsv('horizon_edge_ver') }), EDGE.timeoutMs, 'the Edge voice took too long');
         let r;
         try { r = await go(s.evoice); }
         catch (e) {
@@ -648,6 +741,7 @@
         } catch (e) { /* nothing to unlock */ }
     }
     async function playWebAudio(blob, rate, onStart, pitch) {
+        if (paused) await waitResume();     // V1.63.7: a chunk that arrives while paused waits
         const c = audioCtx();
         if (!c) throw new Error('Web Audio is not available');
         if (c.state !== 'running') {
@@ -680,16 +774,19 @@
             try { srcNode.start(0); if (onStart) onStart(); } catch (e) { end(e); }
         });
     }
-    function playElement(blob, rate, onStart, pitch) {
+    function playElement(blob, rate, onStart, pitch) { return (paused ? waitResume() : Promise.resolve()).then(() => playElement0(blob, rate, onStart, pitch)); }
+    function playElement0(blob, rate, onStart, pitch) {
         return new Promise((resolve, reject) => {
             const url = root.URL.createObjectURL(blob);
             const a = new root.Audio(url);
+            curEl = a;
             let fin = false;
             const stopFn = () => end();
             const end = err => {
                 if (fin) return;
                 fin = true;
                 try { a.pause(); } catch (e) { /* ignore */ }
+                if (curEl === a) curEl = null;
                 root.URL.revokeObjectURL(url);
                 if (audioEnd === stopFn) audioEnd = null;
                 err ? reject(err) : resolve();
@@ -727,6 +824,13 @@
     const LABEL = { gemini: 'Gemini voice', pollinations: 'Pollinations voice', ttsai: 'TTS.ai voice', edge: 'Edge voice', native: 'Android voice', web: 'Browser voice' };
 
     function stop(silent) {
+        if (paused) {
+            paused = false;
+            status = Object.assign({}, status, { paused: false });
+            try { if (actx && actx.state === 'suspended') actx.resume(); } catch (e) { /* ignore */ }
+            try { if (webUsable()) root.speechSynthesis.resume(); } catch (e) { /* ignore */ }
+            flushWaiters();
+        }
         const c = cur;
         cur = null;
         if (c) {
@@ -744,6 +848,7 @@
         const tok = { cancelled: false };
         cur = { id, tok };
         const s = settings();
+        applySlot(s, opts && opts.slot);
         const text = speakable(rawText);
         if (!text) {
             emit({ state: 'error', id, error: 'There is nothing to read aloud in this reply.' });
@@ -764,6 +869,7 @@
             if (eng === 'native' && !nativeUsable()) continue;
             if (eng === 'web' && !webUsable()) continue;
             if (cool[eng] && cool[eng] > Date.now()) { errors.push(LABEL[eng].toLowerCase() + ' is at its limit, trying again in a minute'); continue; }
+            if (!strict && bad[eng] && bad[eng] > Date.now()) { errors.push(LABEL[eng].toLowerCase() + ' failed a moment ago, skipped'); continue; }
             let began = false;
             try {
                 emit({ engine: eng });
@@ -772,6 +878,7 @@
                     if (!tok.cancelled) emit({ state: 'playing', id, engine: eng });
                 });
                 if (tok.cancelled) return false;
+                delete bad[eng];
                 cur = null;
                 emit({
                     state: 'idle', id: null, engine: '', error: '',
@@ -781,6 +888,7 @@
             } catch (e) {
                 if (tok.cancelled) return false;
                 if (e && e.limit) cool[eng] = Date.now() + 60000;
+                else if (!strict && CLOUD.indexOf(eng) >= 0 && !began) bad[eng] = Date.now() + 300000;
                 if (began) { errors.push(LABEL[eng] + ' stopped: ' + msg(e)); break; }   // already speaking, so do not restart from the top
                 errors.push(LABEL[eng].toLowerCase() + ' failed (' + msg(e) + ')');
             }
@@ -913,10 +1021,14 @@
             ['click', 'touchend', 'keydown'].forEach(ev => root.document.addEventListener(ev, unlockAudio, { capture: true, passive: true }));
         }
         root.addEventListener('pagehide', () => { if (!NATIVE) stop(true); });
+        // V1.63.7: the Pause / Resume button in the notification
+        root.addEventListener('horizon-tts-pause', () => { togglePause(); });
+        // V1.64.0: lock-screen / headset Play and Pause say which way to go, so a repeated press can never flip the wrong way
+        root.addEventListener('horizon-tts-set', ev => { setPaused(!!(ev && ev.detail && ev.detail.paused)); });
     }
 
     root.HorizonTTS = {
-        init, settings, set, speak, toggle, stop, test, onState, listVoices, listEngines, describe, diagnose,
+        init, settings, set, speak, toggle, stop, test, onState, pause: () => setPaused(true), resume: () => setPaused(false), togglePause, isPaused: () => paused, setQueued, voiceFor, listVoices, listEngines, describe, diagnose,
         status: () => status,
         speakable, chunkText,
         cloud: {

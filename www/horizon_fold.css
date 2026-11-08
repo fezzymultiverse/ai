@@ -1,0 +1,39 @@
+/* V1.63.4: tiny green arrow on long AI replies. Tap to fold the reply to a few lines, tap again to open it. */
+.hz-fold-btn {
+    margin-left: auto;
+    flex: 0 0 auto;
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border: 1px solid rgba(34, 197, 94, 0.55);
+    background: rgba(34, 197, 94, 0.12);
+    color: #22c55e;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+.hz-fold-btn svg { width: 14px; height: 14px; display: block; transition: transform 0.18s ease; }
+.hz-fold-btn:active { background: rgba(34, 197, 94, 0.28); }
+.message.hz-folded .hz-fold-btn svg { transform: rotate(180deg); }
+.message.ai.hz-folded > .bubble {
+    max-height: 5.2em;
+    overflow: hidden;
+    -webkit-mask-image: linear-gradient(to bottom, #000 55%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 55%, transparent 100%);
+}
+
+/* V1.64.0: Fold all / Unfold all, in the action row under the newest reply. Shows when two or more replies are long enough to fold. */
+.hz-foldall {
+    display: inline-flex; align-items: center; gap: 5px;
+    height: 28px; padding: 0 10px; margin-left: 6px;
+    border-radius: 14px; border: 1px solid rgba(34, 197, 94, 0.55);
+    background: rgba(34, 197, 94, 0.12); color: #22c55e;
+    font: inherit; font-size: 12px; font-weight: 700; letter-spacing: .2px;
+    cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.hz-foldall svg { width: 13px; height: 13px; display: block; transition: transform 0.18s ease; }
+.hz-foldall:not(.is-open) svg { transform: rotate(180deg); }
+.hz-foldall:active { background: rgba(34, 197, 94, 0.28); }
