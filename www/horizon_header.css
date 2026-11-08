@@ -72,3 +72,28 @@ html[data-theme="neon"] .hz-sub { text-shadow: 0 0 8px var(--accent-cyan-glow); 
 .app-header .header-btn .zz { top: 3px; right: 4px; }
 @media (max-width: 380px) { .app-header .brand h1 { font-size: 15px; letter-spacing: .4px; } .app-header .logo-area { gap: 8px; } }
 @media (max-width: 350px) { .app-header .header-actions { gap: 3px; } .app-header .header-btn { width: 37px; height: 52px; } .app-header .header-btn::after { font-size: 8.5px; } }
+
+/* V1.67.3: Light grey theme. The header glows are neon effects for the dark theme; on grey they become a soft shadow. */
+html[data-theme="grey"] .app-header .hzc-sq,
+html[data-theme="grey"] .app-header .hzc-cap,
+html[data-theme="grey"] .app-header .chip-logo,
+html[data-theme="grey"].hzd-on .app-header .chip-logo { box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2); }
+html[data-theme="grey"].hzd-on .app-header .chip-logo { border-color: var(--accent-cyan); }
+
+/* V1.67.3: Light grey theme. Orange, red and amber labels get darker shades so they stay readable on grey (contrast 4.5:1 or better). */
+html[data-theme="grey"] .settings-home .set-row.set-vault .set-text h3,
+html[data-theme="grey"] .set-row.set-vault h3,
+html[data-theme="grey"] .set-row.set-addons h3,
+html[data-theme="grey"] .vt-title,
+html[data-theme="grey"] #settingsTitle.is-vault h2,
+html[data-theme="grey"] .hz-dock-title,
+html[data-theme="grey"] .hz-addon-head h2,
+html[data-theme="grey"] .hz-addon-launch { color: #b4410a; }
+html[data-theme="grey"] .set-row.set-vault,
+html[data-theme="grey"] .set-row.set-addons { box-shadow: inset 3px 0 0 #c2410c; }
+html[data-theme="grey"] .settings-home .set-row.set-security .set-text h3,
+html[data-theme="grey"] #settingsTitle.is-security h2,
+html[data-theme="grey"] .hza-h.red { color: #c01f16; text-shadow: none; }
+html[data-theme="grey"] .set-row.set-security { box-shadow: inset 3px 0 0 #c01f16; }
+html[data-theme="grey"] .hzu-pill.idle { color: #92560a; }
+html[data-theme="grey"] .hzu-pill.warn { color: #b4410a; }

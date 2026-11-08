@@ -1,10 +1,12 @@
 /* Horizon V1.26.0: ABOUT & UPDATES page: version, release check, backup export/import, changelog, privacy awareness + reminder switch. */
 (function () {
     'use strict';
-    var VERSION = 'V1.67.2';
+    var VERSION = 'V1.67.4';
     var LSK = 'horizon_privacy_notice';
     var REPO_API = 'https://api.github.com/repos/fezzymultiverse/ai';
     var LOG = [
+        ['V1.67.4', ['FOLD ALL: the Fold all and Unfold all button now stays on the right side of the action row, next to the speaker button, instead of sitting in the middle. Its label changes, but its right edge stays put.']],
+        ['V1.67.3', ['TWO THEMES: Dark green and Dark purple are gone. Dark cyan stays as the main theme and Light grey is new. Pick one in Settings > PERSONALISATION > Theme or with the two dots under the Settings title. Old green and purple choices become Dark cyan.']],
         ['V1.67.2', ['FOLD ALL: a folded reply is now a small scroll window instead of a clipped one. Fold all keeps every long reply short in the chat, and you can still swipe inside one to read the whole thing. At its top or bottom the swipe carries on into the chat.']],
         ['V1.67.1', ['AI SHEET: tap the provider pill (in the header or on the welcome card) and pick a provider, then a model. Every model has a plain-English line under it. Providers with no key show their models too, with a Set API key box right there: paste, Save key, and it is checked and saved without leaving the sheet.', 'READ-ALOUD PILL: while a reply is read, its speaker button becomes a wide pill: the speaker icon on the left and a long 22-bar waveform beside it. Paused turns it amber with a pause icon.', '+ MENU: a tool that is on goes green all over (tile, icon and dot), off is black with a red dot, and the tile flips the moment you tap it instead of stalling. A tool that needs something no longer paints a red dot over an ON tile, which is why the Vault stayed red while it was locked.', 'MEMORY: the Memory tile no longer opens Settings. It flips the Auto-save switch directly.', 'KEYBOARD: the message box rides on top of the keyboard. Android now measures how much of the page the keyboard covers and the page shrinks to the visible area, so the box lifts like in the Claude app.']],
         ['V1.65.4', ['VOICE IN THE REPLY SPEAKER: the Voice pill at the bottom is gone. The waveform now replaces the speaker icon on the reply being read. Tap it to pause or resume, long-press to stop.', 'TOP PANEL: the usage badge moved up next to the provider pill, side by side. The arrow tab on the right middle is a little smaller.']],

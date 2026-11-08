@@ -73,7 +73,7 @@
   function appMap() {
     const L = ['APP MAP (the whole app, also the parts that are closed or off screen)'];
     const th = document.documentElement.getAttribute('data-accent') || 'cyan';
-    L.push('Theme: ' + ({ cyan: 'Dark cyan', green: 'Dark green', purple: 'Dark purple' }[th] || 'Dark cyan') + ' (the three colour dots, Dark cyan, Dark green and Dark purple, are under the Settings title in the right panel, or Settings > PERSONALISATION). There is no light theme.');
+    L.push('Theme: ' + ({ cyan: 'Dark cyan', grey: 'Light grey' }[th] || 'Dark cyan') + ' (the two dots, Dark cyan and Light grey, are under the Settings title in the right panel, or Settings > PERSONALISATION). Only these two themes exist.');
     const open = [];
     if ($('#leftPanel.open')) open.push('Menu panel');
     if ($('#rightPanel.open')) open.push('Settings panel');

@@ -12,6 +12,14 @@
   <img alt="Capacitor 6" src="https://img.shields.io/badge/Capacitor-6-00e5ff">
 </p>
 
+## What's new in V1.67.4
+
+- **Fold all stays right.** The Fold all / Unfold all button is pinned to the right of the action row (next to the speaker button) instead of sitting in the middle.
+
+## What's new in V1.67.3
+
+- **Two themes.** Dark green and Dark purple are removed. Dark cyan stays as the main theme and **Light grey** is new (soft grey surfaces, dark text, deep cyan accent). Old green and purple saves become Dark cyan.
+
 ## What's new in V1.67.2
 
 - **Fold all keeps reading.** A folded reply is a small scroll window: swipe inside it to read the whole message without unfolding. At its top or bottom the swipe carries on into the chat.

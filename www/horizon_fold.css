@@ -37,7 +37,7 @@
 /* V1.64.0: Fold all / Unfold all, in the action row under the newest reply. Shows when two or more replies are long enough to fold. */
 .hz-foldall {
     display: inline-flex; align-items: center; gap: 5px;
-    height: 28px; padding: 0 10px; margin-left: 6px;
+    height: 28px; padding: 0 10px; margin-left: auto; /* V1.67.4: pinned to the right of the action row, so Fold all and Unfold all stay on the right side */
     border-radius: 14px; border: 1px solid rgba(34, 197, 94, 0.55);
     background: rgba(34, 197, 94, 0.12); color: #22c55e;
     font: inherit; font-size: 12px; font-weight: 700; letter-spacing: .2px;

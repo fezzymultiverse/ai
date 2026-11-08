@@ -12,7 +12,7 @@
 #rightPanel:has(#settingsHome:not([hidden])) { overflow: hidden; }
 
 /* ---------- Browser follows the app theme: white in Light, black in Dark / Cyan ---------- */
-html:not([data-theme]) #hzb, html[data-theme="light"] #hzb {
+html:not([data-theme]) #hzb, html[data-theme="light"] #hzb, html[data-theme="grey"] #hzb {
   --b-bg: #ffffff; --b-panel: #f6f6f6; --b-surface: #f0f0f0; --b-hover: #e4e4e4;
   --b-text: #000000; --b-muted: #5f5f5f; --b-line: rgba(0,0,0,.14); --b-line2: rgba(0,0,0,.5);
   --b-cyan: #000000; --b-glow: rgba(0,0,0,.18); --b-soft: rgba(0,0,0,.07);

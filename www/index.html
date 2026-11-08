@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#000000">
     <title>HORIZON · AI Interface</title>
     <link rel="icon" type="image/png" href="icon.png">
-    <script>(function(){try{var t=localStorage.getItem('horizon_theme');if(t!=='green'&&t!=='purple')t='cyan';document.documentElement.setAttribute('data-theme','neon');document.documentElement.setAttribute('data-accent',t);var m=document.querySelector('meta[name=theme-color]');if(m)m.setAttribute('content',t==='green'?'#000a05':t==='purple'?'#05030a':'#000000');}catch(e){}})();</script>
+    <script>(function(){try{var t=localStorage.getItem('horizon_theme');if(t!=='grey')t='cyan';document.documentElement.setAttribute('data-theme',t==='grey'?'grey':'neon');document.documentElement.setAttribute('data-accent',t);var m=document.querySelector('meta[name=theme-color]');if(m)m.setAttribute('content',t==='grey'?'#eceef1':'#000000');}catch(e){}})();</script>
     <style>
         :root {
             --bg-color: #ffffff;
@@ -104,18 +104,34 @@
             --syn-tag: #ff6ad5;
             --syn-flag: #7dfbff;
         }
-        /* V1.44.0: three dark themes only. data-theme stays "neon" (the dark base); data-accent picks the colour. */
+        /* V1.67.3: two themes only. Dark cyan is the default (data-theme "neon", data-accent "cyan").
+           Light grey is data-theme "grey" + data-accent "grey". */
         html[data-accent="cyan"] { --accent-cyan: #00e5ff; --accent-rgb: 0, 229, 255; --success: #00e5ff; }
-        html[data-accent="green"] {
-            --accent-cyan: #2bff88; --accent-rgb: 43, 255, 136; --success: #2bff88;
-            --bg-color: #000a05; --panel-bg: #020f09; --surface: #07180f; --surface-hover: #0d2a1a; --card-bg: #010b06;
-            --code-bg: #010805; --code-head: #04150d; --btn-bg: #2bff88; --btn-fg: #000000;
+        html[data-theme="grey"] {
+            color-scheme: light;
+            --bg-color: #eceef1;
+            --panel-bg: #e2e5e9;
+            --surface: #d8dce1;
+            --surface-hover: #cdd2d8;
+            --text-main: #15181c;
+            --text-muted: #48505a;
+            --text-dim: #5a636e;
+            --border-color: rgba(0, 0, 0, 0.12);
+            --border-highlight: rgba(0, 0, 0, 0.3);
+            --accent-cyan-glow: rgba(var(--accent-rgb), 0.28);
+            --accent-cyan-light: rgba(var(--accent-rgb), 0.13);
+            --card-bg: #f3f4f6;
+            --ink: #15181c;
+            --btn-bg: #1f2328;
+            --btn-fg: #ffffff;
+            --overlay-bg: rgba(236, 238, 241, 0.72);
+            --code-bg: #f4f5f7;
+            --code-head: #dde0e5;
         }
-        html[data-accent="purple"] {
-            --accent-cyan: #b388ff; --accent-rgb: 179, 136, 255; --success: #b388ff;
-            --bg-color: #05030a; --panel-bg: #0a0613; --surface: #130b22; --surface-hover: #1e1334; --card-bg: #07040e;
-            --code-bg: #04020a; --code-head: #0d0719; --btn-bg: #b388ff; --btn-fg: #000000;
-        }
+        html[data-accent="grey"] { --accent-cyan: #0e7490; --accent-rgb: 14, 116, 144; --success: #0e7490; }
+        html[data-theme="grey"] ::placeholder { color: var(--text-dim); opacity: 1; }
+        html[data-theme="grey"] .fav img { background: #ffffff; }
+        html[data-theme="grey"] .code-copy.done { color: #15803d; }
         /* V1.44.0: white text. Placeholders, small print and hints are light grey-white, never dim. */
         html[data-theme="neon"] ::placeholder { color: var(--text-dim); opacity: 1; }
         html[data-theme="neon"] .hint, html[data-theme="neon"] .set-text p, html[data-theme="neon"] .field-label { color: #e6edf1; }
@@ -1099,8 +1115,7 @@
         .theme-opt .th-prev { flex: 0 0 auto; width: 38px; height: 38px; border-radius: 11px; border: 1px solid var(--border-highlight); display: grid; place-items: center; }
         .theme-opt .th-prev i { width: 16px; height: 16px; border-radius: 50%; display: block; }
         .th-prev.p-cyan { background: #000000; border-color: #00e5ff; box-shadow: 0 0 10px rgba(0, 229, 255, 0.5); } .th-prev.p-cyan i { background: #00e5ff; box-shadow: 0 0 8px #00e5ff; }
-        .th-prev.p-green { background: #000a05; border-color: #2bff88; box-shadow: 0 0 10px rgba(43, 255, 136, 0.5); } .th-prev.p-green i { background: #2bff88; box-shadow: 0 0 8px #2bff88; }
-        .th-prev.p-purple { background: #05030a; border-color: #b388ff; box-shadow: 0 0 10px rgba(179, 136, 255, 0.5); } .th-prev.p-purple i { background: #b388ff; box-shadow: 0 0 8px #b388ff; }
+        .th-prev.p-grey { background: #eceef1; border-color: #0e7490; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12); } .th-prev.p-grey i { background: #0e7490; }
         .theme-opt .to-tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
         .theme-opt b { font-size: 15.5px; font-weight: 600; }
         .theme-opt small { font-size: 13px; color: var(--text-muted); }
@@ -1832,8 +1847,7 @@
                 <span class="hz-theme-lbl">THEME</span>
                 <div class="hz-theme-pill" id="hzThemePill" role="radiogroup" aria-label="Theme">
                 <button type="button" role="radio" aria-checked="true" data-pill-theme="cyan" aria-label="Dark cyan theme" title="Dark cyan theme"><span class="hz-dot" style="background:#00e5ff"></span></button>
-                <button type="button" role="radio" aria-checked="false" data-pill-theme="green" aria-label="Dark green theme" title="Dark green theme"><span class="hz-dot" style="background:#2bff88"></span></button>
-                <button type="button" role="radio" aria-checked="false" data-pill-theme="purple" aria-label="Dark purple theme" title="Dark purple theme"><span class="hz-dot" style="background:#b388ff"></span></button>
+                <button type="button" role="radio" aria-checked="false" data-pill-theme="grey" aria-label="Light grey theme" title="Light grey theme"><span class="hz-dot" style="background:#d3d7dc;box-shadow:inset 0 0 0 1px #0e7490"></span></button>
                 </div>
             </div>
             </div>
@@ -1851,7 +1865,7 @@
                     <svg class="ic set-chev" aria-hidden="true"><use href="#i-chev-r"/></svg>
                 </button>
                 <button class="set-row" role="tab" data-tab="personalisation" aria-selected="false" type="button">
-                    <span class="set-text"><h3>PERSONALISATION</h3><p>Theme (Light, Dark or Neon cyan) and the voice that reads Horizon's replies aloud.</p></span>
+                    <span class="set-text"><h3>PERSONALISATION</h3><p>Theme (Dark cyan or Light grey) and the voice that reads Horizon's replies aloud.</p></span>
                     <svg class="ic set-chev" aria-hidden="true"><use href="#i-chev-r"/></svg>
                 </button>
                 <button class="set-row set-vault" role="tab" data-tab="vault" aria-selected="false" type="button">
@@ -1964,8 +1978,7 @@
                     </div>
                     <div class="theme-list" id="themeMenu" role="radiogroup" aria-label="Theme">
                         <button class="theme-opt" type="button" role="radio" aria-checked="true" data-theme-opt="cyan"><span class="th-prev p-cyan"><i></i></span><span class="to-tx"><b>Dark cyan</b><small>Black with electric cyan, like the icon</small></span><svg class="ic to-ok" aria-hidden="true"><use href="#i-ok"/></svg></button>
-                        <button class="theme-opt" type="button" role="radio" aria-checked="false" data-theme-opt="green"><span class="th-prev p-green"><i></i></span><span class="to-tx"><b>Dark green</b><small>Black with bright green</small></span><svg class="ic to-ok" aria-hidden="true"><use href="#i-ok"/></svg></button>
-                        <button class="theme-opt" type="button" role="radio" aria-checked="false" data-theme-opt="purple"><span class="th-prev p-purple"><i></i></span><span class="to-tx"><b>Dark purple</b><small>Black with soft purple</small></span><svg class="ic to-ok" aria-hidden="true"><use href="#i-ok"/></svg></button>
+                        <button class="theme-opt" type="button" role="radio" aria-checked="false" data-theme-opt="grey"><span class="th-prev p-grey"><i></i></span><span class="to-tx"><b>Light grey</b><small>Soft light grey with deep cyan</small></span><svg class="ic to-ok" aria-hidden="true"><use href="#i-ok"/></svg></button>
                     </div>
                 </section>
 
@@ -7962,7 +7975,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             webIntro: 'Master switch for live web search and page reading.',
             permIntro: 'What Horizon is allowed to do on this phone.',
             ytCard: 'The servers Horizon uses to find and fetch music.',
-            themeCard: 'Light, Dark or Neon cyan.',
+            themeCard: 'Dark cyan or Light grey.',
             ttsCard: 'Hear Horizon\'s replies read aloud. Natural Edge (no key), Gemini, TTS.ai or Pollinations voices, or the free Android voice.',
             'card-gemini': 'Google Gemini. Add a key, pick a model and switch it on.',
             'card-groq': 'Groq. Fast Llama and GPT-OSS models. Add a key and pick a model.',
@@ -8103,17 +8116,16 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
 
         // ===== V1.6.0: theme switch =====
         const THEMES = {
-            cyan: { name: 'Dark cyan', meta: '#000000', ic: 'i-zap' },
-            green: { name: 'Dark green', meta: '#000a05', ic: 'i-zap' },
-            purple: { name: 'Dark purple', meta: '#05030a', ic: 'i-zap' }
+            cyan: { name: 'Dark cyan', meta: '#000000', ic: 'i-zap', base: 'neon' },
+            grey: { name: 'Light grey', meta: '#eceef1', ic: 'i-zap', base: 'grey' }
         };
         const themeMenu = $('#themeMenu');
-        let theme = THEMES[lsGet(LS.theme)] ? lsGet(LS.theme) : 'cyan';   // V1.44.0: old Light, Dark and Neon saves become Dark cyan
+        let theme = THEMES[lsGet(LS.theme)] ? lsGet(LS.theme) : 'cyan';   // V1.67.3: old Light, Dark, Neon, green and purple saves become Dark cyan
 
         function applyTheme(t, persist) {
             if (!THEMES[t]) t = 'cyan';
             theme = t;
-            document.documentElement.setAttribute('data-theme', 'neon');   // the shared dark base
+            document.documentElement.setAttribute('data-theme', THEMES[t].base);   // neon = the dark base, grey = the light grey base
             document.documentElement.setAttribute('data-accent', t);
             const meta = document.querySelector('meta[name="theme-color"]');
             if (meta) meta.setAttribute('content', THEMES[t].meta);

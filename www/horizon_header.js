@@ -1,4 +1,4 @@
-/* HORIZON V1.38.0 · header theme pill. Dark cyan / Dark green / Dark purple in one tap.
+/* HORIZON V1.38.0 · header theme pill. Dark cyan / Light grey in one tap.
    It clicks the real Theme option in Settings, so saving, the status-bar colour and everything else
    stays in one place. The pill only mirrors the current theme. */
 (function () {
@@ -9,7 +9,7 @@
 
   function current() {
     var t = document.documentElement.getAttribute('data-accent');
-    return t === 'green' || t === 'purple' ? t : 'cyan';
+    return t === 'grey' ? 'grey' : 'cyan';
   }
   function paint() {
     var cur = current();
@@ -21,7 +21,7 @@
     else {
       // Settings not built yet: set it directly so the tap still works.
       try { localStorage.setItem('horizon_theme', t); } catch (e) { /* storage full */ }
-      document.documentElement.setAttribute('data-theme', 'neon');
+      document.documentElement.setAttribute('data-theme', t === 'grey' ? 'grey' : 'neon');
       document.documentElement.setAttribute('data-accent', t);
     }
     paint();
