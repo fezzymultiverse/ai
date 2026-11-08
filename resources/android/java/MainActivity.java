@@ -143,11 +143,59 @@ public class MainActivity extends BridgeActivity {
                         if ((animation.getTypeMask() & WindowInsetsCompat.Type.ime()) == 0) return;
                         WindowInsetsCompat now = ViewCompat.getRootWindowInsets(decor);
                         sendKeyboard(false, now != null && now.isVisible(WindowInsetsCompat.Type.ime()));
+                        decor.postDelayed(coverRunner, 60);    // V1.67.1: measure once the layout has settled
+                        decor.postDelayed(coverRunner, 350);
                     }
                 });
+            // V1.67.1: any layout change (the page resizing for the keyboard) re-measures how much of the page the keyboard covers
+            coverListener = new android.view.ViewTreeObserver.OnGlobalLayoutListener() {
+                @Override
+                public void onGlobalLayout() { reportCover(); }
+            };
+            decor.getViewTreeObserver().addOnGlobalLayoutListener(coverListener);
             kbWatching = true;
         } catch (Throwable ignored) {
             // the page falls back to its own resize-based guard
+        }
+    }
+
+    // V1.67.1: how many CSS pixels of the bottom of the WebView the keyboard covers (0 when the page already shrank above it).
+    // The page (horizon_lift.js) uses this to keep the message box on top of the keyboard on phones that do not resize the page.
+    private android.view.ViewTreeObserver.OnGlobalLayoutListener coverListener = null;
+    private int lastCoverPx = -1;
+    private final Runnable coverRunner = new Runnable() {
+        @Override
+        public void run() { reportCover(); }
+    };
+    private void reportCover() {
+        try {
+            final WebView wv = getBridge() != null ? getBridge().getWebView() : null;
+            if (wv == null) return;
+            final View decor = getWindow().getDecorView();
+            WindowInsetsCompat ins = ViewCompat.getRootWindowInsets(decor);
+            int imeBottom = 0;
+            if (ins != null && ins.isVisible(WindowInsetsCompat.Type.ime())) {
+                imeBottom = ins.getInsets(WindowInsetsCompat.Type.ime()).bottom;
+            }
+            int cover = 0;
+            if (imeBottom > 0) {
+                int[] wl = new int[2];
+                int[] dl = new int[2];
+                wv.getLocationOnScreen(wl);
+                decor.getLocationOnScreen(dl);
+                int webBottom = wl[1] + wv.getHeight();
+                int keyboardTop = dl[1] + decor.getHeight() - imeBottom;
+                cover = Math.max(0, webBottom - keyboardTop);
+            }
+            final float density = getResources().getDisplayMetrics().density;
+            if (cover < Math.round(4 * density)) cover = 0;
+            if (cover == lastCoverPx) return;
+            lastCoverPx = cover;
+            final int css = Math.round(cover / density);
+            final String js = "window.hzKbCover&&window.hzKbCover(" + css + ")";
+            wv.post(() -> wv.evaluateJavascript(js, null));
+        } catch (Throwable ignored) {
+            // the page falls back to its own measurement
         }
     }
 
@@ -165,7 +213,10 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onDestroy() {
         try {
-            if (kbWatching) ViewCompat.setWindowInsetsAnimationCallback(getWindow().getDecorView(), null);   // the callback holds this Activity
+            if (kbWatching) {
+                ViewCompat.setWindowInsetsAnimationCallback(getWindow().getDecorView(), null);   // the callback holds this Activity
+                if (coverListener != null) getWindow().getDecorView().getViewTreeObserver().removeOnGlobalLayoutListener(coverListener);
+            }
         } catch (Throwable ignored) {
             // already torn down
         }

@@ -12,6 +12,17 @@
   <img alt="Capacitor 6" src="https://img.shields.io/badge/Capacitor-6-00e5ff">
 </p>
 
+## What's new in V1.67.2
+
+- **Fold all keeps reading.** A folded reply is a small scroll window: swipe inside it to read the whole message without unfolding. At its top or bottom the swipe carries on into the chat.
+
+## What's new in V1.67.1
+
+- **AI sheet.** Tap the provider pill, pick a provider, then a model (each has a plain-English description). A provider with no key still shows its models, with a **Set API key** box in the sheet: paste, Save key, done. The welcome-card pill opens the same sheet.
+- **Read-aloud pill.** While a reply is read, its speaker button becomes a wide pill: speaker icon on the left, a long waveform beside it. Paused = amber.
+- **+ menu.** On = green all over, off = black with a red dot. Tiles flip instantly. A tool that needs something no longer paints a red dot over an ON tile (the Vault stayed red while locked). Memory no longer opens Settings.
+- **Keyboard.** The message box rides on top of the keyboard. New files: `horizon_v3.css`, `horizon_lift.js`; `MainActivity.java` measures the keyboard cover.
+
 ## What's new in V1.65.4
 
 - **Voice in the reply speaker.** The Voice pill is gone. The waveform replaces the speaker icon on the reply being read. Tap = pause / resume, long-press = stop.

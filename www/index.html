@@ -1462,6 +1462,7 @@
     <link rel="stylesheet" href="horizon_speakwave.css">
     <link rel="stylesheet" href="horizon_termlive.css">
     <link rel="stylesheet" href="horizon_v2.css">
+    <link rel="stylesheet" href="horizon_v3.css">
 </head>
 <body>
 
@@ -3864,7 +3865,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             // V1.65.3: the voice waveform lives in the reply speaker now. It replaces the speaker icon while this reply is read.
             const wv = document.createElement('span');
             wv.className = 'spk-wave'; wv.setAttribute('aria-hidden', 'true');
-            for (let k = 0; k < 5; k++) wv.appendChild(document.createElement('i'));
+            for (let k = 0; k < 22; k++) wv.appendChild(document.createElement('i'));   // V1.67.1: 22 thin bars, a long wave beside the speaker
             b.appendChild(wv);
             const live = () => b.classList.contains('playing') || b.classList.contains('loading') || b.classList.contains('paused');
             let lpTimer = 0, lpFired = false;
@@ -4243,7 +4244,8 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             st.type = 'button';
             st.className = 'wl-status';
             st.id = 'wlStatus';
-            st.addEventListener('click', () => { if (groupIds() && window.HorizonGroup && HorizonGroup.open) HorizonGroup.open(); else openPanel('right', 'providers'); });
+            // V1.67.1: the provider pill opens the AI sheet (providers -> models with descriptions -> key box), not Settings.
+            st.addEventListener('click', () => { if (groupIds() && window.HorizonGroup && HorizonGroup.open) HorizonGroup.open(); else if (pkSheet.hidden) pkShow(); else pkHide(); });
             const grid = document.createElement('div');
             grid.className = 'starters';
             const pdfIc = document.querySelector('#pdfBtn .pdf-ic');
@@ -4856,6 +4858,89 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             if (status) b.appendChild(status);
             return b;
         }
+        // V1.67.1: key box on the model step. Paste a key, Save, and it is validated and stored exactly like the Settings card
+        // (it fills that card's field and runs the same validateAndSave), then the model list refreshes in place.
+        const pkKeyBox = document.createElement('div');
+        pkKeyBox.className = 'pk-key'; pkKeyBox.id = 'pkKey'; pkKeyBox.hidden = true;
+        pkList.parentNode.insertBefore(pkKeyBox, pkList);
+        let pkKeyOpen = false, pkKeyBusy = false;
+        function pkPaintKey() {
+            const id = pkProv, p = PROVIDERS[id];
+            pkKeyBox.replaceChildren();
+            if (!p) { pkKeyBox.hidden = true; return; }
+            pkKeyBox.hidden = false;
+            pkKeyBox.classList.toggle('no-key', !pkReady(id));
+            const head = document.createElement('div'); head.className = 'pk-key-h';
+            head.appendChild(icon('i-key'));
+            const ht = document.createElement('b');
+            const saved = state.keys[id];
+            ht.textContent = p.keyless ? 'Free. No key needed' : (saved ? `${p.name} key saved · ••••${String(saved).slice(-4)}` : `Set ${p.name} API key`);
+            head.appendChild(ht);
+            if (!p.keyless && saved) {
+                const ch = document.createElement('button'); ch.type = 'button'; ch.className = 'pk-key-chg';
+                ch.textContent = pkKeyOpen ? 'Cancel' : 'Change';
+                ch.addEventListener('click', () => { pkKeyOpen = !pkKeyOpen; pkPaintKey(); });
+                head.appendChild(ch);
+            }
+            pkKeyBox.appendChild(head);
+            if (p.keyless || (saved && !pkKeyOpen)) return;
+            const row = document.createElement('div'); row.className = 'pk-key-r';
+            const inp = document.createElement('input');
+            inp.type = 'password'; inp.placeholder = `Paste your ${p.name} key`;
+            inp.setAttribute('autocomplete', 'off'); inp.setAttribute('autocapitalize', 'off'); inp.setAttribute('autocorrect', 'off'); inp.spellcheck = false;
+            const eye = document.createElement('button'); eye.type = 'button'; eye.className = 'pk-key-eye'; eye.setAttribute('aria-label', 'Show key');
+            eye.appendChild(icon('i-eye'));
+            eye.addEventListener('click', () => { inp.type = inp.type === 'password' ? 'text' : 'password'; });
+            const go = document.createElement('button'); go.type = 'button'; go.className = 'pk-key-go'; go.textContent = 'Save key';
+            row.append(inp, eye, go);
+            pkKeyBox.appendChild(row);
+            const msg = document.createElement('div'); msg.className = 'pk-key-m'; msg.setAttribute('aria-live', 'polite');
+            msg.textContent = 'Checked with ' + p.name + ' when you save. Stays on this phone.';
+            pkKeyBox.appendChild(msg);
+            if (p.keyUrl) {
+                const a = document.createElement('a'); a.className = 'pk-key-get'; a.href = p.keyUrl; a.target = '_blank'; a.rel = 'noopener';
+                a.textContent = 'Get a ' + p.name + ' key';
+                pkKeyBox.appendChild(a);
+            }
+            const save = async () => {
+                if (pkKeyBusy) return;
+                const raw = inp.value.trim().replace(/^["']+|["']+$/g, '');
+                if (!raw) { inp.classList.add('invalid'); msg.textContent = 'Paste a key first'; msg.className = 'pk-key-m err'; return; }
+                pkKeyBusy = true; go.disabled = true; go.textContent = 'Checking...'; inp.classList.remove('invalid'); msg.className = 'pk-key-m'; msg.textContent = 'Checking the key...';
+                try {
+                    const field = role(id, 'key');
+                    if (field) field.value = raw;
+                    await validateAndSave(id);
+                    if (state.keys[id] === raw) {
+                        pkKeyOpen = false;
+                        notice(`${p.name} key saved`);
+                        // the key works: a provider that was not active becomes the active one, so the next message uses it
+                        if (state.active !== id) setActive(id);
+                        pkPaintKey(); pkRender();
+                    } else {
+                        const st = role(id, 'status');
+                        inp.classList.add('invalid'); msg.className = 'pk-key-m err';
+                        msg.textContent = (st && st.textContent && !/^No key active/i.test(st.textContent)) ? st.textContent : 'That key did not work. Check it and try again.';
+                        const f2 = role(id, 'key'); if (f2) f2.value = '';
+                    }
+                } catch (e) {
+                    inp.classList.add('invalid'); msg.className = 'pk-key-m err'; msg.textContent = friendlyError(e);
+                } finally {
+                    pkKeyBusy = false; go.disabled = false; go.textContent = 'Save key';
+                }
+            };
+            go.addEventListener('click', save);
+            inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); save(); } });
+        }
+        // used by the "Set API key" tab: jump to this provider's model step with the key box open
+        window.HzPickKey = function (id) {
+            id = PROVIDERS[id] ? id : state.active;
+            if (pkSheet.hidden) pkShow();
+            pkStep = 'model'; pkProv = id; pkSearch.value = ''; pkKeyOpen = true;
+            if (!(history.state && history.state.pk === 2)) history.pushState({ pk: 2 }, '');
+            pkRender();
+            setTimeout(() => { try { const ki = pkKeyBox.querySelector('input'); if (ki) ki.focus(); } catch (e) { /* ignore */ } }, 60);
+        };
         function pkRender() {
             pkList.replaceChildren();
             if (pkStep === 'prov') {
@@ -4863,20 +4948,17 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 pkBack.hidden = true;
                 pkSearch.hidden = true;
                 pkFree.hidden = true;
+                pkKeyBox.hidden = true;
                 PROVIDER_IDS.forEach(id => {
                     const p = PROVIDERS[id];
                     const ready = pkReady(id);
                     const st = document.createElement('span');
                     st.className = 'pk-st ' + (id === state.active ? 'on' : (ready ? '' : 'no'));
                     st.textContent = id === state.active ? 'ACTIVE' : (ready ? 'READY' : 'NO KEY');
-                    const row = pkRow(p.icon, p.name, ready ? state.models[id] : 'No key yet. Tap to add one', st, id === state.active ? 'active' : '');
+                    const row = pkRow(p.icon, p.name, ready ? state.models[id] : 'No key yet. Tap to pick a model and add your key', st, id === state.active ? 'active' : '');
                     row.addEventListener('click', () => {
-                        if (!ready) {
-                            hzOpenKeys(id);
-                            notice(`Add your ${p.name} key, then pick it here`);
-                            return;
-                        }
-                        pkStep = 'model'; pkProv = id; pkSearch.value = '';
+                        // V1.67.1: every provider opens its model list. A provider with no key shows its models and a key box right there.
+                        pkStep = 'model'; pkProv = id; pkSearch.value = ''; pkKeyOpen = !pkReady(id);
                         // V1.18.0: the model list is a second level, so hardware Back returns to the provider list.
                         if (!(history.state && history.state.pk === 2)) history.pushState({ pk: 2 }, '');
                         pkRender();
@@ -4887,6 +4969,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 const id = pkProv, p = PROVIDERS[id];
                 pkTitle.textContent = `${p.name}: which model?`;
                 pkBack.hidden = false;
+                pkPaintKey();
                 let list = orderModels(state.modelLists[id], p.defaultModel);
                 if (state.models[id] && list.indexOf(state.models[id]) === -1) list.unshift(state.models[id]);
                 pkSearch.hidden = list.length <= 8;
@@ -4910,6 +4993,13 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                         state.models[id] = m;
                         lsSet(LS.model(id), m);
                         { const gc = currentChat(); const gmem = gc && gc.group && gc.group.members && gc.group.members.find(x => x.id === id); if (gmem) { gmem.model = m; saveChats(); } }   // V1.63.3: in a group the pick also sets that member's model
+                        if (!pkReady(id)) {
+                            // V1.67.1: model remembered; the key is the missing piece, so the key box opens and the sheet stays.
+                            pkKeyOpen = true; pkPaintKey(); pkRender();
+                            notice(`${m} picked. Paste your ${p.name} key above to start.`);
+                            try { const ki = pkKeyBox.querySelector('input'); if (ki) ki.focus(); } catch (e) { /* ignore */ }
+                            return;
+                        }
                         setActive(id);
                         notice(`Using ${p.name} \u00b7 ${m}`);
                         pkHide();
@@ -5576,11 +5666,12 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             if (ok) memInput.value = '';
             else memStatus.textContent = `${state.memories.length} saved · empty, duplicate or looks like a key`;
         });
-        memAutoBtn.addEventListener('click', () => {
-            state.memAuto = !state.memAuto;
+        function setMemAuto(on) {
+            state.memAuto = !!on;
             lsSet(LS.memAuto, state.memAuto ? '1' : '0');
             renderMemories();
-        });
+        }
+        memAutoBtn.addEventListener('click', () => { setMemAuto(!state.memAuto); updateToolMenu(); });
         memClearBtn.addEventListener('click', () => {
             if (!state.memories.length) return;
             if (!memClearTimer) {
@@ -7559,7 +7650,8 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             notice(state.imgOn ? 'Image mode on. Pollinations will draw what you type.' : 'Image mode off. Back to chat.');
         }
         function toggleMem() {
-            memAutoBtn.click();
+            // V1.67.1: flip the setting directly. memAutoBtn.click() sent a real click through the Settings panel, which opened Settings.
+            setMemAuto(!state.memAuto);
             updateToolMenu();
             notice(state.memAuto ? 'Memory on. Horizon will save durable facts (never keys).' : 'Memory off. Horizon will not save new facts.');
         }
@@ -7622,9 +7714,23 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         plusBtn.addEventListener('click', e => { e.stopPropagation(); setToolMenu(toolMenu.hidden); });
         [['think', toggleThink], ['web', toggleWeb], ['yt', toggleYt], ['gh', toggleGh], ['music', toggleMusic], ['pdf', togglePdf], ['img', toggleImg], ['vault', toggleVault], ['screen', toggleScreen], ['mem', toggleMem], ['lens', toggleLens], ['eye', toggleEye]].forEach(([id, fn]) => {
             const row = $('#tm-' + id);
-            row.addEventListener('click', e => { e.stopPropagation(); fn(); });
-            row.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fn(); } });
+            // V1.67.1: the tile flips green/black the instant it is tapped, then the real switch runs one frame later and
+            // updateToolMenu() confirms (or undoes) the flip. Before, the tile waited for the whole updateUI() pass, so it stalled.
+            const run = () => {
+                const on = !row.classList.contains('is-on');
+                row.classList.toggle('is-on', on); row.classList.toggle('is-off', !on);
+                row.setAttribute('aria-checked', on ? 'true' : 'false');
+                const sw = row.querySelector('.sw'); if (sw) sw.classList.toggle('on', on);
+                requestAnimationFrame(() => setTimeout(() => {
+                    try { fn(); } catch (err) { notice(friendlyError(err), 'error'); }
+                    updateToolMenu();
+                    setTimeout(updateToolMenu, 350);
+                }, 0));
+            };
+            row.addEventListener('click', e => { e.stopPropagation(); run(); });
+            row.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); run(); } });
         });
+        window.HzUpdateToolMenu = updateToolMenu;
         // V1.28.0: the paperclip and the microphone sit inside the message pill (they used to live in the + menu)
         $('#clipBtn').addEventListener('click', e => {
             e.stopPropagation(); setToolMenu(false);
@@ -8429,5 +8535,6 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
     <script src="horizon_speakwave.js"></script>
     <script src="horizon_termlive.js"></script>
     <script src="horizon_v2.js"></script>
+    <script src="horizon_lift.js"></script>
 </body>
 </html>

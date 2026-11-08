@@ -55,7 +55,10 @@
     tab.appendChild(svgUse('i-key')); tab.appendChild(el('span', '', 'Set API key'));
     tab.setAttribute('aria-label', 'Set API key');
     tab.addEventListener('click', function () {
-      if (window.HzOpenKeys) window.HzOpenKeys(window.HzPick && window.HzPick.id);
+      /* V1.67.1: the key box is inside the AI sheet now (model step), so the tab jumps there instead of leaving for Settings */
+      var id = window.HzPick && window.HzPick.id;
+      if (window.HzPickKey) window.HzPickKey(id);
+      else if (window.HzOpenKeys) window.HzOpenKeys(id);
     });
     top.insertBefore(tab, closeBtn);
     /* the key tab belongs on the provider list, not inside a model list */
