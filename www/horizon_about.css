@@ -41,3 +41,11 @@
 .settings-home .set-row.set-security .set-text h3{color:#ff3b30}
 .set-row.set-security{box-shadow:inset 3px 0 0 #ff3b30}
 #settingsTitle.is-security h2{color:#ff3b30}
+
+/* V1.63.1: About scrolls smoothly. The panel is the scroller; keep it a plain vertical scroller whenever a settings
+   page is open, and let the browser skip painting log entries that are far off screen. */
+#rightPanel:has(#settingsBack:not([hidden])) { overflow-x: hidden; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; touch-action: pan-y; }
+.tab-body[data-tab="about"], .tab-body[data-tab="security"] { flex: 0 0 auto; min-height: 0; }
+#hzAbout { flex: 0 0 auto; padding-bottom: calc(28px + env(safe-area-inset-bottom, 0px)); }
+.hza-log { content-visibility: auto; contain-intrinsic-size: auto 120px; }
+.hza-log ul { overflow-wrap: anywhere; }

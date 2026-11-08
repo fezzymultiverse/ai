@@ -652,6 +652,16 @@
         }
         .tab-body { display: flex; flex-direction: column; }
         .xkeys { display: flex; flex-direction: column; gap: 6px; }
+        .xk-add { display: flex; align-items: center; gap: 8px; padding: 4px 4px 4px 12px; border: 1px solid var(--border-highlight); border-radius: 14px; background: var(--bg-color); }
+        .xk-add:focus-within { border-color: var(--accent-cyan); box-shadow: 0 0 10px var(--accent-cyan-glow); }
+        .xk-add .xk-input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--text-main); font-family: var(--mono); font-size: 14px; padding: 8px 0; }
+        .xk-slots { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+        .xk-empty { font-size: 13px; color: var(--text-muted); padding: 4px 2px; }
+        .xk-slot { padding: 7px 8px 7px 11px; }
+        .xk-slot .kh-name { font-size: 12.5px; flex: 1 1 auto; min-width: 9ch; }
+        .xk-slot .kh-st { font-size: 12px; }
+        .xk-del { flex: 0 0 auto; width: 30px; height: 30px; display: grid; place-items: center; border-radius: 50%; border: 1px solid var(--border-color); background: transparent; color: var(--text-main); font-size: 20px; line-height: 1; cursor: pointer; }
+        .xk-del:active { background: rgba(239,68,68,.25); border-color: #ef4444; color: #ef4444; }
         .xkeys textarea { width: 100%; box-sizing: border-box; font: inherit; font-size: 13.5px; color: var(--text-main); background: var(--surface); border: 1px solid var(--border-color); border-radius: 10px; padding: 8px 10px; outline: none; }
         .hint { font-size: 13.5px; color: var(--text-muted); line-height: 1.5; }
         .opt-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 13.5px; color: var(--text-main); }
@@ -4927,20 +4937,25 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 <a class="get-key" data-role="link" target="_blank" rel="noopener"></a>`;
             providerList.appendChild(card);
             if (!p.keyless) {
+                // V1.63.1: backup keys are individual slots. Paste a key and it saves into its own slot (the box empties,
+                // ready for the next one). Each slot has its own health light and an X to delete it. Stored in the same list
+                // as before (horizon_xkeys_<provider>), so rotation, backups and the old saved keys all keep working.
                 const xb = document.createElement('div');
                 xb.className = 'xkeys';
-                xb.innerHTML = '<label class="field-label">Backup keys (one per line). Used when the main key hits its limit.</label><textarea rows="2" spellcheck="false" autocapitalize="off" placeholder="Paste extra ' + p.name + ' keys here"></textarea>';
-                const ta = xb.querySelector('textarea');
-                ta.value = xKeys(id).join('\n');
-                ta.addEventListener('change', () => { const list = Array.from(new Set(ta.value.split(/\s+/).map(x => x.trim()).filter(Boolean))); lsSet(XKEY(id), JSON.stringify(list)); ta.value = list.join('\n'); notice(list.length ? `${list.length} backup key${list.length === 1 ? '' : 's'} saved for ${p.name}` : `Backup keys cleared for ${p.name}`); });
+                xb.innerHTML = '<label class="field-label">Backup keys. Paste one and it saves into its own slot. Used when the main key hits its limit.</label>'
+                    + '<div class="xk-add"><input type="password" class="xk-input" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Paste a ' + p.name + ' key"><button type="button" class="use-btn xk-addbtn">Add</button></div>'
+                    + '<div class="xk-slots" aria-live="polite"></div>'
+                    + '<div class="xkeys-health"><div class="kh-bar"><button type="button" class="use-btn kh-btn">Test all keys</button><span class="kh-sum" aria-live="polite"></span></div></div>';
                 card.appendChild(xb);
                 {
-                    const kh = document.createElement('div');
-                    kh.className = 'xkeys-health';
-                    kh.innerHTML = '<div class="kh-bar"><button type="button" class="use-btn kh-btn">Check key health</button><span class="kh-sum" aria-live="polite"></span></div><div class="kh-list"></div>';
-                    xb.appendChild(kh);
-                    const khBtn = kh.querySelector('.kh-btn'), khSum = kh.querySelector('.kh-sum'), khList = kh.querySelector('.kh-list');
+                    const addIn = xb.querySelector('.xk-input'), addBtn = xb.querySelector('.xk-addbtn');
+                    const slotsEl = xb.querySelector('.xk-slots');
+                    const khBtn = xb.querySelector('.kh-btn'), khSum = xb.querySelector('.kh-sum');
+                    const results = new Map();   // key -> { c, t, ms, m } from the last check, so a repaint keeps the lights
                     let khBusy = false;
+                    const mainKey = () => String(state.keys[id] || '').trim();
+                    const saveList = list => lsSet(XKEY(id), JSON.stringify(list));
+                    const last4 = k => '\u00b7\u00b7\u00b7\u00b7' + String(k).slice(-4);
                     const khCheck = async key => {
                         const t0 = Date.now();
                         try {
@@ -4965,36 +4980,95 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                             return { c: 'bad', t: 'ERROR', ms: Date.now() - t0, m };
                         }
                     };
-                    const khRun = async () => {
-                        if (khBusy) return;
-                        const all = [state.keys[id]].concat(xKeys(id)).map(k => String(k || '').trim()).filter(Boolean);
-                        const keys = all.filter((k, i) => all.indexOf(k) === i);
-                        khList.textContent = '';
-                        if (!keys.length) { khSum.textContent = 'No keys saved yet'; return; }
-                        khBusy = true; khBtn.disabled = true;
-                        const rows = keys.map((k, i) => {
-                            const row = document.createElement('div'); row.className = 'kh-row';
-                            const dot = document.createElement('i'); dot.className = 'kh-dot';
-                            const nm = document.createElement('span'); nm.className = 'kh-name'; nm.textContent = (i === 0 ? 'Main' : 'Backup ' + i) + ' \u00b7\u00b7\u00b7\u00b7' + k.slice(-4);
-                            const st = document.createElement('b'); st.className = 'kh-st'; st.textContent = 'checking...';
-                            row.append(dot, nm, st); khList.appendChild(row);
-                            return { row, st };
-                        });
-                        let live = 0, lim = 0, bad = 0;
-                        for (let i = 0; i < keys.length; i++) {
-                            khSum.textContent = 'Checking ' + (i + 1) + ' of ' + keys.length;
-                            const r = await khCheck(keys[i]);
-                            rows[i].row.className = 'kh-row ' + r.c;
-                            rows[i].st.textContent = r.t + ' \u00b7 ' + (r.ms / 1000).toFixed(1) + 's';
-                            if (r.m) rows[i].row.title = r.m;
-                            if (r.c === 'live') live++; else if (r.c === 'warn') lim++; else bad++;
+                    const paintSlots = () => {
+                        slotsEl.textContent = '';
+                        const items = [];
+                        if (mainKey()) items.push({ k: mainKey(), main: true });
+                        xKeys(id).forEach(k => items.push({ k, main: false }));
+                        if (!items.length) {
+                            const e = document.createElement('div'); e.className = 'xk-empty'; e.textContent = 'No keys saved yet';
+                            slotsEl.appendChild(e); return;
                         }
-                        khSum.textContent = live + ' live' + (lim ? ', ' + lim + ' limited' : '') + (bad ? ', ' + bad + ' failing' : '') + ' of ' + keys.length;
-                        khBusy = false; khBtn.disabled = false;
+                        let n = 0;
+                        items.forEach(d => {
+                            const r = results.get(d.k);
+                            const row = document.createElement('div'); row.className = 'kh-row xk-slot' + (r && r.c ? ' ' + r.c : '');
+                            const dot = document.createElement('i'); dot.className = 'kh-dot';
+                            const nm = document.createElement('span'); nm.className = 'kh-name';
+                            nm.textContent = (d.main ? 'Main' : 'Backup ' + (++n)) + ' ' + last4(d.k);
+                            const st = document.createElement('b'); st.className = 'kh-st';
+                            st.textContent = r ? (r.ms != null ? r.t + ' \u00b7 ' + (r.ms / 1000).toFixed(1) + 's' : r.t) : 'not tested';
+                            if (r && r.m) row.title = r.m;
+                            row.append(dot, nm, st);
+                            if (!d.main) {
+                                const x = document.createElement('button'); x.type = 'button'; x.className = 'xk-del';
+                                x.setAttribute('aria-label', 'Delete backup key ' + last4(d.k)); x.textContent = '\u00d7';
+                                x.addEventListener('click', () => {
+                                    saveList(xKeys(id).filter(z => z !== d.k));
+                                    results.delete(d.k);
+                                    paintSlots();
+                                    notice('Backup key deleted for ' + p.name);
+                                });
+                                row.appendChild(x);
+                            }
+                            slotsEl.appendChild(row);
+                        });
                     };
+                    const checkKeys = async keys => {
+                        while (khBusy) await new Promise(r => setTimeout(r, 150));   // a key pasted while a check runs waits its turn
+                        if (!keys.length) { khSum.textContent = 'No keys saved yet'; return; }
+                        khBusy = true; khBtn.disabled = true; addBtn.disabled = true;
+                        keys.forEach(k => results.set(k, { c: '', t: 'checking...' }));
+                        paintSlots();
+                        let live = 0, lim = 0, bad = 0;
+                        try {
+                            for (let i = 0; i < keys.length; i++) {
+                                khSum.textContent = 'Checking ' + (i + 1) + ' of ' + keys.length;
+                                const r = await khCheck(keys[i]);
+                                results.set(keys[i], r);
+                                if (r.c === 'live') live++; else if (r.c === 'warn') lim++; else bad++;
+                                paintSlots();
+                            }
+                            khSum.textContent = live + ' live' + (lim ? ', ' + lim + ' limited' : '') + (bad ? ', ' + bad + ' failing' : '') + ' of ' + keys.length;
+                        } catch (e) {
+                            khSum.textContent = 'Check stopped: ' + String((e && e.message) || e);
+                        } finally {
+                            khBusy = false; khBtn.disabled = false; addBtn.disabled = false;
+                            paintSlots();
+                        }
+                    };
+                    const khRun = async () => {
+                        const all = [mainKey()].concat(xKeys(id)).filter(Boolean);
+                        await checkKeys(all.filter((k, i) => all.indexOf(k) === i));
+                    };
+                    // Takes whatever was pasted or typed (one key, or several separated by spaces or lines), makes a slot for each new key.
+                    const commit = raw => {
+                        const found = String(raw || '').split(/\s+/).map(x => x.trim()).filter(Boolean);
+                        if (!found.length) return;
+                        const list = xKeys(id), fresh = [];
+                        let dup = 0;
+                        found.forEach(k => {
+                            if (k === mainKey() || list.indexOf(k) !== -1 || fresh.indexOf(k) !== -1) { dup++; return; }
+                            fresh.push(k);
+                        });
+                        addIn.value = '';
+                        if (fresh.length) {
+                            saveList(list.concat(fresh));
+                            notice(fresh.length === 1 ? 'Backup key saved for ' + p.name : fresh.length + ' backup keys saved for ' + p.name);
+                        } else if (dup) {
+                            notice('That key is already saved for ' + p.name);
+                        }
+                        paintSlots();
+                        if (fresh.length) checkKeys(fresh);   // light up the new slot straight away
+                    };
+                    addIn.addEventListener('paste', () => setTimeout(() => commit(addIn.value), 0));
+                    addIn.addEventListener('change', () => commit(addIn.value));
+                    addIn.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); commit(addIn.value); } });
+                    addBtn.addEventListener('click', () => commit(addIn.value));
                     khBtn.addEventListener('click', khRun);
+                    paintSlots();
                     card.hzKh = { run: khRun, sum: khSum, busy: () => khBusy };   // V1.37.2: lets Test all drive this card
-                    xb.querySelector('textarea').addEventListener('change', () => setTimeout(khRun, 120));
+                    card.hzSlots = paintSlots;                                     // V1.63.1: the Main row follows the main key
                 }
                 if (id === PROVIDER_IDS[0]) {
                     const sw = document.createElement('label');
@@ -5065,6 +5139,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
 
         function updateCard(id) {
             const key = state.keys[id];
+            { const sc = cardEl(id); if (sc && sc.hzSlots) sc.hzSlots(); }   // V1.63.1: keep the key slots in step
             const health = role(id, 'health');
             const use = role(id, 'use');
             fillModels(id);

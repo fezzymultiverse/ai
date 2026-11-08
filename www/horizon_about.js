@@ -1,10 +1,11 @@
 /* Horizon V1.26.0: ABOUT & UPDATES page: version, release check, backup export/import, changelog, privacy awareness + reminder switch. */
 (function () {
     'use strict';
-    var VERSION = 'V1.63.0';
+    var VERSION = 'V1.63.1';
     var LSK = 'horizon_privacy_notice';
     var REPO_API = 'https://api.github.com/repos/fezzymultiverse/ai';
     var LOG = [
+        ['V1.63.1', ['BUILD FIX: the Android build no longer fails at the keyboard resize step. The old edit looked for the activity tag with a space after it, but Android writes a line break there, so nothing was changed and the check stopped the build. It now finds the right activity however it is laid out. Every check also prints what went wrong and the current manifest, and the APK check lists every missing plugin at once.', 'API KEYS: backup keys are now separate slots. Paste a key and it saves into its own slot, and the box empties for the next one. Each slot has its own health light and an X to delete it. A Test all keys button checks every slot, and the Test all button at the top still checks every provider. Your old saved backup keys show up as slots.', 'ABOUT: scrolls smoothly. The changelog shows the newest five versions and loads the older ones when you tap Show older versions.']],
         ['V1.63.0', ['POP-UP REPLIES: when Horizon finishes a reply while you are in another app, it now drops in front of the screen as a banner and makes the notification sound (it also vibrates). Android locks a notification channel\u2019s importance the first time it is made, so Horizon makes a new one, AI replies (pop-up + sound), and removes the old one. Progress lines such as Horizon is thinking stay silent on their own channel. Type /notif to send a test pop-up, check banner and sound, or jump to the channel settings. On Android 14, /notif also opens the Allow full-screen alerts switch so a reply can open over a locked screen.', 'KEYBOARD FREEZE: Android now tells Horizon the exact moment the keyboard starts and stops sliding, instead of Horizon guessing from resize events. While it slides the page does no layout work, the browser sends one position update (it used to send dozens), and a safety timer means the page can never stay stuck. If the keyboard is hidden with Back while the message box still had focus, the box lets go, so the next tap lifts the keyboard again.', 'COROUTINES + STRUCTURED CONCURRENCY: Horizon\u2019s background AI requests and media saves now run as Kotlin coroutines inside scopes owned by the service or plugin that started them. Every job has a time limit, one failure never cancels the others, the page is always told when a job is cancelled, and when the owner is destroyed all of its work is cancelled with it. A cancelled download stops at once and deletes the half-written file. No GlobalScope and no loose threads.', 'LEAKCANARY: watches every closed screen, service and plugin and, when one is still in memory five seconds after it should be gone, shows the chain of references holding it. Type /canary to open the leak list or switch it on and off. It pauses the phone for a second or two when it dumps memory, so switch it off for normal use.']],
         ['V1.62.0', ['EDGE VOICE: a keyless natural voice. Settings > Voice > Natural: Microsoft Edge. No key, no account, no daily limit, so it cannot run out of credit. 18 neural voices (US, South African, British, Australian) and six tone presets (Natural, Calm and warm, Upbeat, Bright, Deep narrator, Fast reader) that stack with your Speed and Pitch sliders and are applied by the voice itself, so it sounds clean. The text is sent to Microsoft. It is an unofficial route that the Edge browser itself uses, so if Microsoft changes it Horizon says why and falls back to the Android voice. Android app only.']],
         ['V1.61.0', ['DEBATE: in a group chat, tap Debate in the members bar and every AI critiques the others\u2019 replies (what they got right, wrong or missed). It uses the same [Name said] history, so it is one more round and Stop still ends it.', 'FREE ONLY: in the model picker for OpenRouter, a Free only switch hides the paid models and keeps the :free ones. It is remembered.', 'WHAT\u2019S THIS SONG?: the music notification has a new button. Tap it and Gemini listens to a clip of what is playing and answers in a notification, without opening the app. The red eye and your Gemini key still apply.', 'SAVE TO VAULT: under each of Gemini\u2019s song answers there is a Save to Vault button that files the answer as an encrypted Vault note. The answer from the notification waits for you in the Ask Gemini sheet.']],
@@ -402,15 +403,30 @@
 
         f.appendChild(backupSection());
 
+        /* V1.63.1: the changelog used to put every version (about 80 long entries) into the page at once, which made the
+           About screen heavy to scroll. Now the newest few show and the rest load when asked for. */
         var c = sec('CHANGELOG');
-        LOG.forEach(function (e) {
+        function logBox(e) {
             var box = el('div', 'hza-log');
             box.appendChild(el('b', null, e[0]));
             var ul = el('ul');
             e[1].forEach(function (x) { ul.appendChild(el('li', null, x)); });
             box.appendChild(ul);
-            c.appendChild(box);
-        });
+            return box;
+        }
+        var SHOWN = 5;
+        LOG.slice(0, SHOWN).forEach(function (e) { c.appendChild(logBox(e)); });
+        if (LOG.length > SHOWN) {
+            var more = el('button', 'hza-btn alt', 'Show older versions (' + (LOG.length - SHOWN) + ')');
+            more.type = 'button';
+            more.addEventListener('click', function () {
+                var rest = document.createDocumentFragment();
+                LOG.slice(SHOWN).forEach(function (e) { rest.appendChild(logBox(e)); });
+                c.insertBefore(rest, more);
+                more.remove();
+            });
+            c.appendChild(more);
+        }
         f.appendChild(c);
 
         /* data-training reminder moved into SECURITY AND PRIVACY above; the notice() reminder below still runs while its key is on */

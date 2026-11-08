@@ -87,13 +87,23 @@ jobs:
         run: |
           set -euo pipefail
           UNSIGNED="$(ls android/app/build/outputs/apk/release/*.apk | head -1)"
+          echo "APK: $UNSIGNED"
           rm -rf "$RUNNER_TEMP/dexcheck" && mkdir -p "$RUNNER_TEMP/dexcheck"
           unzip -q -o "$UNSIGNED" 'classes*.dex' -d "$RUNNER_TEMP/dexcheck"
-          for cls in HorizonAIPlugin HorizonAIService HorizonMediaPlugin HorizonSpeechPlugin HorizonPermsPlugin HorizonNotify HorizonScopes HorizonCanary; do
-            if ! grep -aq "$cls" "$RUNNER_TEMP"/dexcheck/classes*.dex; then
-              echo "::error::$cls is missing from the APK"; exit 1
+          echo "dex files:"; ls -l "$RUNNER_TEMP"/dexcheck/
+          MISSING=""
+          for cls in HorizonAIPlugin HorizonAIService HorizonMediaPlugin HorizonSpeechPlugin HorizonPermsPlugin HorizonNotify HorizonScopes HorizonCanary HorizonLockPlugin HorizonShellPlugin HorizonBrowserPlugin; do
+            if grep -aq "$cls" "$RUNNER_TEMP"/dexcheck/classes*.dex; then
+              echo "  ok       $cls"
+            else
+              echo "  MISSING  $cls"; MISSING="$MISSING $cls"
             fi
           done
+          if [ -n "$MISSING" ]; then
+            echo "::error::Missing from the APK:$MISSING"
+            echo "Native sources that were applied:"; ls -l "android/app/src/main/java/"*/*/*/ 2>/dev/null || true
+            exit 1
+          fi
           echo "All native plugins present in the APK."
 
       - name: Sign APK with release keystore
@@ -153,6 +163,16 @@ jobs:
           path: dist/${{ steps.apk.outputs.name }}
           if-no-files-found: error
           retention-days: 30
+
+      - name: Diagnostics on failure
+        if: failure()
+        run: |
+          echo "---- AndroidManifest.xml ----"
+          cat android/app/src/main/AndroidManifest.xml 2>/dev/null || echo "(no manifest)"
+          echo "---- app/build.gradle ----"
+          cat android/app/build.gradle 2>/dev/null || echo "(no app/build.gradle)"
+          echo "---- native sources ----"
+          ls -l android/app/src/main/java/*/*/*/ 2>/dev/null || echo "(no sources)"
 
       - name: Publish GitHub Release
         if: startsWith(github.ref, 'refs/tags/')
