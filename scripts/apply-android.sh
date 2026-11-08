@@ -200,7 +200,7 @@ need "$APP_GRADLE" 'org.jetbrains.kotlin.android' "Kotlin plugin not applied to 
 say "Native plugin sources verified."
 
 # ------------------------------------------------------------------------------------------
-# 6. Gradle libraries: biometric (V1.43.0), OkHttp (V1.62.0), coroutines + LeakCanary (V1.63.0)
+# 6. Gradle libraries: biometric (V1.43.0), OkHttp (V1.62.0), coroutines (V1.63.0)
 #    V1.47.0: Piper / sherpa-onnx stay removed (no native voice libraries, no commons-compress).
 # ------------------------------------------------------------------------------------------
 python3 - <<'PY'
@@ -216,9 +216,7 @@ for dep in (
     "implementation 'com.squareup.okhttp3:okhttp:4.12.0'",
     "implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1'",
     "implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1'",
-    # LeakCanary 2.14 needs no code in an Application class: it installs itself through a ContentProvider.
-    # It is on `implementation`, not `debugImplementation`, because the APK Horizon ships is a release build.
-    "implementation 'com.squareup.leakcanary:leakcanary-android:2.14'",
+    # V1.63.2: LeakCanary removed (the app closed on launch after it shipped).
 ):
     artifact = dep.split("'")[1].rsplit(':', 1)[0]
     if artifact not in s:
@@ -228,7 +226,6 @@ PY
 need "$APP_GRADLE" "androidx.biometric:biometric"        "biometric library missing from app/build.gradle"
 need "$APP_GRADLE" "com.squareup.okhttp3:okhttp"         "okhttp library missing from app/build.gradle"
 need "$APP_GRADLE" "kotlinx-coroutines-android"          "coroutines library missing from app/build.gradle"
-need "$APP_GRADLE" "leakcanary-android"                  "LeakCanary library missing from app/build.gradle"
 say "Gradle libraries applied (verified)."
 
 # ------------------------------------------------------------------------------------------
@@ -237,11 +234,11 @@ say "Gradle libraries applied (verified)."
 need "$JAVA_DIR/MainActivity.java" "registerPlugin(HorizonLockPlugin.class)" "MainActivity does not register HorizonLockPlugin"
 need "$JAVA_DIR/HorizonPermsPlugin.java" "setBackdrop"   "HorizonPermsPlugin has no setBackdrop"
 need "$JAVA_DIR/MainActivity.java" "paintBackdrop"       "MainActivity does not paint the backdrop"
-need "$JAVA_DIR/MainActivity.java" "HorizonCanary.init"  "MainActivity does not start LeakCanary"
+need "$JAVA_DIR/MainActivity.java" "HorizonCanary.init"  "MainActivity does not call HorizonCanary.init"
 need "$JAVA_DIR/MainActivity.java" "watchKeyboard"       "MainActivity has no keyboard watcher"
 need "$JAVA_DIR/HorizonAIPlugin.kt" "HorizonNotify.alert" "Replies do not use the pop-up notification channel"
 need "$MANIFEST" "android.permission.USE_FULL_SCREEN_INTENT" "Full-screen intent permission missing from the manifest"
-say "App lock, theme backdrop, LeakCanary and pop-up notifications verified."
+say "App lock, theme backdrop and pop-up notifications verified."
 
 # ------------------------------------------------------------------------------------------
 # 8. V1.58.2: keyboard resize mode pinned in the manifest + native 90 Hz request

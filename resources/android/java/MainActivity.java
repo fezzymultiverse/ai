@@ -17,7 +17,8 @@ import com.getcapacitor.BridgeActivity;
 public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        HorizonCanary.init(getApplication());   // V1.63.0: LeakCanary on (it hooks in by itself; this only tunes it)
+        installCrashRecorder();                 // V1.63.2: if Horizon crashes, the next launch shows why (no adb needed)
+        HorizonCanary.init(getApplication());
         registerPlugin(HorizonPermsPlugin.class);
         registerPlugin(HorizonAIPlugin.class);
         registerPlugin(HorizonMediaPlugin.class);
@@ -28,6 +29,7 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(HorizonShellPlugin.class);
         registerPlugin(HorizonLockPlugin.class);
         super.onCreate(savedInstanceState);
+        showLastCrash();                          // V1.63.2: a saved crash report from the last run, if any
         HorizonPermsPlugin.paintBackdrop(this);   // V1.44.0: theme colour behind the page, no white flash
         // V1.58.2: pin the keyboard behaviour (the page shrinks above the keyboard) instead of leaving it to the device default.
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE | WindowManager.LayoutParams.SOFT_INPUT_STATE_UNCHANGED);
@@ -68,6 +70,60 @@ public class MainActivity extends BridgeActivity {
     // V1.63.0: tell the page exactly when the keyboard starts and stops sliding. The page used to guess from resize events
     // (an 80 px change, then 220 ms of quiet), which left the interface busy or stuck while the keyboard lifted and collapsed.
     // Android reports the real start and end of the slide, so the page can pause its work for exactly that long.
+    // V1.63.2: crash recorder. A crash writes its stack trace into private storage; the next launch shows it in a dialog
+    // with a Copy button, so the cause can be read on the phone without a computer.
+    private void installCrashRecorder() {
+        try {
+            final Thread.UncaughtExceptionHandler prev = Thread.getDefaultUncaughtExceptionHandler();
+            final android.content.Context app = getApplicationContext();
+            Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
+                try {
+                    java.io.StringWriter sw = new java.io.StringWriter();
+                    e.printStackTrace(new java.io.PrintWriter(sw));
+                    String s = sw.toString();
+                    if (s.length() > 6000) s = s.substring(0, 6000);
+                    app.getSharedPreferences("horizon_crash", 0).edit().putString("trace", "Thread: " + t.getName() + "\n" + s).commit();
+                } catch (Throwable ignored) {
+                    // recording must never make a crash worse
+                }
+                if (prev != null) prev.uncaughtException(t, e);
+            });
+        } catch (Throwable ignored) {
+            // no recorder: Android shows its normal crash behaviour
+        }
+    }
+
+    private void showLastCrash() {
+        try {
+            final android.content.SharedPreferences sp = getSharedPreferences("horizon_crash", 0);
+            final String trace = sp.getString("trace", null);
+            if (trace == null) return;
+            sp.edit().remove("trace").apply();
+            android.widget.TextView tv = new android.widget.TextView(this);
+            tv.setText(trace);
+            tv.setTextSize(11f);
+            tv.setTextIsSelectable(true);
+            tv.setPadding(32, 24, 32, 24);
+            android.widget.ScrollView sv = new android.widget.ScrollView(this);
+            sv.addView(tv);
+            new android.app.AlertDialog.Builder(this)
+                .setTitle("Horizon crashed last time")
+                .setView(sv)
+                .setPositiveButton("Copy", (d, w) -> {
+                    try {
+                        android.content.ClipboardManager cm = (android.content.ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+                        cm.setPrimaryClip(android.content.ClipData.newPlainText("Horizon crash", trace));
+                    } catch (Throwable ignored) {
+                        // nothing to do
+                    }
+                })
+                .setNegativeButton("Close", null)
+                .show();
+        } catch (Throwable ignored) {
+            // the report is already cleared; nothing else to do
+        }
+    }
+
     private boolean kbWatching = false;
     private void watchKeyboard() {
         try {

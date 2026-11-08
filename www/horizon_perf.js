@@ -8,7 +8,7 @@
 (function () {
   'use strict';
   var de = document.documentElement;
-  var VERSION = 'V1.63.1';
+  var VERSION = 'V1.63.2';
   var LONG_MS = 50, KEY_MS = 40, KEEP = 60;
   var tasks = [], keys = [], slow = [], worst = [], kbMoves = 0, loafOk = false;
   var kbTimer = 0, isOpen = false, panel = null, pre = null, btnCopy = null, uiTimer = 0, rafId = 0;
