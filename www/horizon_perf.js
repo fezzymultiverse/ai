@@ -1,17 +1,19 @@
-/* HORIZON V1.58.2 · keyboard guard + lag detector.
+/* HORIZON V1.58.3 · keyboard guard + lag detector V2.
    1. Keyboard guard: while the on-screen keyboard slides in or out, window.hzKbBusy is true and <html> carries .hz-kb-moving until the
-      page has been still for 220 ms. Other code (dashboard fit, music wave, background sweep) waits instead of re-measuring the page
-      mid-slide, then gets one 'hz-kb-settled' event.
-   2. Lag detector: type /lag in the message box. It records slow keys (Event Timing) and long tasks in memory only, measures the real
-      refresh rate while it is open, and copies a short plain-text report. Nothing is stored or sent anywhere. */
+      page has been still for 220 ms. While the message box has focus, <html> carries .hz-kb-open. CSS pauses decorative animations
+      under either class. Other code (dashboard fit, music wave, background sweep) waits for 'hz-kb-settled'.
+   2. Lag detector: type /lag in the message box. It records slow frames (which file and function ran, how long scripts and
+      style+layout took), slow keys and long tasks in memory only, measures the real refresh rate while open, offers test switches,
+      and copies a short plain-text report. Nothing is stored or sent anywhere. */
 (function () {
   'use strict';
   var de = document.documentElement;
-  var VERSION = 'V1.58.2';
+  var VERSION = 'V1.58.5';
   var LONG_MS = 50, KEY_MS = 40, KEEP = 60;
-  var tasks = [], keys = [], kbMoves = 0;
+  var tasks = [], keys = [], slow = [], worst = [], kbMoves = 0, loafOk = false;
   var kbTimer = 0, isOpen = false, panel = null, pre = null, btnCopy = null, uiTimer = 0, rafId = 0;
   var frames = [], hz = 0, hzPeak = 0;
+  var chips = {}, swOn = {};
 
   function vh() { return window.visualViewport ? window.visualViewport.height : window.innerHeight; }
 
@@ -39,8 +41,25 @@
   window.addEventListener('resize', kbCheck, { passive: true });
   if (window.visualViewport) window.visualViewport.addEventListener('resize', kbCheck, { passive: true });
 
-  /* ---------------------------------------------------------------- slow keys and long tasks */
+  var chat = document.getElementById('chatInput');
+  if (chat) {
+    chat.addEventListener('focus', function () { de.classList.add('hz-kb-open'); }, { passive: true });
+    chat.addEventListener('blur', function () { de.classList.remove('hz-kb-open'); }, { passive: true });
+    if (document.activeElement === chat) de.classList.add('hz-kb-open');
+  }
+
+  /* ---------------------------------------------------------------- recording */
   function push(list, row) { list.push(row); if (list.length > KEEP) list.shift(); }
+  function baseName(u) { return String(u || '').replace(/[?#].*$/, '').split('/').pop() || 'inline'; }
+  function shortInvoker(s) { return String(s || '').replace(/https?:\/\/[^\/\s]+\//g, '').slice(0, 48); }
+  function label(s) {
+    return baseName(s.sourceURL) + (s.sourceFunctionName ? ' ' + s.sourceFunctionName : '') + (s.invoker ? ' <' + shortInvoker(s.invoker) + '>' : '');
+  }
+  function noteWorst(row) {
+    worst.push(row);
+    worst.sort(function (a, b) { return b.dur - a.dur; });
+    if (worst.length > 5) worst.length = 5;
+  }
   var KEYNAMES = { keydown: 1, keyup: 1, keypress: 1, input: 1, beforeinput: 1, compositionstart: 1, compositionupdate: 1, compositionend: 1 };
   try {
     new PerformanceObserver(function (list) {
@@ -51,9 +70,9 @@
         push(keys, {
           name: e.name,
           dur: Math.round(e.duration),
-          wait: Math.max(0, Math.round(e.processingStart - e.startTime)),          // page was busy before the key was even handled
-          run: Math.max(0, Math.round(e.processingEnd - e.processingStart)),       // the key handlers themselves
-          paint: Math.max(0, Math.round(e.startTime + e.duration - e.processingEnd)), // layout + drawing afterwards
+          wait: Math.max(0, Math.round(e.processingStart - e.startTime)),               // page was busy before the key was handled
+          run: Math.max(0, Math.round(e.processingEnd - e.processingStart)),            // the key handlers themselves
+          paint: Math.max(0, Math.round(e.startTime + e.duration - e.processingEnd)),   // layout + drawing afterwards
           kb: !!window.hzKbBusy
         });
       }
@@ -68,6 +87,28 @@
       }
     }).observe({ type: 'longtask', buffered: true });
   } catch (e) { /* Long Tasks not available */ }
+  try {
+    new PerformanceObserver(function (list) {
+      var es = list.getEntries();
+      for (var i = 0; i < es.length; i++) {
+        var e = es[i];
+        if (e.duration < LONG_MS) continue;
+        var sc = e.scripts || [], sum = 0, forced = 0, top = null, j;
+        for (j = 0; j < sc.length; j++) {
+          sum += sc[j].duration || 0;
+          forced += sc[j].forcedStyleAndLayoutDuration || 0;
+          if (!top || sc[j].duration > top.duration) top = sc[j];
+        }
+        var end = e.startTime + e.duration;
+        var sl = e.styleAndLayoutStart > 0 ? Math.max(0, end - e.styleAndLayoutStart) : 0;
+        var row = { dur: Math.round(e.duration), script: Math.round(sum), sl: Math.round(sl), forced: Math.round(forced),
+          top: top ? label(top) : '', typing: !!window.hzTyping, kb: !!window.hzKbBusy };
+        push(slow, row);
+        noteWorst(row);
+      }
+    }).observe({ type: 'long-animation-frame', buffered: true });
+    loafOk = true;
+  } catch (e) { loafOk = false; }
 
   /* ---------------------------------------------------------------- refresh-rate meter (runs only while the panel is open) */
   function frame(t) {
@@ -83,37 +124,83 @@
     if (hz > hzPeak) hzPeak = hz;
   }
 
+  /* ---------------------------------------------------------------- test switches */
+  var SW = [
+    { id: 'noglow', label: 'Header glow off' },
+    { id: 'noanim', label: 'All animations off' },
+    { id: 'noshadow', label: 'Shadows + filters off' },
+    { id: 'nomsgs', label: 'Hide messages' },
+    { id: 'nospell', label: 'Spellcheck off' }
+  ];
+  function resetStats() { tasks = []; keys = []; slow = []; worst = []; kbMoves = 0; hzPeak = 0; frames = []; }
+  function setSwitch(id, on) {
+    swOn[id] = !!on;
+    if (id === 'nospell') {
+      if (chat) chat.setAttribute('spellcheck', on ? 'false' : 'true');
+    } else {
+      de.classList.toggle('hzp-' + id, !!on);
+    }
+    if (chips[id]) { chips[id].classList.toggle('on', !!on); chips[id].setAttribute('aria-pressed', on ? 'true' : 'false'); }
+  }
+  function switchesOn() {
+    var a = SW.filter(function (s) { return swOn[s.id]; }).map(function (s) { return s.label; });
+    return a.length ? a.join(', ') : 'none';
+  }
+
   /* ---------------------------------------------------------------- report */
-  function worst(list) { var w = 0; list.forEach(function (r) { if (r.dur > w) w = r.dur; }); return w; }
+  function maxDur(list) { var w = 0; list.forEach(function (r) { if (r.dur > w) w = r.dur; }); return w; }
   function count(list, fn) { var n = 0; list.forEach(function (r) { if (fn(r)) n++; }); return n; }
+  function sum(list, k) { var s = 0; list.forEach(function (r) { s += r[k] || 0; }); return s; }
   function env() {
     var ua = navigator.userAgent || '';
     var a = /Android [\d.]+/.exec(ua), c = /Chrome\/[\d.]+/.exec(ua);   // version numbers only, nothing that identifies the phone
     return (a ? a[0] : 'Android ?') + ' \u00b7 WebView ' + (c ? c[0] : '?');
   }
   function diagnosis() {
-    if (!keys.length) return tasks.length ? 'Slow tasks seen, but no slow keys yet.' : 'Nothing slow so far. Type a few sentences with this open.';
+    if (!keys.length) return slow.length || tasks.length ? 'Slow frames seen, but no slow keys yet.' : 'Nothing slow so far. Type a few sentences with this open.';
     var w = 0, r = 0, p = 0;
     keys.forEach(function (k) { w += k.wait; r += k.run; p += k.paint; });
     if (w >= r && w >= p) return 'Likely: the page was busy with something else when keys arrived (timers or background work).';
     if (r >= p) return 'Likely: the key handlers themselves are slow.';
     return 'Likely: drawing after each key is slow (layout or paint).';
   }
+  function culprits() {
+    var map = {}, out = [];
+    slow.forEach(function (f) {
+      if (!f.top) return;
+      var m = map[f.top] || (map[f.top] = { name: f.top, n: 0, ms: 0 });
+      m.n++; m.ms += f.script;
+    });
+    Object.keys(map).forEach(function (k) { out.push(map[k]); });
+    out.sort(function (a, b) { return b.ms - a.ms; });
+    return out.slice(0, 5);
+  }
   function report() {
-    var L = [];
+    var L = [], d, s, l, o;
     L.push('Horizon lag report ' + VERSION);
     L.push(env());
+    L.push('Switches on: ' + switchesOn());
     L.push('Refresh measured: ' + (hz || 'n/a') + ' Hz (peak ' + (hzPeak || 'n/a') + ')');
     L.push('Keyboard moves: ' + kbMoves);
-    L.push('Long tasks >= ' + LONG_MS + ' ms: ' + tasks.length + ' (worst ' + worst(tasks) + ' ms, ' +
-      count(tasks, function (t) { return t.typing; }) + ' while typing, ' + count(tasks, function (t) { return t.kb; }) + ' during a keyboard move)');
-    L.push('Slow keys >= ' + KEY_MS + ' ms: ' + keys.length + ' (worst ' + worst(keys) + ' ms)');
+    if (loafOk) {
+      d = sum(slow, 'dur'); s = sum(slow, 'script'); l = sum(slow, 'sl');
+      o = Math.max(0, d - s - l);
+      L.push('Slow frames >= ' + LONG_MS + ' ms: ' + slow.length + ' (worst ' + maxDur(slow) + ' ms, ' +
+        count(slow, function (f) { return f.typing; }) + ' while typing, ' + count(slow, function (f) { return f.kb; }) + ' during a keyboard move)');
+      if (d > 0) L.push('  time split: scripts ' + Math.round(100 * s / d) + '% · style+layout ' + Math.round(100 * l / d) + '% · other ' + Math.round(100 * o / d) + '%' +
+        (sum(slow, 'forced') ? ' (forced layout ' + sum(slow, 'forced') + ' ms)' : ''));
+      culprits().forEach(function (c) { L.push('  script ' + c.n + 'x ' + c.ms + ' ms  ' + c.name); });
+      worst.slice(0, 3).forEach(function (f) {
+        L.push('  worst frame ' + f.dur + ' ms: scripts ' + f.script + ', style+layout ' + f.sl + (f.top ? ' · ' + f.top : ''));
+      });
+    } else {
+      L.push('Frame attribution: not supported by this WebView');
+    }
+    L.push('Long tasks >= ' + LONG_MS + ' ms: ' + tasks.length + ' (worst ' + maxDur(tasks) + ' ms)');
+    L.push('Slow keys >= ' + KEY_MS + ' ms: ' + keys.length + ' (worst ' + maxDur(keys) + ' ms)');
     L.push(diagnosis());
-    keys.slice(-12).forEach(function (k) {
+    keys.slice(-8).forEach(function (k) {
       L.push('  key ' + k.name + ' ' + k.dur + ' ms = wait ' + k.wait + ' + run ' + k.run + ' + paint ' + k.paint + (k.kb ? ' (keyboard moving)' : ''));
-    });
-    tasks.slice(-8).forEach(function (t) {
-      L.push('  task ' + t.dur + ' ms' + (t.typing ? ' (typing)' : '') + (t.kb ? ' (keyboard moving)' : ''));
     });
     return L.join('\n');
   }
@@ -145,6 +232,11 @@
     } catch (e) { /* fall through */ }
     fallbackCopy(txt, done);
   }
+  function keepFocus(b) {
+    // taps on panel buttons must not pull focus out of the message box, so the keyboard stays up while you test
+    b.addEventListener('pointerdown', function (e) { e.preventDefault(); });
+    b.addEventListener('mousedown', function (e) { e.preventDefault(); });
+  }
   function build() {
     panel = el('div', 'hzp'); panel.id = 'hzPerf'; panel.hidden = true;
     panel.setAttribute('role', 'dialog'); panel.setAttribute('aria-label', 'Lag detector');
@@ -152,21 +244,23 @@
     head.appendChild(el('b', null, 'LAG DETECTOR'));
     var x = el('button', 'hzp-x', '\u00d7'); x.type = 'button'; x.setAttribute('aria-label', 'Close lag detector');
     head.appendChild(x);
+    var sw = el('div', 'hzp-sw');
+    SW.forEach(function (s) {
+      var c = el('button', 'hzp-chip', s.label); c.type = 'button'; c.setAttribute('aria-pressed', 'false');
+      c.addEventListener('click', function () { setSwitch(s.id, !swOn[s.id]); resetStats(); paint(); });
+      keepFocus(c); chips[s.id] = c; sw.appendChild(c);
+    });
     pre = el('pre', 'hzp-out');
-    var hint = el('p', 'hzp-hint', 'Keep this open and type a few sentences, then tap Copy report and paste it into your chat with Claude. Nothing is saved or sent anywhere.');
+    var hint = el('p', 'hzp-hint', 'Type a few sentences, then Copy report and paste it into your chat with Claude. Flipping a switch starts a fresh measurement. Switches reset when you close this. Nothing is saved or sent.');
     var row = el('div', 'hzp-row');
     btnCopy = el('button', 'hzp-b', 'Copy report'); btnCopy.type = 'button';
     var clr = el('button', 'hzp-b ghost', 'Clear'); clr.type = 'button';
     row.appendChild(btnCopy); row.appendChild(clr);
-    panel.appendChild(head); panel.appendChild(pre); panel.appendChild(hint); panel.appendChild(row);
-    // taps on these buttons must not pull focus out of the message box, so the keyboard stays up while you test
-    [x, btnCopy, clr].forEach(function (b) {
-      b.addEventListener('pointerdown', function (e) { e.preventDefault(); });
-      b.addEventListener('mousedown', function (e) { e.preventDefault(); });
-    });
+    panel.appendChild(head); panel.appendChild(sw); panel.appendChild(pre); panel.appendChild(hint); panel.appendChild(row);
+    [x, btnCopy, clr].forEach(keepFocus);
     x.addEventListener('click', closePanel);
     btnCopy.addEventListener('click', copy);
-    clr.addEventListener('click', function () { tasks = []; keys = []; kbMoves = 0; hzPeak = 0; frames = []; paint(); });
+    clr.addEventListener('click', function () { resetStats(); paint(); });
     document.body.appendChild(panel);
   }
   function openPanel() {
@@ -181,6 +275,7 @@
   function closePanel() {
     isOpen = false;
     if (panel) panel.hidden = true;
+    SW.forEach(function (s) { if (swOn[s.id]) setSwitch(s.id, false); });   // test switches never linger after the panel is closed
     if (rafId) { cancelAnimationFrame(rafId); rafId = 0; }
     clearInterval(uiTimer); uiTimer = 0;
   }

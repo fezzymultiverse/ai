@@ -81,6 +81,8 @@
             for (var i = 0; i < P.list.length; i++) {
                 var p = P.list[i];
                 if (p.unsupported || p.id === 'battery' || snap[p.id] !== true) continue;
+                // V1.58.3: Location's own off() opens Android Settings (an app cannot revoke it). Snooze pauses it softly instead.
+                if (p.id === 'loc') { if (window.HzGeo && window.HzGeo.pause) window.HzGeo.pause(true); continue; }
                 try { await p.off(); } catch (e) { /* keep going */ }
             }
             P.refresh();
@@ -91,6 +93,7 @@
         var P = window.HzPerms, snap = {};
         try { snap = JSON.parse(ls(SNAP) || '{}') || {}; } catch (e) { snap = {}; }
         lsDel(SNAP);
+        if (window.HzGeo && window.HzGeo.pause) window.HzGeo.pause(false);   // V1.58.3: Location comes back before the permissions are restored
         if (P) {
             for (var i = 0; i < P.list.length; i++) {
                 var p = P.list[i];

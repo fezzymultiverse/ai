@@ -1,22 +1,65 @@
-/* HORIZON V1.58.2 · keyboard-move pause + lag detector panel. */
+/* HORIZON V1.58.3 · header glow without repaints, animation pause while typing, test switches, lag detector panel. */
 
-/* While the keyboard slides, nothing animates or eases, so the page has less to redraw on every frame. */
+/* ---- 1. Header glow. The old glow animated a big blurred box-shadow, which Android redraws on every frame (90 times a second).
+   Now the shadow sits on a pseudo-element that is drawn once and only fades in and out (opacity runs on the graphics chip). ---- */
+@media (prefers-reduced-motion: no-preference) {
+  .hzsa-btn { position: relative; animation: none; box-shadow: 0 0 8px 1px rgba(var(--accent-rgb), .45); }
+  .hzsa-btn::before {
+    content: ""; position: absolute; inset: -1px; border-radius: inherit; pointer-events: none;
+    box-shadow: 0 0 16px 4px rgba(var(--accent-rgb), .85), 0 0 0 5px rgba(var(--accent-rgb), .12);
+    opacity: 0; will-change: opacity; animation: hzsaGlow 2s ease-in-out infinite;
+  }
+  .hzsa-btn svg { will-change: transform; }
+  .app-header .header-btn.hzb-hbtn { animation: hzbVibe .22s steps(2, end) infinite; box-shadow: 0 0 8px 2px rgba(var(--accent-rgb), .45); }
+  .app-header .header-btn.hzb-hbtn::before {
+    content: ""; position: absolute; inset: -1px; border-radius: inherit; pointer-events: none;
+    box-shadow: 0 0 14px 4px rgba(var(--accent-rgb), .95), 0 0 34px 10px rgba(var(--accent-rgb), .5);
+    opacity: 0; will-change: opacity; animation: hzbGlow 1.6s ease-in-out infinite;
+  }
+}
+@keyframes hzsaGlow { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
+@keyframes hzbGlow { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
+
+/* ---- 2. While the message box has focus or the keyboard slides, decorative animations hold still. ---- */
+:is(.hz-kb-open, .hz-kb-moving) .hzsa-btn::before,
+:is(.hz-kb-open, .hz-kb-moving) .hzsa-btn svg,
+:is(.hz-kb-open, .hz-kb-moving) .app-header .header-btn.hzb-hbtn,
+:is(.hz-kb-open, .hz-kb-moving) .app-header .header-btn.hzb-hbtn::before,
+:is(.hz-kb-open, .hz-kb-moving) .hzt-dot,
+:is(.hz-kb-open, .hz-kb-moving) .wx-rays,
+:is(.hz-kb-open, .hz-kb-moving) .wx-cloud,
+:is(.hz-kb-open, .hz-kb-moving) .wx-drop,
+:is(.hz-kb-open, .hz-kb-moving) .wx-bolt,
+:is(.hz-kb-open, .hz-kb-moving) .mp-now.playing .mp-wave i,
+:is(.hz-kb-open, .hz-kb-moving) .mp-now.playing .mp-bars i,
+:is(.hz-kb-open, .hz-kb-moving) .mp-mini.playing .mp-bars i { animation-play-state: paused !important; }
+
 html.hz-kb-moving .chat-messages > .message,
 html.hz-kb-moving .chat-messages > .notice { animation: none !important; }
 html.hz-kb-moving .chat-input-area { transition: none !important; }
 
+/* ---- 3. Test switches from the lag detector (only active while you flip them on; they reset when the panel closes). ---- */
+html.hzp-noglow .hzsa-btn, html.hzp-noglow .hzsa-btn::before, html.hzp-noglow .hzsa-btn svg,
+html.hzp-noglow .app-header .header-btn.hzb-hbtn, html.hzp-noglow .app-header .header-btn.hzb-hbtn::before { animation: none !important; }
+html.hzp-noanim *, html.hzp-noanim *::before, html.hzp-noanim *::after { animation: none !important; transition: none !important; }
+html.hzp-noshadow *, html.hzp-noshadow *::before, html.hzp-noshadow *::after {
+  box-shadow: none !important; text-shadow: none !important; filter: none !important; backdrop-filter: none !important;
+}
+html.hzp-nomsgs #chatMessages { display: none !important; }
+
+/* ---- 4. Lag detector panel. ---- */
 .hzp {
   position: fixed; z-index: 900;
   left: 8px; right: 8px;
   top: calc(env(safe-area-inset-top, 0px) + 8px);
-  max-height: 52vh;
+  max-height: min(60vh, 420px);
   display: flex; flex-direction: column; gap: 8px;
   padding: 10px 12px;
   border-radius: 16px;
   border: 1px solid var(--accent-cyan, #00e5ff);
   background: var(--panel-bg, #0a0a12);
   color: var(--text-main, #fff);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, .5), 0 0 18px var(--accent-cyan-glow, rgba(0, 229, 255, .25));
+  box-shadow: 0 8px 30px rgba(0, 0, 0, .5);
   font-size: 13px;
 }
 .hzp[hidden] { display: none; }
@@ -27,13 +70,20 @@ html.hz-kb-moving .chat-input-area { transition: none !important; }
   border: 1px solid var(--border-color, rgba(255, 255, 255, .2));
   background: transparent; color: inherit; font-size: 20px; line-height: 1; cursor: pointer;
 }
+.hzp-sw { display: flex; flex-wrap: wrap; gap: 6px; }
+.hzp-chip {
+  min-height: 30px; padding: 0 10px; border-radius: 999px; cursor: pointer; font-size: 11.5px; font-weight: 700;
+  border: 1px solid var(--border-color, rgba(255, 255, 255, .25)); background: transparent; color: var(--text-main, #fff);
+}
+.hzp-chip.on { background: var(--accent-cyan, #00e5ff); border-color: var(--accent-cyan, #00e5ff); color: var(--btn-fg, #001014); }
 .hzp-out {
-  margin: 0; flex: 1 1 auto; min-height: 0; overflow: auto;
+  margin: 0; flex: 1 1 auto; min-height: 60px; overflow: auto;
   white-space: pre-wrap; word-break: break-word;
-  font: 11.5px/1.45 var(--mono, ui-monospace, Menlo, Consolas, monospace);
+  font: 11px/1.45 var(--mono, ui-monospace, Menlo, Consolas, monospace);
   color: var(--text-main, #fff);
 }
 .hzp-hint { margin: 0; color: var(--text-muted, #9aa3b2); font-size: 11.5px; line-height: 1.4; }
+html.hz-kb-open .hzp-hint { display: none; }
 .hzp-row { display: flex; gap: 8px; }
 .hzp-b {
   flex: 1 1 0; min-height: 40px; border-radius: 12px; cursor: pointer; font-weight: 700;

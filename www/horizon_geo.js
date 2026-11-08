@@ -3,10 +3,17 @@
    so the place tag on your messages and the DASH stayed empty. Inside the app this now asks Android directly
    (HorizonPerms: locationStatus / requestLocation / getLocation). In a plain browser it falls back to
    navigator.geolocation. One request at a time is shared by everything that asks, so there is never a double prompt.
-   Result: { lat, lon, acc } or { err: 1 denied | 2 location switched off | 3 no fix | 0 unsupported, why } */
+   Result: { lat, lon, acc } or { err: 1 denied | 2 location switched off | 3 no fix | 4 paused by Snooze | 0 unsupported, why } */
 (function () {
     'use strict';
     var inflight = null, last = null, lastAt = 0, FRESH = 5 * 60 * 1000;
+    // V1.58.3: Android cannot switch Location off from inside an app, so Snooze pauses it here instead (no Settings page opens).
+    var PAUSE_KEY = 'horizon_geo_paused';
+    function paused() { try { return localStorage.getItem(PAUSE_KEY) === '1'; } catch (e) { return false; } }
+    function setPaused(on) {
+        try { if (on) localStorage.setItem(PAUSE_KEY, '1'); else localStorage.removeItem(PAUSE_KEY); } catch (e) { /* ignore */ }
+        last = null; lastAt = 0;
+    }
 
     function perms() {
         try {
@@ -51,6 +58,7 @@
 
     /* get(ask): ask=true shows the Android permission prompt when it is not granted yet. */
     function get(ask) {
+        if (paused()) return Promise.resolve({ err: 4, why: 'Location is paused while Horizon is snoozed. Wake Horizon to use it again' });
         if (last && Date.now() - lastAt < FRESH) return Promise.resolve(last);
         if (inflight) return inflight;
         var p = perms();
@@ -62,6 +70,7 @@
     }
     /* status(): true granted, false not granted, null unknown (plain browser). Never prompts. */
     function status() {
+        if (paused()) return Promise.resolve(false);
         var p = perms();
         if (p && typeof p.locationStatus === 'function') {
             return Promise.resolve(p.locationStatus()).then(function (s) { return !!(s && s.granted); }, function () { return null; });
@@ -77,5 +86,5 @@
         try { var p = window.Capacitor.Plugins.HorizonPerms; if (p && p.openAppSettings) return Promise.resolve(p.openAppSettings()); } catch (e) { /* no plugin */ }
         return Promise.resolve();
     }
-    window.HzGeo = { get: get, status: status, why: why, settings: settings, forget: function () { last = null; lastAt = 0; } };
+    window.HzGeo = { get: get, status: status, why: why, settings: settings, pause: setPaused, paused: paused, forget: function () { last = null; lastAt = 0; } };
 })();

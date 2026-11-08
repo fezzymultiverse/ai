@@ -1441,6 +1441,7 @@
     <link rel="stylesheet" href="horizon_voicepill.css">
     <link rel="stylesheet" href="horizon_hdr2.css">
     <link rel="stylesheet" href="horizon_perf.css">
+    <link rel="stylesheet" href="horizon_toolgrid.css">
 </head>
 <body>
 
@@ -1951,13 +1952,6 @@
                     <input id="opName" class="hzo-input" type="text" maxlength="24" placeholder="Operator" autocomplete="off" spellcheck="false" enterkeyhint="done">
                     <p class="hint">Call yourself whatever you like. Switch it off and your messages show only the date and time.</p>
                     <div class="hzo-row"><button class="use-btn" id="opReset" type="button">Reset to Operator</button></div>
-                    <div class="settings-row-header hzo-locrow">
-                        <div class="settings-row-content">
-                            <h3>Show my place</h3>
-                            <p id="opLocStatus">Your real place name on the right of your messages</p>
-                        </div>
-                        <button class="hzo-sw" id="opLocSwitch" type="button" role="switch" aria-checked="true" aria-label="Show my place on my messages"><i></i></button>
-                    </div>
                 </section>
 
                 <section class="provider-card" id="typeCard">
@@ -3686,9 +3680,6 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         function addUserMessage(text, ts, att, msg, stamp) {
             const bubble = buildMessage('user', ts);
             bubble.textContent = text;
-            { const st = msg || stamp, w0 = bubble.parentNode;   // V1.51.0: the saved place rides on the message element
-              if (st && st.place) { w0.dataset.place = st.place; if (st.vpn) w0.dataset.vpn = '1'; }
-              if (Date.now() - ts < 8000) w0.dataset.fresh = '1'; }
             if (msg) { bubble.parentNode._msg = msg; if (msg.edited) { const tm = bubble.parentNode.querySelector('.message-meta .meta-time'); if (tm) tm.textContent += ' \u00b7 edited'; } }
             if (att && att.length && window.HorizonAttach) bubble.parentNode.appendChild(HorizonAttach.cards(att));
             if (att && att.length && att.every(a => a.kind === 'voice') && /^Voice notes?\.$/.test(text)) bubble.style.display = 'none';   // a voice note alone shows just its card
@@ -4149,10 +4140,6 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             const m = { role, text, ts: Date.now() };
             if (ms) m.ms = ms;
             if (info) Object.assign(m, info);
-            if (role === 'user' && window.HzOperator && window.HzOperator.stamp) {   // V1.51.0: the place is stamped when the message is sent and never changes
-                const pl = window.HzOperator.stamp();
-                if (pl && pl.place) { m.place = pl.place; if (pl.vpn) m.vpn = 1; }
-            }
             chat.messages.push(m);
             chat.updated = m.ts;
             if (role === 'user' && chat.title === 'New chat') chat.title = text.replace(/\s+/g, ' ').slice(0, 42);
@@ -7987,6 +7974,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
     <script src="horizon_termai.js"></script>
     <script src="horizon_typing.js"></script>
     <script src="horizon_perf.js"></script>
+    <script src="horizon_toolgrid.js"></script>
     <script src="horizon_bojack.js"></script>
     <script src="horizon_header.js"></script>
     <script src="horizon_htmlview.js"></script>

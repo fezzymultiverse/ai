@@ -11,17 +11,4 @@
 .hzo-row { display: flex; justify-content: flex-end; margin-top: 8px; }
 @media (prefers-reduced-motion: reduce) { .hzo-sw, .hzo-sw i { transition: none; } }
 
-/* V1.42.1: place tag on the right edge of your messages, red pin on the left of the name */
-.message.user .message-meta .meta-op { max-width: 32vw; }
-.message.user .message-meta .meta-loc { margin-left: auto; display: inline-flex; align-items: center; gap: 3px; flex: 0 1 auto; min-width: 0; max-width: 46%; color: var(--text-muted); font-weight: 600; }
-.message-meta .meta-pin { width: 12px; height: 12px; flex: 0 0 auto; fill: #ff3b30; }
-.message-meta .meta-loc-t { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.hzo-locrow { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border-color); }
-
-/* V1.44.0: VPN chip + named place always visible, in white */
-.message.user .message-meta .meta-loc { color: #ffffff; font-weight: 700; max-width: 58%; }
-.message.user .message-meta .meta-loc.none { color: var(--text-muted); }
-.message-meta .meta-vpn { flex: 0 0 auto; margin-right: 5px; padding: 1px 6px; border-radius: 999px; font-size: 10px; font-weight: 800; letter-spacing: .6px; color: #000; background: #2bff88; box-shadow: 0 0 6px rgba(43,255,136,.6); }
-
-/* V1.52.0: no VPN chip on message bubbles */
-.message-meta .meta-vpn { display: none !important; }
+/* V1.58.4: the place tag and the VPN chip on message bubbles were removed. */

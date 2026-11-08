@@ -12,6 +12,24 @@
   <img alt="Capacitor 6" src="https://img.shields.io/badge/Capacitor-6-00e5ff">
 </p>
 
+## What's new in V1.58.5
+
+- **Tools grid.** The + menu shows every tool at once as two-column tiles with no scrolling: a Generators row (Avatars, Memes, Visuals) on top, then Think and look, Fetch, Make and Remember. Green tile = on, plain tile = off, red dot = needs attention. Tap a tile to switch it (the existing switch code is untouched); hold a tile to read its description and status in the strip at the bottom. The strip also shows the missing-item chips (keys and so on) and the Make PDF button while PDF is on.
+- **List view.** A chip in the menu header switches back to the old list. The choice is remembered on the phone (`horizon_toolgrid`).
+- The layout is CSS scoped to `#toolMenu.hzg` plus `horizon_toolgrid.js`; no tool logic moved. Not tested on a phone yet.
+
+## What's new in V1.58.4
+
+- **Place tag removed from chat bubbles.** The suburb-and-city tag beside the time on your messages is gone, together with its "Show my place" switch under Personalisation. Horizon no longer looks up your location for it at start-up, no longer saves a place with each new message, and deletes the cached place name from the phone. Your "Operator" name tag, the DASH weather and the Location permission are unchanged.
+- Messages sent in earlier versions may still carry a saved place in your stored chats. It is not shown or used anywhere now.
+
+## What's new in V1.58.3
+
+- **Snooze fix.** Tapping Snooze no longer opens Android Settings. The cause was Location: Android does not let an app switch it off, so its Off button opens the Settings page. Snooze now pauses Location inside Horizon (`HzGeo.pause`) and Wake turns it back on.
+- **Less redrawing.** The pulsing glow on the Settings AI button and the Browser button animated a large blurred `box-shadow`, which forces a repaint on every frame (90 times a second at 90 Hz). The glow is now a pseudo-element whose opacity fades, so the shadow is drawn once. The inner glow of the Browser button is gone; the rest looks the same. These animations also pause while the keyboard is open or sliding.
+- **Lag detector V2.** `/lag` adds Chrome's long-animation-frame data (which file and function made each slow frame, scripts vs style+layout), a worst-frames list, and five test switches. Changing a switch starts a fresh measurement and the report names the switches that were on.
+- Not tested on a phone yet. The glow fix is the most likely cause of the per-key drawing cost but is not proven; the switches are there to prove or disprove it.
+
 ## What's new in V1.58.2
 
 - **Smoother typing.** The message box only re-measures when the text grows or shrinks (before, every key forced a full page re-layout). The link-card check and the draft save wait for a longer pause; the draft is still saved when you leave the box or the app. The music wave and the background sweep rest while you type or the keyboard moves.

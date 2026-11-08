@@ -156,7 +156,7 @@ grep -q "setBackdrop" "$JAVA_DIR/HorizonPermsPlugin.java" || { echo "HorizonPerm
 grep -q "paintBackdrop" "$JAVA_DIR/MainActivity.java" || { echo "MainActivity does not paint the backdrop" >&2; exit 1; }
 echo "Theme backdrop applied."
 
-# ---- V1.58.2: keyboard resize mode pinned in the manifest + native 90 Hz request ---- || true
+# ---- V1.58.2: keyboard resize mode pinned in the manifest + native 90 Hz request ----
 python3 - <<'PY'
 import re
 from pathlib import Path
@@ -168,5 +168,6 @@ else:
     s = s.replace('<activity ', '<activity android:windowSoftInputMode="adjustResize" ', 1)
 m.write_text(s)
 PY
+grep -q 'android:windowSoftInputMode="adjustResize"' "$MANIFEST" || { echo "Could not pin the keyboard resize mode in the manifest" >&2; exit 1; }
 grep -q "requestHighRefresh" "$JAVA_DIR/MainActivity.java" || { echo "MainActivity has no 90 Hz request" >&2; exit 1; }
 echo "Keyboard resize mode and 90 Hz request applied."
