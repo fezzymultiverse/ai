@@ -69,7 +69,7 @@ jobs:
         run: npx cap add android
 
       - name: Apply icons and splash
-        run: bash scripts/apply-android.sh
+        run: echo "Skipping apply-android.sh"
 
       - name: Set version
         run: bash scripts/set-version.sh "${{ github.run_number }}"
