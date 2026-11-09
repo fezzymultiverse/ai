@@ -241,3 +241,26 @@ html.hz-snoozed .welcome .starter .st-ic { margin-bottom: 0; }
 #ttsEngine, #ttsNVoice { margin-bottom: 4px; }
 #ttsRate, #ttsPitch { margin: 8px 0 20px; }
 #ttsRate + *, #ttsPitchWrap { margin-top: 4px; }
+
+/* V1.75.1: Browser in LIGHT mode. Variables turn white/black in light mode, but many pieces kept a hard-coded black background, so black icons sat on black boxes
+   and the chat text was dark on dark. These rules fix only the light theme; dark and cyan are untouched. */
+html[data-theme="grey"] #hzb .hzb-tile b, html[data-theme="light"] #hzb .hzb-tile b, html:not([data-theme]) #hzb .hzb-tile b { background:#fff; color:#000; border-color:rgba(0,0,0,.35); }
+html[data-theme="grey"] #hzb .hzb-bigsearch button, html[data-theme="grey"] #hzb .hzb-send, html[data-theme="light"] #hzb .hzb-bigsearch button, html[data-theme="light"] #hzb .hzb-send, html:not([data-theme]) #hzb .hzb-bigsearch button, html:not([data-theme]) #hzb .hzb-send { background:#000; color:#fff; box-shadow:none; }
+html[data-theme="grey"] #hzb .hzb-bigsearch button svg, html[data-theme="grey"] #hzb .hzb-send svg, html[data-theme="light"] #hzb .hzb-bigsearch button svg, html[data-theme="light"] #hzb .hzb-send svg, html:not([data-theme]) #hzb .hzb-bigsearch button svg, html:not([data-theme]) #hzb .hzb-send svg { stroke:#fff; }
+html[data-theme="grey"] #hzb .hzb-url .ddg, html[data-theme="light"] #hzb .hzb-url .ddg, html:not([data-theme]) #hzb .hzb-url .ddg { background:#000; color:#fff; }
+html[data-theme="grey"] #hzb .hzb-url .ddg.off, html[data-theme="light"] #hzb .hzb-url .ddg.off, html:not([data-theme]) #hzb .hzb-url .ddg.off { background:transparent; color:#5f5f5f; border:1px solid rgba(0,0,0,.3); }
+html[data-theme="grey"] #hzb .hzb-dock, html[data-theme="light"] #hzb .hzb-dock, html:not([data-theme]) #hzb .hzb-dock { background:linear-gradient(to top,#fff 70%,rgba(255,255,255,0)); }
+html[data-theme="grey"] #hzb .hzb-msgs, html[data-theme="light"] #hzb .hzb-msgs, html:not([data-theme]) #hzb .hzb-msgs { background:rgba(255,255,255,.98); box-shadow:0 0 0 1px rgba(0,0,0,.08); }
+html[data-theme="grey"] #hzb .hzb-widget, html[data-theme="light"] #hzb .hzb-widget, html:not([data-theme]) #hzb .hzb-widget { background:#f0f0f0; box-shadow:none; }
+html[data-theme="grey"] #hzb .hzb-widget .seg, html[data-theme="light"] #hzb .hzb-widget .seg, html:not([data-theme]) #hzb .hzb-widget .seg { color:#000; text-shadow:none; }
+html[data-theme="grey"] #hzb .hzb-widget .seg .mini, html[data-theme="grey"] #hzb .hzb-eye, html[data-theme="light"] #hzb .hzb-widget .seg .mini, html[data-theme="light"] #hzb .hzb-eye, html:not([data-theme]) #hzb .hzb-widget .seg .mini, html:not([data-theme]) #hzb .hzb-eye { background:#fff; border-color:rgba(0,0,0,.45); }
+html[data-theme="grey"] #hzb .hzb-widget .seg .mini svg, html[data-theme="light"] #hzb .hzb-widget .seg .mini svg, html:not([data-theme]) #hzb .hzb-widget .seg .mini svg { stroke:#000; }
+html[data-theme="grey"] #hzb .hzb-net, html[data-theme="light"] #hzb .hzb-net, html:not([data-theme]) #hzb .hzb-net { box-shadow:0 0 10px 2px rgba(var(--accent-rgb),.45); }
+html[data-theme="grey"] #hzb .hzb-opt, html[data-theme="grey"] #hzb .hzb-use, html[data-theme="light"] #hzb .hzb-opt, html[data-theme="light"] #hzb .hzb-use, html:not([data-theme]) #hzb .hzb-opt, html:not([data-theme]) #hzb .hzb-use { background:#fff; color:#000; border-color:rgba(0,0,0,.4); }
+html[data-theme="grey"] #hzb .hzb-use.danger, html[data-theme="light"] #hzb .hzb-use.danger, html:not([data-theme]) #hzb .hzb-use.danger { color:#b91c1c; border-color:rgba(185,28,28,.6); }
+html[data-theme="grey"] #hzb .hzb-hint.warn, html[data-theme="light"] #hzb .hzb-hint.warn, html:not([data-theme]) #hzb .hzb-hint.warn { color:#92400e; }
+html[data-theme="grey"] #hzb .hzb-err, html[data-theme="light"] #hzb .hzb-err, html:not([data-theme]) #hzb .hzb-err { background:#fff; color:#000; }
+html[data-theme="grey"] #hzb .hzb-note, html[data-theme="light"] #hzb .hzb-note, html:not([data-theme]) #hzb .hzb-note { background:rgba(255,255,255,.92); color:#222; border-color:rgba(0,0,0,.2); }
+html[data-theme="grey"] #hzb .hzb-paused, html[data-theme="light"] #hzb .hzb-paused, html:not([data-theme]) #hzb .hzb-paused { background:rgba(255,255,255,.7); color:#000; }
+html[data-theme="grey"] #hzb .hzb-tab .x, html[data-theme="grey"] #hzb .hzb-li .rm, html[data-theme="light"] #hzb .hzb-tab .x, html[data-theme="light"] #hzb .hzb-li .rm, html:not([data-theme]) #hzb .hzb-tab .x, html:not([data-theme]) #hzb .hzb-li .rm { background:rgba(0,0,0,.09); }
+html[data-theme="grey"] #hzb .hzb-star.on svg, html[data-theme="light"] #hzb .hzb-star.on svg, html:not([data-theme]) #hzb .hzb-star.on svg { stroke:#b45309; fill:#f59e0b; }

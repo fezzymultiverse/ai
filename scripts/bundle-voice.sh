@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Horizon V1.73.0: pack the built-in Kokoro voice into the Android project.
+# Horizon V1.75.0: pack the built-in Kitten voice (was Kokoro in V1.73/V1.74) into the Android project.
 #   1. sherpa-onnx native libraries (libsherpa-onnx-jni.so + libonnxruntime.so, arm64-v8a)  -> android/app/src/main/jniLibs/arm64-v8a
 #   2. sherpa-onnx Kotlin API (Tts.kt, package com.k2fsa.sherpa.onnx, same release tag)     -> android/app/src/main/java/com/k2fsa/sherpa/onnx
-#   3. Kokoro multi-lang v1.0 model (int8 if the release has it), trimmed to English        -> android/app/src/main/assets/horizon_voice
+#   3. Kitten nano English model (4 male + 4 female voices, small)                          -> android/app/src/main/assets/horizon_voice
 # Run after `npx cap add android` and scripts/apply-android.sh, from the project root. Needs: gh (GH_TOKEN set), curl, tar, python3.
 # Optional: SHERPA_VERSION=v1.12.x pins the sherpa-onnx release (default: the newest release).
 # Every step checks what it got and stops with a readable error, so a half-bundled APK can never ship.
@@ -72,32 +72,31 @@ grep -q 'OfflineTtsKokoroModelConfig'    "$KT/Tts.kt" || die "this sherpa-onnx r
 say "Kotlin API in place ($GOT)"
 
 # ------------------------------------------------------------------------------------------
-# 3. Kokoro model
+# 3. Voice model. V1.75.0: KITTEN nano (small, 4 male + 4 female English voices) is the default.
+#    HORIZON_VOICE=kokoro brings the big Kokoro model back (the plugin in this version only knows Kitten, so use the V1.74.0 zip for that).
 # ------------------------------------------------------------------------------------------
+VOICE="${HORIZON_VOICE:-kitten}"
+[ "$VOICE" = "kitten" ] || die "this version only bundles the Kitten voice (HORIZON_VOICE=$VOICE). Kokoro lives in the V1.74.0 zip"
+grep -q 'OfflineTtsKittenModelConfig' "$KT/Tts.kt" || die "this sherpa-onnx release has no Kitten support in Tts.kt. Set SHERPA_VERSION to a newer release"
 MODEL=""
-for name in kokoro-int8-multi-lang-v1_0 kokoro-multi-lang-v1_0; do
+for name in kitten-nano-en-v0_2-fp16 kitten-nano-en-v0_1-fp16; do
     if gh release download tts-models --repo "$REPO" --pattern "$name.tar.bz2" --dir "$WORK" --clobber >/dev/null 2>&1 && [ -s "$WORK/$name.tar.bz2" ]; then MODEL="$name"; break; fi
 done
-[ -n "$MODEL" ] || die "no kokoro-(int8-)multi-lang-v1_0 model in the $REPO tts-models release"
+[ -n "$MODEL" ] || die "no kitten-nano-en model in the $REPO tts-models release"
 say "model: $MODEL"
 mkdir -p "$WORK/model"
 tar -xjf "$WORK/$MODEL.tar.bz2" -C "$WORK/model" || die "could not unpack $MODEL"
 SRC="$(find "$WORK/model" -maxdepth 2 -name 'tokens.txt' -printf '%h\n' | head -1)"
 [ -n "$SRC" ] || die "$MODEL has no tokens.txt"
-[ -f "$SRC/voices.bin" ]        || die "$MODEL has no voices.bin"
-[ -d "$SRC/espeak-ng-data" ]    || die "$MODEL has no espeak-ng-data"
-ONNX="$(ls "$SRC"/model.int8.onnx "$SRC"/model.onnx 2>/dev/null | head -1 || true)"
-[ -n "$ONNX" ] || die "$MODEL has no model.int8.onnx or model.onnx"
-
-# Horizon speaks English only: drop the Chinese dictionary, number/date/phone rules and the Chinese lexicon (tens of MB).
-rm -rf "$SRC/dict"
-rm -f  "$SRC"/*.fst "$SRC"/lexicon-zh.txt "$SRC"/lexicon-gb-en.txt
-[ -f "$SRC/lexicon-us-en.txt" ] || say "note: no lexicon-us-en.txt in this model, the voice will use espeak only"
+[ -f "$SRC/voices.bin" ]     || die "$MODEL has no voices.bin"
+[ -d "$SRC/espeak-ng-data" ] || die "$MODEL has no espeak-ng-data"
+ONNX="$(ls "$SRC"/model*.onnx 2>/dev/null | head -1 || true)"
+[ -n "$ONNX" ] || die "$MODEL has no model*.onnx"
 
 rm -rf "$ASSET"
 mkdir -p "$ASSET"
 cp -R "$SRC"/. "$ASSET"/
-printf '%s %s %s\n' "$TAG" "$MODEL" "$(basename "$ONNX")" > "$ASSET/VERSION"
+printf '%s %s %s kitten\n' "$TAG" "$MODEL" "$(basename "$ONNX")" > "$ASSET/VERSION"
 [ -s "$ASSET/tokens.txt" ] && [ -s "$ASSET/voices.bin" ] && [ -s "$ASSET/VERSION" ] || die "model files did not land in $ASSET"
 say "model in place: $(du -sh "$ASSET" | cut -f1) in assets/horizon_voice"
 

@@ -23,7 +23,8 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(HorizonAIPlugin.class);
         registerPlugin(HorizonMediaPlugin.class);
         registerPlugin(HorizonSpeechPlugin.class);
-        registerPlugin(HorizonVoicePlugin.class);    // V1.73.0: built-in Kokoro voice (sherpa-onnx)
+        registerPlugin(HorizonVoicePlugin.class);    // V1.73.0: built-in Kitten voice (sherpa-onnx)
+        registerPlugin(HorizonDaemonPlugin.class);   // V1.74.0: Proactive Daemon (battery + heat watcher)
         registerPlugin(HorizonLensPlugin.class);
         registerPlugin(HorizonStatsPlugin.class);
         registerPlugin(HorizonBrowserPlugin.class);

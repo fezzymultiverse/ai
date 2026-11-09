@@ -108,6 +108,7 @@
     // not the last single AI that was picked.
     function paintGroupBadge(b, ids) {
         var running = !!(live && ids.indexOf(live.id) >= 0);
+        window.HzLast = null;   /* V1.76.0: no tokens + ms readout in a group pill */
         var names = ids.map(function (i) { return cfg.providers[i] ? cfg.providers[i].name : i; });
         var key = ['G', ids.join(','), running ? 'run:' + live.id : 'idle'].join('|');
         if (running && b._hzKey === key && b.firstChild) {
@@ -167,6 +168,8 @@
             pill.appendChild(bars);
         }
         var out;
+        /* V1.76.0: the header pill shows tokens in/out and the reply time in ms on its one line */
+        window.HzLast = (!running && s && s.lastTurn) ? { i: s.lastTurn.i, o: s.lastTurn.o, ms: s.lastTurn.ms, est: !!s.lastTurn.est } : null;
         if (running) out = fmtMs(Date.now() - live.t0);
         else {
             var lt = s && s.lastTurn;

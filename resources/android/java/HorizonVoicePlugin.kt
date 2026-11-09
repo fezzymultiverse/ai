@@ -8,7 +8,7 @@ import com.getcapacitor.PluginMethod
 import com.getcapacitor.annotation.CapacitorPlugin
 import com.k2fsa.sherpa.onnx.OfflineTts
 import com.k2fsa.sherpa.onnx.OfflineTtsConfig
-import com.k2fsa.sherpa.onnx.OfflineTtsKokoroModelConfig
+import com.k2fsa.sherpa.onnx.OfflineTtsKittenModelConfig
 import com.k2fsa.sherpa.onnx.OfflineTtsModelConfig
 import java.io.File
 import java.io.FileOutputStream
@@ -17,16 +17,16 @@ import java.nio.ByteOrder
 import java.util.concurrent.Executors
 
 /**
- * V1.73.0 Horizon Voice: the built-in Kokoro voice (Settings > Voice > Natural: Kokoro).
+ * V1.75.0 Horizon Voice: the built-in Kitten voice (Settings > Voice > Natural: Built-in voice). Was Kokoro in V1.73/V1.74.
  *
- * The sherpa-onnx runtime (libsherpa-onnx-jni.so, libonnxruntime.so), its Kotlin API (com.k2fsa.sherpa.onnx.Tts.kt) and the Kokoro
- * multi-lang v1.0 int8 model are packed into the APK by scripts/bundle-voice.sh during the build. Nothing is downloaded on the phone.
+ * The sherpa-onnx runtime (libsherpa-onnx-jni.so, libonnxruntime.so), its Kotlin API (com.k2fsa.sherpa.onnx.Tts.kt) and the Kitten nano
+ * English model are packed into the APK by scripts/bundle-voice.sh during the build. Nothing is downloaded on the phone.
  *
  *  - status():  { bundled, unpacked, loaded }       what is in the APK / on the phone right now
  *  - load():    { ready, sampleRate, speakers }     unpacks the model from the APK once (files/horizon_voice), then loads it. Sends
  *                                                   "voiceProgress" { note } events while unpacking. Always resolves; ready=false carries error.
  *  - synth():   { wav, sampleRate, ms }             text + sid (speaker id) in, a 16-bit mono WAV (base64) out. Rejects on failure.
- *  - release(): frees the model (about 250 MB of memory).
+ *  - release(): frees the model (a small amount of memory).
  *
  * All model work runs on one background thread (the native object is not thread-safe, and the bridge thread must never block).
  */
@@ -106,19 +106,17 @@ class HorizonVoicePlugin : Plugin() {
     }
 
     private fun buildTts(dir: File): OfflineTts {
-        val model = listOf("model.int8.onnx", "model.onnx").map { File(dir, it) }.firstOrNull { it.exists() }
-            ?: throw IllegalStateException("No Kokoro model file was found in the unpacked voice")
-        val lexicon = File(dir, "lexicon-us-en.txt")
-        val kokoro = OfflineTtsKokoroModelConfig(
+        val model = (dir.listFiles() ?: emptyArray()).filter { it.name.startsWith("model") && it.name.endsWith(".onnx") }.minByOrNull { it.name }
+            ?: throw IllegalStateException("No Kitten model file was found in the unpacked voice")
+        val kitten = OfflineTtsKittenModelConfig(
             model = model.absolutePath,
             voices = File(dir, "voices.bin").absolutePath,
             tokens = File(dir, "tokens.txt").absolutePath,
-            dataDir = File(dir, "espeak-ng-data").absolutePath,
-            lexicon = if (lexicon.exists()) lexicon.absolutePath else ""
+            dataDir = File(dir, "espeak-ng-data").absolutePath
         )
         val threads = Runtime.getRuntime().availableProcessors().coerceIn(2, 4)
         val cfg = OfflineTtsConfig(
-            model = OfflineTtsModelConfig(kokoro = kokoro, numThreads = threads, debug = false, provider = "cpu")
+            model = OfflineTtsModelConfig(kitten = kitten, numThreads = threads, debug = false, provider = "cpu")
         )
         return OfflineTts(null, cfg)
     }

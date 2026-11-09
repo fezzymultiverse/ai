@@ -317,6 +317,9 @@ class HorizonAIPlugin : Plugin() {
         if (url == null || !(url.startsWith("https://") || url.startsWith("http://"))) { call.reject("Missing or unsupported URL"); return }
         val filename = (call.getString("filename") ?: "horizon-media").replace(Regex("[\\\\/:*?\"<>|\\p{Cntrl}]"), "_").take(120)
         val video = call.getBoolean("video", false) == true
+        // V1.78.0: YouTube stream links are locked to the client that asked for them, so the caller can pass that client's User-Agent.
+        val ua = call.getString("ua")?.takeIf { it.isNotBlank() && it.length < 300 && !it.contains('\n') && !it.contains('\r') }
+            ?: "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Mobile Safari/537.36"
         // V1.23.0: optional kind = audio | video | image | file. Without it the old video flag decides, so older callers behave the same.
         val kind = (call.getString("kind") ?: (if (video) "video" else "audio")).lowercase().let { if (it == "audio" || it == "video" || it == "image" || it == "file") it else "file" }
         scope.launch {
@@ -345,7 +348,7 @@ class HorizonAIPlugin : Plugin() {
                 conn.connectTimeout = 20000
                 conn.readTimeout = 60000
                 conn.instanceFollowRedirects = true
-                conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Mobile Safari/537.36")
+                conn.setRequestProperty("User-Agent", ua)
                 conn.setRequestProperty("Accept", "*/*")
                 val code = conn.responseCode
                 if (code !in 200..299) throw IOException("the server answered $code")

@@ -180,7 +180,7 @@
             rec.ref = d; rec.ts = d.ts || rec.ts;
             touch();
         },
-        ai: { run: aiRun },
+        ai: { run: aiRun, trust },
         count() { return list.length; },
         failed() { return list.filter(r => r.status === 'failed').length; }
     };
@@ -189,6 +189,9 @@
     // The AI reaches the same sources as the Downloads page: Audius, Internet Archive, Wikimedia Commons images,
     // direct https links, .torrent files, and magnet links (handed to a torrent app). Links on unknown hosts and magnets ask you first.
     const AI_TRUSTED = /^https:\/\/(?:archive\.org|[\w-]+\.archive\.org|api\.audius\.co|upload\.wikimedia\.org)\//i;
+    // V1.78.0: image links that came back from the AI's own image search were already shown to Fezzy, so saving them does not ask again.
+    const aiTrusted = new Set();
+    const trust = urls => { (urls || []).forEach(u => { if (typeof u === 'string' && /^https:\/\//i.test(u)) { aiTrusted.add(u); if (aiTrusted.size > 200) aiTrusted.delete(aiTrusted.values().next().value); } }); };
     const aiFail = t => ({ text: 'ERROR: ' + t });
     function aiAsk(msg) { try { return window.confirm(msg); } catch (e) { return false; } }
     async function aiSearch(arg) {
@@ -252,7 +255,7 @@
         if (/youtu\.?be/i.test(ref)) return aiFail('that is a YouTube link. Use [[yt.download: VIDEO_ID | Title]] instead.');
         if (/^https:\/\/(?:www\.)?(?:github|gitlab)\.com\/[^/?#]+\/[^/?#]+\/?$/i.test(ref)) return aiFail('that is a repo. Fezzy pulls repos from the GitHub widget in the right panel.');
         if (!/^https:\/\/[^\s/]+/i.test(ref)) return aiFail('only full https:// links can be saved.');
-        if (!AI_TRUSTED.test(ref) && !aiAsk('The AI wants to save this link to your phone:\n\n' + ref.slice(0, 300) + '\n\nSave it?')) return aiFail('Fezzy declined that download.');
+        if (!AI_TRUSTED.test(ref) && !aiTrusted.has(ref) && !aiAsk('The AI wants to save this link to your phone:\n\n' + ref.slice(0, 300) + '\n\nSave it?')) return aiFail('Fezzy declined that download.');
         const isTor = /\.torrent(?:[?#]|$)/i.test(ref) || /^torrent$/i.test(hint);
         const fname = hint && /\.[A-Za-z0-9]{2,5}$/.test(hint) ? safe(hint) : nameFromUrl(ref, isTor ? 'torrent' : (EXT[hint] ? DEF_EXT[hint] : 'bin'));
         const kind = isTor ? 'file' : (hint && DEF_EXT[hint] ? hint : kindOf(fname));

@@ -1,4 +1,4 @@
-/* HORIZON V1.40.0 · toasts. HzToast.show({ icon, title, sub, kind: 'ok'|'bad'|'', ms, onTap }).
+/* HORIZON V1.40.0 · toasts. HzToast.show({ icon, title, sub, act, kind: 'ok'|'bad'|'', ms, onTap }).
    Pill-shaped, stacked above the message box, tap to act, auto-dismiss. */
 (function () {
   'use strict';
@@ -30,6 +30,7 @@
     tx.appendChild(b);
     if (o.sub) { var s = document.createElement('small'); s.textContent = String(o.sub); tx.appendChild(s); }
     el.appendChild(ic); el.appendChild(tx);
+    if (o.act) { var ac = document.createElement('span'); ac.className = 'hz-tt-act'; ac.textContent = String(o.act); el.appendChild(ac); }   /* V1.77.0: e.g. UNDO */
     var gone = false;
     function close() { if (gone) return; gone = true; el.classList.add('out'); setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 220); }
     el.addEventListener('click', function () { if (typeof o.onTap === 'function') { try { o.onTap(); } catch (e) { /* ignore */ } } close(); });

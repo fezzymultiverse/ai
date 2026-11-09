@@ -44,7 +44,18 @@
   var spk = el('span', 'hzc-spk'); spk.setAttribute('aria-hidden', 'true');
   spk.innerHTML = '<svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9z"/><path class="a1" d="M16 9a4 4 0 0 1 0 6"/><path class="a2" d="M18.5 6.5a8 8 0 0 1 0 11"/></svg>';
   var st = el('button', 'hzc-st'); st.type = 'button';
-  inn.appendChild(main); inn.appendChild(spk); inn.appendChild(st); cap.appendChild(inn); top.appendChild(cap);
+  /* V1.76.0 P4: arrows step through your AI providers. Tap the middle for the full AI sheet (provider, model, API key). */
+  function arrow(dir) {
+    var b = el('button', 'hzc-ar'); b.type = 'button';
+    b.setAttribute('aria-label', dir < 0 ? 'Previous AI provider' : 'Next AI provider'); b.title = b.getAttribute('aria-label');
+    b.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + (dir < 0 ? 'M15 6l-6 6 6 6' : 'M9 6l6 6-6 6') + '"/></svg>';
+    b.addEventListener('click', function (e) { e.stopPropagation(); if (cap.classList.contains('busy')) return; if (typeof window.HzCycle === 'function') window.HzCycle(dir); });
+    return b;
+  }
+  var prev = arrow(-1), next = arrow(1);
+  /* V1.76.0 P3: the Laser runs along the bottom edge of the pill while a reply is running (horizon_laser.js moves it) */
+  var lz = el('i', 'hzc-lz'); lz.setAttribute('aria-hidden', 'true');
+  inn.appendChild(prev); inn.appendChild(main); inn.appendChild(spk); inn.appendChild(st); inn.appendChild(next); cap.appendChild(inn); cap.appendChild(lz); top.appendChild(cap);
   main.addEventListener('click', function () { pill.click(); });
   st.addEventListener('click', function () { badge.click(); });
 
@@ -57,18 +68,29 @@
     a2.style.opacity = (0.2 + 0.8 * (0.5 + 0.5 * Math.sin(t * 7 - 1.4))).toFixed(2);
     raf = requestAnimationFrame(frame);
   }
+  /* V1.76.0 P6: tokens in and out plus the reply time in ms, on the pill's one line */
+  function tok(n) { n = Math.max(0, Math.round(n || 0)); return n >= 1000 ? (n / 1000).toFixed(n >= 10000 ? 0 : 1) + 'k' : String(n); }
   function paint() {
     var q = function (s) { return badge.querySelector(s); };
     var p = window.HzPick || {}, n = q('.hzb-name'), m = q('.hzb-model'), r = q('.hzb-read'), d = q('.hzu-dot');
     nm.textContent = n ? n.textContent : (p.name || 'Horizon');
     md.textContent = '';   // V1.67.10: the pill never shows the model or the group's AI names. The reply carries provider + model.
-    st.textContent = r ? r.textContent : 'ready';
+    var lt = window.HzLast, wasBusy = cap.classList.contains('busy');
+    var full = (lt && !q('.hzb-pill.busy')) ? (lt.est ? '~' : '') + '\u2191' + tok(lt.i) + ' \u2193' + tok(lt.o) + ' ' + Math.round(lt.ms || 0) + 'ms' : (r ? r.textContent : 'ready');
+    var compact = (lt && !q('.hzb-pill.busy')) ? (lt.est ? '~' : '') + '\u2193' + tok(lt.o) + ' ' + Math.round(lt.ms || 0) + 'ms' : full;
+    st.textContent = full;
+    var grp = !!q('.hzb-opt'), ready = (window.HzProviders || []).filter(function (x) { return x.ready; }).length;
+    cap.classList.toggle('no-cycle', grp || ready < 2);   /* no arrows in a group chat or with a single key */
     dot.className = 'hzc-dot ' + (d ? d.className.replace('hzu-dot', '').trim() : ''); dot.style.setProperty('--pc', d ? d.style.getPropertyValue('--pc') : '');
     var busy = !!(q('.hzb-pill.busy') || (d && /\brun\b/.test(d.className)));
     cap.classList.toggle('busy', busy);
+    if (wasBusy && !busy && window.HzLaser) window.HzLaser.sweep(cap, 560);   /* T4: one last pass, then the pill settles */
     if (busy && !raf) raf = requestAnimationFrame(frame);
-    cap.setAttribute('aria-label', (nm.textContent + ' ' + md.textContent + '. ' + st.textContent).trim());
+    /* one line: if the name would be cut, the status drops the tokens-in count and keeps tokens-out + ms */
+    if (compact !== full && nm.scrollWidth > nm.clientWidth + 1) st.textContent = compact;
+    cap.setAttribute('aria-label', (nm.textContent + ' ' + md.textContent + '. ' + full).trim());
   }
+  window.addEventListener('resize', function () { paint(); });
   try { new MutationObserver(paint).observe(badge, { childList: true, subtree: true, characterData: true }); } catch (e) { /* no observer */ }
   document.addEventListener('hz:pick', paint);
   paint(); setTimeout(paint, 600); setTimeout(paint, 2000);

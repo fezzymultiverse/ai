@@ -59,3 +59,31 @@ html.hzd-on .app-header .chip-logo { width: 36px; height: 36px; border-radius: 1
 /* ---- apps dock: four tiles (Music, Terminal, Lens, YouTube) ---- */
 #rightPanel .hz-dock-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 #hzDlRow .set-ic { color: #00e5ff; }
+
+/* ===== V1.76.0 · pill: arrows (P4), Laser edge (P3), tokens + ms on the one line (P6); scroll-to-bottom button (F11) ===== */
+.hzc-in > button.hzc-ar { flex: 0 0 auto; justify-content: center; width: 18px; height: 30px; color: #00e5ff; opacity: .85; }
+.hzc-in > button.hzc-ar:active { opacity: 1; transform: scale(.88); }
+.hzc-ar svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2.8; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 3px rgba(0,229,255,.7)); }
+.hzc-cap.no-cycle .hzc-ar { display: none; }
+.hzc-cap.busy .hzc-ar { opacity: .3; }
+.hzc-in { gap: 4px; padding: 0 6px; }
+/* one line: the name gives way first (ellipsis), the tokens + ms text is never cut */
+.hzc-in > button.hzc-main { flex: 1 1 0; min-width: 0; overflow: hidden; gap: 5px; font-size: 13px; }
+.hzc-nm { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.hzc-in > button.hzc-st { flex: 0 0 auto; font: 500 10.5px/1 system-ui, sans-serif; font-variant-numeric: tabular-nums; letter-spacing: -.1px; color: var(--text-muted, #9fb0bd); }
+.hzc-cap:not(.no-cycle) .hzc-in { padding: 0 3px; }
+.hzc-lz { position: absolute; left: 16px; right: 16px; bottom: 3px; height: 2px; pointer-events: none; opacity: 0;
+  background-repeat: no-repeat; background-size: 26% 100%; background-position: calc(var(--lx) * 100%) 0;
+  background-image: linear-gradient(90deg, rgba(57,255,20,0) 0%, rgba(57,255,20,.15) 60%, rgba(57,255,20,.65) 88%, #f4fff2 96%, rgba(57,255,20,0) 100%);
+  filter: drop-shadow(0 0 3px rgba(57,255,20,.95)); }
+.hzc-cap { --lx: -0.55; }
+.hzc-cap.busy .hzc-lz, .hzc-cap.lz-final .hzc-lz { opacity: 1; }
+
+.hz-fab { position: fixed; right: 16px; bottom: 120px; z-index: 40; width: 40px; height: 40px; padding: 0; border-radius: 50%; display: grid; place-items: center;
+  border: 1px solid var(--accent-cyan, #00e5ff); background: var(--surface, #0b1117); color: var(--accent-cyan, #00e5ff);
+  box-shadow: 0 0 10px rgba(var(--accent-rgb, 0,229,255), .45), 0 4px 12px rgba(0,0,0,.35); -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+.hz-fab[hidden] { display: none; }
+.hz-fab:active { transform: scale(.92); }
+.hz-fab svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.hz-fab-n { position: absolute; top: -6px; right: -6px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: #22c55e; color: #001a08; font: 700 11px/18px system-ui, sans-serif; text-align: center; box-sizing: border-box; }
+.hz-fab-n[hidden] { display: none; }

@@ -1,0 +1,68 @@
+/* HORIZON V1.77.0 · message tools (batch 2): long-press menu, quote chip + swipe, pinned banner, Remember button, undo toast action */
+
+/* ---- long-press menu (bottom sheet) ---- */
+.hz-mback { position: fixed; inset: 0; z-index: 9000; background: rgba(0,0,0,.5); display: flex; align-items: flex-end; justify-content: center; animation: hzMIn .16s ease both; -webkit-tap-highlight-color: transparent; }
+.hz-mback.out { opacity: 0; transition: opacity .17s ease; }
+@keyframes hzMIn { from { opacity: 0; } to { opacity: 1; } }
+.hz-menu, .hz-msel { width: min(100%, 520px); box-sizing: border-box; background: var(--surface, #0b1117); color: var(--text-main, #fff); border: 1px solid var(--border-color, rgba(255,255,255,.12)); border-bottom: 0; border-radius: 18px 18px 0 0; padding: 8px 12px calc(14px + env(safe-area-inset-bottom, 0px)); box-shadow: 0 -8px 30px rgba(0,0,0,.45), 0 0 14px rgba(var(--accent-rgb, 0,229,255), .18); animation: hzMUp .2s cubic-bezier(.2,.9,.3,1) both; }
+@keyframes hzMUp { from { transform: translateY(30px); } to { transform: none; } }
+.hz-menu::before, .hz-msel::before { content: ""; display: block; width: 38px; height: 4px; border-radius: 2px; margin: 2px auto 8px; background: var(--border-color, rgba(255,255,255,.2)); }
+.hz-mh { display: flex; flex-direction: column; gap: 2px; padding: 2px 8px 10px; border-bottom: 1px solid var(--border-color, rgba(255,255,255,.1)); margin-bottom: 4px; min-width: 0; }
+.hz-mh b { font-size: 13px; letter-spacing: .02em; color: var(--accent-cyan, #00e5ff); }
+.hz-mh span { font-size: 13px; opacity: .7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hz-mi { display: flex; align-items: center; gap: 14px; width: 100%; min-height: 48px; padding: 0 10px; border: 0; border-radius: 12px; background: transparent; color: inherit; font: 500 16px/1 system-ui, sans-serif; text-align: left; cursor: pointer; touch-action: manipulation; }
+.hz-mi:active { background: var(--surface-hover, rgba(255,255,255,.07)); }
+.hz-mi .ic { width: 20px; height: 20px; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; color: var(--accent-cyan, #00e5ff); }
+.hz-mi.danger, .hz-mi.danger .ic { color: #ff5a5f; }
+.hz-mcancel { display: block; width: 100%; margin-top: 6px; min-height: 46px; border-radius: 12px; border: 1px solid var(--border-color, rgba(255,255,255,.12)); background: transparent; color: inherit; font: 600 15px/1 system-ui, sans-serif; cursor: pointer; }
+
+/* ---- select text + remember sheets ---- */
+.hz-msel-h { display: flex; align-items: center; gap: 8px; font: 700 15px/1.2 system-ui, sans-serif; padding: 2px 6px 8px; }
+.hz-msel-h .ic { width: 18px; height: 18px; fill: none; stroke: var(--accent-cyan, #00e5ff); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.hz-msel-n { font-size: 13px; opacity: .7; padding: 0 6px 8px; line-height: 1.4; }
+.hz-msel-ta { display: block; width: 100%; box-sizing: border-box; height: min(46vh, 360px); resize: none; padding: 12px; border-radius: 12px; border: 1px solid var(--border-color, rgba(255,255,255,.14)); background: var(--card-bg, #11161c); color: inherit; font: 15px/1.5 system-ui, sans-serif; user-select: text; -webkit-user-select: text; }
+.hz-msel-ta.short { height: 120px; }
+.hz-msel-row { display: flex; gap: 8px; margin-top: 10px; }
+.hz-mbtn { flex: 1; min-height: 46px; border-radius: 12px; border: 1px solid var(--border-color, rgba(255,255,255,.14)); background: transparent; color: inherit; font: 600 15px/1 system-ui, sans-serif; cursor: pointer; touch-action: manipulation; }
+.hz-mbtn.pri { border-color: var(--accent-cyan, #00e5ff); color: var(--accent-cyan, #00e5ff); box-shadow: 0 0 10px rgba(var(--accent-rgb, 0,229,255), .25); }
+.hz-mbtn:active { transform: scale(.98); }
+
+/* ---- quote chip above the message box ---- */
+.hz-qchip { display: flex; align-items: center; gap: 10px; margin: 0 10px 6px; padding: 7px 8px 7px 10px; border-radius: 12px; background: var(--surface, #0b1117); border: 1px solid var(--border-color, rgba(255,255,255,.12)); min-width: 0; }
+.hz-qchip[hidden] { display: none; }
+.hz-qbar { flex: none; width: 3px; align-self: stretch; border-radius: 2px; background: var(--accent-cyan, #00e5ff); box-shadow: 0 0 8px rgba(var(--accent-rgb, 0,229,255), .6); }
+.hz-qtx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.hz-qtx b { font-size: 12px; color: var(--accent-cyan, #00e5ff); letter-spacing: .02em; }
+.hz-qtx span { font-size: 13px; opacity: .75; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hz-qx { flex: none; width: 30px; height: 30px; display: grid; place-items: center; border: 0; border-radius: 50%; background: transparent; color: inherit; opacity: .7; cursor: pointer; }
+.hz-qx .ic { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; }
+
+/* ---- quote block inside a sent message ---- */
+.hz-qb { margin: 0 0 6px; padding: 4px 8px; border-left: 3px solid var(--accent-cyan, #00e5ff); border-radius: 4px; background: rgba(var(--accent-rgb, 0,229,255), .08); font-size: .92em; opacity: .85; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* ---- swipe hint on the message being dragged ---- */
+.message.hz-swiping { position: relative; will-change: transform; }
+.message.hz-swiping::before { content: ""; position: absolute; left: -44px; top: 50%; width: 28px; height: 28px; margin-top: -14px; border-radius: 50%; border: 2px solid var(--border-color, rgba(255,255,255,.3)); background: var(--surface, #0b1117) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2300e5ff' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'><path d='M9 14L4 9l5-5'/><path d='M20 20v-7a4 4 0 0 0-4-4H4'/></svg>") center/16px no-repeat; opacity: .6; transition: opacity .12s, border-color .12s, box-shadow .12s; }
+.message.hz-swipe-ok::before { opacity: 1; border-color: var(--accent-cyan, #00e5ff); box-shadow: 0 0 10px rgba(var(--accent-rgb, 0,229,255), .6); }
+
+/* ---- pinned banner (top of the chat) ---- */
+.hz-pinbar { position: sticky; top: 0; z-index: 6; display: flex; align-items: center; margin: 0 0 6px; border-radius: 0 0 12px 12px; background: var(--surface, #0b1117); border-bottom: 1px solid var(--accent-cyan, #00e5ff); box-shadow: 0 4px 14px rgba(0,0,0,.28); }
+.hz-pinbar[hidden] { display: none; }
+.hz-pin-b { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; padding: 9px 6px 9px 12px; border: 0; background: transparent; color: var(--text-main, #fff); text-align: left; cursor: pointer; font: 500 13.5px/1.2 system-ui, sans-serif; }
+.hz-pin-b .ic, .hz-pin-x .ic { width: 16px; height: 16px; flex: none; fill: none; stroke: var(--accent-cyan, #00e5ff); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.hz-pin-t { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hz-pin-x { flex: none; width: 38px; height: 38px; display: grid; place-items: center; border: 0; background: transparent; cursor: pointer; }
+.hz-pin-x .ic { stroke: currentColor; color: var(--text-main, #fff); opacity: .65; }
+.message.hz-flash .bubble { animation: hzFlash 1.4s ease; }
+@keyframes hzFlash { 0%, 60% { box-shadow: 0 0 0 2px var(--accent-cyan, #00e5ff), 0 0 16px rgba(var(--accent-rgb, 0,229,255), .6); } 100% { box-shadow: 0 0 0 0 transparent; } }
+
+/* ---- Remember button in the reply action row ---- */
+.hz-rem { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 10px; border-radius: 15px; border: 1px solid var(--border-color, rgba(255,255,255,.14)); background: transparent; color: inherit; font: 600 12.5px/1 system-ui, sans-serif; cursor: pointer; touch-action: manipulation; }
+.hz-rem .ic { width: 15px; height: 15px; fill: none; stroke: var(--accent-cyan, #00e5ff); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.hz-rem:active { transform: scale(.96); }
+
+/* ---- UNDO action on the toast ---- */
+.hz-tt-act { margin-left: 12px; padding: 4px 10px; border-radius: 10px; font: 800 12px/1 system-ui, sans-serif; letter-spacing: .06em; color: #39ff14; border: 1px solid rgba(57,255,20,.5); flex: none; }
+
+html[data-theme="grey"] .hz-mback { background: rgba(20,24,30,.38); }
+html[data-theme="grey"] .hz-tt-act { color: #0a7a2b; border-color: rgba(10,122,43,.5); }

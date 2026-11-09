@@ -914,15 +914,21 @@
         .th-body { display: grid; grid-template-columns: 1fr auto; column-gap: 8px; align-items: baseline; }
         .th-body b { font-weight: 600; color: var(--text-main); font-size: 14px; overflow-wrap: anywhere; }
         .th-body em { font-style: normal; font-size: 12px; opacity: 0.9; font-variant-numeric: tabular-nums; }
-        .th-bar { display: flex; gap: 3px; align-items: center; height: 6px; margin: 6px 4px 2px; }
-        .th-bar i { flex: 1 1 0; max-width: 26px; height: 5px; border-radius: 3px; background: rgba(57, 255, 20, 0.85); box-shadow: 0 0 7px rgba(57, 255, 20, 0.7); transform-origin: left; animation: thFill .35s ease-out both; }
+        /* V1.75.2: LASER pulse, a bit smaller. Segments sit dim; a thin hot line with bloom sweeps over them while the AI thinks.
+           horizon_laser.js moves the line (sets --lx), so the phone's Remove animations setting can not freeze it. A finished bar (.done) is solid green. */
+        .th-bar { position: relative; display: flex; gap: 2px; align-items: center; height: 4px; margin: 5px 4px 1px; width: fit-content; max-width: calc(100% - 8px); --lx: -0.55; }
+        .th-bar:not(.done), .th-bar.lz-final { clip-path: inset(-8px 0); }
+        .th-bar i { transition: box-shadow .5s ease, background-color .5s ease; }
+        .th-bar.done.lz-final i:not(.p):not(.x) { box-shadow: 0 0 9px rgba(57, 255, 20, 0.95); }
+        .th-bar i { flex: 0 1 auto; width: 18px; min-width: 4px; height: 3px; border-radius: 2px; background: rgba(57, 255, 20, 0.85); box-shadow: 0 0 4px rgba(57, 255, 20, 0.6); transform-origin: left; }
         .th-bar i.p { background: rgba(138, 151, 166, 0.55); box-shadow: none; }
-        .th-bar i.x { background: #ff4d6d; box-shadow: 0 0 7px rgba(255, 77, 109, 0.7); }
-        .th-bar i.now { animation: thFill .35s ease-out both, thPulse 1s ease-in-out .35s infinite; }
-        .th-bar.done i { animation: none; }
+        .th-bar i.x { background: #ff4d6d; box-shadow: 0 0 4px rgba(255, 77, 109, 0.7); }
+        .th-bar:not(.done) i { background: rgba(34, 197, 94, 0.28); box-shadow: none; }
+        .th-bar:not(.done) i.p { background: rgba(138, 151, 166, 0.4); }
+        .th-bar:not(.done) i.x { background: #ff4d6d; box-shadow: 0 0 4px rgba(255, 77, 109, 0.7); }
+        .th-bar:not(.done) i.now { background: rgba(57, 255, 20, 0.5); animation: thFill .35s ease-out both; }
+        .th-bar:not(.done)::after, .th-bar.lz-final::after { content: ''; position: absolute; left: 0; right: 0; top: -1px; bottom: -1px; pointer-events: none; background-repeat: no-repeat; background-size: 26% 100%; background-position: calc(var(--lx) * 100%) 0; background-image: linear-gradient(90deg, rgba(57, 255, 20, 0) 0%, rgba(57, 255, 20, 0.12) 60%, rgba(57, 255, 20, 0.55) 88%, #f4fff2 96%, rgba(57, 255, 20, 0) 100%); filter: drop-shadow(0 0 3px rgba(57, 255, 20, 0.9)); }
         @keyframes thFill { from { transform: scaleX(0); opacity: .3; } to { transform: scaleX(1); opacity: 1; } }
-        @keyframes thPulse { 50% { opacity: .35; box-shadow: 0 0 2px rgba(57, 255, 20, 0.3); } }
-        @media (prefers-reduced-motion: reduce) { .th-bar i, .th-bar i.now { animation: none; } }
         .th-body small.th-pw { white-space: pre-wrap; max-height: 11em; overflow-y: auto; border-left: 2px solid rgba(57, 255, 20, 0.55); padding-left: 8px; }
         .th-body small.th-pw.live::after { content: '\u258D'; margin-left: 1px; color: #39ff14; animation: thBlink 1s steps(2) infinite; }
         @keyframes thBlink { 50% { opacity: 0; } }
@@ -1023,6 +1029,9 @@
         .img-actions { display: flex; flex-wrap: wrap; gap: 8px; padding: 8px 10px 10px; }
         .img-actions button, .img-actions a { height: 32px; padding: 0 12px; border-radius: 16px; border: 1px solid var(--border-highlight); background: var(--card-bg); color: var(--text-main); font-size: 14px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; text-decoration: none; }
         .img-actions .ic { width: 14px; height: 14px; }
+        .img-card.web .img-frame { aspect-ratio: auto; min-height: 120px; }
+        .img-card.web .img-frame img { height: auto; max-height: 420px; object-fit: contain; }
+        .img-card.web .img-frame.bad::after { content: 'Could not load this image. Tap Open.'; }
         .img-actions button:disabled { opacity: 0.5; }
         /* voice card extras */
         .tts-diag { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
@@ -1492,6 +1501,7 @@
     <link rel="stylesheet" href="horizon_v2.css">
     <link rel="stylesheet" href="horizon_v3.css">
     <link rel="stylesheet" href="horizon_fix.css">
+    <link rel="stylesheet" href="horizon_msgmenu.css">
 </head>
 <body>
 
@@ -2026,6 +2036,31 @@
                     </div>
                 </section>
 
+                <section class="provider-card" id="daemonCard">
+                    <div class="settings-row-header">
+                        <div class="settings-row-content">
+                            <h3><svg class="ic" aria-hidden="true"><use href="#i-info"/></svg> Proactive Daemon</h3>
+                            <p id="dmStatus">Checking</p>
+                        </div>
+                    </div>
+                    <p class="hint">Watches the battery while Horizon is running. When it falls to your level and the phone is not charging, Horizon pauses the music, stops reading aloud if it was, and pops a banner that says what it did. Android hides real CPU load from apps, so Horizon watches the phone's heat warning instead. If you hammer the backspace key, it asks "Need help?" and a tap lets you talk instead of type. It cannot see typing in other apps, and it does not run if Android has closed Horizon.</p>
+                    <label class="opt-row"><span>Watch battery and heat</span><input type="checkbox" id="dmOn"></label>
+                    <label class="opt-row"><span>Low battery level</span>
+                        <select id="dmPct">
+                            <option value="10">10%</option>
+                            <option value="15">15%</option>
+                            <option value="20">20%</option>
+                            <option value="25">25%</option>
+                            <option value="30">30%</option>
+                        </select>
+                    </label>
+                    <label class="opt-row"><span>Ask "Need help?" after lots of backspaces</span><input type="checkbox" id="dmType"></label>
+                    <div class="card-actions">
+                        <button class="use-btn" id="dmTest" type="button">Test battery alert</button>
+                        <button class="use-btn" id="dmHeat" type="button">Test heat alert</button>
+                    </div>
+                </section>
+
                 <section class="provider-card" id="ttsCard">
                     <div class="settings-row-header">
                         <div class="settings-row-content">
@@ -2038,7 +2073,7 @@
                     <label class="field-label" for="ttsEngine">Voice</label>
                     <select id="ttsEngine">
                         <option value="gemini">Natural: Gemini (30 voices)</option>
-                        <option value="kokoro">Natural: Kokoro (28 voices, built in, offline, no key)</option>
+                        <option value="kokoro">Natural: Built-in voice (8 voices, male + female, offline, no key)</option>
                         <option value="standard">Standard: Android voice (free, offline)</option>
                     </select>
                     <div class="tts-nat" id="ttsNat" hidden>
@@ -3652,6 +3687,14 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                     continue;
                 }
 
+                // V1.78.0: ![caption](https://link) alone on a line is drawn as a picture card (the AI "sends" images this way)
+                const pic = /^\s*!\[([^\]]{0,200})\]\((https:\/\/[^\s)]+)(?:\s+"[^"]*")?\)\s*$/.exec(line);
+                if (pic) {
+                    frag.appendChild(imageCard({ url: pic[2], prompt: pic[1], web: true }, null));
+                    i++;
+                    continue;
+                }
+
                 const h = line.match(/^(#{1,4})\s+(.*)$/);
                 if (h) {
                     const el = document.createElement(h[1].length <= 2 ? 'h3' : 'h4');
@@ -3828,7 +3871,14 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
 
         function addUserMessage(text, ts, att, msg, stamp) {
             const bubble = buildMessage('user', ts);
-            bubble.textContent = text;
+            // V1.77.0 F3: a quoted message (lines starting with "> ") shows as a quote block above your words
+            const qm = /^((?:>[^\n]*(?:\n|$))+)\n*([\s\S]*)$/.exec(String(text));
+            if (qm) {
+                const qb = document.createElement('div');
+                qb.className = 'hz-qb';
+                qb.textContent = qm[1].replace(/^> ?/gm, '').trim();
+                bubble.replaceChildren(qb, document.createTextNode(qm[2]));
+            } else bubble.textContent = text;
             if (msg) { bubble.parentNode._msg = msg; if (msg.edited) { const tm = bubble.parentNode.querySelector('.message-meta .meta-time'); if (tm) tm.textContent += ' \u00b7 edited'; } }
             if (att && att.length && window.HorizonAttach) bubble.parentNode.appendChild(HorizonAttach.cards(att));
             if (att && att.length && att.every(a => a.kind === 'voice') && /^Voice notes?\.$/.test(text)) bubble.style.display = 'none';   // a voice note alone shows just its card
@@ -4073,13 +4123,17 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         function thoughtIcon(label) {
             return /^(?:Writing|Outlining|Continuing)/.test(label) ? 'i-flame' : /^Music/.test(label) ? 'i-music' : /GitHub|^Reading repo|^Searching repo/.test(label) ? 'i-gh' : /YouTube/.test(label) ? 'i-yt' : /^Queuing/.test(label) ? 'i-download' : /^Searching/.test(label) ? 'i-search' : /^Reading/.test(label) ? 'i-globe' : 'i-spark';
         }
+        let thoughtFresh = false;
         function thoughtChip(steps, open) {
+            const fresh = thoughtFresh; thoughtFresh = false;
             const total = steps.length ? steps[steps.length - 1].at : 0;
             const d = document.createElement('div');
             d.className = 'th-chip';
             d.innerHTML = `<button type="button" class="th-toggle" aria-expanded="${open ? 'true' : 'false'}"><svg class="ic" aria-hidden="true"><use href="#i-spark"/></svg><span>Thought process · ${steps.length} step${steps.length === 1 ? '' : 's'}${total ? ' · ' + secsTxt(total) : ''}</span><svg class="ic th-chev" aria-hidden="true"><use href="#i-chev-d"/></svg></button><div class="th-bar done" aria-hidden="true">${thoughtBar(steps, false)}</div><div class="th-log"${open ? '' : ' hidden'}>${thoughtRows(steps, false)}</div>`;
             const btn = d.querySelector('.th-toggle'), log = d.querySelector('.th-log');
             btn.addEventListener('click', () => { const o = log.hidden; log.hidden = !o; btn.setAttribute('aria-expanded', String(o)); });
+            // V1.76.0 T4: a bar that has just finished gets one last fast Laser pass, then settles solid green
+            if (fresh) setTimeout(() => { try { if (window.HzLaser) window.HzLaser.sweep(d.querySelector('.th-bar'), 560); } catch (_) { /* decoration only */ } }, 80);
             return d;
         }
 
@@ -4211,6 +4265,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         function hideLoading() {
             const steps = thought ? thought.steps.slice() : [];
             thoughtWasOpen = !!(thought && thought.open);
+            if (steps.length) { thoughtFresh = true; setTimeout(() => { thoughtFresh = false; }, 1500); }   // V1.76.0: the chip built next gets the final Laser sweep
             if (thought) { clearInterval(thought.timer); thought = null; }
             const el = $('#loadingBubble');
             if (el) el.remove();
@@ -4455,6 +4510,8 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         }
 
         function deleteChat(id) {
+            const gone = state.chats.find(c => c.id === id) || null;
+            const wasCurrent = state.currentId === id;
             state.chats = state.chats.filter(c => c.id !== id);
             saveChats();
             if (state.currentId === id) {
@@ -4465,6 +4522,16 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             }
             renderChatList();
             updateUI();
+            // V1.77.0 F25: UNDO for five seconds
+            if (gone && window.HzToast) HzToast.show({
+                icon: 'i-trash', title: 'Chat deleted', sub: String(gone.title || 'New chat').slice(0, 40), act: 'UNDO', ms: 5000,
+                onTap: () => {
+                    if (state.chats.some(c => c.id === id)) return;
+                    state.chats.push(gone);
+                    saveChats();
+                    if (wasCurrent && !state.currentId) openChat(id); else { renderChatList(); updateUI(); }
+                }
+            });
         }
 
         // ===== V1.31.0: pinned chats stay on top; the search box looks inside every chat =====
@@ -4757,6 +4824,17 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             lsSet(LS.active, id);
             updateUI();
         }
+
+        // V1.76.0: the header pill's arrows. Steps to the previous or next provider that has a key (tap the pill itself for the full AI sheet).
+        window.HzCycle = dir => {
+            const ids = PROVIDER_IDS.filter(pkReady);
+            if (ids.length < 2) { notice('Add a second API key to switch with the arrows.', 'error'); return false; }
+            const i = Math.max(0, ids.indexOf(state.active));
+            const next = ids[(i + (dir < 0 ? -1 : 1) + ids.length) % ids.length];
+            setActive(next);
+            notice(`Using ${PROVIDERS[next].name} \u00b7 ${state.models[next]}`);
+            return true;
+        };
 
         function renderChips() {
             aiSelector.replaceChildren();
@@ -5810,7 +5888,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                         continue;
                     }
                     if (c.yt) {
-                        setLoading(c.kind === 'yt.search' ? `Searching YouTube: ${shortTxt(c.arg, 60)}` : c.kind === 'get.search' ? `Searching: ${shortTxt(c.arg, 60)}` : `Queuing download: ${shortTxt(c.arg.split('|')[0], 40)}`);
+                        setLoading(c.kind === 'yt.search' ? `Searching YouTube: ${shortTxt(c.arg, 60)}` : c.kind === 'yt.play' ? `Starting the song: ${shortTxt(c.arg.split('|')[1] || c.arg.split('|')[0], 50)}` : c.kind === 'img.search' ? `Finding images: ${shortTxt(c.arg, 60)}` : c.kind === 'img.save' ? `Saving the image: ${shortTxt(c.arg.split('|')[0], 40)}` : c.kind === 'get.search' ? `Searching: ${shortTxt(c.arg, 60)}` : `Queuing download: ${shortTxt(c.arg.split('|')[0], 40)}`);
                         const yres = await runYtTool(c.kind, c.arg);
                         const bad = /^ERROR/i.test(yres.text);
                         thoughtAdd(bad ? 'i-x' : 'i-check', bad ? 'YouTube step failed' : 'YouTube step done', true, shortTxt(yres.text.replace(/^ERROR:\s*/i, ''), 160), bad);
@@ -5978,13 +6056,28 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             return fname;
         }
 
+        // V1.78.0: pictures the AI sends from the web are saved by the native MediaStore saver (Pictures/Horizon) and tracked in Downloads.
+        async function saveWebImage(img) {
+            const ext = (/\.(png|gif|webp|jpe?g|avif|bmp)(?:[?#]|$)/i.exec(img.url) || [])[1];
+            const name = safeName(img.prompt || 'image').slice(0, 60) + '.' + (ext ? ext.toLowerCase() : 'jpg');
+            if (lsGet(LS.filesOn) === '0') throw new Error('Enable File access in Settings → Permissions first.');
+            let host = '';
+            try { host = new URL(img.url).hostname; } catch (e) { /* no host */ }
+            const track = window.HorizonDownloads ? window.HorizonDownloads.begin({ type: 'image', src: 'link', title: name.replace(/\.[^.]+$/, ''), sub: host, retry: { op: 'url', url: img.url, filename: name, kind: 'image' } }) : null;
+            try {
+                const where = await saveFile(track ? track.live : {}, img.url, name, 'image');
+                if (track) track.finish(where);
+                return where;
+            } catch (e) { if (track) track.fail(e); throw e; }
+        }
+
         function imageCard(img, src) {
             const card = document.createElement('div');
-            card.className = 'img-card';
+            card.className = 'img-card' + (img.web ? ' web' : '');
             const frame = document.createElement('div');
             frame.className = 'img-frame';
             const im = document.createElement('img');
-            im.alt = img.prompt || 'Generated image';
+            im.alt = img.prompt || (img.web ? 'Image' : 'Generated image');
             im.decoding = 'async';
             im.referrerPolicy = 'no-referrer';
             im.addEventListener('error', () => frame.classList.add('bad'));
@@ -6005,10 +6098,11 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             };
             mk('i-download', 'Save', async b => {
                 b.disabled = true;
-                try { const where = await saveImageFile(img, src); notice(`Saved to ${where}`); } catch (e) { notice(friendlyError(e), 'error'); }
+                try { const where = img.web ? await saveWebImage(img) : await saveImageFile(img, src); notice(`Saved to ${where}`); } catch (e) { notice(friendlyError(e), 'error'); }
                 b.disabled = false;
             });
-            mk('i-spark', 'Redo', () => { if (!state.busy) sendImage(img.prompt, { redo: true }); });
+            if (!img.web) mk('i-spark', 'Redo', () => { if (!state.busy) sendImage(img.prompt, { redo: true }); });
+            if (img.web && navigator.share) mk('i-globe', 'Share', async () => { try { await navigator.share({ title: img.prompt || 'Image', url: img.url }); } catch (e) { /* cancelled */ } });
             const open = document.createElement('a');
             open.href = safeUrl(img.url) || '#';
             open.target = '_blank';
@@ -6103,6 +6197,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             const atts = hasAtt ? HorizonAttach.take() : [];
             if (!text && !atts.length) return;
             if (!text) text = atts.every(a => a.kind === 'voice') ? (atts.length > 1 ? 'Voice notes.' : 'Voice note.') : (atts.length > 1 ? 'Please look at these files.' : 'Please look at this file.');
+            if (!opts.text && window.HzMsgMenu && HzMsgMenu.takeQuote) { const q = HzMsgMenu.takeQuote(); if (q) text = q + '\n\n' + text; }   // V1.77.0 F3
             if (atts.some(a => a.kind === 'image' || (a.kind === 'pdf' && !a.chars)) && !canSeeImages(id, state.models[id])) notice(`${p.name} (${state.models[id]}) cannot see pictures. Switch to Gemini to have images read.`, 'error');
             const chat = ensureChat();
             const lastAi = chat.messages.slice().reverse().find(m => m.role !== 'user');
@@ -6341,22 +6436,37 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             try { chatInput.setSelectionRange(chatInput.value.length, chatInput.value.length); } catch (e) { /* ignore */ }
             notice('Replying to ' + p.name + ' only. The others stay out of it.');
         }
-        // Delete removes your message and the reply under it.
-        function deleteMessage(wrap) {
+        // Delete removes your message and the reply under it. V1.77.0 F25: no confirm box any more; a toast with UNDO stays for five seconds.
+        // V1.77.0 F4: the long-press menu can delete one reply on its own (single).
+        function deleteMessage(wrap, single) {
             if (state.busy) return;
             const m = wrap._msg, chat = currentChat();
             if (!m || !chat) return;
             const i = chat.messages.indexOf(m);
             if (i < 0) return;
             const nx = chat.messages[i + 1];
-            const both = !!(nx && nx.role !== 'user');
-            if (!confirm(both ? 'Delete this message and the reply under it?' : 'Delete this message?')) return;
-            chat.messages.splice(i, both ? 2 : 1);
+            const both = !single && m.role === 'user' && !!(nx && nx.role !== 'user');
+            const hadPin = chat.pinTs;
+            const removed = chat.messages.splice(i, both ? 2 : 1);
+            const pinGone = !!(hadPin && removed.some(x => x.ts === hadPin));
+            if (pinGone) delete chat.pinTs;
             chat.updated = Date.now();
             saveChats();
             renderChatList();
             renderMessages(chat);
             if (!chat.messages.length) showWelcome();
+            if (window.HzToast) HzToast.show({
+                icon: 'i-trash', title: both ? 'Message and reply deleted' : 'Message deleted', act: 'UNDO', ms: 5000,
+                onTap: () => {
+                    if (!state.chats.includes(chat)) return;
+                    chat.messages.splice(Math.min(i, chat.messages.length), 0, ...removed);
+                    if (pinGone) chat.pinTs = hadPin;
+                    chat.updated = Date.now();
+                    saveChats();
+                    renderChatList();
+                    if (currentChat() === chat) renderMessages(chat);
+                }
+            });
         }
         // Regenerate any reply. The newest one is a straight redo; an older one drops what came after it (restored if the new try fails).
         function regenerateAt(wrap) {
@@ -6848,7 +6958,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             const out = document.getElementById('nativeCheckOut');
             if (!btn || !out) return;
             const WEB_VERSION = '1.14.1';
-            const NAMES = ['HorizonPerms', 'HorizonAI', 'HorizonMedia', 'HorizonSpeech', 'HorizonVoice', 'HorizonLens', 'HorizonStats'];
+            const NAMES = ['HorizonPerms', 'HorizonAI', 'HorizonMedia', 'HorizonSpeech', 'HorizonVoice', 'HorizonDaemon', 'HorizonLens', 'HorizonStats'];
             let running = false;
             async function probe(name) {
                 const cap = window.Capacitor;
@@ -7203,7 +7313,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             'https://pipedapi.drgns.space', 'https://api.piped.yt', 'https://pipedapi.leptons.xyz',
             'inv:https://inv.nadeko.net', 'inv:https://yewtu.be', 'inv:https://invidious.nerdvpn.de', 'inv:https://invidious.privacyredirect.com'
         ];
-        const YT_SRC = '\\[\\[(yt|get)\\.(search|download|url|magnet):\\s*([^\\]]+?)\\s*\\]\\]';
+        const YT_SRC = '\\[\\[(yt|get|img)\\.(search|download|url|magnet|play|save):\\s*([^\\]]+?)\\s*\\]\\]';
         const YT_DISC = 'horizon_yt_discovered', YT_GOOD = 'horizon_yt_good';
         let ytErrLog = [];
 
@@ -7291,7 +7401,16 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             throw ytSummary(what, errs, tried.size);
         }
 
-        function ytSearch(q) {
+        // V1.78.0: YouTube's own app API first (horizon_ytdirect.js). The public Piped/Invidious servers are only the fallback.
+        async function ytTryDirect(fn) {
+            if (!window.HzYtDirect) return null;
+            try { return await fn(); } catch (e) { return null; }
+        }
+        async function ytSearch(q) {
+            const d = await ytTryDirect(() => window.HzYtDirect.search(q));
+            return d || ytSearchPublic(q);
+        }
+        function ytSearchPublic(q) {
             return ytRace('Search', async inst => {
                 let items = [];
                 if (inst.kind === 'piped') {
@@ -7327,7 +7446,11 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             } catch (e) { return u; }
         }
 
-        function ytStream(id) {
+        async function ytStream(id) {
+            const d = await ytTryDirect(() => window.HzYtDirect.audio(id));
+            return d || ytStreamPublic(id);
+        }
+        function ytStreamPublic(id) {
             return ytRace('Download', async inst => {
                 let best = null, title = '', artist = '';
                 if (inst.kind === 'piped') {
@@ -7352,7 +7475,11 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             });
         }
 
-        function ytVideoStream(id) {
+        async function ytVideoStream(id) {
+            const d = await ytTryDirect(() => window.HzYtDirect.video(id));
+            return d || ytVideoStreamPublic(id);
+        }
+        function ytVideoStreamPublic(id) {
             return ytRace('Video download', async inst => {
                 const d = await ytJSON(inst.kind === 'piped' ? `${inst.base}/streams/${id}` : `${inst.base}/api/v1/videos/${id}?local=true`);
                 const streams = inst.kind === 'piped' ? (d.videoStreams || []).filter(v => v.url && v.videoOnly === false)
@@ -7379,7 +7506,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 if (lsGet(LS.filesOn) === '0') throw new Error('Enable File access in Settings → Permissions first.');
                 const stream = kind === 'video' ? await ytVideoStream(id) : await ytStream(id);
                 const filename = safeName((stream.artist ? stream.artist + ' - ' : '') + (stream.title || id)) + '.' + stream.ext;
-                const path = await saveFile(prog || {}, stream.url, filename, kind === 'video' ? 'video' : 'audio');
+                const path = await saveFile(prog || {}, stream.url, filename, kind === 'video' ? 'video' : 'audio', stream.ua);
                 return 'Saved: ' + path;
             }
         };
@@ -7470,7 +7597,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             $('#dlHead').setAttribute('aria-expanded', open ? 'true' : 'false');
         }
 
-        async function saveFile(d, url, fname, kindHint) {
+        async function saveFile(d, url, fname, kindHint, ua) {
             const FSP = plug('Filesystem');
             if (NATIVE && FSP) {
                 if (!dlListener) {
@@ -7495,7 +7622,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                             dlMediaListener = true;
                             try { HAI.addListener('mediaProgress', ev => { const t = ev && dlByUrl[ev.url]; if (!t) return; t.bytes = ev.bytes || 0; if (ev.contentLength > 0) { t.total = ev.contentLength; t.pct = Math.min(99, Math.round(ev.bytes / ev.contentLength * 100)); } scheduleTray(); }); } catch (e) { /* no progress */ }
                         }
-                        const r = await HAI.saveMedia({ url, filename: fname, video: /\.(mp4|mkv|webm|mov|m4v)$/i.test(fname), kind: kindHint || undefined });
+                        const r = await HAI.saveMedia({ url, filename: fname, video: /\.(mp4|mkv|webm|mov|m4v)$/i.test(fname), kind: kindHint || undefined, ua: ua || undefined });
                         delete dlByUrl[url];
                         if (r) { d.uri = r.uri || ''; d.mime = r.mime || ''; }
                         return (r && r.path) || `Music/Horizon/${fname}`;
@@ -7508,7 +7635,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 ];
                 for (const t of targets) {
                     try {
-                        await FSP.downloadFile({ url, path: t.path, directory: t.directory, progress: true, recursive: true });
+                        await FSP.downloadFile({ url, path: t.path, directory: t.directory, progress: true, recursive: true, headers: ua ? { 'User-Agent': ua } : undefined });
                         delete dlByUrl[url];
                         return t.label;
                     } catch (e) { errs.push(friendlyError(e)); }
@@ -7565,7 +7692,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 d.artist = s.artist || d.artist;
                 d.total = s.size || 0;
                 scheduleTray();
-                d.path = await saveFile(d, s.url, `${safeName((d.artist ? d.artist + ' - ' : '') + d.title)}.${s.ext}`);
+                d.path = await saveFile(d, s.url, `${safeName((d.artist ? d.artist + ' - ' : '') + d.title)}.${s.ext}`, 'audio', s.ua);
                 d.status = 'done';
                 d.pct = 100;
                 notifyDone(d);
@@ -7582,7 +7709,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         // V1.23.0: the Downloads app reuses the one save path (MediaStore, progress, fallbacks) and the native helpers.
         window.HorizonDlHost = {
             native: NATIVE,
-            save: (d, url, fname, kind) => saveFile(d, url, fname, kind),
+            save: (d, url, fname, kind, ua) => saveFile(d, url, fname, kind, ua),
             call: callNative,
             lastErr: () => lastNativeErr,
             friendly: friendlyError,
@@ -7625,8 +7752,64 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             return calls;
         }
 
+        // V1.78.0: stream a song through the music player. Tries the direct link; if the player refuses it, fetches the audio through the native
+        // HTTP layer (which sends the right User-Agent) and plays that copy instead.
+        async function ytPlayTool(arg) {
+            if (!window.HorizonMusic || !HorizonMusic.playRemote) return { text: 'ERROR: the music player is not ready. Reopen the app.' };
+            const parts = String(arg).split('|');
+            const vid = ytId(parts[0]);
+            if (!vid) return { text: 'ERROR: give a VIDEO_ID from yt.search, like [[yt.play: VIDEO_ID | Title]].' };
+            const hint = (parts[1] || '').trim();
+            const st = await ytStream(vid);
+            const info = { id: vid, title: st.title || hint || vid, artist: st.artist || '', url: st.url, dur: st.dur || 0 };
+            let r = await HorizonMusic.playRemote(info);
+            if (!r.ok && st.ua) {
+                try {
+                    const res = await timed(fetch(st.url, { headers: { 'User-Agent': st.ua } }), 90000);
+                    if (res.ok) {
+                        const blob = await res.blob();
+                        if (blob.size > 0 && blob.size < 60 * 1048576) r = await HorizonMusic.playRemote(Object.assign({}, info, { url: URL.createObjectURL(blob.type ? blob : new Blob([blob], { type: 'audio/mp4' })) }));
+                    }
+                } catch (e) { /* report the failure below */ }
+            }
+            return r.ok ? { text: `Started: ${r.title}${r.artist ? ' - ' + r.artist : ''}. It is streaming now through the music player (not saved to the phone).` }
+                : { text: 'ERROR: the song would not start. Tell Fezzy in one short sentence, and offer to download it instead.' };
+        }
+
+        // V1.78.0: image search for the chat AI. Openverse first (openly licensed), Wikimedia Commons as the backup.
+        async function imgSearchTool(arg) {
+            const q = String(arg || '').trim();
+            if (!q) return { text: 'ERROR: use [[img.search: what the picture shows]].' };
+            let rows = [];
+            try {
+                const d = await ytJSON(`https://api.openverse.org/v1/images/?q=${encodeURIComponent(q)}&page_size=10&mature=false`);
+                rows = (d.results || []).filter(r => r && /^https:\/\//.test(r.url || '')).slice(0, 6).map(r => ({
+                    title: r.title || 'Image', by: r.creator || '', lic: [r.license, r.license_version].filter(Boolean).join(' ').toUpperCase(), url: r.url
+                }));
+            } catch (e) { /* try Commons next */ }
+            if (!rows.length && window.HorizonDownloads && HorizonDownloads.ai) {
+                const r = await HorizonDownloads.ai.run('get.search', 'images | ' + q);
+                if (r && !/^ERROR/i.test(r.text)) return { text: r.text + '\nShow one to Fezzy with ![caption](url) on its own line; save it with [[img.save: url | name.jpg]].' };
+            }
+            if (!rows.length) return { text: 'ERROR: no images came back for that search. Try different words.' };
+            if (window.HorizonDownloads && HorizonDownloads.ai && HorizonDownloads.ai.trust) HorizonDownloads.ai.trust(rows.map(x => x.url));
+            return { text: rows.map((x, n) => `${n + 1}. ${shortTxt(x.title, 70)}${x.by ? ' by ' + shortTxt(x.by, 30) : ''}${x.lic ? ' [' + x.lic + ']' : ''}  url=${x.url}`).join('\n')
+                + '\nTo show one to Fezzy, put ![caption](url) alone on its own line in your reply (the app draws it as a picture with Save and Open buttons). To save it to his phone use [[img.save: url | name.jpg]]. Mention the licence.' };
+        }
+
         async function runYtTool(kind, arg) {
             try {
+                if (kind === 'yt.play') return await ytPlayTool(arg);
+                if (kind === 'img.search') return await imgSearchTool(arg);
+                if (kind === 'img.save') {
+                    if (!window.HorizonDownloads || !HorizonDownloads.ai) return { text: 'ERROR: the Downloads module is not ready. Reopen the app.' };
+                    if (lsGet(LS.filesOn) === '0') return { text: 'ERROR: File access is switched off. Tell Fezzy to turn it on under Settings > PERMISSIONS.' };
+                    const bar = String(arg).indexOf('|');
+                    const ref = (bar < 0 ? arg : arg.slice(0, bar)).trim();
+                    let name = (bar < 0 ? '' : arg.slice(bar + 1)).trim();
+                    if (!/\.(?:jpe?g|png|gif|webp|bmp|avif)$/i.test(name)) name = (name || 'image').replace(/\.[A-Za-z0-9]{2,5}$/, '') + (/\.(png|gif|webp|jpe?g)(?:[?#]|$)/i.exec(ref) ? '.' + /\.(png|gif|webp|jpe?g)(?:[?#]|$)/i.exec(ref)[1].toLowerCase() : '.jpg');
+                    return await HorizonDownloads.ai.run('get.url', ref + ' | ' + name);
+                }
                 if (kind.indexOf('get.') === 0) {
                     if (!window.HorizonDownloads || !HorizonDownloads.ai) return { text: 'ERROR: the Downloads module is not ready. Reopen the app.' };
                     if (lsGet(LS.filesOn) === '0') return { text: 'ERROR: File access is switched off. Tell Fezzy to turn it on under Settings > PERMISSIONS.' };
@@ -7636,6 +7819,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                     const r = await ytSearch(arg);
                     return { text: `(via ${r.via})\n` + r.items.map((i, n) => `${n + 1}. ${i.title} - ${i.artist}${i.dur ? ' [' + fmtDur(i.dur) + ']' : ''}  id=${i.id}`).join('\n') };
                 }
+                if (kind !== 'yt.download') return { text: 'ERROR: unknown tool ' + kind + '. Use yt.search, yt.download, yt.play, img.search or img.save.' };
                 const parts = arg.split('|');
                 return await queueDownload(parts[0], (parts[1] || '').trim());
             } catch (e) {
@@ -7693,9 +7877,14 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             return [
                 'YOUTUBE (music search and audio downloads, NewPipe style, live)',
                 '- [[yt.search: song or artist]]  returns up to 8 results, each with a video id.',
+                '- [[yt.play: VIDEO_ID | Title]]  streams the song through his music player right now (nothing is saved). Use it when he says play, put on, or listen to a song. Search first, then play the best match. Say "playing" only after the result says Started; if it says ERROR, tell him in one short sentence.',
                 '- [[yt.download: VIDEO_ID | Title]]  queues the audio download to the phone. Progress shows in the Downloads box above the message bar. You cannot see it finish, so say "queued", never "downloaded".',
                 'When Fezzy asks for music or downloads: search first, pick the best match (the official audio, not a cover, live cut or remix unless he asked), then download it. For several songs, send up to 3 tags per turn. When using a tool reply with ONLY the tag(s). You can also just talk about music (artists, albums, history, picks) without tools.',
                 'Audio only, and only for music Fezzy has the right to save. If a tool returns ERROR, tell him in one short sentence what failed. Never paste the raw error text.',
+                'IMAGES (same switch): you CAN pull, show, save and send pictures.',
+                '- [[img.search: what the picture shows]]  returns up to 6 openly licensed images, each with a licence and url=.',
+                '- To SEND an image into the chat, write ![short caption](https://image-url) on its own line in your reply. The app draws it as a picture with Save and Open buttons. Use only urls you got from a tool result or that Fezzy gave you, and never invent a link.',
+                '- [[img.save: url | name.jpg]]  saves that image to his phone (Pictures/Horizon). Say "queued", not "saved".',
                 'MORE DOWNLOADS (same switch): other music sites, images, files, torrents.',
                 '- [[get.search: SOURCE | query]]  SOURCE is audius (music), images (Wikimedia Commons, openly licensed), archive (Internet Archive films and shows) or archive-audio. Each result has a ref= or url=.',
                 '- [[get.url: REF | name or type]]  REF is audius:ID, archive:ID (type after | is audio, video or torrent), or a direct https link (hint: music, video, image, torrent, or a file name like cat.jpg). Links on unknown sites ask Fezzy first.',
@@ -8217,7 +8406,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             permIntro: 'What Horizon is allowed to do on this phone.',
             ytCard: 'The servers Horizon uses to find and fetch music.',
             themeCard: 'Dark cyan or Light grey.',
-            ttsCard: 'Hear Horizon\'s replies read aloud. Kokoro voices built into the app (no key, no limit, offline), Gemini voices, or the free Android voice.',
+            ttsCard: 'Hear Horizon\'s replies read aloud. Built-in voices, male and female (no key, no limit, offline), Gemini voices, or the free Android voice.',
             'card-gemini': 'Google Gemini. Add a key, pick a model and switch it on.',
             'card-groq': 'Groq. Fast Llama and GPT-OSS models. Add a key and pick a model.',
             'card-cohere': 'Cohere Command models. Add a key (a free trial key works) and pick a model.',
@@ -8601,7 +8790,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                     vEl.status.textContent = TTS.describe();
                 } else if (st.state === 'playing') {
                     vEl.status.classList.remove('error');
-                    vEl.status.textContent = 'Playing: ' + (st.engine === 'gemini' ? 'Gemini voice' : st.engine === 'kokoro' ? 'Kokoro voice' : st.engine === 'native' ? 'Android voice' : 'Browser voice');
+                    vEl.status.textContent = 'Playing: ' + (st.engine === 'gemini' ? 'Gemini voice' : st.engine === 'kokoro' ? 'Built-in voice' : st.engine === 'native' ? 'Android voice' : 'Browser voice');
                 } else if (st.state === 'idle' && !vEl.status.classList.contains('error')) {
                     vEl.status.textContent = TTS.describe();
                 }
@@ -8701,6 +8890,14 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             updateUI();
         } else showWelcome(true);
         replyIntent();
+        // V1.77.0: the small door horizon_msgmenu.js uses (long-press menu, pin, Remember). Nothing else is exposed.
+        window.HzMsg = {
+            chat: () => currentChat(),
+            busy: () => !!state.busy,
+            save: () => { saveChats(); renderChatList(); },
+            deleteMsg: wrap => deleteMessage(wrap, true),
+            remember: t => addMemory(t, 'you')
+        };
         const draft = lsGet(LS.draft);
         if (draft) chatInput.value = draft;
         let draftT = 0;   // V1.58.2: saved after a 1.5 s pause, and always when the box loses focus or the app goes to the background
@@ -8712,6 +8909,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
     })();
     </script>
     <script src="horizon_downloads.js"></script>
+    <script src="horizon_ytdirect.js"></script>
     <script src="horizon_youtube.js"></script>
     <script src="horizon_addons.js"></script>
     <script src="horizon_terminal.js"></script>
@@ -8729,8 +8927,12 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
     <script src="horizon_hdr2.js"></script>
     <script src="horizon_fold.js"></script>
     <script src="horizon_autoread.js"></script>
+    <script src="horizon_daemon.js"></script>
     <script src="horizon_door.js"></script>
     <script src="horizon_speakwave.js"></script>
+    <script src="horizon_laser.js"></script>
+    <script src="horizon_fab.js"></script>
+    <script src="horizon_msgmenu.js"></script>
     <script src="horizon_termlive.js"></script>
     <script src="horizon_v2.js"></script>
     <script src="horizon_lift.js"></script>

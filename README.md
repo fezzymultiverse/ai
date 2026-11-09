@@ -12,6 +12,54 @@
   <img alt="Capacitor 6" src="https://img.shields.io/badge/Capacitor-6-00e5ff">
 </p>
 
+## What's new in V1.78.0
+
+- **YouTube works again.** The public Piped and Invidious servers Horizon relied on are mostly down or blocked, which is why the AI could not search or download. New `www/horizon_ytdirect.js` asks YouTube's own app API (InnerTube) straight from the phone through the native HTTP layer (`CapacitorHttp`, so no CORS and the User-Agent is really sent). Search, audio and video use it first; the old public servers are only the backup. The stream link is locked to the client that asked, so the native saver (`HorizonAIPlugin.saveMedia`) now takes a `ua` and sends it.
+- **Play music.** New AI tool `[[yt.play: VIDEO_ID | Title]]` streams a song through the music player with no download (`HorizonMusic.playRemote`). If the player refuses the direct link, it fetches the audio through the native layer and plays that copy. The tool only says Started once sound is really running.
+- **Library play is less picky.** `music.play` and `music.search` ignore dashes, `feat.`, `Official Video` and similar, and a long query may miss one word.
+- **Images.** `[[img.search: words]]` finds openly licensed pictures (Openverse, Wikimedia Commons as backup). The AI sends one by writing `![caption](https://link)` on its own line; the chat draws a picture card with Save, Share and Open. `[[img.save: url | name.jpg]]` and the card's Save button store it in Pictures/Horizon and list it in Downloads.
+- All of it sits behind the chat's YouTube button, as before.
+- *Tested:* JS syntax everywhere, the direct YouTube client against mocked responses (search, audio and video picks, bad id), the picture-line and library-match patterns. *Not tested:* on a phone or against live YouTube, and the Kotlin edit (one `ua` line in `saveMedia`) was not compiled. YouTube changes its app API now and then; if search or play stops again, Settings shows the failure and `HzYtDirect.diag()` lists what each client said.
+
+## What's new in V1.77.0
+
+- **Long-press menu** (`horizon_msgmenu.js`). Hold any message: Copy, Quote, Select text, Pin to top, Share, Read from here, Delete. Delete on a reply removes only that reply; on your message it removes the message and the reply under it, as before.
+- **Quote reply.** Swipe a message right (or pick Quote). The quote sits above the message box and is sent as `> ` lines with your next typed message; sent messages show it as a quote block.
+- **Pinned banner.** One pinned message per chat (`chat.pinTs`), shown at the top of the chat. Tap to jump, X to unpin.
+- **Undo toast.** Deleting a message or a chat shows a toast with UNDO for 5 seconds (`act` option added to `HzToast`). The confirm box is gone.
+- **Remember.** A brain button on every reply opens a small editor and saves the line to the Memory box (`window.HzMsg.remember`).
+- *Not tested:* on a phone.
+
+## What's new in V1.76.0
+
+- **Top pill.** `<` and `>` arrows step through providers that have a key (`window.HzCycle` in `index.html`); the middle still opens the AI sheet. The Laser runs along the pill's bottom edge while a reply runs. Tokens in/out and reply time in ms sit on the same line (`window.HzLast` from `horizon_usage.js`). Not shown in group chats or with a single key.
+- **Final sweep.** When a reply finishes, the Thought process bar and the pill get one fast Laser pass (`HzLaser.sweep` in `horizon_laser.js`), then settle.
+- **Scroll-to-bottom button** (`horizon_fab.js`). Count of new AI replies while scrolled up. Tap = latest, hold = previous AI reply.
+- *Not tested:* on a phone.
+
+## What's new in V1.75.2
+
+- **Thought process bar: Laser pulse, smaller.** The dotted line under "Thought process" now shows the Laser style from the pulse lab: dim segments and a thin hot line with bloom sweeping across while the AI thinks; solid green when done. Segments are thinner and shorter (3px tall, 18px max) with a softer glow. `www/horizon_laser.js` moves the beam from JavaScript, so Android's Remove animations setting cannot freeze it (the old bar was switched off under that setting). CSS is the `.th-bar` block in `www/index.html`. *Not tested:* on a phone.
+
+## What's new in V1.75.1
+
+- **Browser, light mode.** Hard-coded black backgrounds made icons, arrows, the eye button, the URL pill, chat text and the bottom strip invisible in light mode. A scoped block at the end of `www/horizon_tidy.css` fixes it. Dark and cyan themes unchanged. *Not tested:* on a phone.
+
+## What's new in V1.75.0
+
+- **Voice: small built-in voice.** Kokoro (very large) is replaced by Kitten nano through the same sherpa-onnx engine. 8 English voices, 4 female and 4 male, offline, no key, nothing downloaded on the phone. `scripts/bundle-voice.sh` fetches it at build time; the plugin builds an `OfflineTtsKittenModelConfig`. The engine id stays `kokoro` internally so saved settings keep working; old Kokoro voice picks fall back to the first voice.
+- *Not tested:* on a phone or in the real build. The speaker order (male, female, male, female...) is from the Kitten voice list; if a gender is swapped, change the `sid` numbers in `KOKORO.voices` in `www/horizon_tts.js`. Kokoro is still in the V1.74.0 zip.
+
+## What's new in V1.74.0
+
+- **Proactive Daemon** (Settings > Proactive Daemon). While Horizon is running, it watches the battery. When the level falls to yours (10 to 30%, default 15%) and the phone is not charging, Horizon pauses the music, stops reading aloud if it was, and pops a banner: "Fezzy, battery is low (14%). I paused the music. Plug in soon." The banner only claims what it really did. One alert per drain (it re-arms when you charge or the level climbs 5 points) and at most one every 30 minutes. If the page cannot answer, the native side posts a plain banner anyway.
+- **Heat instead of CPU.** Android has hidden real CPU load from apps since Android 8, so Horizon cannot read it. It watches the phone's own heat warning (severe and worse) and reacts the same way.
+- **"Need help?"** Eight or more separate backspace taps in 12 seconds, making up at least 40% of the keystrokes (a held key counts once), and Horizon asks "Need help?". Tap it to start a voice note instead of typing. Works in Horizon's own text boxes only, once every 10 minutes.
+- **Test buttons** for the battery and heat alerts, so you do not have to drain the phone.
+- **Not done on purpose:** "stopped background syncing". Horizon has no background sync to stop, so the banner never says it. The daemon does not run when Android has closed Horizon, and it cannot see typing in other apps.
+- New files: `HorizonDaemonPlugin.kt`, `horizon_daemon.js`. Also `horizon_music.js` (pauseNow), `index.html`, `MainActivity.java`, `apply-android.sh`, the workflow.
+- *Tested:* JS syntax, the typing detector and the battery reaction in a stubbed run. *Not tested:* the Kotlin was not compiled and nothing ran on a phone; the CI build is the first compile.
+
 ## What's new in V1.73.0
 
 - **Voice: Kokoro is now built into the app.** The 28 English Kokoro voices (US and UK, female and male) run natively through sherpa-onnx. The runtime, its Kotlin API and the Kokoro multi-lang v1.0 int8 model are packed into the APK by `scripts/bundle-voice.sh` during the build, so there is nothing to install and nothing to download on the phone. The first use unpacks the model once (a few seconds), then it starts fast and works offline. Replaces the WebView Kokoro (kokoro-js), which had to pull its model through the app's network layer and would not play. New file: `HorizonVoicePlugin.kt`. The plugin returns a WAV per sentence, so speed, pitch, pause and stop work like the other voices.

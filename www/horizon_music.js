@@ -197,7 +197,7 @@
     function onErr() {
         loadedId = '';
         errRun++;
-        host.notice(`Could not play ${cur ? cur.title : 'that file'}. It may have moved. Rescan your storage.`, 'error');
+        host.notice(cur && cur.remote ? `Could not stream ${cur.title} from YouTube. Try again, or download it instead.` : `Could not play ${cur ? cur.title : 'that file'}. It may have moved. Rescan your storage.`, 'error');
         if (errRun < 3 && queue.length > 1) setTimeout(() => next(true), 400); else paintNow();
     }
     au.addEventListener('ended', () => { if (repeat === 2) { au.currentTime = 0; const p = au.play(); if (p && p.catch) p.catch(onErr); } else next(true); });
@@ -819,6 +819,7 @@
         out.push('TOOLS (tag alone in your reply, up to 3 per turn; the result comes back to you before you answer): [[music.now]]  [[music.search: words]] returns up to 10 songs with ids  [[music.play: id or words]]  [[music.queue: id]]  [[music.pause]]  [[music.resume]]  [[music.next]]  [[music.prev]]' + (canListen ? '  [[music.listen: your question about the sound]] sends a short clip of what is playing to Gemini, who listens and answers (slow, use it only when he asks what the song sounds like).' : '.'));
         if (isG && canListen) out.push('YOU CAN HEAR THE SONG. You are Gemini, and the app listens through you: when Fezzy asks how a song sounds (vibe, beat, vocals, mix, tempo, key, what song it is), put [[music.listen: his question]] alone in your reply. The app cuts a clip of what is playing, sends it to you as audio, and the answer comes back before you reply. Never tell him you cannot listen or that you have no ears. If the tool returns an ERROR, say what it says in one line.');
         else if (isG) out.push('You are Gemini and you can hear songs, but no Gemini key is saved, so the listen tool is off. Tell Fezzy to add one in Settings > API providers.');
+        out.push('A song that is not in his library can be streamed live with [[yt.play: VIDEO_ID | Title]] when the YouTube button is on (find the id first with [[yt.search: words]]).');
         out.push('Older replies in this chat may name songs that played earlier. Only the NOW PLAYING line above is true right now, so never repeat a song name from earlier messages as the current one.');
         out.push('You only know metadata (title, artist, album, length, position). ' + (isG ? 'Without the listen tool you cannot hear the audio' : 'You cannot hear the audio yourself') + (canListen && !isG ? ' (only the listen tool can, through Gemini)' : '') + ' and cannot see lyrics here: talk about the song from what you genuinely know, say so when you do not, and never paste long lyrics. Comment on what is playing like a friend when he asks or it fits, do not interrupt unprompted. Never say you played something until the tool result confirms it.');
         return out.join('\n');
@@ -834,9 +835,12 @@
         const l = visible();
         const byIdHit = byId.get(q);
         if (byIdHit) return [byIdHit];
-        const words = q.toLowerCase().split(/\s+/).filter(Boolean);
-        return l.map(t => { const h = (t.title + ' ' + t.artist + ' ' + t.album).toLowerCase(); let s = 0; words.forEach(w => { if (h.indexOf(w) !== -1) s++; if (t.title.toLowerCase().indexOf(w) !== -1) s += 0.5; }); return { t, s }; })
-            .filter(x => x.s >= words.length).sort((a, b) => b.s - a.s).slice(0, n).map(x => x.t);
+        // V1.78.0: punctuation such as the dash in "Artist - Title" no longer counts as a word, and a long query may miss one word.
+        const words = String(q).toLowerCase().replace(/[()\[\]"'`,.!?:;&+/\\-]+/g, ' ').split(/\s+/).filter(w => w && !/^(?:feat|ft|by|official|audio|video|lyrics|the)$/.test(w));
+        if (!words.length) return [];
+        const need = words.length >= 4 ? words.length - 1 : words.length;
+        return l.map(t => { const h = (t.title + ' ' + t.artist + ' ' + t.album).toLowerCase(); const ti = t.title.toLowerCase(); let hit = 0, s = 0; words.forEach(w => { if (h.indexOf(w) !== -1) { hit++; s++; } if (ti.indexOf(w) !== -1) s += 0.5; }); return { t, s, hit }; })
+            .filter(x => x.hit >= need).sort((a, b) => b.s - a.s).slice(0, n).map(x => x.t);
     }
     async function run(kind, arg, by) {
         if (!seesAi()) return { text: 'ERROR: music is hidden from you. Tell Fezzy to tap the red eye.' };
@@ -862,13 +866,35 @@
             if (kind === 'music.play' || kind === 'music.queue') {
                 if (!arg) return { text: 'ERROR: give an id or words.' };
                 const r = find(arg, 1);
-                if (!r.length) return { text: `ERROR: nothing in the library matches "${arg}". Try music.search.` };
+                if (!r.length) return { text: `ERROR: nothing in the library matches "${arg}". Try music.search. If the YouTube button is on, [[yt.search: ${arg}]] then [[yt.play: VIDEO_ID | Title]] streams it instead.` };
                 const t = r[0];
                 if (kind === 'music.queue') { if (!cur) return playTool(t); queue.splice(qi + 1, 0, t.id); paintLib(); return { text: `Queued next: ${line(t)}` }; }
                 return playTool(t);
             }
             return { text: 'ERROR: unknown music tool ' + kind };
         } catch (e) { return { text: 'ERROR: ' + ((e && e.message) || e) }; }
+    }
+    // V1.78.0: streams a song that is not in the library (a YouTube audio link). Resolves { ok, title } once sound really starts or fails.
+    function playRemote(o) {
+        const id = 'yt:' + String(o.id || Date.now());
+        const rec = { id, title: o.title || String(o.id || 'Song'), artist: o.artist || 'YouTube', album: 'YouTube', dur: o.dur || 0, path: '', size: 0, added: Date.now() / 1000, music: true, tmp: true, remote: true, src: o.url };
+        const old = byId.get(id);
+        if (old) Object.assign(old, rec); else setLib(lib.concat([rec]));
+        const t = byId.get(id);
+        loadedId = '';
+        if (!queue.length || qi < 0) { queue = [id]; qi = 0; }
+        else { queue = queue.filter(x => x !== id); queue.splice(Math.max(0, qi) + 1, 0, id); }
+        return new Promise(resolve => {
+            let done = false;
+            const fin = v => { if (done) return; done = true; au.removeEventListener('timeupdate', onTime); au.removeEventListener('error', onBad); clearTimeout(tm); resolve({ ok: v, title: t.title, artist: t.artist }); };
+            const onTime = () => { if (au.currentTime > 0.2 && !au.paused) fin(true); };
+            const onBad = () => fin(false);
+            const tm = setTimeout(() => fin(!au.paused && au.currentTime > 0), 12000);
+            au.addEventListener('timeupdate', onTime);
+            au.addEventListener('error', onBad);
+            playId(id);
+            paintLib();
+        });
     }
     function playTool(t) {
         playId(t.id, sorted(visible()).map(x => x.id));
@@ -941,5 +967,9 @@
         host.onChange();
     }
 
-    window.HorizonMusic = { init, SRC, parse, run, block, seesAi, setAi, openTab, scan, openEars };
+    // V1.74.0: for the Proactive Daemon. Pauses only if a song is really playing, and says whether it did. Works even when the AI cannot see music.
+    function playingNow() { return !!cur && !au.paused; }
+    function pauseNow() { if (!playingNow()) return false; try { au.pause(); return true; } catch (_) { return false; } }
+
+    window.HorizonMusic = { init, SRC, parse, run, block, seesAi, setAi, openTab, scan, openEars, playingNow, pauseNow, playRemote };
 })();

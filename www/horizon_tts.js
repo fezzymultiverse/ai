@@ -1,8 +1,8 @@
-/* HORIZON · text to speech · V1.73.0
+/* HORIZON · text to speech · V1.75.0
  *
  * Engines. You pick one under Voice; Horizon always falls back to the Android voice if it fails:
  *   1. Gemini   natural voice, 30 voices, uses your Gemini key(s) from API PROVIDERS PLUS KEYS
- *   2. Kokoro   natural voices, 28 of them (US + UK, female + male), built INTO the app (sherpa-onnx, native). NO key, NO download, NO limit, offline.
+ *   2. Kokoro   V1.75.0: Kitten nano, 8 English voices (4 female + 4 male), built INTO the app (sherpa-onnx, native). Small. NO key, NO download, NO limit, offline.
  *               V1.73.0: replaces the WebView Kokoro (kokoro-js), which could not load its model through the app's network layer.
  *   3. Native   Android's own speech engine through the HorizonSpeech plugin (free, offline, unlimited)
  *   4. Web Speech  the WebView's speechSynthesis, as a last resort
@@ -31,20 +31,17 @@
     };
     const MAX_CHARS = { native: 3000, web: 180, gemini: 1200, kokoro: 300 };
     const ENGINES = ['standard', 'gemini', 'kokoro'];
-    // V1.73.0: KOKORO, native. The open Kokoro 82M model (Apache 2.0, int8) and the sherpa-onnx runtime are packed INSIDE the APK by the build
+    // V1.75.0: KITTEN nano replaces Kokoro (Kokoro was too big). Same engine id 'kokoro' so saved settings keep working. The open Kitten nano model and the sherpa-onnx runtime are packed INSIDE the APK by the build
     // (scripts/bundle-voice.sh). HorizonVoicePlugin.kt unpacks the model once into app storage, loads it, and makes each sentence on the phone.
     // Speaker ids are the order of kokoro-multi-lang-v1_0 (voices.bin): af_*, am_*, bf_*, bm_* come first, then the other languages.
     const KOKORO = {
         loadMs: 180000,
         genMs: 90000,
+        // V1.75.0: Kitten nano. 8 English voices in voices.bin order: male, female, male, female ... (speaker ids 0-7). Female listed first.
+        // If a voice sounds the wrong gender on your phone, swap the two sid numbers here, it is a one-line fix.
         voices: [
-            ['af_heart', 3, 'Heart \u00b7 US female, warm (best)'], ['af_bella', 2, 'Bella \u00b7 US female'], ['af_nicole', 6, 'Nicole \u00b7 US female, soft'], ['af_sarah', 9, 'Sarah \u00b7 US female'],
-            ['af_sky', 10, 'Sky \u00b7 US female, light'], ['af_nova', 7, 'Nova \u00b7 US female'], ['af_river', 8, 'River \u00b7 US female, calm'], ['af_jessica', 4, 'Jessica \u00b7 US female'],
-            ['af_kore', 5, 'Kore \u00b7 US female'], ['af_aoede', 1, 'Aoede \u00b7 US female'], ['af_alloy', 0, 'Alloy \u00b7 US female'],
-            ['am_adam', 11, 'Adam \u00b7 US male, deep'], ['am_michael', 16, 'Michael \u00b7 US male'], ['am_eric', 13, 'Eric \u00b7 US male'], ['am_liam', 15, 'Liam \u00b7 US male'],
-            ['am_onyx', 17, 'Onyx \u00b7 US male, deep'], ['am_echo', 12, 'Echo \u00b7 US male'], ['am_fenrir', 14, 'Fenrir \u00b7 US male'], ['am_puck', 18, 'Puck \u00b7 US male, playful'], ['am_santa', 19, 'Santa \u00b7 US male, jolly'],
-            ['bf_emma', 21, 'Emma \u00b7 UK female'], ['bf_isabella', 22, 'Isabella \u00b7 UK female'], ['bf_alice', 20, 'Alice \u00b7 UK female'], ['bf_lily', 23, 'Lily \u00b7 UK female'],
-            ['bm_george', 26, 'George \u00b7 UK male'], ['bm_lewis', 27, 'Lewis \u00b7 UK male'], ['bm_daniel', 24, 'Daniel \u00b7 UK male'], ['bm_fable', 25, 'Fable \u00b7 UK male']
+            ['kt_f1', 1, 'Female 1 \u00b7 clear'], ['kt_f2', 3, 'Female 2'], ['kt_f3', 5, 'Female 3'], ['kt_f4', 7, 'Female 4'],
+            ['kt_m1', 0, 'Male 1 \u00b7 clear'], ['kt_m2', 2, 'Male 2'], ['kt_m3', 4, 'Male 3'], ['kt_m4', 6, 'Male 4']
         ].map(v => ({ id: v[0], sid: v[1], name: v[2] }))
     };
     const CLOUD = ['gemini', 'kokoro'];
@@ -708,7 +705,7 @@
 
     // ------------------------------------------------------------- orchestration
     const RUN = { gemini: runGemini, kokoro: runKokoro, native: runNative, web: runWeb };
-    const LABEL = { gemini: 'Gemini voice', kokoro: 'Kokoro voice', native: 'Android voice', web: 'Browser voice' };
+    const LABEL = { gemini: 'Gemini voice', kokoro: 'Built-in voice', native: 'Android voice', web: 'Browser voice' };
 
     function stop(silent) {
         if (paused) {
@@ -754,7 +751,7 @@
         for (const eng of order) {
             if (tok.cancelled) return false;
             if (eng === 'native' && !nativeUsable()) continue;
-            if (eng === 'kokoro' && !kokoroUsable()) { errors.push('kokoro voice is not part of this build'); continue; }
+            if (eng === 'kokoro' && !kokoroUsable()) { errors.push('built-in voice is not part of this build'); continue; }
             if (eng === 'web' && !webUsable()) continue;
             if (cool[eng] && cool[eng] > Date.now()) { errors.push(LABEL[eng].toLowerCase() + ' is at its limit, trying again in a minute'); continue; }
             if (!strict && bad[eng] && bad[eng] > Date.now()) { errors.push(LABEL[eng].toLowerCase() + ' failed a moment ago, skipped'); continue; }
@@ -879,9 +876,9 @@
             return 'Natural voice (Gemini · ' + s.gvoice + ')';
         }
         if (s.engine === 'kokoro') {
-            if (!kokoroUsable()) return 'The built-in Kokoro voice is missing from this build. Using the Android voice for now.';
+            if (!kokoroUsable()) return 'The built-in voice is missing from this build. Using the Android voice for now.';
             const v = KOKORO.voices.find(x => x.id === s.kvoice);
-            return 'Natural voice (Kokoro \u00b7 ' + (v ? v.name.split(' \u00b7 ')[0] : s.kvoice) + ' \u00b7 built in, offline)';
+            return 'Natural voice (Built-in \u00b7 ' + (v ? v.name.split(' \u00b7 ')[0] : s.kvoice) + ' \u00b7 built in, offline)';
         }
         if (nativeUsable()) return 'Standard voice (Android)';
         if (webUsable()) return 'Standard voice (browser)';
