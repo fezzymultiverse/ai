@@ -201,9 +201,9 @@ class HorizonTermuxPlugin : Plugin() {
         try {
             job.server.soTimeout = 30000
             sock = try { job.server.accept() } catch (_: SocketTimeoutException) { add("N", "Live channel did not connect; the final result will still arrive."); flush(); return }
-            sock.soTimeout = 80
-            job.out = sock.getOutputStream()
-            val input = sock.getInputStream()
+            sock?.soTimeout = 80
+            job.out = sock?.getOutputStream()
+            val input = sock?.getInputStream()
             val acc = ByteArrayOutputStream()
             val buf = ByteArray(8192)
             val utf = Utf8Stream()
