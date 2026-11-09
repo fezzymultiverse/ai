@@ -49,7 +49,8 @@ class HorizonAlarmPlugin : Plugin() {
         val title = call.getString("title") ?: "Horizon"
         val body = call.getString("body") ?: ""
         val mode = if (call.getString("mode") == "alarm") "alarm" else "remind"
-        val ok = HorizonAlarms.arm(context, id, at, title, body, mode, call.getString("song"))
+        val rep = (call.getString("repeat") ?: "").let { if (it == "daily" || it == "weekdays") it else "" }
+        val ok = HorizonAlarms.arm(context, id, at, title, body, mode, call.getString("song"), rep, call.getBoolean("brief") == true)
         var clock = false
         if (ok && mode == "alarm" && call.getBoolean("clock") == true) clock = addToClock(at, body.ifEmpty { title })
         val o = JSObject()
@@ -71,6 +72,17 @@ class HorizonAlarmPlugin : Plugin() {
             context.startActivity(i)
             true
         } catch (e: Exception) { false }
+    }
+
+    /** The page asks, after it starts or comes back: did the user just tap Stop on an alarm with the morning brief on? */
+    @PluginMethod
+    fun consumeBrief(call: PluginCall) { call.resolve(JSObject().put("pending", HorizonAlarms.takeBriefPending(context))) }
+
+    @PluginMethod
+    fun nextRing(call: PluginCall) {
+        val id = call.getInt("id") ?: return call.reject("id missing")
+        val o = HorizonAlarms.find(context, id)
+        call.resolve(JSObject().put("at", o?.optLong("at") ?: 0L).put("repeat", o?.optString("repeat") ?: ""))
     }
 
     @PluginMethod

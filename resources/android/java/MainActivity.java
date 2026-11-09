@@ -23,6 +23,7 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(HorizonAIPlugin.class);
         registerPlugin(HorizonMediaPlugin.class);
         registerPlugin(HorizonSpeechPlugin.class);
+        registerPlugin(HorizonVoicePlugin.class);    // V1.73.0: built-in Kokoro voice (sherpa-onnx)
         registerPlugin(HorizonLensPlugin.class);
         registerPlugin(HorizonStatsPlugin.class);
         registerPlugin(HorizonBrowserPlugin.class);
@@ -129,6 +130,12 @@ public class MainActivity extends BridgeActivity {
 
     // V1.68.0: a ringing alarm opens Horizon over the lock screen with Stop and Snooze buttons.
     private void handleAlarmIntent(android.content.Intent i) {
+        if (i != null && i.getBooleanExtra("hz_stop", false)) {   // "Stop + brief" from the notification
+            i.removeExtra("hz_stop");
+            startService(new android.content.Intent(this, HorizonAlarmService.class).setAction(HorizonAlarmService.ACT_STOP));
+            if (i.getBooleanExtra("hz_brief", false)) { HorizonAlarms.setBriefPending(this); HorizonAIPlugin.dispatchToJs("horizon-brief", "{}"); }
+            return;
+        }
         if (i == null || !i.getBooleanExtra("hz_alarm", false)) return;
         i.removeExtra("hz_alarm");
         try {
@@ -137,11 +144,12 @@ public class MainActivity extends BridgeActivity {
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
             if (!HorizonAlarmService.ringing) return;   // already stopped from the notification
             String title = i.getStringExtra("hz_title"), body = i.getStringExtra("hz_body");
+            final boolean brief = i.getBooleanExtra("hz_brief", false);
             new android.app.AlertDialog.Builder(this)
                 .setTitle(title == null ? "Alarm" : title)
                 .setMessage(body == null ? "" : body)
                 .setCancelable(false)
-                .setPositiveButton("Stop", (d, w) -> startService(new android.content.Intent(this, HorizonAlarmService.class).setAction(HorizonAlarmService.ACT_STOP)))
+                .setPositiveButton(brief ? "Stop + brief" : "Stop", (d, w) -> { startService(new android.content.Intent(this, HorizonAlarmService.class).setAction(HorizonAlarmService.ACT_STOP)); if (brief) { HorizonAlarms.setBriefPending(this); HorizonAIPlugin.dispatchToJs("horizon-brief", "{}"); } })
                 .setNegativeButton("Snooze 10 min", (d, w) -> startService(new android.content.Intent(this, HorizonAlarmService.class).setAction(HorizonAlarmService.ACT_SNOOZE)))
                 .show();
         } catch (Throwable ignored) {

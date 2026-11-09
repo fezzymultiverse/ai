@@ -79,11 +79,38 @@ object HorizonAlarms {
         return PendingIntent.getActivity(c, id, i, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
     }
 
-    /** Arms (or re-arms) one alarm and stores it. mode = "alarm" (rings with a song) or "remind" (loud banner). */
-    @JvmStatic fun arm(c: Context, id: Int, at: Long, title: String, body: String, mode: String, song: String?): Boolean {
-        if (at <= System.currentTimeMillis() + 1000) return false
-        val o = JSONObject().put("id", id).put("at", at).put("title", title).put("body", body).put("mode", mode)
+    /** V1.71.0: next time after `after` that has the same clock time as `at` and falls on an allowed day. repeat = daily | weekdays. */
+    @JvmStatic fun nextAfter(at: Long, repeat: String, after: Long): Long {
+        val cal = java.util.Calendar.getInstance(); cal.timeInMillis = at
+        val h = cal.get(java.util.Calendar.HOUR_OF_DAY); val m = cal.get(java.util.Calendar.MINUTE)
+        val n = java.util.Calendar.getInstance(); n.timeInMillis = after
+        n.set(java.util.Calendar.HOUR_OF_DAY, h); n.set(java.util.Calendar.MINUTE, m); n.set(java.util.Calendar.SECOND, 0); n.set(java.util.Calendar.MILLISECOND, 0)
+        for (i in 0..8) {
+            val d = n.get(java.util.Calendar.DAY_OF_WEEK)
+            val okDay = repeat != "weekdays" || (d != java.util.Calendar.SATURDAY && d != java.util.Calendar.SUNDAY)
+            if (okDay && n.timeInMillis > after + 1000) return n.timeInMillis
+            n.add(java.util.Calendar.DAY_OF_YEAR, 1)
+        }
+        return at
+    }
+
+    // ---- the morning brief: set when the user taps Stop on a wake alarm that has it on; the page reads and clears it ----
+    @JvmStatic fun setBriefPending(c: Context) { prefs(c).edit().putLong("brief_at", System.currentTimeMillis()).apply() }
+    @JvmStatic fun takeBriefPending(c: Context): Boolean {
+        val t = prefs(c).getLong("brief_at", 0L)
+        prefs(c).edit().remove("brief_at").apply()
+        return t > 0L && System.currentTimeMillis() - t < 20 * 60_000L
+    }
+
+    /** Arms (or re-arms) one alarm and stores it. mode = "alarm" (rings with a song) or "remind" (loud banner).
+     *  repeat = "" (once), "daily" or "weekdays": a repeating alarm re-arms itself every time it rings. brief = read the morning brief after Stop. */
+    @JvmStatic fun arm(c: Context, id: Int, at: Long, title: String, body: String, mode: String, song: String?, repeat: String = "", brief: Boolean = false): Boolean {
+        var t = at
+        if (t <= System.currentTimeMillis() + 1000) { if (repeat.isEmpty()) return false; t = nextAfter(at, repeat, System.currentTimeMillis()) }
+        val o = JSONObject().put("id", id).put("at", t).put("title", title).put("body", body).put("mode", mode)
         if (!song.isNullOrEmpty()) o.put("song", song)
+        if (repeat.isNotEmpty()) o.put("repeat", repeat)
+        if (brief) o.put("brief", true)
         put(c, o)
         return schedule(c, o)
     }
@@ -124,7 +151,11 @@ object HorizonAlarms {
         val a = list(c); val now = System.currentTimeMillis()
         for (i in 0 until a.length()) {
             val o = a.optJSONObject(i) ?: continue
-            if (o.optLong("at") > now + 1000) schedule(c, o) else missed.add(o)
+            if (o.optLong("at") > now + 1000) schedule(c, o)
+            else if (o.optString("repeat").isNotEmpty()) {
+                // a repeating alarm that was missed (phone off): skip to its next ring
+                o.put("at", nextAfter(o.optLong("at"), o.optString("repeat"), now)); put(c, o); schedule(c, o)
+            } else missed.add(o)
         }
         for (o in missed) forget(c, o.optInt("id"))
         return missed

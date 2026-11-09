@@ -150,18 +150,77 @@ class HorizonAIPlugin : Plugin() {
                         val key = keys.next()
                         connection.setRequestProperty(key, headers.optString(key))
                     }
+                    if (call.getBoolean("stream", false) == true) {
+                        connection.setRequestProperty("Accept", "text/event-stream")
+                        connection.setRequestProperty("Accept-Encoding", "identity") // gzip would hold chunks back
+                    }
                     if (connection.requestMethod != "GET") {
                         connection.doOutput = true
                         connection.outputStream.use { it.write((call.getString("body") ?: "").toByteArray(Charsets.UTF_8)) }
                     }
+                    val wantStream = call.getBoolean("stream", false) == true
                     val status = connection.responseCode
                     val stream = if (status >= 400) connection.errorStream else connection.inputStream
-                    val body = stream?.bufferedReader(Charsets.UTF_8)?.use { it.readText() } ?: ""
+                    // V1.70.0: live streaming. Each "data:" line of the provider's stream is handed to the page as it arrives
+                    // (event "horizon-ai-chunk") so Gemini and Groq reasoning can be shown while it is being thought.
+                    // The page still gets the whole stream back at the end, so nothing is lost if the page was asleep.
+                    val streamed = wantStream && status in 200..299
+                    val streamText = StringBuilder()
+                    val body: String
+                    if (streamed) {
+                        val sid = call.getString("streamId") ?: ""
+                        val wantText = call.getBoolean("notifyOnResponse", false) == true
+                        val all = StringBuilder()
+                        var pend = org.json.JSONArray()
+                        var lastFlush = 0L
+                        fun flushNow() {
+                            if (pend.length() == 0) return
+                            if (sid.isNotEmpty()) dispatchToJs("horizon-ai-chunk", org.json.JSONObject().put("id", sid).put("d", pend).toString())
+                            pend = org.json.JSONArray()
+                            lastFlush = System.currentTimeMillis()
+                        }
+                        val reader = stream?.bufferedReader(Charsets.UTF_8)
+                        if (reader != null) {
+                            reader.use { r ->
+                                while (true) {
+                                    val l = r.readLine() ?: break
+                                    if (!l.startsWith("data:")) continue
+                                    val payload = l.substring(5).trim()
+                                    if (payload.isEmpty() || payload == "[DONE]") continue
+                                    if (all.isNotEmpty()) all.append('\n')
+                                    all.append(payload)
+                                    pend.put(payload)
+                                    if (wantText) {
+                                        try {
+                                            val j = org.json.JSONObject(payload)
+                                            if (host == "generativelanguage.googleapis.com") {
+                                                val parts = j.optJSONArray("candidates")?.optJSONObject(0)?.optJSONObject("content")?.optJSONArray("parts")
+                                                for (i in 0 until (parts?.length() ?: 0)) {
+                                                    val pt = parts?.optJSONObject(i) ?: continue
+                                                    if (!pt.optBoolean("thought", false)) streamText.append(pt.optString("text", ""))
+                                                }
+                                            } else {
+                                                streamText.append(j.optJSONArray("choices")?.optJSONObject(0)?.optJSONObject("delta")?.optString("content", "") ?: "")
+                                            }
+                                        } catch (_: Exception) { /* a chunk that is not JSON is skipped */ }
+                                    }
+                                    if (System.currentTimeMillis() - lastFlush >= 70) flushNow()
+                                }
+                            }
+                        }
+                        flushNow()
+                        body = all.toString()
+                    } else {
+                        body = stream?.bufferedReader(Charsets.UTF_8)?.use { it.readText() } ?: ""
+                    }
                     val result = JSObject()
                     result.put("status", status)
                     result.put("body", body)
                     // Notify from native I/O even if Android has suspended the WebView's JS timers.
-                    if (status in 200..299 && call.getBoolean("notifyOnResponse", false) == true && !foreground) {
+                    if (streamed && call.getBoolean("notifyOnResponse", false) == true && !foreground) {
+                        val text = streamText.toString()
+                        if (text.isNotBlank() && !text.contains("[[") && !text.contains("<artifact")) publishReply(call.getString("chatId") ?: "", text)
+                    } else if (!streamed && status in 200..299 && call.getBoolean("notifyOnResponse", false) == true && !foreground) {
                         try {
                             val data = org.json.JSONObject(body)
                             val text = when (host) {

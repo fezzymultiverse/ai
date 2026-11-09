@@ -48,6 +48,7 @@ class HorizonAlarmService : Service() {
     private var curTitle = ""
     private var curBody = ""
     private var curSong = ""
+    private var curBrief = false
 
     private val ramp = object : Runnable {
         override fun run() {
@@ -65,7 +66,7 @@ class HorizonAlarmService : Service() {
             ACT_STOP -> { stopAll(); stopSelf(); return START_NOT_STICKY }
             ACT_SNOOZE -> {
                 val at = System.currentTimeMillis() + SNOOZE_MIN * 60_000L
-                HorizonAlarms.arm(this, curId, at, curTitle, "Snoozed: $curBody", "alarm", curSong)
+                HorizonAlarms.arm(this, 6900001, at, curTitle, "Snoozed: $curBody", "alarm", curSong, "", curBrief)   // its own id, so a repeating alarm keeps its schedule
                 stopAll(); stopSelf(); return START_NOT_STICKY
             }
         }
@@ -73,6 +74,7 @@ class HorizonAlarmService : Service() {
         curTitle = intent?.getStringExtra("title") ?: "Horizon alarm"
         curBody = intent?.getStringExtra("body") ?: ""
         curSong = intent?.getStringExtra("song") ?: ""
+        curBrief = intent?.getBooleanExtra("brief", false) ?: false
         val n = buildNotification()
         if (Build.VERSION.SDK_INT >= 29) startForeground(NOTIF, n, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK)
         else startForeground(NOTIF, n)
@@ -98,10 +100,19 @@ class HorizonAlarmService : Service() {
         PendingIntent.getService(this, code, Intent(this, HorizonAlarmService::class.java).setAction(action),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
 
+    /** Stop with the morning brief opens the app (allowed from a notification button only as an activity), which stops the alarm and reads the brief. */
+    private fun stopAction(): PendingIntent {
+        if (!curBrief) return act(ACT_STOP, 6804)
+        val open = (packageManager.getLaunchIntentForPackage(packageName) ?: Intent())
+            .putExtra("hz_stop", true).putExtra("hz_brief", true)
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+        return PendingIntent.getActivity(this, 6805, open, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+    }
+
     private fun buildNotification(): Notification {
         channel()
         val open = (packageManager.getLaunchIntentForPackage(packageName) ?: Intent())
-            .putExtra("hz_alarm", true).putExtra("hz_title", curTitle).putExtra("hz_body", curBody)
+            .putExtra("hz_alarm", true).putExtra("hz_title", curTitle).putExtra("hz_body", curBody).putExtra("hz_brief", curBrief)
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
         val full = PendingIntent.getActivity(this, 6802, open, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         return NotificationCompat.Builder(this, CH)
@@ -116,7 +127,7 @@ class HorizonAlarmService : Service() {
             .setContentIntent(full)
             .setFullScreenIntent(full, true)
             .addAction(0, "Snooze $SNOOZE_MIN min", act(ACT_SNOOZE, 6803))
-            .addAction(0, "Stop", act(ACT_STOP, 6804))
+            .addAction(0, if (curBrief) "Stop + brief" else "Stop", stopAction())
             .build()
     }
 

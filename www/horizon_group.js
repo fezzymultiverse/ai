@@ -33,7 +33,11 @@
         }
         var g = chat && chat.group && chat.group.members && chat.group.members.length ? chat.group : null;
         if (ids.length) return { mention: true, targets: ids.map(function (id) { var mm = memberOf(g, id); return mm ? { id: id, model: mm.model } : { id: id }; }) };
-        if (g) return { mention: false, targets: g.members.filter(function (mm) { return by[mm.id]; }).map(function (mm) { return { id: mm.id, model: mm.model }; }) };
+        if (g) {
+            var live = g.members.filter(function (mm) { return by[mm.id] && !mm.mute; });
+            if (!live.length) live = g.members.filter(function (mm) { return by[mm.id]; });   // everyone muted: never leave the group silent
+            return { mention: false, targets: live.map(function (mm) { return { id: mm.id, model: mm.model }; }) };
+        }
         if (all) return null;
         return null;
     }
@@ -213,15 +217,53 @@
             if (!spare.length) { b.appendChild(el('p', 'hgp-mn', 'Add a key for another provider in Settings to bring it in.')); return; }
             spare.forEach(function (p, k) {
                 b.appendChild(mchip(k, p, p.model || '', function () {
-                    var members = g.members.map(function (m) { return { id: m.id, model: m.model }; }); members.push({ id: p.id, model: p.model });
+                    var members = g.members.map(function (m) { return m.mute ? { id: m.id, model: m.model, mute: true } : { id: m.id, model: m.model }; }); members.push({ id: p.id, model: p.model });
                     host.update(chat, members); host.notice(p.name + ' joined the group'); paintBar(); paintMenu(false);
                 }));
             });
         }));
         // 5. DEBATE (was a pill in the bar)
         if (g.members.length > 1 && host.debate) menu.appendChild(mrow(n++, '\u2694\uFE0F', 'Debate', 'Each AI critiques the others\u2019 replies', '', function () { closeMenu(); host.debate(); }));
+        // 5b. JUDGE: one AI reads the others' replies and rules on them
+        if (g.members.length > 1 && host.send) menu.appendChild(section('judge', n++, '\u2696\uFE0F', 'Judge', 'One AI weighs the replies and picks the best', '', function (b) {
+            b.appendChild(el('p', 'hgp-mn', 'Pick who judges. It reads the latest replies above, says where they agree, where they clash, and gives the best answer.'));
+            g.members.forEach(function (m, k) {
+                var p = by[m.id]; if (!p) return;
+                b.appendChild(mchip(k, p, m.model || '', function () {
+                    if (host.busy && host.busy()) { host.notice('Wait for the AIs to finish first.'); return; }
+                    closeMenu();
+                    host.send('@' + p.name.toLowerCase() + ' Judge: read the latest replies from the other AIs above. In three short parts: 1) where they agree, 2) where they clash, 3) the best answer, in your own words. Do not repeat their replies.');
+                }));
+            });
+        }));
+        // 5c. ORDER AND MUTE
+        if (g.members.length > 1) menu.appendChild(section('order', n++, '\u2195', 'Order and mute', 'Who answers first, and who stays quiet', '', function (b) {
+            b.appendChild(el('p', 'hgp-mn', 'Top answers first. A muted AI stays in the group and can still be tagged with @name, it just skips group replies.'));
+            var mem = g.members.slice();
+            function commitOrder(arr) { host.update(chat, arr); paintBar(); paintMenu(false); }
+            mem.forEach(function (m, k) {
+                var p = by[m.id]; if (!p) return;
+                var row = el('div', 'hgp-or' + (m.mute ? ' muted' : '')); row.style.setProperty('--i', k);
+                row.appendChild(el('span', 'hgp-on2', String(k + 1)));
+                var nm = el('span', 'hgp-nm'); nm.appendChild(ico(p.icon)); nm.appendChild(el('b', null, p.name)); row.appendChild(nm);
+                function mini(txt, label, dis, fn) { var x = el('button', 'hgp-mini', txt); x.type = 'button'; x.setAttribute('aria-label', label); x.disabled = !!dis; x.addEventListener('click', function (e) { e.preventDefault(); fn(); }); return x; }
+                row.appendChild(mini('\u25B2', 'Move ' + p.name + ' up', k === 0, function () { var a = mem.slice(); var t = a[k - 1]; a[k - 1] = a[k]; a[k] = t; commitOrder(a); }));
+                row.appendChild(mini('\u25BC', 'Move ' + p.name + ' down', k === mem.length - 1, function () { var a = mem.slice(); var t = a[k + 1]; a[k + 1] = a[k]; a[k] = t; commitOrder(a); }));
+                row.appendChild(mini(m.mute ? '\uD83D\uDD07' : '\uD83D\uDD0A', (m.mute ? 'Unmute ' : 'Mute ') + p.name, false, function () {
+                    var live = mem.filter(function (x) { return !x.mute; }).length;
+                    if (!m.mute && live <= 1) { host.notice('Keep at least one AI unmuted.'); return; }
+                    var a = mem.map(function (x) { var o = { id: x.id, model: x.model }; if (x.mute) o.mute = true; return o; });
+                    if (m.mute) delete a[k].mute; else a[k].mute = true;
+                    commitOrder(a);
+                }));
+                b.appendChild(row);
+            });
+        }));
         // 6. PREFERENCES (group rules)
         menu.appendChild(section('prefs', n++, '\u2699', 'Preferences', 'Group rules: the hard guard rails', '', function (b) { prefsBody(b, chat); }));
+        // 6b. WAKE ALARM: repeating (daily / weekdays) plus the morning brief
+        menu.appendChild(section('wake', n++, '\u23F0', 'Wake alarm', wakeHint(), '', function (b) { wakeBody(b); }));
+        menu.appendChild(mrow(n++, '\u2600\uFE0F', 'Hear my morning brief now', 'Calendar, weather and one line of news', '', function () { closeMenu(); window.dispatchEvent(new Event('horizon-brief-now')); }));
         // 7. LEAVE GROUP
         menu.appendChild(section('leave', n++, '\u21AA', 'Leave group', 'Keep chatting with one AI (history stays)', 'hgp-danger', function (b) {
             b.appendChild(el('p', 'hgp-mn', 'Continue with:'));
@@ -237,6 +279,45 @@
         if (badge) menu.appendChild(mrow(n++, '\u25D4', 'Usage dashboard', 'Engine, speed and keys', '', function () { closeMenu(); badge.dataset.pass = '1'; badge.click(); delete badge.dataset.pass; }));
         place();
         menu.scrollTop = scroll;
+    }
+    function wakeHint() {
+        var W = window.HorizonDash && HorizonDash.wake; if (!W) return 'Repeats daily or weekdays, with a morning brief';
+        var w = W.get(); return w.on ? (w.r === 'weekdays' ? 'Weekdays' : 'Every day') + ' at ' + w.t + (w.brief ? ' + morning brief' : '') : 'Off. Repeats daily or weekdays, with a morning brief';
+    }
+    function wakeBody(b) {
+        var W = window.HorizonDash && HorizonDash.wake;
+        if (!W) { b.appendChild(el('p', 'hgp-mn', 'Alarms need the Android app.')); return; }
+        var w = W.get();
+        function chk(label, on) { var l = el('label', 'hgp-wk'); var c = el('input'); c.type = 'checkbox'; c.checked = !!on; l.appendChild(c); l.appendChild(el('span', null, label)); b.appendChild(l); return c; }
+        var cOn = chk('Wake alarm on', w.on);
+        var row = el('div', 'hgp-wk');
+        var tm = el('input', 'hgp-time'); tm.type = 'time'; tm.value = w.t; tm.setAttribute('aria-label', 'Wake time');
+        var rp = el('select', 'hgp-sel'); rp.setAttribute('aria-label', 'Repeat');
+        [['daily', 'Every day'], ['weekdays', 'Weekdays only']].forEach(function (o) { var x = el('option', null, o[1]); x.value = o[0]; if (o[0] === w.r) x.selected = true; rp.appendChild(x); });
+        row.appendChild(tm); row.appendChild(rp); b.appendChild(row);
+        var cBr = chk('Morning brief when I tap Stop (calendar, weather, one line of news, read aloud)', w.brief);
+        var songRow = el('div', 'hgp-acts');
+        var sb = el('button', 'use-btn hgp-alt', '\uD83C\uDFB5 Wake-up song'); sb.type = 'button';
+        sb.addEventListener('click', function () {
+            var ap = window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.HorizonAlarm;
+            if (!ap) { host.notice('Alarm songs need the Android app.'); return; }
+            ap.pickSong().then(function (r) { host.notice(r && r.ok ? 'Wake-up song: ' + r.name : 'No song chosen. The phone alarm tone is used.'); }).catch(function () { host.notice('Could not open the song picker.'); });
+        });
+        songRow.appendChild(sb); b.appendChild(songRow);
+        var st = el('p', 'hgp-mn', ''); b.appendChild(st);
+        var go = el('button', 'use-btn hgp-go hgp-wide', 'Save wake alarm'); go.type = 'button';
+        go.addEventListener('click', function () {
+            go.disabled = true;
+            W.set({ on: cOn.checked, t: tm.value || '07:00', r: rp.value, brief: cBr.checked }).then(function (res) {
+                go.disabled = false;
+                if (!res.w.on) { st.textContent = 'Wake alarm is off.'; host.notice('Wake alarm off'); }
+                else if (res.ok) { var d = new Date(res.next); st.textContent = 'Next ring: ' + d.toLocaleDateString([], { weekday: 'long' }) + ' ' + res.w.t + '. Then it repeats ' + (res.w.r === 'weekdays' ? 'on weekdays' : 'every day') + '.'; host.notice('Wake alarm set for ' + res.w.t); }
+                else { st.textContent = 'Could not set it here. It works in the Android app.'; }
+                paintMenu(false);
+            });
+        });
+        b.appendChild(go);
+        b.appendChild(el('p', 'hgp-mn', 'Tip: in the calendar, tap Fix alarm settings once so Honor lets the alarm ring with the screen off.'));
     }
     function tagInput(txt) {
         closeMenu();
@@ -323,7 +404,14 @@
         paintCount();
     }
     function chosen() {
-        return provs().filter(function (p) { return p.ready && draft[p.id] && draft[p.id].on; }).map(function (p) { return { id: p.id, model: draft[p.id].model || p.model }; });
+        var cg = curChat() && curChat().group, old = cg && cg.members ? cg.members : [];
+        var list = provs().filter(function (p) { return p.ready && draft[p.id] && draft[p.id].on; }).map(function (p) {
+            var o = memberOf(cg, p.id), r = { id: p.id, model: draft[p.id].model || p.model };
+            if (o && o.mute) r.mute = true;
+            return r;
+        });
+        var pos = function (id) { for (var i = 0; i < old.length; i++) if (old[i].id === id) return i; return 999; };
+        return list.sort(function (a, b) { return pos(a.id) - pos(b.id); });
     }
     function paintCount() {
         var n = chosen().length, c = sheet.querySelector('.hgp-count');

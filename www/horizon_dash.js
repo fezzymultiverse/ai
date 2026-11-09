@@ -744,6 +744,7 @@
     }
 
     function init(h) {
+        setTimeout(function () { if (wakeGet().on) wakeApply(); }, 3500);   // V1.71.0: keep the repeating wake alarm armed
         H = h || {};
         root = document.getElementById('hzDash');
         if (!root) return;
@@ -761,5 +762,44 @@
         setTimeout(function () { loadNotes().forEach(function (n) { if (n.r && !n.f) scheduleNative(n); }); }, 4000);
     }
 
-    window.HorizonDash = { init: init, block: block, extract: extract, NOTE_SRC: NOTE_SRC, openCalendar: openCal, refresh: onOpen };
+    /* ---------- V1.71.0: the repeating wake alarm and the morning brief (set from Options in a group chat) ---------- */
+    var WAKE_ID = 77001;
+    function wakeGet() {
+        try { var w = JSON.parse(lsg('horizon_wake') || '{}'); return { on: !!w.on, t: /^\d\d:\d\d$/.test(w.t || '') ? w.t : '07:00', r: w.r === 'weekdays' ? 'weekdays' : 'daily', brief: w.brief !== false }; }
+        catch (e) { return { on: false, t: '07:00', r: 'daily', brief: true }; }
+    }
+    function wakeNext(w) {
+        var now = new Date(), d = new Date(now.getFullYear(), now.getMonth(), now.getDate(), +w.t.slice(0, 2), +w.t.slice(3, 5));
+        for (var i = 0; i < 9; i++) {
+            var wd = d.getDay();
+            if ((w.r !== 'weekdays' || (wd !== 0 && wd !== 6)) && d.getTime() > now.getTime() + 1000) return d.getTime();
+            d = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1, d.getHours(), d.getMinutes());
+        }
+        return 0;
+    }
+    function wakeApply() {
+        var w = wakeGet(), ap = alarmPlugin();
+        if (!ap) return Promise.resolve(false);
+        if (!w.on) return ap.cancel({ id: WAKE_ID }).then(function () { return true; }).catch(function () { return false; });
+        return ap.schedule({ id: WAKE_ID, at: wakeNext(w), title: 'Wake up', body: w.brief ? 'Good morning. Tap Stop to hear your brief.' : 'Good morning', mode: 'alarm', repeat: w.r, brief: w.brief, clock: false })
+            .then(function (r) { return !!(r && r.ok); }).catch(function () { return false; });
+    }
+    function wakeSet(patch) {
+        var w = Object.assign(wakeGet(), patch || {});
+        lss('horizon_wake', JSON.stringify(w));
+        return wakeApply().then(function (ok) { return { ok: ok, w: w, next: w.on ? wakeNext(w) : 0 }; });
+    }
+    /* what the morning brief says out loud first: today's calendar notes (works offline); the AI adds one line of news after it */
+    function briefText() {
+        var now = new Date(), k = dkey(now), list = notesOn(k), h = now.getHours();
+        var hi = h < 12 ? 'Good morning, Fezzy.' : h < 18 ? 'Good afternoon, Fezzy.' : 'Good evening, Fezzy.';
+        var out = [hi, 'It is ' + now.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' }) + '.'];
+        if (S && S.wx && typeof S.wx.t === 'number') out.push('It is about ' + Math.round(S.wx.t) + ' degrees outside.');
+        var todo = list.filter(function (n) { return !n.f || dueTs(n) >= now.getTime() - 3600000; });
+        if (!list.length) out.push('Nothing on your calendar today.');
+        else out.push('On your calendar today: ' + list.map(function (n) { return (/^\d\d:\d\d$/.test(n.t || '') ? 'at ' + n.t + ', ' : '') + clip(n.x, 120); }).join('. ') + '.');
+        return out.join(' ');
+    }
+    window.HorizonDash = { init: init, block: block, extract: extract, NOTE_SRC: NOTE_SRC, openCalendar: openCal, refresh: onOpen,
+        wake: { get: wakeGet, set: wakeSet, apply: wakeApply, next: wakeNext }, briefText: briefText };
 })();

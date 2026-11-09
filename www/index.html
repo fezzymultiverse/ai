@@ -914,6 +914,18 @@
         .th-body { display: grid; grid-template-columns: 1fr auto; column-gap: 8px; align-items: baseline; }
         .th-body b { font-weight: 600; color: var(--text-main); font-size: 14px; overflow-wrap: anywhere; }
         .th-body em { font-style: normal; font-size: 12px; opacity: 0.9; font-variant-numeric: tabular-nums; }
+        .th-bar { display: flex; gap: 3px; align-items: center; height: 6px; margin: 6px 4px 2px; }
+        .th-bar i { flex: 1 1 0; max-width: 26px; height: 5px; border-radius: 3px; background: rgba(57, 255, 20, 0.85); box-shadow: 0 0 7px rgba(57, 255, 20, 0.7); transform-origin: left; animation: thFill .35s ease-out both; }
+        .th-bar i.p { background: rgba(138, 151, 166, 0.55); box-shadow: none; }
+        .th-bar i.x { background: #ff4d6d; box-shadow: 0 0 7px rgba(255, 77, 109, 0.7); }
+        .th-bar i.now { animation: thFill .35s ease-out both, thPulse 1s ease-in-out .35s infinite; }
+        .th-bar.done i { animation: none; }
+        @keyframes thFill { from { transform: scaleX(0); opacity: .3; } to { transform: scaleX(1); opacity: 1; } }
+        @keyframes thPulse { 50% { opacity: .35; box-shadow: 0 0 2px rgba(57, 255, 20, 0.3); } }
+        @media (prefers-reduced-motion: reduce) { .th-bar i, .th-bar i.now { animation: none; } }
+        .th-body small.th-pw { white-space: pre-wrap; max-height: 11em; overflow-y: auto; border-left: 2px solid rgba(57, 255, 20, 0.55); padding-left: 8px; }
+        .th-body small.th-pw.live::after { content: '\u258D'; margin-left: 1px; color: #39ff14; animation: thBlink 1s steps(2) infinite; }
+        @keyframes thBlink { 50% { opacity: 0; } }
         .th-body small { grid-column: 1 / -1; font-size: 13px; line-height: 1.45; margin-top: 2px; overflow-wrap: anywhere; }
         .th-step.real .th-dot { background: var(--accent-cyan-light); }
         .th-step.real .th-dot .ic { color: var(--accent-cyan); }
@@ -1463,6 +1475,7 @@
     <link rel="stylesheet" href="horizon_tidy.css">
     <link rel="stylesheet" href="horizon_ears.css">
     <link rel="stylesheet" href="horizon_group.css">
+    <link rel="stylesheet" href="horizon_chips.css">
     <link rel="stylesheet" href="horizon_htmlview.css">
     <link rel="stylesheet" href="horizon_mdview.css">
     <link rel="stylesheet" href="horizon_setai.css">
@@ -2025,30 +2038,12 @@
                     <label class="field-label" for="ttsEngine">Voice</label>
                     <select id="ttsEngine">
                         <option value="gemini">Natural: Gemini (30 voices)</option>
-                        <option value="kokoro">Natural: Kokoro (28 voices, on-phone, no key, no limit)</option>
-                        <option value="openai">Natural: OpenAI (11 voices, needs key with credit)</option>
-                        <option value="pollinations">Natural: Pollinations (6 voices, needs key)</option>
+                        <option value="kokoro">Natural: Kokoro (28 voices, built in, offline, no key)</option>
                         <option value="standard">Standard: Android voice (free, offline)</option>
                     </select>
                     <div class="tts-nat" id="ttsNat" hidden>
                         <label class="field-label" id="ttsNVoiceLbl" for="ttsNVoice">Natural voice</label>
                         <select id="ttsNVoice"></select>
-                        <div id="ttsPollRow" hidden>
-                            <label class="field-label" for="ttsPollKey">Pollinations key</label>
-                            <input type="password" id="ttsPollKey" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="sk_... or pk_...">
-                            <div class="card-actions">
-                                <button class="use-btn" id="ttsPollSave" type="button">Save key</button>
-                                <button class="use-btn" id="ttsPollClear" type="button">Remove key</button>
-                            </div>
-                        </div>
-                        <div id="ttsOaiRow" hidden>
-                            <label class="field-label" for="ttsOaiKey">OpenAI key</label>
-                            <input type="password" id="ttsOaiKey" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="sk-...">
-                            <div class="card-actions">
-                                <button class="use-btn" id="ttsOaiSave" type="button">Save key</button>
-                                <button class="use-btn" id="ttsOaiClear" type="button">Remove key</button>
-                            </div>
-                        </div>
                         <p class="hint" id="ttsNatHint"></p>
                     </div>
                     <div id="ttsAndroid">
@@ -2165,6 +2160,7 @@
     <script src="horizon_native_audio.js"></script>
     <script src="horizon_music.js"></script>
     <script src="horizon_group.js"></script>
+    <script src="horizon_chips.js"></script>
     <script src="horizon_vault.js"></script>
     <script src="horizon_attach.js"></script>
     <script src="horizon_creator.js"></script>
@@ -2345,11 +2341,14 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 async chat(key, model, history) {
                     const T = curTurn; turnCheck(T);
                     let tc = state.thinkOn ? geminiThink(model) : null;
+                    let lt = null;
                     const send = () => {
+                        lt = tc ? thoughtLive('i-brain', 'Model thinking, live') : null;
                         const gc = docMode ? { temperature: 0.7, maxOutputTokens: tc ? 65536 : 32768 } : { temperature: 0.85 };
                         if (tc) gc.thinkingConfig = tc;
-                        return timed(aiFetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
+                        return timed(aiFetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:streamGenerateContent?alt=sse`, {
                             method: 'POST',
+                            hzStream: { kind: 'gemini', onThought: t => { if (lt) lt.add(t); } },
                             headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
                             body: JSON.stringify({
                                 systemInstruction: { parts: [{ text: getSystemPrompt() }] },
@@ -2375,8 +2374,10 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                     noteCut(cand && cand.finishReason);
                     const gparts = (cand && cand.content && cand.content.parts) || [];
                     const out = gparts.filter(p => !p.thought).map(p => p.text || '').join('').trim();
-                    const tsum = gparts.filter(p => p.thought).map(p => p.text || '').join(' ').replace(/\*\*/g, '').replace(/\s+/g, ' ').trim();
-                    if (tsum) thoughtAdd('i-brain', 'Model reasoning (summary)', true, tsum);
+                    const tsum = gparts.filter(p => p.thought).map(p => p.text || '').join('').replace(/\*\*/g, '').trim();
+                    if (tsum && lt) lt.done(tsum);
+                    else if (tsum) thoughtAdd('i-brain', 'Model reasoning (summary)', true, tsum);
+                    else if (tc) thoughtAdd('i-brain', 'This reply came with no thoughts', false, 'Gemini did not send a reasoning summary this time, so there is nothing real to show');
                     if (!out) {
                         const why = (data.promptFeedback && data.promptFeedback.blockReason) || (cand && cand.finishReason);
                         throw new Error(why ? `No response (${why})` : 'Empty response');
@@ -2427,9 +2428,11 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                             messages: [{ role: 'system', content: sys }].concat(msgs.map(m => ({ role: m.role, content: window.HorizonAttach ? HorizonAttach.openaiContent(m, canSeeImages('groq', model)) : m.text })))
                         };
                         if (cap) body.max_tokens = cap;
-                        if (oss) { body.reasoning_effort = state.thinkOn ? 'high' : 'low'; body.include_reasoning = false; }
+                        let lt = null;
+                        if (oss) { body.reasoning_effort = state.thinkOn ? 'high' : 'low'; body.include_reasoning = true; body.stream = true; lt = thoughtLive('i-brain', 'Model thinking, live'); }
                         const res = await timed(aiFetch('https://api.groq.com/openai/v1/chat/completions', {
                             method: 'POST',
+                            hzStream: oss ? { kind: 'oai', onThought: t => { if (lt) lt.add(t); } } : undefined,
                             headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
                             body: JSON.stringify(body)
                         }), (docMode || (oss && state.thinkOn)) ? 240000 : 90000);
@@ -2438,6 +2441,8 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                             noteUsage(data.usage && data.usage.prompt_tokens, data.usage && data.usage.completion_tokens);
                             noteCut(data.choices && data.choices[0] && data.choices[0].finish_reason);
                             const out = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content || '').trim();
+                            const rsn = String(data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.reasoning || '').trim();
+                            if (lt) { if (rsn) lt.done(rsn); else thoughtAdd('i-brain', 'This reply came with no thoughts', false, 'The model did not send its reasoning this time'); }
                             if (!out) throw new Error('Empty response');
                             return out;
                         }
@@ -4017,10 +4022,34 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             if (thought.steps.length > THOUGHT_MAX) thought.steps.splice(1, 1);
             paintThought();
         }
+        // V1.70.0: one step that grows while a model is really thinking (text arrives from the provider's stream).
+        function thoughtLive(ic, title) {
+            const T = thought;
+            if (!T) return { add() {}, done() {} };
+            let st = null, buf = '', raf = 0;
+            const paint = () => { raf = 0; if (st) { st.d = buf.length > 6000 ? '\u2026' + buf.slice(-6000) : buf; if (thought === T) paintThought(); } };
+            const make = () => { st = { i: ic, t: title, r: 1, pw: 1, live: 1, at: Date.now() - T.t0 }; T.steps.push(st); if (T.steps.length > THOUGHT_MAX) T.steps.splice(1, 1); };
+            return {
+                add(txt) { txt = String(txt || '').replace(/\*\*/g, ''); if (!txt) return; if (!st) make(); buf += txt; if (!raf) raf = requestAnimationFrame(paint); },
+                done(full) {
+                    if (raf) { cancelAnimationFrame(raf); raf = 0; }
+                    const f = full == null ? buf : String(full).replace(/\*\*/g, '').trim();
+                    if (!st) { if (!f) return; make(); }
+                    buf = f; st.d = buf.length > 6000 ? '\u2026' + buf.slice(-6000) : buf;
+                    st.t = title.replace(/,? live$/, ''); delete st.live;
+                    if (thought === T) paintThought();
+                }
+            };
+        }
+        // V1.72.0: the thinking timeline. One glowing segment per real step; the newest one pulses while the AI works.
+        function thoughtBar(steps, live) {
+            const max = 14, shown = steps.slice(-max);
+            return shown.map((x, k) => `<i class="${x.r ? 'r' : 'p'}${x.x ? ' x' : ''}${live && k === shown.length - 1 ? ' now' : ''}"></i>`).join('');
+        }
         function thoughtRows(steps, live) {
             return steps.map((s, k) => {
                 const act = live && k === steps.length - 1;
-                return `<div class="th-step${s.r ? ' real' : ''}${s.x ? ' bad' : ''}${act ? ' act' : ''}"><span class="th-dot"><svg class="ic" aria-hidden="true"><use href="#${esc(s.i)}"/></svg></span><div class="th-body"><b>${esc(s.t)}</b><em>+${(s.at / 1000).toFixed(1)}s</em>${s.d ? `<small>${esc(s.d)}</small>` : ''}${s.l && s.l.length ? `<div class="th-links">${linkRows(s.l, 'th-link')}</div>` : ''}</div></div>`;
+                return `<div class="th-step${s.r ? ' real' : ''}${s.x ? ' bad' : ''}${act ? ' act' : ''}"><span class="th-dot"><svg class="ic" aria-hidden="true"><use href="#${esc(s.i)}"/></svg></span><div class="th-body"><b>${esc(s.t)}</b><em>+${(s.at / 1000).toFixed(1)}s</em>${s.d ? `<small${s.pw ? ` class="th-pw${s.live && live ? ' live' : ''}"` : ''}>${esc(s.d)}</small>` : ''}${s.l && s.l.length ? `<div class="th-links">${linkRows(s.l, 'th-link')}</div>` : ''}</div></div>`;
             }).join('');
         }
         function paintThought() {
@@ -4028,11 +4057,15 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             if (!thought || !b || !thought.steps.length) return;
             const s = thought.steps[thought.steps.length - 1];
             const row = b.querySelector('.th-now');
-            row.innerHTML = `<svg class="ic" aria-hidden="true"><use href="#${esc(s.i)}"/></svg><span id="loadingLabel">${esc(s.t)}</span><small class="th-sec" id="thSec">${Math.round((Date.now() - thought.t0) / 1000)}s</small>`;
+            let bar = b.querySelector('.th-bar');
+            if (!bar) { bar = document.createElement('div'); bar.className = 'th-bar'; bar.setAttribute('aria-hidden', 'true'); row.insertAdjacentElement('afterend', bar); }
+            bar.innerHTML = thoughtBar(thought.steps, true);
+            row.innerHTML = `<svg class="ic" aria-hidden="true"><use href="#${esc(s.i)}"/></svg><span id="loadingLabel">${esc(s.live && s.d ? 'Thinking: ' + s.d.replace(/\s+/g, ' ').slice(-70) : s.t)}</span><small class="th-sec" id="thSec">${Math.round((Date.now() - thought.t0) / 1000)}s</small>`;
             if (thought.open) {
                 const log = b.querySelector('.th-log');
                 const stick = log.scrollTop + log.clientHeight >= log.scrollHeight - 24;
                 log.innerHTML = thoughtRows(thought.steps, true);
+                log.querySelectorAll('.th-pw.live').forEach(e => { e.scrollTop = e.scrollHeight; });
                 if (stick) log.scrollTop = log.scrollHeight;
             }
             scrollBottom();
@@ -4044,7 +4077,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             const total = steps.length ? steps[steps.length - 1].at : 0;
             const d = document.createElement('div');
             d.className = 'th-chip';
-            d.innerHTML = `<button type="button" class="th-toggle" aria-expanded="${open ? 'true' : 'false'}"><svg class="ic" aria-hidden="true"><use href="#i-spark"/></svg><span>Thought process · ${steps.length} step${steps.length === 1 ? '' : 's'}${total ? ' · ' + secsTxt(total) : ''}</span><svg class="ic th-chev" aria-hidden="true"><use href="#i-chev-d"/></svg></button><div class="th-log"${open ? '' : ' hidden'}>${thoughtRows(steps, false)}</div>`;
+            d.innerHTML = `<button type="button" class="th-toggle" aria-expanded="${open ? 'true' : 'false'}"><svg class="ic" aria-hidden="true"><use href="#i-spark"/></svg><span>Thought process · ${steps.length} step${steps.length === 1 ? '' : 's'}${total ? ' · ' + secsTxt(total) : ''}</span><svg class="ic th-chev" aria-hidden="true"><use href="#i-chev-d"/></svg></button><div class="th-bar done" aria-hidden="true">${thoughtBar(steps, false)}</div><div class="th-log"${open ? '' : ' hidden'}>${thoughtRows(steps, false)}</div>`;
             const btn = d.querySelector('.th-toggle'), log = d.querySelector('.th-log');
             btn.addEventListener('click', () => { const o = log.hidden; log.hidden = !o; btn.setAttribute('aria-expanded', String(o)); });
             return d;
@@ -6502,7 +6535,100 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         }
 
         // V1.13.0: native foreground AI jobs and reply notification deep links.
+        // V1.70.0: streaming transport. Gemini and Groq reasoning is shown live; the replies are put back together into the
+        // same JSON the non-streaming calls return, so the rest of the app does not change.
+        const streamFeeds = new Map();
+        window.addEventListener('horizon-ai-chunk', e => { const d = e.detail || {}; const f = streamFeeds.get(d.id); if (f) (d.d || []).forEach(f); });
+        function sseLive(kind, j, sp) {
+            if (kind === 'gemini') {
+                const parts = j && j.candidates && j.candidates[0] && j.candidates[0].content && j.candidates[0].content.parts || [];
+                parts.forEach(p => { if (p.thought && p.text && sp.onThought) sp.onThought(p.text); });
+            } else {
+                const dl = j && j.choices && j.choices[0] && j.choices[0].delta || {};
+                const r = dl.reasoning || dl.reasoning_content;
+                if (r && sp.onThought) sp.onThought(r);
+            }
+        }
+        function sseJoin(kind, payloads) {
+            let err = null;
+            if (kind === 'gemini') {
+                const parts = []; let finish = '', usage = null, fb = null;
+                payloads.forEach(pl => {
+                    let j; try { j = JSON.parse(pl); } catch (e) { return; }
+                    if (j.error) { err = j.error.message || JSON.stringify(j.error); return; }
+                    if (j.promptFeedback && !fb) fb = j.promptFeedback;
+                    if (j.usageMetadata) usage = j.usageMetadata;
+                    const c = j.candidates && j.candidates[0]; if (!c) return;
+                    if (c.finishReason) finish = c.finishReason;
+                    ((c.content && c.content.parts) || []).forEach(pt => {
+                        const last = parts[parts.length - 1];
+                        if (typeof pt.text === 'string' && last && typeof last.text === 'string' && !!last.thought === !!pt.thought) last.text += pt.text;
+                        else parts.push(Object.assign({}, pt));
+                    });
+                });
+                if (err && !parts.length) return { err };
+                return { obj: { candidates: [{ content: { role: 'model', parts }, finishReason: finish || undefined }], usageMetadata: usage || {}, promptFeedback: fb || undefined } };
+            }
+            let content = '', reasoning = '', finish = '', usage = null; const tcs = [];
+            payloads.forEach(pl => {
+                let j; try { j = JSON.parse(pl); } catch (e) { return; }
+                if (j.error) { err = j.error.message || JSON.stringify(j.error); return; }
+                usage = (j.x_groq && j.x_groq.usage) || j.usage || usage;
+                const ch = j.choices && j.choices[0]; if (!ch) return;
+                if (ch.finish_reason) finish = ch.finish_reason;
+                const d = ch.delta || {};
+                if (d.content) content += d.content;
+                const r = d.reasoning || d.reasoning_content; if (r) reasoning += r;
+                (d.tool_calls || []).forEach(t => {
+                    const k = t.index || 0; const cur = tcs[k] || (tcs[k] = { id: '', type: 'function', function: { name: '', arguments: '' } });
+                    if (t.id) cur.id = t.id;
+                    if (t.function) { if (t.function.name) cur.function.name += t.function.name; if (t.function.arguments) cur.function.arguments += t.function.arguments; }
+                });
+            });
+            if (err && !content && !tcs.length) return { err };
+            const message = { role: 'assistant', content, reasoning };
+            if (tcs.length) message.tool_calls = tcs.filter(Boolean);
+            return { obj: { choices: [{ message, finish_reason: finish || 'stop' }], usage: usage || {} } };
+        }
+        async function aiStream(url, options, sp) {
+            const jsonResp = (body, status) => new Response(body, { status, headers: { 'Content-Type': 'application/json' } });
+            const feed = pl => { let j; try { j = JSON.parse(pl); } catch (e) { return; } try { sseLive(sp.kind, j, sp); } catch (e) { /* display only */ } };
+            const headers = Object.assign({}, options.headers || {}, { Accept: 'text/event-stream' });
+            let status = 200, errBody = ''; let payloads = [];
+            const native = NATIVE && lsGet(LS.bg) !== '0' ? plug('HorizonAI') : null;
+            if (native) {
+                const id = 's' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+                streamFeeds.set(id, feed);
+                try {
+                    const r = await native.request({ url, method: options.method || 'POST', headers, body: options.body || '', chatId: liveCtx.chatId || state.currentId || '',
+                        notifyOnResponse: !docMode && lsGet(LS.notifOn) !== '0', stream: true, streamId: id });
+                    status = r.status;
+                    if (status >= 200 && status < 300) payloads = String(r.body || '').split('\n').filter(Boolean); else errBody = r.body;
+                } finally { streamFeeds.delete(id); }
+            } else {
+                const res = await fetch(url, { method: options.method || 'POST', headers, body: options.body });
+                status = res.status;
+                if (!res.ok) errBody = await res.text();
+                else if (res.body && res.body.getReader) {
+                    const rd = res.body.getReader(), dec = new TextDecoder(); let carry = '';
+                    const line = l => { if (l.startsWith('data:')) { const pl = l.slice(5).trim(); if (pl && pl !== '[DONE]') { payloads.push(pl); feed(pl); } } };
+                    for (;;) {
+                        const { done, value } = await rd.read();
+                        if (done) break;
+                        carry += dec.decode(value, { stream: true });
+                        const ls = carry.split('\n'); carry = ls.pop();
+                        ls.forEach(l => line(l.replace(/\r$/, '')));
+                    }
+                    if (carry) line(carry);
+                } else { (await res.text()).split('\n').forEach(l => { if (l.startsWith('data:')) { const pl = l.slice(5).trim(); if (pl && pl !== '[DONE]') payloads.push(pl); } }); }
+            }
+            if (status < 200 || status >= 300) return jsonResp(errBody, status);
+            const out = sseJoin(sp.kind, payloads);
+            if (out.err) return jsonResp(JSON.stringify({ error: { message: out.err } }), 502);
+            return jsonResp(JSON.stringify(out.obj), 200);
+        }
         async function aiFetch(url, options) {
+            if (options && options.hzStream) return aiStream(url, options, options.hzStream);
             if (!NATIVE || lsGet(LS.bg) === '0') return fetch(url, options);
             const native = plug('HorizonAI');
             if (!native) throw new Error('Native AI bridge is missing. Rebuild the Android app.');
@@ -6530,6 +6656,39 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         window.addEventListener('horizon-inline-reply', e => handleInlineReply(e.detail));
         window.addEventListener('horizon-tts-stop', () => ttsStop());
         setTimeout(() => { if (NATIVE) drainInlineReplies(); }, 2000);   // NATIVE is declared further down, so check it later
+        // V1.71.0: MORNING BRIEF. After Stop on a wake alarm that has it on, Horizon reads today's calendar (and the weather),
+        // then asks the active AI for one line of news and reads that too.
+        let briefBusy = false;
+        const waitMs = ms => new Promise(r => setTimeout(r, ms));
+        async function runBrief() {
+            if (briefBusy) return;
+            briefBusy = true;
+            try {
+                const T = window.HorizonTTS, dash = window.HorizonDash;
+                const part1 = dash && dash.briefText ? dash.briefText() : 'Good morning, Fezzy.';
+                if (T && T.speak) { try { await T.speak('brief', part1); } catch (e) { /* voice problem: the chat still shows the news line */ } }
+                for (let i = 0; i < 240 && state.busy; i++) await waitMs(500);
+                if (state.busy) return;
+                const ch0 = currentChat();
+                const who = ch0 && ch0.group && PROVIDERS[state.active] ? '@' + PROVIDERS[state.active].name.toLowerCase() + ' ' : '';
+                await sendMessage({ text: who + 'Morning brief: give me ONE line about the most important news today, under 30 words, plain spoken style, no markdown, no lists. Search the web for it if you can.' });
+                const autoOn = (() => { try { return localStorage.getItem('horizon_autoread') === '1'; } catch (e) { return false; } })();
+                if (!autoOn && T && T.speak) {
+                    const ch = currentChat();
+                    const last = ch && ch.messages ? ch.messages.slice().reverse().find(m => m.role !== 'user' && m.text) : null;
+                    if (last) { try { await T.speak('brief-news', last.text); } catch (e) { /* ignore */ } }
+                }
+            } finally { briefBusy = false; }
+        }
+        async function drainBrief() {
+            if (!NATIVE) return;
+            const r = await callNative('HorizonAlarm', 'consumeBrief');
+            if (r && r.pending) runBrief();
+        }
+        window.addEventListener('horizon-brief', () => drainBrief());
+        window.addEventListener('horizon-brief-now', () => runBrief());
+        document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') drainBrief(); });
+        setTimeout(() => drainBrief(), 3000);
         async function replyIntent() {
             if (!NATIVE) return;
             drainInlineReplies();
@@ -6689,7 +6848,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             const out = document.getElementById('nativeCheckOut');
             if (!btn || !out) return;
             const WEB_VERSION = '1.14.1';
-            const NAMES = ['HorizonPerms', 'HorizonAI', 'HorizonMedia', 'HorizonSpeech', 'HorizonLens', 'HorizonStats'];
+            const NAMES = ['HorizonPerms', 'HorizonAI', 'HorizonMedia', 'HorizonSpeech', 'HorizonVoice', 'HorizonLens', 'HorizonStats'];
             let running = false;
             async function probe(name) {
                 const cap = window.Capacitor;
@@ -7902,6 +8061,13 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
 
 
         // --- V1.60.0: group chat (header tile + @mentions) ---
+        // V1.72.0: quick reply chips above the message box
+        setTimeout(() => { if (window.HorizonChips) HorizonChips.init({
+            anchor: toolMenu,
+            busy: () => !!state.busy,
+            send: text => sendMessage({ text }),
+            last: () => { const c = currentChat(); const m = c && c.messages ? c.messages.slice().reverse().find(x => x.role !== 'user' && x.text) : null; return m ? { prov: m.prov || '', name: m.prov && PROVIDERS[m.prov] ? PROVIDERS[m.prov].name : '', group: !!(c && c.group), img: !!m.img } : null; }
+        }); }, 0);
         if (window.HorizonGroup) HorizonGroup.init({
             input: chatInput,
             anchor: toolMenu,
@@ -7942,6 +8108,8 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             },
             ungroup: chat => { delete chat.group; delete chat.multi; chat.updated = Date.now(); saveChats(); updateComposer(); },
             debate: () => debateRound(),
+            send: text => sendMessage({ text }),   // V1.72.0: Judge and the quick reply chips send through the normal path
+            busy: () => !!state.busy,
             // V1.69.0: group rules (Options > Preferences). Saved on the group; every AI in it gets them as hard guard rails.
             rules: (chat, text) => { if (!chat || !chat.group) return; chat.group.rules = String(text || '').slice(0, 1500); chat.updated = Date.now(); saveChats(); },
             openKeys: id => hzOpenKeys(id)
@@ -8049,7 +8217,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             permIntro: 'What Horizon is allowed to do on this phone.',
             ytCard: 'The servers Horizon uses to find and fetch music.',
             themeCard: 'Dark cyan or Light grey.',
-            ttsCard: 'Hear Horizon\'s replies read aloud. Kokoro voices that run on the phone (no key, no limit), OpenAI, Gemini or Pollinations voices, or the free Android voice.',
+            ttsCard: 'Hear Horizon\'s replies read aloud. Kokoro voices built into the app (no key, no limit, offline), Gemini voices, or the free Android voice.',
             'card-gemini': 'Google Gemini. Add a key, pick a model and switch it on.',
             'card-groq': 'Groq. Fast Llama and GPT-OSS models. Add a key and pick a model.',
             'card-cohere': 'Cohere Command models. Add a key (a free trial key works) and pick a model.',
@@ -8253,8 +8421,6 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             rate: $('#ttsRate'), rateVal: $('#ttsRateVal'), pitch: $('#ttsPitch'), pitchVal: $('#ttsPitchVal'), pitchWrap: $('#ttsPitchWrap'),
             android: $('#ttsAndroid'), nat: $('#ttsNat'), nVoice: $('#ttsNVoice'), nHint: $('#ttsNatHint'),
             nLbl: $('#ttsNVoiceLbl'),
-            oaiRow: $('#ttsOaiRow'), oaiKey: $('#ttsOaiKey'), oaiSave: $('#ttsOaiSave'), oaiClear: $('#ttsOaiClear'),
-            pollRow: $('#ttsPollRow'), pollKey: $('#ttsPollKey'), pollSave: $('#ttsPollSave'), pollClear: $('#ttsPollClear'),
             nEngine: $('#ttsNEngine'), nEngineHint: $('#ttsNEngineHint')
         };
         const fmtX = v => (+v).toFixed(2).replace(/\.?0+$/, '') + '\u00d7';
@@ -8268,8 +8434,6 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             vEl.android.hidden = s.engine !== 'standard';
             vEl.pitchWrap.hidden = false;
             vEl.nat.hidden = !cloud;
-            vEl.pollRow.hidden = s.engine !== 'pollinations';
-            vEl.oaiRow.hidden = s.engine !== 'openai';
             if (!cloud) return;
             const eng = TTS.cloud[s.engine];
             vEl.nVoice.hidden = false; vEl.nLbl.hidden = false;
@@ -8279,31 +8443,23 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 o.value = v.id; o.textContent = v.name;
                 vEl.nVoice.appendChild(o);
             });
-            vEl.nVoice.value = s.engine === 'gemini' ? s.gvoice : s.engine === 'kokoro' ? s.kvoice : s.engine === 'openai' ? s.ovoice : s.pvoice;
+            vEl.nVoice.value = s.engine === 'gemini' ? s.gvoice : s.kvoice;
             if (s.engine === 'kokoro') {
-                vEl.nHint.textContent = 'No key, no account, no limit. 28 voices that run on your phone, so nothing you read aloud leaves it. The first time, the voice model (about 90 MB) downloads once, then it works offline. On a slow phone the first sentence takes a few seconds. Speed and pitch both work.';
-            } else if (s.engine === 'openai') {
-                vEl.nHint.textContent = eng.hasKey()
-                    ? 'Key saved. OpenAI voices are paid by use, about 1 US cent for a few thousand characters, with no daily cap. If the credit runs out, Horizon switches to the Android voice.'
-                    : 'Paste an OpenAI API key (platform.openai.com/api-keys). Your account needs a few dollars of credit under Billing, or voices will be refused.';
-                vEl.oaiKey.placeholder = eng.hasKey() ? 'Key saved. Paste a new one to replace it' : 'sk-...';
-            } else if (s.engine === 'gemini') {
+                vEl.nHint.textContent = eng.usable()
+                    ? 'No key, no account, no download, no limit. 28 English voices (US and UK, female and male) are built into Horizon and run on your phone, so nothing you read aloud leaves it. The first time you use it, Horizon unpacks the voice (a few seconds), then it starts fast every time. Speed and pitch both work.'
+                    : 'The built-in voice is not part of this build. Install the latest Horizon APK from the build page.';
+            } else {
                 const n = eng.keyCount();
                 vEl.nHint.textContent = n
                     ? `Uses your Gemini key${n === 1 ? '' : 's'} from API PROVIDERS PLUS KEYS (${n} found). Google's free tier has limits. When it runs out, Horizon switches to the Android voice. Speed and pitch both work (pitch also shifts speed a little on natural voices).`
                     : 'No Gemini key found. Add one under API PROVIDERS PLUS KEYS, or pick another voice.';
-            } else {
-                vEl.nHint.textContent = eng.hasKey()
-                    ? 'Key saved. Pollinations free credit is limited. When it runs out, Horizon switches to the Android voice. Speed and pitch both work (pitch also shifts speed a little on natural voices).'
-                    : 'Pollinations voices need a key now (their docs say audio is not keyless). Create a free one at enter.pollinations.ai, paste it above, or use the Android voice, which is instant and free.';
-                vEl.pollKey.placeholder = eng.hasKey() ? 'Key saved. Paste a new one to replace it' : 'sk_... or pk_...';
             }
         }
 
         async function paintVoice() {
             if (!TTS) {
                 vEl.status.textContent = 'The voice engine did not load. Install the latest build.';
-                [vEl.test, vEl.engine, vEl.voice, vEl.lang, vEl.more, vEl.rate, vEl.pitch, vEl.nVoice, vEl.oaiSave, vEl.oaiClear, vEl.pollSave, vEl.pollClear, vEl.nEngine].forEach(x => { x.disabled = true; });
+                [vEl.test, vEl.engine, vEl.voice, vEl.lang, vEl.more, vEl.rate, vEl.pitch, vEl.nVoice, vEl.nEngine].forEach(x => { x.disabled = true; });
                 return;
             }
             const s = TTS.settings();
@@ -8417,40 +8573,8 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 ttsToast('Engine changed. Tap Test to hear it.');
             });
             vEl.nVoice.addEventListener('change', () => {
-                TTS.set(TTS.settings().engine === 'gemini' ? 'gvoice' : TTS.settings().engine === 'kokoro' ? 'kvoice' : TTS.settings().engine === 'openai' ? 'ovoice' : 'pvoice', vEl.nVoice.value);
+                TTS.set(TTS.settings().engine === 'gemini' ? 'gvoice' : 'kvoice', vEl.nVoice.value);
                 vEl.status.textContent = TTS.describe();
-            });
-            vEl.pollSave.addEventListener('click', () => {
-                const v = vEl.pollKey.value.trim();
-                if (!v) { ttsToast('Paste your Pollinations key first.', true); return; }
-                TTS.set('pkey', v);
-                vEl.pollKey.value = '';
-                paintEngine();
-                vEl.status.textContent = TTS.describe();
-                ttsToast('Pollinations key saved. Tap Test to hear it.');
-            });
-            vEl.oaiSave.addEventListener('click', () => {
-                const v = vEl.oaiKey.value.trim();
-                if (!v) { ttsToast('Paste your OpenAI key first.', true); return; }
-                TTS.set('okey', v);
-                vEl.oaiKey.value = '';
-                paintEngine();
-                vEl.status.textContent = TTS.describe();
-                ttsToast('OpenAI key saved. Tap Test to hear it.');
-            });
-            vEl.oaiClear.addEventListener('click', () => {
-                TTS.set('okey', '');
-                vEl.oaiKey.value = '';
-                paintEngine();
-                vEl.status.textContent = TTS.describe();
-                ttsToast('OpenAI key removed.');
-            });
-            vEl.pollClear.addEventListener('click', () => {
-                TTS.set('pkey', '');
-                vEl.pollKey.value = '';
-                paintEngine();
-                vEl.status.textContent = TTS.describe();
-                ttsToast('Pollinations key removed.');
             });
             vEl.voice.addEventListener('change', () => TTS.set('voice', vEl.voice.value));
             vEl.lang.addEventListener('change', () => { TTS.set('lang', vEl.lang.value); fillVoices(); });
@@ -8477,7 +8601,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                     vEl.status.textContent = TTS.describe();
                 } else if (st.state === 'playing') {
                     vEl.status.classList.remove('error');
-                    vEl.status.textContent = 'Playing: ' + (st.engine === 'gemini' ? 'Gemini voice' : st.engine === 'pollinations' ? 'Pollinations voice' : st.engine === 'openai' ? 'OpenAI voice' : st.engine === 'kokoro' ? 'Kokoro voice' : st.engine === 'native' ? 'Android voice' : 'Browser voice');
+                    vEl.status.textContent = 'Playing: ' + (st.engine === 'gemini' ? 'Gemini voice' : st.engine === 'kokoro' ? 'Kokoro voice' : st.engine === 'native' ? 'Android voice' : 'Browser voice');
                 } else if (st.state === 'idle' && !vEl.status.classList.contains('error')) {
                     vEl.status.textContent = TTS.describe();
                 }

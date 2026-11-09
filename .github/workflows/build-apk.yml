@@ -71,6 +71,12 @@ jobs:
       - name: Apply icons and splash
         run: bash scripts/apply-android.sh
 
+      - name: Bundle the built-in voice (sherpa-onnx + Kokoro)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SHERPA_VERSION: ${{ vars.SHERPA_VERSION }}
+        run: bash scripts/bundle-voice.sh
+
       - name: Set version
         run: bash scripts/set-version.sh "${{ github.run_number }}"
 
@@ -92,7 +98,7 @@ jobs:
           unzip -q -o "$UNSIGNED" 'classes*.dex' -d "$RUNNER_TEMP/dexcheck"
           echo "dex files:"; ls -l "$RUNNER_TEMP"/dexcheck/
           MISSING=""
-          for cls in HorizonAIPlugin HorizonAIService HorizonMediaPlugin HorizonSpeechPlugin HorizonPermsPlugin HorizonNotify HorizonScopes HorizonCanary HorizonLockPlugin HorizonShellPlugin HorizonBrowserPlugin; do
+          for cls in HorizonAIPlugin HorizonAIService HorizonMediaPlugin HorizonSpeechPlugin HorizonVoicePlugin OfflineTtsKokoroModelConfig HorizonPermsPlugin HorizonNotify HorizonScopes HorizonCanary HorizonLockPlugin HorizonShellPlugin HorizonBrowserPlugin; do
             if grep -aq "$cls" "$RUNNER_TEMP"/dexcheck/classes*.dex; then
               echo "  ok       $cls"
             else
@@ -105,6 +111,13 @@ jobs:
             exit 1
           fi
           echo "All native plugins present in the APK."
+          echo "Built-in voice payload:"
+          LIST="$(unzip -l "$UNSIGNED")"
+          for f in lib/arm64-v8a/libsherpa-onnx-jni.so lib/arm64-v8a/libonnxruntime.so assets/horizon_voice/tokens.txt assets/horizon_voice/voices.bin assets/horizon_voice/VERSION; do
+            if grep -qF "$f" <<<"$LIST"; then echo "  ok       $f"; else echo "::error::Missing from the APK: $f"; exit 1; fi
+          done
+          grep -qE 'assets/horizon_voice/model(\.int8)?\.onnx' <<<"$LIST" || { echo "::error::Kokoro model is not in the APK"; exit 1; }
+          echo "  ok       Kokoro model"
 
       - name: Sign APK with release keystore
         env:

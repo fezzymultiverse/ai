@@ -43,7 +43,7 @@ class HorizonAlarmReceiver : BroadcastReceiver() {
     private fun pre(c: Context, id: Int) {
         val o = HorizonAlarms.find(c, id) ?: return
         // Re-arm the real alarm in case the system dropped it, and make sure the song can still be opened.
-        HorizonAlarms.arm(c, id, o.optLong("at"), o.optString("title"), o.optString("body"), o.optString("mode"), o.optString("song", ""))
+        HorizonAlarms.arm(c, id, o.optLong("at"), o.optString("title"), o.optString("body"), o.optString("mode"), o.optString("song", ""), o.optString("repeat"), o.optBoolean("brief", false))
         val song = o.optString("song", HorizonAlarms.song(c) ?: "")
         if (song.isNotEmpty()) {
             val ok = try { c.contentResolver.openInputStream(android.net.Uri.parse(song))?.use { true } ?: false } catch (e: Exception) { false }
@@ -54,10 +54,15 @@ class HorizonAlarmReceiver : BroadcastReceiver() {
     private fun fire(c: Context, id: Int) {
         val o = HorizonAlarms.find(c, id) ?: return
         HorizonAlarms.forget(c, id)
+        val rep = o.optString("repeat")
+        if (rep.isNotEmpty()) {   // V1.71.0: a repeating alarm sets up its next ring before it rings
+            HorizonAlarms.arm(c, id, HorizonAlarms.nextAfter(o.optLong("at"), rep, System.currentTimeMillis() + 60_000L), o.optString("title"), o.optString("body"),
+                o.optString("mode"), o.optString("song", ""), rep, o.optBoolean("brief", false))
+        }
         if (o.optString("mode") == "alarm") {
             val i = Intent(c, HorizonAlarmService::class.java)
                 .putExtra("id", id).putExtra("title", o.optString("title")).putExtra("body", o.optString("body"))
-                .putExtra("song", o.optString("song", ""))
+                .putExtra("song", o.optString("song", "")).putExtra("brief", o.optBoolean("brief", false))
             try {
                 if (Build.VERSION.SDK_INT >= 26) c.startForegroundService(i) else c.startService(i)
             } catch (e: Exception) {

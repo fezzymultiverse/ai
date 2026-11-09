@@ -12,6 +12,14 @@
   <img alt="Capacitor 6" src="https://img.shields.io/badge/Capacitor-6-00e5ff">
 </p>
 
+## What's new in V1.73.0
+
+- **Voice: Kokoro is now built into the app.** The 28 English Kokoro voices (US and UK, female and male) run natively through sherpa-onnx. The runtime, its Kotlin API and the Kokoro multi-lang v1.0 int8 model are packed into the APK by `scripts/bundle-voice.sh` during the build, so there is nothing to install and nothing to download on the phone. The first use unpacks the model once (a few seconds), then it starts fast and works offline. Replaces the WebView Kokoro (kokoro-js), which had to pull its model through the app's network layer and would not play. New file: `HorizonVoicePlugin.kt`. The plugin returns a WAV per sentence, so speed, pitch, pause and stop work like the other voices.
+- **Pollinations and OpenAI voices removed** (they needed keys). Their key boxes are gone. An old Pollinations or OpenAI voice pick becomes Kokoro. Pollinations as a chat and image provider is untouched. Voices now: Gemini (your keys), Kokoro (built in), Android voice.
+- **First run default is Kokoro** in the app (no key needed).
+- **Build:** new workflow step "Bundle the built-in voice" and an APK check that fails the build if the voice libraries or model are missing. APK is arm64-v8a only and several tens of MB bigger. Optional repo variable `SHERPA_VERSION` pins the sherpa-onnx release (default: newest).
+- *Tested:* JS syntax, the TTS engine against a stubbed plugin (engine migration, speak path, missing-plugin error), the bundle script against mocked `gh` and `curl`, the workflow YAML. *Not tested:* the Kotlin was not compiled here and nothing ran on a phone, so the CI build is the first compile. Not checked against the live release: the sherpa-onnx asset names and the speaker order of the Kokoro voices (ids follow kokoro-multi-lang-v1_0: af 0-10, am 11-19, bf 20-23, bm 24-27). If a voice has the wrong gender, tell me which one.
+
 ## What's new in V1.67.11
 
 - **Group reply.** Every AI message in a group has a Reply button. It fills the box with @that AI so only that one answers.
