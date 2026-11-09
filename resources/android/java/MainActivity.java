@@ -29,6 +29,7 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(HorizonStatsPlugin.class);
         registerPlugin(HorizonBrowserPlugin.class);
         registerPlugin(HorizonWhatsAppPlugin.class);
+        registerPlugin(HorizonTermuxPlugin.class);
         registerPlugin(HorizonExtractorPlugin.class);
         registerPlugin(HorizonLockPlugin.class);
         registerPlugin(HorizonAlarmPlugin.class);   // V1.68.0: calendar wake-up alarms
