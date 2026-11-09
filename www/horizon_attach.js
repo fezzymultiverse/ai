@@ -65,22 +65,27 @@
     const lib = await pdfjs();
     const doc = await lib.getDocument({ data: new Uint8Array(await f.arrayBuffer()) }).promise;
     let text = '';
+    try {
     const pages = doc.numPages;
     for (let p = 1; p <= Math.min(pages, 80) && text.length < MAX_CHARS + 2000; p++) {
-      const tc = await (await doc.getPage(p)).getTextContent();
-      text += tc.items.map(i => i.str + (i.hasEOL ? '\n' : '')).join(' ').replace(/[ \t]+\n/g, '\n') + '\n\n';
+      const pg = await doc.getPage(p), tc = await pg.getTextContent();
+      text += '\n--- Page ' + p + ' ---\n' + tc.items.map(i => i.str + (i.hasEOL ? '\n' : '')).join(' ').replace(/[ \t]+\n/g, '\n') + '\n\n';
+      pg.cleanup();
     }
     const out = { text: text.trim(), pages };
-    if (out.text.length < 40) {   // scanned: hand the first pages to a vision model as pictures
+    if (out.text.replace(/--- Page \d+ ---/g, '').trim().length < 40) {   // scanned: hand the first pages to a vision model as pictures
       out.imgs = [];
-      for (let p = 1; p <= Math.min(pages, 3); p++) {
+      for (let p = 1; p <= Math.min(pages, 10); p++) {
         const pg = await doc.getPage(p), vp = pg.getViewport({ scale: 1.3 });
         const c = document.createElement('canvas'); c.width = vp.width; c.height = vp.height;
         await pg.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise;
         out.imgs.push({ mime: 'image/jpeg', b64: c.toDataURL('image/jpeg', 0.8).split(',')[1] });
+        pg.cleanup(); c.width = c.height = 0;
       }
     }
+    if (out.imgs) out.text += '\n[Scanned PDF: ' + out.imgs.length + ' of ' + pages + ' pages attached as pictures. Use a vision model; do not claim to read unsent pages.]';
     return out;
+    } finally { await doc.destroy(); }
   }
   async function zipEntry(buf, want) {
     const dv = new DataView(buf), u8 = new Uint8Array(buf);

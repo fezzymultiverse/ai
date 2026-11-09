@@ -1,10 +1,11 @@
 /* Horizon V1.26.0: ABOUT & UPDATES page: version, release check, backup export/import, changelog, privacy awareness + reminder switch. */
 (function () {
     'use strict';
-    var VERSION = 'V1.86.0';
+    var VERSION = 'V1.87.0';
     var LSK = 'horizon_privacy_notice';
     var REPO_API = 'https://api.github.com/repos/fezzymultiverse/ai';
     var LOG = [
+        ['V1.87.0', ['TTS: native WAV playback bypasses WebView audio locks, safe Android default, missing voice-pack preflight, pause/resume and startup watchdog fixes. Needs APK rebuild; device playback still needs testing.', 'KEYS: local note importer at the bottom of API Providers; Gemini AIza and AQ keys; standalone and backup keys are verified before saving. Public model lists no longer validate gateway keys.', 'GREY THEME: readable, muted green quick replies and subdued starter cards. Three decorative details stay inside the existing layout.', 'PDF: smaller section builds, ten-page wording support, real page-count checks, empty-section protection, cancellation, and up to ten scanned pages for vision models.'] ],
         ['V1.86.0', ['VOICE LIBRARY: Settings, Voice, On-phone voices now has a Voice library. Download a more human voice once (Kokoro with 28 English voices, or Piper voices: Lessac, Ryan, Amy, Joe, Alan), then it runs on your phone with no internet, no key and no limit. Delete a pack any time to free the space. The 8 small built-in voices stay as the default. Group chats keep each round inside one pack so a big model is not swapped every turn.']],
         ['V1.85.0', ['TYPING INDICATOR STYLES (V14): Settings has a new Typing indicator card. Pick how the waiting animation looks: Dots (default), Laser, Orbiting diamond or Terminal cursor. Stored on this phone only. LIVE STEP TEXT (P1): while Horizon works, the header pill now shows what it is doing right now (Searching, Reading, Writing section 2/5) next to the name, and clears when the reply is done.']],
         ['V1.84.0', ['SPEED PACK: replies type out with one text change per step instead of rewriting the whole reply, so the page does far less work while an answer appears (about 14 times fewer DOM change events). The fold arrows measure all replies in one pass. Old replies far above the screen are skipped until you scroll near them, and only the newest three fade in when a chat opens. DOWNLOADS FIXED: a start-up error in the Downloads module (trust used before it was defined) is gone, so the Downloads tray and the AI get.* tools load again.']],

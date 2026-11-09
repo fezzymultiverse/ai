@@ -38,8 +38,8 @@
     // (scripts/bundle-voice.sh). HorizonVoicePlugin.kt unpacks the model once into app storage, loads it, and makes each sentence on the phone.
     // Speaker ids are the order of kokoro-multi-lang-v1_0 (voices.bin): af_*, am_*, bf_*, bm_* come first, then the other languages.
     const KOKORO = {
-        loadMs: 180000,
-        genMs: 90000,
+        loadMs: 60000,
+        genMs: 45000,
         // V1.75.0: Kitten nano. 8 English voices in voices.bin order: male, female, male, female ... (speaker ids 0-7). Female listed first.
         // If a voice sounds the wrong gender on your phone, swap the two sid numbers here, it is a one-line fix.
         voices: [
@@ -173,7 +173,7 @@
         let eng = ls.get(KEYS.engine);
         if (eng === 'freetts' || eng === 'ttsai' || eng === 'edge' || eng === 'pollinations' || eng === 'openai') eng = 'kokoro';   // Edge, TTS.ai (V1.67.5) and Pollinations, OpenAI (V1.73.0) were removed; Kokoro replaces them
         if (eng === 'sherpa') eng = 'standard';   // V1.47.0: Piper is gone, so an old Piper pick becomes the Android voice
-        if (ENGINES.indexOf(eng) < 0) eng = NATIVE ? 'kokoro' : (cloudKeys('gemini').length ? 'gemini' : 'standard');   // first run: the built-in voice needs nothing
+        if (ENGINES.indexOf(eng) < 0) eng = 'standard';   // first run: Android/browser voice needs no model unpacking
         return {
             engine: eng,
             voice: ls.get(KEYS.voice) || '',
@@ -304,6 +304,7 @@
     let nativeMissing = false;
     let nativeStop = Promise.resolve();
     let cur = null;                        // { id, tok }
+    let utterSeq = 0; // unique native WAV playback event ids
     let audioEnd = null;                   // stops whatever cloud audio is playing
     let actx = null;                       // Web Audio context, created and unlocked on a tap
     let status = { state: 'idle', id: null, engine: '', error: '', note: '' };
@@ -460,6 +461,7 @@
         }
         return list.map((v, i) => ({ index: i, id: v.voiceURI || v.name, name: v.name, lang: v.lang || '' }));
     }
+    let webUtterance = null; // some WebViews garbage-collect an unreferenced utterance before playback
     function runWeb(chunks, tok, s, started) {
         return new Promise((resolve, reject) => {
             const synth = root.speechSynthesis;
@@ -476,20 +478,21 @@
                 if (tok.cancelled) { resolve(); return; }
                 if (i >= chunks.length) { resolve(); return; }
                 const u = new root.SpeechSynthesisUtterance(chunks[i++]);
+                webUtterance = u;
                 u.rate = s.rate; u.pitch = s.pitch;
                 if (pick) { u.voice = pick; u.lang = pick.lang; }
                 else if (s.lang) u.lang = s.lang;
                 // The WebView can accept speak() and then stay silent forever. Do not wait for it.
-                let guard = begun ? null : setTimeout(() => { synth.cancel(); reject(new Error('The browser voice did not start')); }, 4000);
+                let guard = setTimeout(() => { synth.cancel(); reject(new Error('The browser voice did not start')); }, 4000);
                 u.onstart = () => { if (guard) { clearTimeout(guard); guard = null; } if (!begun) { begun = true; started(); } };
-                u.onend = () => { if (guard) clearTimeout(guard); next(); };
+                u.onend = () => { webUtterance = null; if (guard) clearTimeout(guard); next(); };
                 u.onerror = ev => {
                     if (guard) clearTimeout(guard);
                     const er = ev && ev.error;
                     if (tok.cancelled || er === 'canceled' || er === 'interrupted') { resolve(); return; }
                     reject(new Error('Browser voice error: ' + (er || 'unknown')));
                 };
-                try { synth.speak(u); } catch (e) { if (guard) clearTimeout(guard); reject(e); }
+                try { synth.resume(); synth.speak(u); } catch (e) { if (guard) clearTimeout(guard); reject(e); }
             };
             try { synth.cancel(); } catch (e) { /* ignore */ }
             next();
@@ -520,11 +523,14 @@
                 if (curEl) curEl.pause();
                 if (webUsable()) root.speechSynthesis.pause();
                 const p = nativePlugin();
-                if (p && typeof p.stop === 'function') nativeStop = Promise.resolve(p.stop()).catch(() => {});
+                if (p && status.engine !== 'native' && typeof p.pauseAudio === 'function') Promise.resolve(p.pauseAudio()).catch(() => {});
+                else if (p && status.engine === 'native' && typeof p.stop === 'function') nativeStop = Promise.resolve(p.stop()).catch(() => {});
             } else {
                 if (actx && actx.state === 'suspended') actx.resume();
                 if (curEl) { const r = curEl.play(); if (r && typeof r.catch === 'function') r.catch(() => {}); }
                 if (webUsable()) root.speechSynthesis.resume();
+                const p = nativePlugin();
+                if (p && status.engine !== 'native' && typeof p.resumeAudio === 'function') Promise.resolve(p.resumeAudio()).catch(() => {});
                 flushWaiters();
             }
         } catch (e) { /* pause is best effort */ }
@@ -647,6 +653,12 @@
         const p = voicePlugin();
         if (!p) throw new Error('the built-in voice is not part of this build. Install the latest Horizon APK');
         kokReady = (async () => {
+            if (pack === 'builtin' && typeof p.status === 'function') {
+                try {
+                    const status = await withTimeout(p.status(), 5000, 'Voice status timed out');
+                    if (status && status.bundled === false) throw new Error('The built-in model is missing from this APK; using another available voice');
+                } catch (e) { if (!isMissing(e)) throw e; }
+            }
             let ln = null;
             try {
                 if (typeof p.addListener === 'function') {
@@ -732,7 +744,8 @@
     // so the tap is long gone by the time the sound is ready. A Web Audio context that was created and resumed
     // during a tap stays unlocked, so it is unlocked early (on every tap) and used for playback.
     function audioCtx() {
-        if (actx) return actx;
+        if (actx && actx.state !== 'closed') return actx;
+        actx = null;
         const AC = root.AudioContext || root.webkitAudioContext;
         if (!AC) return null;
         try { actx = new AC(); } catch (e) { actx = null; }
@@ -788,10 +801,12 @@
             const a = new root.Audio(url);
             curEl = a;
             let fin = false;
+            const watchdog = setTimeout(() => end(new Error('Audio playback did not start')), 8000);
             const stopFn = () => end();
             const end = err => {
                 if (fin) return;
-                fin = true;
+                fin = true; clearTimeout(watchdog);
+                a.onended = a.onerror = a.onplaying = null;
                 try { a.pause(); } catch (e) { /* ignore */ }
                 if (curEl === a) curEl = null;
                 root.URL.revokeObjectURL(url);
@@ -803,7 +818,7 @@
             a.playbackRate = clamp(clamp(rate, 0.5, 2, 1) * clamp(pitch, 0.5, 2, 1), 0.25, 4, 1);
             a.onended = () => end();
             a.onerror = () => end(new Error('Audio playback failed'));
-            a.onplaying = () => { if (onStart) { const f = onStart; onStart = null; f(); } };
+            a.onplaying = () => { clearTimeout(watchdog); if (onStart) { const f = onStart; onStart = null; f(); } };
             const pr = a.play();
             if (pr && typeof pr.catch === 'function') pr.catch(e => end(new Error('The audio element was refused: ' + msg(e))));
         });
@@ -811,6 +826,29 @@
     async function playBlob(blob, rate, onStart, pitch) {
         let began = false;
         const mark = () => { began = true; if (onStart) onStart(); };
+        const playbackToken = cur && cur.tok;
+        if (paused) await waitResume();
+        if (playbackToken && playbackToken.cancelled) return;
+        if (NATIVE) {
+            const p = nativePlugin();
+            if (p && typeof p.playAudio === 'function') {
+                let listener = null;
+                try {
+                    await nativeStop;
+                    const id = 'wav-' + (++utterSeq);
+                    if (typeof p.addListener === 'function') listener = await p.addListener('speechStart', ev => { if (ev && ev.id === id) mark(); });
+                    const bytes = new Uint8Array(await blob.arrayBuffer());
+                    let binary = '';
+                    for (let i=0; i<bytes.length; i+=8192) binary += String.fromCharCode.apply(null,bytes.subarray(i,i+8192));
+                    if (playbackToken && playbackToken.cancelled) return;
+                    if (paused) await waitResume();
+                    if (playbackToken && playbackToken.cancelled) return;
+                    await p.playAudio({wav:root.btoa(binary),rate,pitch,utteranceId:id});
+                    return;
+                } catch (e) { if (playbackToken && playbackToken.cancelled) return; if (began) throw e; /* old APK or device player: try Web Audio */ }
+                finally { if (listener) { try { await listener.remove(); } catch (_) {} } }
+            }
+        }
         try {
             await playWebAudio(blob, rate, mark, pitch);
             return;

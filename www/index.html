@@ -1521,6 +1521,7 @@
     <link rel="stylesheet" href="horizon_v3.css">
     <link rel="stylesheet" href="horizon_fix.css">
     <link rel="stylesheet" href="horizon_msgmenu.css">
+    <link rel="stylesheet" href="horizon_robust.css">
 </head>
 <body>
 
@@ -2232,6 +2233,7 @@
     <script src="ember_document_engine.js"></script>
     <script src="horizon_pdf.js"></script>
     <script src="ember_artbox.js"></script>
+    <script src="horizon_key_import.js"></script>
     <script src="horizon_tts.js"></script>
     <script src="horizon_github.js"></script>
     <script src="horizon_native_audio.js"></script>
@@ -2404,7 +2406,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             gemini: {
                 name: 'Gemini',
                 icon: 'i-b-gemini',
-                placeholder: 'AIza...',
+                placeholder: 'AIza… or AQ… Gemini key',
                 keyUrl: 'https://aistudio.google.com/apikey',
                 defaultModel: 'gemini-2.5-flash',
                 fallbackModels: ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-2.0-flash'],
@@ -2475,7 +2477,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                     .map(m => m.id)
                     .filter(id => id && !/whisper|tts|guard|playai|orpheus|embed|safeguard/.test(id))
                     .sort(),
-                wrongKey: k => /^AIza/.test(k) ? 'That looks like a Gemini key.' : '',
+                wrongKey: k => /^(?:AIza|AQ[.A-Za-z0-9_-]|Aq[.A-Za-z0-9_-])/.test(k) ? 'That looks like a Gemini key.' : '',
                 async chat(key, model, history) {
                     const T = curTurn; turnCheck(T);
                     const sys = getSystemPrompt();
@@ -2555,7 +2557,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 modelsUrl: 'https://api.cohere.com/v1/models?endpoint=chat&page_size=100',
                 headers: k => ({ Authorization: `Bearer ${k}` }),
                 parseModels: d => (d.models || []).map(m => m && m.name).filter(Boolean).sort(),
-                wrongKey: k => /^gsk_/.test(k) ? 'That looks like a Groq key.' : /^AIza/.test(k) ? 'That looks like a Gemini key.' : '',
+                wrongKey: k => /^gsk_/.test(k) ? 'That looks like a Groq key.' : /^(?:AIza|AQ[.A-Za-z0-9_-]|Aq[.A-Za-z0-9_-])/.test(k) ? 'That looks like a Gemini key.' : '',
                 async chat(key, model, history) {
                     const T = curTurn; turnCheck(T);
                     const sys = getSystemPrompt();
@@ -2617,7 +2619,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                     .filter(m => m && m.id && !(m.capabilities && m.capabilities.completion_chat === false))
                     .map(m => m.id)
                     .filter(id => !/embed|moderation|ocr|voxtral|transcribe|tts/i.test(id)))).sort(),
-                wrongKey: k => /^gsk_/.test(k) ? 'That looks like a Groq key.' : /^AIza/.test(k) ? 'That looks like a Gemini key.' : '',
+                wrongKey: k => /^gsk_/.test(k) ? 'That looks like a Groq key.' : /^(?:AIza|AQ[.A-Za-z0-9_-]|Aq[.A-Za-z0-9_-])/.test(k) ? 'That looks like a Gemini key.' : '',
                 async chat(key, model, history) {
                     const T = curTurn; turnCheck(T);
                     const sys = getSystemPrompt();
@@ -2681,7 +2683,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                     ids.sort((a, b) => (/:free$/.test(b) ? 1 : 0) - (/:free$/.test(a) ? 1 : 0) || a.localeCompare(b));
                     return ['openrouter/free', 'openrouter/auto'].concat(ids.filter(id => id !== 'openrouter/auto' && id !== 'openrouter/free'));
                 },
-                wrongKey: k => /^gsk_/.test(k) ? 'That looks like a Groq key.' : /^AIza/.test(k) ? 'That looks like a Gemini key.' : '',
+                wrongKey: k => /^gsk_/.test(k) ? 'That looks like a Groq key.' : /^(?:AIza|AQ[.A-Za-z0-9_-]|Aq[.A-Za-z0-9_-])/.test(k) ? 'That looks like a Gemini key.' : '',
                 async chat(key, model, history) {
                     const T = curTurn; turnCheck(T);
                     const sys = getSystemPrompt();
@@ -2810,7 +2812,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 }
             }
         };
-        // V1.81.0: AnyAPI (free models only) and GonkaRouter. Both speak the OpenAI chat format, so one builder serves both.
+        // Gateway protocol is explicit: AnyAPI/Routeway use OpenAI; Gonka uses its documented Anthropic Messages endpoint.
         const oaiGateway = cfg => ({
             name: cfg.name,
             icon: cfg.icon,
@@ -2819,17 +2821,24 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             defaultModel: cfg.defaultModel,
             fallbackModels: cfg.fallbackModels,
             modelsUrl: cfg.base + '/models',
-            headers: k => ({ Authorization: `Bearer ${k}` }),
+            chatUrl: cfg.base + (cfg.protocol === 'anthropic' ? '/messages' : '/chat/completions'),
+            protocol: cfg.protocol || 'openai',
+            freeOnly: !!cfg.freeOnly,
+            headers: k => cfg.protocol === 'anthropic' ? ({'x-api-key':k,'anthropic-version':'2023-06-01'}) : ({ Authorization: `Bearer ${k}` }),
             parseModels: d => {
-                const ids = Array.from(new Set((d && d.data || []).filter(m => m && m.id).map(m => m.id)))
+                const ids = Array.from(new Set((d && d.data || []).filter(m => m && m.id && m.available !== false && (!m.endpoints || !m.endpoints.length || m.endpoints.some(e => cfg.protocol === 'anthropic' ? /(?:^|\/)messages$/.test(e) : /(?:^|\/)chat\/completions$/.test(e)))).map(m => m.id)))
                     .filter(id => !/embed|moderation|whisper|tts|rerank/i.test(id))
                     .filter(id => !cfg.freeOnly || /:free$/.test(id));
                 return ids.sort((a, b) => a.localeCompare(b));
             },
-            wrongKey: k => /^gsk_/.test(k) ? 'That looks like a Groq key.' : /^AIza/.test(k) ? 'That looks like a Gemini key.' : /^sk-or-/.test(k) ? 'That looks like an OpenRouter key.' : '',
+            wrongKey: k => /^gsk_/.test(k) ? 'That looks like a Groq key.' : /^(?:AIza|AQ[.A-Za-z0-9_-]|Aq[.A-Za-z0-9_-])/.test(k) ? 'That looks like a Gemini key.' : /^sk-or-/.test(k) ? 'That looks like an OpenRouter key.' : '',
             async chat(key, model, history) {
                 const T = curTurn; turnCheck(T);
-                if (cfg.freeOnly && !/:free$/.test(model)) model = cfg.defaultModel;   // never spend credit: only :free ids go out
+                const eligible = (state.modelLists[PROVIDER_IDS.find(id => PROVIDERS[id].name === cfg.name)] || []).filter(m => !cfg.freeOnly || /:free$/.test(m));
+                if (!eligible.includes(model)) {
+                    if (!eligible.length) throw new Error(cfg.name + ' has no eligible chat models. Refresh models in Settings.');
+                    model = eligible.includes(cfg.defaultModel) ? cfg.defaultModel : eligible[0];
+                }   // never spend credit: only :free ids go out
                 const sys = getSystemPrompt();
                 const cap = docMode ? 8000 : 0;
                 let lastWhy = 'Request failed';
@@ -2842,9 +2851,12 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                         messages: [{ role: 'system', content: sys }].concat(history.map(m => ({ role: m.role === 'user' ? 'user' : 'assistant', content: window.HorizonAttach ? HorizonAttach.openaiContent(m, false) : m.text })))
                     };
                     if (cap) body.max_tokens = cap;
-                    const res = await timed(aiFetch(cfg.base + '/chat/completions', {
+                    if (cfg.protocol === 'anthropic') {
+                        body.system = sys; body.messages = body.messages.slice(1); body.max_tokens = cap || 4096;
+                    }
+                    const res = await timed(aiFetch(this.chatUrl, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json', Accept: 'application/json', Authorization: `Bearer ${key}` },
+                        headers: Object.assign({'Content-Type':'application/json',Accept:'application/json'}, this.headers(key)),
                         body: JSON.stringify(body)
                     }), docMode ? 240000 : 120000);
                     if (res.ok) {
@@ -2855,9 +2867,9 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                             err.status = Number(data.error.code) || 502;
                             throw err;
                         }
-                        noteUsage(data.usage && data.usage.prompt_tokens, data.usage && data.usage.completion_tokens);
-                        noteCut(data.choices && data.choices[0] && data.choices[0].finish_reason);
-                        const c = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+                        noteUsage(data.usage && (data.usage.prompt_tokens || data.usage.input_tokens), data.usage && (data.usage.completion_tokens || data.usage.output_tokens));
+                        noteCut(data.stop_reason === 'max_tokens' ? 'length' : data.choices && data.choices[0] && data.choices[0].finish_reason);
+                        const c = cfg.protocol === 'anthropic' ? (data.content || []).filter(p => p.type === 'text') : data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
                         const out = (Array.isArray(c) ? c.map(p => (p && p.text) || '').join('') : (c || '')).trim();
                         if (!out) throw new Error('Empty response' + (data.model ? ` from ${data.model}` : ''));
                         return out;
@@ -2895,6 +2907,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             name: 'GonkaRouter',
             icon: 'i-b-gonka',
             base: 'https://api.gonkarouter.io/v1',
+            protocol: 'anthropic',
             placeholder: 'sk-...',
             keyUrl: 'https://gonkarouter.io',
             freeOnly: false,
@@ -2914,6 +2927,12 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             noCredit: 'Routeway says this needs credit. Horizon only sends :free models, so check your Routeway dashboard.'
         });
         const PROVIDER_IDS = Object.keys(PROVIDERS);
+        // Public model catalogs are NOT proof that a secret belongs to this provider.
+        PROVIDER_IDS.forEach(id => {
+            if (PROVIDERS[id].keyless) return;
+            const old = PROVIDERS[id].wrongKey;
+            PROVIDERS[id].wrongKey = k => HorizonKeyImport.validate(id, k) || old(k);
+        });
         // V1.18.0: every provider call is timed and counted for the USAGE & ENGINE dashboard.
         // V1.22.0: backup keys per provider + auto-switch to the next provider when one is rate limited.
         const XKEY = id => `horizon_xkeys_${id}`;
@@ -5518,24 +5537,26 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                         await checkKeys(all.filter((k, i) => all.indexOf(k) === i));
                     };
                     // Takes whatever was pasted or typed (one key, or several separated by spaces or lines), makes a slot for each new key.
-                    const commit = raw => {
-                        const found = String(raw || '').split(/\s+/).map(x => x.trim()).filter(Boolean);
+                    let committing = false;
+                    const commit = async raw => {
+                        if (committing) return;
+                        const found = [...new Set(String(raw || '').split(/\s+/).map(x => x.replace(/^["']+|["',;]+$/g, '')).filter(Boolean))];
                         if (!found.length) return;
-                        const list = xKeys(id), fresh = [];
-                        let dup = 0;
-                        found.forEach(k => {
-                            if (k === mainKey() || list.indexOf(k) !== -1 || fresh.indexOf(k) !== -1) { dup++; return; }
-                            fresh.push(k);
-                        });
-                        addIn.value = '';
-                        if (fresh.length) {
-                            saveList(list.concat(fresh));
-                            notice(fresh.length === 1 ? 'Backup key saved for ' + p.name : fresh.length + ' backup keys saved for ' + p.name);
-                        } else if (dup) {
-                            notice('That key is already saved for ' + p.name);
-                        }
-                        paintSlots();
-                        if (fresh.length) checkKeys(fresh);   // light up the new slot straight away
+                        committing = true; addBtn.disabled = true;
+                        let accepted = 0, failed = 0;
+                        try {
+                            for (const k of found) {
+                                if (k === mainKey() || xKeys(id).includes(k)) continue;
+                                try {
+                                    const list = await fetchModels(id, k);
+                                    saveList([...new Set(xKeys(id).concat(k))]);
+                                    results.set(k, {c:'live',t:'VERIFIED'}); accepted++;
+                                } catch (_) { failed++; }
+                            }
+                            if (!failed) addIn.value = '';
+                            notice(accepted + ' verified backup(s) saved for ' + p.name + (failed ? '; ' + failed + ' not verified, not saved' : ''));
+                            paintSlots();
+                        } finally { committing = false; addBtn.disabled = false; }
                     };
                     addIn.addEventListener('paste', () => setTimeout(() => commit(addIn.value), 0));
                     addIn.addEventListener('change', () => commit(addIn.value));
@@ -5593,6 +5614,40 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             input.addEventListener('keydown', e => { if (e.key === 'Enter') validateAndSave(id); });
         }
 
+        function buildKeyImporter() {
+            const box = document.createElement('section'); box.className = 'provider-card hz-key-import'; box.id = 'hzKeyImporter'; box.setAttribute('data-hz-private','');
+            box.innerHTML = '<h3>Paste all AI keys</h3><p class="hint">Paste a note with provider names and keys. Recognised standalone keys are routed automatically; ambiguous keys need a provider label. Each key is verified before saving. Gateway checks use a tiny request and may use a token.</p><label class="field-label" for="hzKeyNote">Provider note</label><textarea id="hzKeyNote" rows="5" maxlength="65536" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Gemini: AQ…&#10;Groq: gsk_…&#10;Routeway: your key"></textarea><div class="card-actions"><button type="button" id="hzKeyExtract" class="primary-btn">Extract, verify &amp; distribute</button><button type="button" id="hzKeyClear" class="use-btn">Clear note</button></div><div id="hzKeyResults" role="status" aria-live="polite"></div>';
+            providerList.appendChild(box);
+            const note = box.querySelector('textarea'), go = box.querySelector('#hzKeyExtract'), results = box.querySelector('#hzKeyResults');
+            box.querySelector('#hzKeyClear').onclick = () => { note.value = ''; results.textContent = ''; };
+            go.onclick = async () => {
+                const parsed = HorizonKeyImport.extract(note.value);
+                results.textContent = ''; go.disabled = true; note.disabled = true;
+                let saved = 0;
+                const line = text => { const row = document.createElement('p'); row.textContent = text; results.appendChild(row); };
+                try {
+                    if (!parsed.items.length) line('No safely identifiable keys found. Add provider labels to ambiguous keys.');
+                    for (const item of parsed.items) {
+                        const id = item.provider, key = item.key, p = PROVIDERS[id];
+                        if (!p || p.keyless) continue;
+                        if (state.keys[id] === key || xKeys(id).includes(key)) { line(p.name + ': already saved'); continue; }
+                        try {
+                            const models = await fetchModels(id, key);
+                            if (!state.keys[id]) { state.keys[id] = key; lsSet(LS.key(id),key); }
+                            else lsSet(XKEY(id),JSON.stringify([...new Set(xKeys(id).concat(key))]));
+                            state.modelLists[id] = models; lsSet(LS.models(id),JSON.stringify(models));
+                            if (!models.includes(state.models[id])) { state.models[id] = models.includes(p.defaultModel) ? p.defaultModel : models[0]; lsSet(LS.model(id),state.models[id]); }
+                            saved++; line(p.name + ': verified and saved');
+                        } catch (_) { line(p.name + ': not verified; not saved. Check key, provider access, quota and connection.'); }
+                    }
+                    if (parsed.rejected) line(parsed.rejected + ' ambiguous, mismatched or invalid item(s) not saved.');
+                    if (saved) updateUI();
+                    // Never persist or send the note itself to an AI. Clear only a fully successful note.
+                    if (saved && !parsed.rejected && !results.textContent.includes('not saved')) note.value = '';
+                } finally { go.disabled = false; note.disabled = false; }
+            };
+        }
+
         function setCardStatus(id, text, kind) {
             const el = role(id, 'status');
             el.textContent = text;
@@ -5601,7 +5656,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
 
         function fillModels(id) {
             const select = role(id, 'model');
-            const list = orderModels(state.modelLists[id], PROVIDERS[id].defaultModel);
+            const list = orderModels(state.modelLists[id], PROVIDERS[id].defaultModel).filter(m => !PROVIDERS[id].chatUrl || state.modelLists[id].includes(m));
             if (state.models[id] && list.indexOf(state.models[id]) === -1) list.unshift(state.models[id]);
             select.replaceChildren();
             list.forEach(m => {
@@ -5640,22 +5695,41 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
 
         async function fetchModels(id, key) {
             const p = PROVIDERS[id];
-            // OpenRouter lists its models without a key, so check the key itself first or any text would pass.
+            if (!p.keyless) {
+                const wrong = p.wrongKey(key);
+                if (wrong) throw new Error(wrong);
+            }
             if (id === 'openrouter' && key) {
                 let kr = await timed(fetch('https://openrouter.ai/api/v1/key', { headers: p.headers(key) }), 20000);
                 if (kr.status === 404) kr = await timed(fetch('https://openrouter.ai/api/v1/auth/key', { headers: p.headers(key) }), 20000);
-                if (kr.status === 401 || kr.status === 403) throw new Error('OpenRouter rejected this key (invalid API key). Check it at openrouter.ai/settings/keys.');
+                if (!kr.ok) throw new Error('OpenRouter key could not be verified (HTTP ' + kr.status + '). Nothing saved.');
+                const auth = await kr.json();
+                if (!auth || !auth.data || auth.error) throw new Error('OpenRouter returned no authenticated key record. Nothing saved.');
             }
             const res = await timed(fetch(p.modelsUrl, { headers: p.headers(key) }), 30000);
-            if (!res.ok) throw new Error(await errorText(res));
-            const list = p.parseModels(await res.json());
-            return list.length ? list : p.fallbackModels.slice();
+            if (!res.ok) throw new Error(p.name + ' model endpoint (HTTP ' + res.status + '): ' + await errorText(res));
+            const data = await res.json();
+            if (data && data.error) throw new Error(p.name + ' returned a model error. Nothing saved.');
+            const list = p.parseModels(data);
+            if (!list.length) throw new Error(p.name + (p.freeOnly ? ' returned no eligible :free models. No paid model was selected.' : ' returned no chat models. Check provider access.'));
+            if (p.chatUrl && key) {
+                const preferred = list.includes(state.models[id]) ? state.models[id] : list.includes(p.defaultModel) ? p.defaultModel : list[0];
+                const check = await timed(fetch(p.chatUrl, {
+                    method: 'POST', headers: Object.assign({'Content-Type':'application/json'}, p.headers(key)),
+                    body: JSON.stringify({model: preferred, messages:[{role:'user',content:'Reply OK.'}],max_tokens:p.protocol === 'anthropic' ? 16 : 1,stream:false})
+                }), 45000);
+                if (!check.ok) throw new Error(p.name + ' key could not be verified (HTTP ' + check.status + '). Nothing saved. Check the key, model access, quota or balance.');
+                const proof = await check.json();
+                if (proof.error || (p.protocol === 'anthropic' ? proof.type !== 'message' || !Array.isArray(proof.content) : !Array.isArray(proof.choices) || !proof.choices.length)) throw new Error(p.name + ' returned no authenticated completion. Nothing saved.');
+            }
+            return list;
         }
 
         async function validateAndSave(id) {
             const p = PROVIDERS[id];
             const input = role(id, 'key');
             const btn = role(id, 'save');
+            if (btn.disabled) return;
             if (p.keyless) { await refreshKeyless(id); return; }
             const raw = (input.value || '').trim().replace(/^["']+|["']+$/g, '');
             const key = raw || state.keys[id];
@@ -5691,7 +5765,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 setCardStatus(id, `Validated · ••••${key.slice(-4)}`, 'ok');
             } catch (e) {
                 input.classList.add('invalid');
-                setCardStatus(id, friendlyError(e), 'error');
+                setCardStatus(id, 'Key not verified; nothing saved. Check provider, key, access, quota and connection.', 'error');
             } finally {
                 btn.disabled = false;
                 label.textContent = 'Save & validate';
@@ -5885,7 +5959,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 setCardStatus(id, `${msg} · ••••${key.slice(-4)}`, 'ok');
             } catch (e) {
                 input.classList.add('invalid');
-                setCardStatus(id, friendlyError(e), 'error');
+                setCardStatus(id, 'Key not verified; nothing saved. Check provider, key, access, quota and connection.', 'error');
             } finally {
                 btn.disabled = false;
                 label.textContent = 'Save & validate';
@@ -5908,7 +5982,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         const memClearBtn = $('#memClear');
         let memClearTimer = null;
 
-        const looksSecret = t => /AIza[0-9A-Za-z_-]{10,}|gsk_[0-9A-Za-z]{10,}|sk-[0-9A-Za-z_-]{16,}|\b[0-9A-Za-z_-]{32,}\b/.test(t);
+        const looksSecret = t => /(?:AIza|AQ[.]?|Aq[.]?)[0-9A-Za-z_.-]{10,}|gsk_[0-9A-Za-z]{10,}|sk-[0-9A-Za-z_-]{16,}|\b[0-9A-Za-z_-]{32,}\b/.test(t);
 
         function saveMemories() { lsSet(LS.memories, JSON.stringify(state.memories)); }
 
@@ -6095,13 +6169,13 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         }
 
         // --- V1.4.3: long documents (section by section) and auto-continue when a reply is cut off ---
-        const pagesWanted = t => { const m = /(\d{1,3})\s*(?:-|\s)?\s*pages?\b/i.exec(t); return m ? Math.min(60, +m[1]) : 0; };
+        const pagesWanted = t => { t = String(t || '').replace(/\bten(?=\s*[- ]?\s*pages?\b)/ig, '10'); const m = /(\d{1,3})\s*(?:-|\s)?\s*pages?\b/i.exec(t); return m ? Math.min(60, +m[1]) : 0; };
         const longPlan = t => !/\b(?:cv|resume|letter|invoice)\b/i.test(t) && (pagesWanted(t) >= 4 || /\b(?:long|detailed|comprehensive|in-depth|thorough|full report|ebook)\b/i.test(t));
         const lastUserText = chat => { const b = buildHistory(chat.messages, chat); return b.length ? b[b.length - 1].text : ''; };
 
         async function runLong(chat, p, key, model, text) {
             const P = pagesWanted(text) || 12;
-            const n = Math.max(4, Math.min(14, Math.ceil(P / 2.5)));
+            const n = Math.max(4, Math.min(20, Math.ceil(P / 1.25)));
             const words = Math.round(P * 470 / n / 10) * 10;   // V1.80.0: aim a little high, headings and spacing eat space
             const base = buildHistory(chat.messages, chat);
             const ask0 = lastUserText(chat);
@@ -6110,18 +6184,22 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             const outline = await p.chat(key, model, base.slice(0, -1).concat({ role: 'user', text: planAsk }));
             const title = ((/^\s*TITLE:\s*(.+)$/im.exec(outline) || [])[1] || 'Document').replace(/[*"<>\\/:|?]/g, '').trim().slice(0, 70) || 'Document';
             const theme = ((/^\s*THEME:\s*([a-z]+)/im.exec(outline) || [])[1] || 'ocean').toLowerCase();
-            const secs = [...outline.matchAll(/^\s*\d+[.)]\s*(.+?)\s*(?:\|\s*(.+))?$/gm)].map(m => ({ t: m[1].replace(/\*\*/g, '').trim(), d: (m[2] || '').trim() })).filter(x => x.t).slice(0, 14);
-            if (secs.length < 2) throw new Error('Could not plan the document. Try again.');
+            let secs = [...outline.matchAll(/^\s*\d+[.)]\s*(.+?)\s*(?:\|\s*(.+))?$/gm)].map(m => ({ t: m[1].replace(/\*\*/g, '').trim(), d: (m[2] || '').trim() })).filter(x => x.t).slice(0, 14);
+            if (secs.length < 2) secs = Array.from({length:n}, (_,i) => ({t: 'Section ' + (i+1), d: 'Develop distinct part ' + (i+1) + ' of the requested topic'}));
+            // Keep the plan at the requested size, even if an upstream model returned extra lines.
+            secs = secs.slice(0,n);
             const outlineText = secs.map((x, j) => (j + 1) + '. ' + x.t + (x.d ? ' - ' + x.d : '')).join('\n');
             thoughtAdd('i-layers', `Outline ready: ${secs.length} sections`, true, `\u201c${title}\u201d \u00b7 theme ${theme} \u00b7 about ${words} words per section \u00b7 ${secs.map(x => shortTxt(x.t, 28)).join(' / ')}`);
             const parts = [];
             for (let k = 0; k < secs.length; k++) {
+                turnCheck(curTurn);
                 setLoading('Writing section ' + (k + 1) + '/' + secs.length + ': ' + shortTxt(secs[k].t, 40), secs[k].d || '');
                 const ask = ask0 + '\n\n[APP INSTRUCTION] You are writing a long document in sections. Document: "' + title + '". Outline:\n' + outlineText + '\n\nWrite ONLY section ' + (k + 1) + ': "' + secs[k].t + '". Start with the line "## ' + secs[k].t + '". About ' + words + ' words of real detail, with tables or lists where useful. No <artifact> tag, no front matter, no document title, no intro or closing remarks.';
                 let md = '';
                 for (let tries = 0; tries < 2 && !md; tries++) {
-                    try { md = (await p.chat(key, model, [{ role: 'user', text: ask }])).trim(); } catch (e) { if (tries) throw e; }
+                    try { md = (await p.chat(key, model, base.slice(0,-1).concat({ role: 'user', text: ask + '\nAlready completed (do not repeat): ' + parts.map(x => x.slice(0,180)).join(' | ') }))).trim(); } catch (e) { turnCheck(curTurn); if (tries) throw e; }
                 }
+                if (!md) throw new Error('The provider returned an empty document section. Please retry.');
                 md = md.replace(/<\/?artifact[^>]*>/gi, '').replace(/^---[\s\S]*?\n---\s*/, '').trim();
                 if (!/^#{1,3}\s/.test(md)) md = '## ' + secs[k].t + '\n\n' + md;
                 parts.push(md.replace(/^#{1,3}\s/, '## '));
@@ -6153,7 +6231,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 setLoading(`Only ${n} of ${P} pages. Adding about ${wordsNeeded} words`, 'New sections only, nothing rewritten');
                 const ask = ask0 + '\n\n[APP INSTRUCTION] The document "' + a.title.replace(/\.pdf$/i, '') + '" was written but renders at only ' + n + ' page' + (n === 1 ? '' : 's') + ', and Fezzy asked for ' + P + '. It already has these headings: ' + (heads || '(none)') + '.\nWrite ONLY new sections that add about ' + wordsNeeded + ' words of real, useful detail on topics NOT already covered (worked examples, comparisons, tables, practical steps, pitfalls). Do not repeat or rewrite anything. Start each with a line "## Heading". No <artifact> tag, no front matter, no title, no intro or closing remarks.';
                 let more = '';
-                try { more = (await p.chat(key, model, [{ role: 'user', text: ask }])).trim(); } catch (e) { return out; }
+                try { more = (await p.chat(key, model, [{ role: 'user', text: ask }])).trim(); } catch (e) { turnCheck(curTurn); return out; }
                 more = more.replace(/<\/?artifact[^>]*>/gi, '').replace(/^---[\s\S]*?\n---\s*/, '').trim();
                 if (!more || (more.match(/\S+/g) || []).length < wordsNeeded * 0.3) return out;
                 if (!/^#{1,3}\s/.test(more)) more = '## More detail\n\n' + more;
@@ -6175,7 +6253,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 let more = '';
                 try {
                     more = await p.chat(key, model, buildHistory(chat.messages, chat).concat({ role: 'assistant', text: out }, { role: 'user', text: '[APP INSTRUCTION] Your document was cut off. Continue exactly where it stopped, even mid-sentence. Output only the remaining Markdown: no repeated text and no new <artifact> opening tag. Close with </artifact> when the document is complete.' }));
-                } catch (e) { return out; }
+                } catch (e) { turnCheck(curTurn); return out; }
                 out += more.replace(/<artifact\b[^>]*>/gi, '');
             }
             return out;
@@ -9121,6 +9199,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
 
         // --- Init ---
         PROVIDER_IDS.forEach(buildCard);
+        buildKeyImporter();
         // V1.37.2: one Test all button above the provider cards. Runs each provider's own key health check in turn.
         {
             const tb = document.createElement('div');

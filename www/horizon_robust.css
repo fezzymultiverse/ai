@@ -1,0 +1,31 @@
+/* Horizon 1.87: final, scoped fixes; no layout rearrangement. */
+/* Fix the actual theme name; the previous quick-reply rule targeted 'light'. */
+html[data-theme="grey"] .hz-chips .hz-chip {
+  color: #14532d; border: 1px solid #648873; background: #e1eae4;
+  box-shadow: none; text-shadow: none; font-weight: 650;
+}
+html[data-theme="grey"] .hz-chips .hz-chip:hover,
+html[data-theme="grey"] .hz-chips .hz-chip:active { color: #103b22; background: #ccdcd1; box-shadow: none; }
+html[data-theme="grey"] .starter { background: #e4e7eb; border-color: #a5adb7; color: #202833; box-shadow: none; }
+html[data-theme="grey"] .starter small { color: #465363; }
+html[data-theme="grey"] .starter .st-ic { background: #d3dce2; color: #14566a; box-shadow: none; }
+html[data-theme="grey"] .qa-btn.qa-primary { color: #fff; box-shadow: none; }
+.hz-key-import { box-sizing: border-box; min-width: 0; max-width: 100%; padding: 18px 20px; gap: 12px; overflow-wrap: anywhere; }
+.hz-key-import .card-actions { flex-wrap: wrap; min-width: 0; }
+.hz-key-import .card-actions button { max-width: 100%; height: auto; min-height: 38px; padding-top: 8px; padding-bottom: 8px; white-space: normal; text-align: center; }
+.hz-key-import h3 { color: var(--text-main); font-size: 16px; }
+.hz-key-import textarea { box-sizing: border-box; width: 100%; min-height: 125px; resize: vertical; padding: 12px; background: var(--surface); color: var(--text-main); border: 1px solid var(--border-highlight); border-radius: 12px; font: inherit; line-height: 1.5; -webkit-text-security: disc; }
+.hz-key-import textarea:focus { outline: 2px solid var(--accent-cyan); outline-offset: 2px; -webkit-text-security: none; }
+#hzKeyResults { font-size: 13px; line-height: 1.5; color: var(--text-main); overflow-wrap: anywhere; }
+/* Three purely decorative details, all pointer-transparent and within existing bounds. */
+/* 1: fine horizon line behind the welcome insignia. */
+.welcome .wl-mark { position: relative; isolation: isolate; }
+.welcome .wl-mark::after { content: ''; position: absolute; pointer-events: none; left: -36px; right: -36px; bottom: -5px; height: 1px; background: linear-gradient(90deg, transparent, var(--accent-cyan), transparent); opacity: .45; }
+/* 2: quiet directional accent inside the existing starter cards. */
+.starter { position: relative; }
+.starter::after { content: '↗'; position: absolute; pointer-events: none; top: 13px; right: 13px; font-size: 17px; color: var(--text-muted); opacity: .65; }
+/* 3: restrained focus ring on the composer, not an always-on glow. */
+.chat-input-area:focus-within { outline: 1px solid var(--accent-cyan); outline-offset: 2px; }
+html[data-theme="grey"] .chat-input-area:focus-within { outline-color: #527787; }
+.hz-chips .hz-chip:focus-visible, .starter:focus-visible { outline: 2px solid var(--accent-cyan); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .starter, .chat-input-area { transition: none !important; } }
