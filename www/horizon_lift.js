@@ -65,7 +65,7 @@
     window.visualViewport.addEventListener('scroll', kick, { passive: true });
   }
   window.addEventListener('resize', kick, { passive: true });
-  window.addEventListener('hz-kb-settled', function () { kick(); setTimeout(kick, 60); });
+  window.addEventListener('hz-kb-settled', kick);
   document.addEventListener('focusin', kick, { passive: true });
   document.addEventListener('focusout', function () { setTimeout(kick, 80); }, { passive: true });
   if (input) {

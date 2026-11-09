@@ -1,6 +1,6 @@
 {
   "name": "horizon",
-  "version": "1.87.0",
+  "version": "1.87.1",
   "private": true,
   "description": "Horizon Bojack Security",
   "license": "MIT",
@@ -11,9 +11,11 @@
     "@capacitor/local-notifications": "^6.1.0"
   },
   "devDependencies": {
-    "@capacitor/cli": "^6.2.0"
+    "@capacitor/cli": "^6.2.0",
+    "playwright": "1.65.0"
   },
   "scripts": {
-    "test": "node --test tests/*.test.cjs"
+    "test": "node --test tests/*.test.cjs",
+    "test:browser": "node tests/browser.smoke.cjs"
   }
 }

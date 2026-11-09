@@ -71,7 +71,7 @@
     if (md.textContent !== v) md.textContent = v;
   }
   function frame(ms) {
-    raf = 0; if (!cap.classList.contains('busy')) return;
+    raf = 0; if (!cap.classList.contains('busy') || window.hzEditorFocused || window.hzKbBusy || document.hidden) return;
     if (ms - stepAt > 300) { stepAt = ms; stepText(); }
     var t = ms / 1000;
     a1.style.opacity = (0.3 + 0.7 * (0.5 + 0.5 * Math.sin(t * 7))).toFixed(2);
@@ -101,7 +101,11 @@
     if (compact !== full && nm.scrollWidth > nm.clientWidth + 1) st.textContent = compact;
     cap.setAttribute('aria-label', (nm.textContent + ' ' + md.textContent + '. ' + full).trim());
   }
-  window.addEventListener('resize', function () { paint(); });
+  function resumeDecorations() { if (!raf && cap.classList.contains('busy') && !window.hzEditorFocused && !window.hzKbBusy && !document.hidden) raf = requestAnimationFrame(frame); }
+  document.addEventListener('focusout', function () { setTimeout(resumeDecorations, 0); });
+  document.addEventListener('visibilitychange', resumeDecorations);
+  window.addEventListener('hz-kb-settled', resumeDecorations);
+  window.addEventListener('resize', function () { if (!window.hzKbBusy) paint(); });
   try { new MutationObserver(paint).observe(badge, { childList: true, subtree: true, characterData: true }); } catch (e) { /* no observer */ }
   document.addEventListener('hz:pick', paint);
   paint(); setTimeout(paint, 600); setTimeout(paint, 2000);

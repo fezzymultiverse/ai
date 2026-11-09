@@ -145,7 +145,7 @@
     function startUrl(meta, url, filename, kind) {
         const h = host();
         if (!h) { say('Downloads are not ready. Reopen the app.', 'error'); return null; }
-        if (!h.filesOn()) { say('File access is off. Turn it on under Settings > Permissions.', 'error'); return null; }
+        if (!h.filesOn()) { say('File access is off. Turn it on under Terminal > Controls.', 'error'); return null; }
         if (!/^https:\/\//i.test(url)) { say('Only https links can be saved.', 'error'); return null; }
         const fname = safe(filename);
         return add(Object.assign({ filename: fname, retry: { op: 'url', url, filename: fname, kind } }, meta), rec => h.save(rec, url, fname, kind));
@@ -294,7 +294,7 @@
         if (!/^magnet:\?xt=urn:/i.test(raw)) return aiFail('that is not a magnet link.');
         const name = (/[?&]dn=([^&]+)/i.exec(raw) || [])[1];
         let label = 'a torrent'; try { if (name) label = decodeURIComponent(name.replace(/\+/g, ' ')); } catch (e) { /* keep default */ }
-        if (window.HorizonBridges && HorizonBridges.state().termux.enabled) return HorizonBridges.torrent(raw);
+        if (window.HorizonBridges && HorizonBridges.state().termux.enabled) return HorizonBridges.torrent(raw, true);
         if (!aiAsk('The AI wants to send this magnet link to your torrent app:\n\n' + label.slice(0, 200) + '\n\nHorizon has no torrent engine; your torrent app does the download. Only do this for files you have the right to download. Send it?')) return aiFail('Fezzy declined that magnet link.');
         add({ type: 'torrent', src: 'torrent', title: label.slice(0, 80), sub: 'Handed to your torrent app', retry: { op: 'magnet', url: raw } }, async () => { await openLink(raw); return ''; });
         return { text: 'Magnet link sent to the torrent app (if one is installed). Horizon cannot see its progress; say "sent", not "downloaded".' };

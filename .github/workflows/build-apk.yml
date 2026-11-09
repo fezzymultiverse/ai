@@ -47,7 +47,15 @@ jobs:
             gradle-${{ runner.os }}-
 
       - name: Install dependencies
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
+
+      - name: Bridge, voice and credential regression tests
+        run: npm test
+
+      - name: Browser navigation and privacy regression tests
+        run: |
+          npx playwright install --with-deps chromium
+          npm run test:browser
 
       - name: Apply app identity from repo variables
         env:

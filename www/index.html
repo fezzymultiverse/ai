@@ -1522,6 +1522,7 @@
     <link rel="stylesheet" href="horizon_fix.css">
     <link rel="stylesheet" href="horizon_msgmenu.css">
     <link rel="stylesheet" href="horizon_robust.css">
+    <link rel="stylesheet" href="horizon_hub.css">
 </head>
 <body>
 
@@ -1652,7 +1653,7 @@
             <button class="header-btn" id="groupBtn" data-lbl="Group" type="button" aria-haspopup="dialog" aria-label="Group chat: start a chat with several AIs at once"><svg class="ic" aria-hidden="true"><use href="#i-users"/></svg></button>
             <button class="header-btn" id="pickBtn" data-lbl="AI" type="button" aria-haspopup="dialog" aria-label="Choose AI provider and model"><svg class="hz-robot" viewBox="0 0 64 64" aria-hidden="true"><use href="#i-robot"/></svg><i class="pk-dot" id="pkDot"></i></button>
             <button class="header-btn" id="menuBtn" data-lbl="Menu" type="button" aria-label="Open menu"><svg class="ic" aria-hidden="true"><use href="#i-menu"/></svg></button>
-            <button class="header-btn" id="settingsBtn" data-lbl="Settings" type="button" aria-label="Open settings: API providers plus keys, web scraping, permissions, personalisation"><svg class="ic" aria-hidden="true"><use href="#i-sliders"/></svg></button>
+            <button class="header-btn" id="settingsBtn" data-lbl="Settings" type="button" aria-label="Open settings: API providers plus keys, web scraping, personalisation"><svg class="ic" aria-hidden="true"><use href="#i-sliders"/></svg></button>
         </div>
     </header>
     <div class="mp-now" id="mpNow" hidden></div>
@@ -1787,7 +1788,7 @@
             </div>
         </main>
 
-        <button class="side-trigger right" id="rightTrigger" type="button" aria-label="Open settings: API providers plus keys, web scraping, permissions, personalisation"><svg class="ic" aria-hidden="true"><use href="#i-chev-l"/></svg></button>
+        <button class="side-trigger right" id="rightTrigger" type="button" aria-label="Open settings: API providers plus keys, web scraping, personalisation"><svg class="ic" aria-hidden="true"><use href="#i-chev-l"/></svg></button>
 
         <!-- Left Panel: Chats / Prompt & Preferences / AI Memories -->
         <aside class="panel left-panel" id="leftPanel" aria-label="Menu">
@@ -1908,16 +1909,12 @@
                     <span class="set-text"><h3>WEB SCRAPING</h3><p>SerpAPI, Firecrawl, ScraperBee and Browserless keys, switches and tests.</p></span>
                     <svg class="ic set-chev" aria-hidden="true"><use href="#i-chev-r"/></svg>
                 </button>
-                <button class="set-row" role="tab" data-tab="permissions" aria-selected="false" type="button">
-                    <span class="set-text"><h3>PERMISSIONS</h3><p>Wake lock, run in background, notifications, file access, battery optimisation and microphone, plus the YouTube music source.</p></span>
-                    <svg class="ic set-chev" aria-hidden="true"><use href="#i-chev-r"/></svg>
-                </button>
                 <button class="set-row" role="tab" data-tab="personalisation" aria-selected="false" type="button">
                     <span class="set-text"><h3>PERSONALISATION</h3><p>Theme (Dark cyan or Light grey) and the voice that reads Horizon's replies aloud.</p></span>
                     <svg class="ic set-chev" aria-hidden="true"><use href="#i-chev-r"/></svg>
                 </button>
                 <button class="set-row set-vault" role="tab" data-tab="vault" aria-selected="false" type="button">
-                    <span class="set-text"><h3>HORIZON VAULT</h3><p>Your private, encrypted stash: AI and scraping keys, notes, SSH keys, tokens and links. The AI can file notes here too (switch it in PERMISSIONS).</p></span>
+                    <span class="set-text"><h3>HORIZON VAULT</h3><p>Your private, encrypted stash: AI and scraping keys, notes, SSH keys, tokens and links. The AI can file notes here too (switch it in Terminal Controls).</p></span>
                     <svg class="ic set-chev" aria-hidden="true"><use href="#i-chev-r"/></svg>
                 </button>
                 <button class="set-row set-security" role="tab" data-tab="security" aria-selected="false" type="button">
@@ -1985,36 +1982,6 @@
                     <pre id="nativeCheckOut" class="hint" style="white-space:pre-wrap;word-break:break-word;margin-top:10px;user-select:text;" hidden></pre>
                 </section>
                 <div id="vaultRoot"></div>
-            </div>
-
-            <div class="tab-body" role="tabpanel" data-tab="permissions" hidden>
-                <section class="provider-card" id="permIntro">
-                    <div class="settings-row-header">
-                        <div class="settings-row-content">
-                            <h3><svg class="ic" aria-hidden="true"><use href="#i-shield"/></svg> Permissions</h3>
-                            <p>Green is on, red is off.</p>
-                        </div>
-                    </div>
-                    <p class="hint">Tap a switch to turn it on. Horizon asks Android for the permission itself. If Android already blocked the prompt, Horizon opens the right settings page for you.</p>
-                </section>
-                <div id="permList"></div>
-                <div id="vaultPermHost"></div>
-                <section class="provider-card" id="ytCard">
-                    <div class="settings-row-header">
-                        <div class="settings-row-content">
-                            <h3><svg class="ic" aria-hidden="true"><use href="#i-yt"/></svg> YouTube music source</h3>
-                            <p id="ytStatus">Default sources</p>
-                        </div>
-                        <button class="use-btn" id="ytTest" type="button">Test</button>
-                    </div>
-                    <p class="hint">Android tries the native NewPipe extractor first, then direct YouTube clients and these public Piped/Invidious sources. Enable Termux bridge and install download tools for a confirmed yt-dlp + FFmpeg fallback. Put one public server per line; prefix Invidious with inv:. No extractor can guarantee access to private, age-restricted or DRM-protected content.</p>
-                    <textarea class="yt-inst" id="ytInstInput" rows="4" spellcheck="false" autocapitalize="off" placeholder="https://pipedapi.example.com&#10;inv:https://inv.example.com"></textarea>
-                    <div class="card-actions">
-                        <button class="primary-btn" id="ytSave" type="button"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg><span>Save sources</span></button>
-                        <button class="use-btn" id="ytReset" type="button">Reset</button>
-                    </div>
-                </section>
-                <div class="panel-foot">Use the red YouTube button beside + to switch YouTube on for a chat, then ask Horizon for music.</div>
             </div>
 
             <div class="tab-body" role="tabpanel" data-tab="personalisation" hidden>
@@ -2112,6 +2079,7 @@
                     <select id="ttsEngine">
                         <option value="gemini">Natural: Gemini (30 voices)</option>
                         <option value="kokoro">Natural: On-phone voices (8 built in + downloadable library, offline)</option>
+                        <option value="gcloud">Google Cloud Standard · optional free tier</option>
                         <option value="standard">Standard: Android voice (free, offline)</option>
                     </select>
                     <div class="tts-nat" id="ttsNat" hidden>
@@ -2139,6 +2107,13 @@
                     </div>
                     <label class="field-label" for="ttsRate">Speed<span class="tts-val" id="ttsRateVal">1&times;</span></label>
                     <input class="hz-range" type="range" id="ttsRate" min="0.5" max="2" step="0.05" value="1">
+                    <div id="ttsCloudConfig" hidden data-hz-private>
+                        <label class="field-label" for="ttsCloudKey">Google Cloud TTS restricted API key</label>
+                        <input id="ttsCloudKey" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" data-hz-private placeholder="Separate Cloud TTS key, not a Gemini key">
+                        <button id="ttsCloudSave" type="button" class="use-btn">Save Cloud TTS key</button>
+                        <p class="hint">Optional: Standard voices have a 4-million-character monthly free tier. Google requires billing and can charge beyond its allowance. Horizon caps its own requests at 4 million characters per UTC month; this does NOT include other apps, resets or devices. Set provider-side quotas. Text leaves your phone only when you select this engine. Key is stored locally and sent only to Google Cloud TTS.</p>
+                        <a href="https://cloud.google.com/text-to-speech/pricing" target="_blank" rel="noopener noreferrer">Google Cloud pricing and setup</a>
+                    </div>
                     <div id="ttsPitchWrap">
                         <label class="field-label" for="ttsPitch">Pitch<span class="tts-val" id="ttsPitchVal">1&times;</span></label>
                         <input class="hz-range" type="range" id="ttsPitch" min="0.5" max="2" step="0.05" value="1">
@@ -2157,12 +2132,44 @@
                     <button type="button" class="hz-app hz-app-term" data-term-open aria-label="Open terminal"><svg class="hzt-logo" viewBox="0 0 24 24" aria-hidden="true"><rect x="1" y="1" width="22" height="22" rx="6" fill="#fff" stroke="#000" stroke-width="1"/><text x="4.4" y="16.6" font-family="monospace" font-size="12.5" font-weight="700" fill="#000">$_</text></svg><span>Terminal</span></button>
                     <button type="button" class="hz-app" data-addon="lens"><svg class="ic" aria-hidden="true"><use href="#i-lens"/></svg><span>Lens</span></button>
                     <button type="button" class="hz-app" data-addon="youtube"><svg class="ic" aria-hidden="true"><use href="#i-yt"/></svg><span>YouTube</span></button>
+                    <button type="button" class="hz-app hz-contacts-open" aria-label="Open Contacts"><svg class="ic" aria-hidden="true"><use href="#i-users"/></svg><span>Contacts</span></button>
                     <span hidden><button type="button" class="hz-app" data-addon="github"><svg class="ic hz-gh-logo" aria-hidden="true"><use href="#i-gh"/></svg><span>Github Push</span></button><button type="button" class="hz-app" data-addon="downloads"><svg class="ic" aria-hidden="true"><use href="#i-dl"/></svg><span>Downloads</span></button></span>
                 </div>
             </nav>
         </aside>
 
     </div>
+
+
+            <div id="hzTerminalPermissions" class="hzt-permissions" hidden aria-label="Terminal permissions and integrations">
+                <section class="provider-card" id="permIntro">
+                    <div class="settings-row-header">
+                        <div class="settings-row-content">
+                            <h3><svg class="ic" aria-hidden="true"><use href="#i-shield"/></svg> Terminal Control Hub</h3>
+                            <p>Device access · messaging · command approval</p>
+                        </div>
+                    </div>
+                    <p class="hint">Tap a switch to turn it on. Horizon asks Android for the permission itself. If Android already blocked the prompt, Horizon opens the right settings page for you.</p>
+                </section>
+                <div id="permList"></div>
+                <div id="vaultPermHost"></div>
+                <section class="provider-card" id="ytCard">
+                    <div class="settings-row-header">
+                        <div class="settings-row-content">
+                            <h3><svg class="ic" aria-hidden="true"><use href="#i-yt"/></svg> YouTube music source</h3>
+                            <p id="ytStatus">Default sources</p>
+                        </div>
+                        <button class="use-btn" id="ytTest" type="button">Test</button>
+                    </div>
+                    <p class="hint">Android tries the native NewPipe extractor first, then direct YouTube clients and these public Piped/Invidious sources. Enable Termux bridge and install download tools for a confirmed yt-dlp + FFmpeg fallback. Put one public server per line; prefix Invidious with inv:. No extractor can guarantee access to private, age-restricted or DRM-protected content.</p>
+                    <textarea class="yt-inst" id="ytInstInput" rows="4" spellcheck="false" autocapitalize="off" placeholder="https://pipedapi.example.com&#10;inv:https://inv.example.com"></textarea>
+                    <div class="card-actions">
+                        <button class="primary-btn" id="ytSave" type="button"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg><span>Save sources</span></button>
+                        <button class="use-btn" id="ytReset" type="button">Reset</button>
+                    </div>
+                </section>
+                <div class="panel-foot">Use the red YouTube button beside + to switch YouTube on for a chat, then ask Horizon for music.</div>
+            </div>
 
 
     <div id="hzAddonShade" class="hz-addon-shade" hidden></div>
@@ -2174,7 +2181,8 @@
         <button type="button" class="hz-app hz-app-term" data-term-open aria-label="Open terminal"><svg class="hzt-logo" viewBox="0 0 24 24" aria-hidden="true"><rect x="1" y="1" width="22" height="22" rx="6" fill="#fff" stroke="#000" stroke-width="1"/><text x="4.4" y="16.6" font-family="monospace" font-size="12.5" font-weight="700" fill="#000">$_</text></svg><span>Terminal</span></button>
         <button type="button" class="hz-app" data-addon="lens"><svg class="ic" aria-hidden="true"><use href="#i-lens"/></svg><span>Lens</span></button>
         <button type="button" class="hz-app" data-addon="youtube"><svg class="ic" aria-hidden="true"><use href="#i-yt"/></svg><span>YouTube</span></button>
-        <span hidden><button type="button" class="hz-app" data-addon="github"><svg class="ic hz-gh-logo" aria-hidden="true"><use href="#i-gh"/></svg><span>Github Push</span></button><button type="button" class="hz-app" data-addon="downloads"><svg class="ic" aria-hidden="true"><use href="#i-dl"/></svg><span>Downloads</span></button></span>
+        <button type="button" class="hz-app hz-contacts-open" aria-label="Open Contacts"><svg class="ic" aria-hidden="true"><use href="#i-users"/></svg><span>Contacts</span></button>
+                    <span hidden><button type="button" class="hz-app" data-addon="github"><svg class="ic hz-gh-logo" aria-hidden="true"><use href="#i-gh"/></svg><span>Github Push</span></button><button type="button" class="hz-app" data-addon="downloads"><svg class="ic" aria-hidden="true"><use href="#i-dl"/></svg><span>Downloads</span></button></span>
       </div>
       <section class="hz-addon-tile hz-addon-mini"><div class="mp-mini" id="mpMini" aria-label="Music widget"></div></section>
     </aside>
@@ -2239,6 +2247,7 @@
     <script src="horizon_native_audio.js"></script>
     <script src="horizon_music.js"></script>
     <script src="horizon_bridges.js"></script>
+    <script src="horizon_contacts.js"></script>
     <link rel="stylesheet" href="horizon_bridges.css">
     <script src="horizon_group.js"></script>
     <script src="horizon_chips.js"></script>
@@ -4657,6 +4666,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         }
 
         function openChat(id) {
+            if (window.HorizonContacts) HorizonContacts.clear();
             const chat = state.chats.find(c => c.id === id);
             if (!chat) return;
             state.currentId = id;
@@ -4668,6 +4678,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         }
 
         function newChat() {
+            if (window.HorizonContacts) HorizonContacts.clear();
             skipTyping();
             ttsStop();
             state.currentId = null;
@@ -4850,6 +4861,11 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         const SUB_TITLES = { usage: 'USAGE & ENGINE', about: 'ABOUT & UPDATES', providers: 'API Providers + Keys', web: 'Web Scraping', vault: 'HORIZON VAULT', security: 'SECURITY', permissions: 'Permissions', personalisation: 'Personalisation' };
         let rightSub = '';
         function rightPage(name, fromPop) {
+            if (name === 'permissions') {
+                closePanelsUI();
+                if (window.HorizonTerminal) HorizonTerminal.openSettings();
+                return;
+            }
             name = (name === 'home' || !SUB_TITLES[name]) ? '' : name;
             const was = rightSub;
             rightSub = name;
@@ -6357,7 +6373,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         async function saveWebImage(img) {
             const ext = (/\.(png|gif|webp|jpe?g|avif|bmp)(?:[?#]|$)/i.exec(img.url) || [])[1];
             const name = safeName(img.prompt || 'image').slice(0, 60) + '.' + (ext ? ext.toLowerCase() : 'jpg');
-            if (lsGet(LS.filesOn) === '0') throw new Error('Enable File access in Settings → Permissions first.');
+            if (lsGet(LS.filesOn) === '0') throw new Error('Enable File access in Terminal → Controls first.');
             let host = '';
             try { host = new URL(img.url).hostname; } catch (e) { /* no host */ }
             const track = window.HorizonDownloads ? window.HorizonDownloads.begin({ type: 'image', src: 'link', title: name.replace(/\.[^.]+$/, ''), sub: host, retry: { op: 'url', url: img.url, filename: name, kind: 'image' } }) : null;
@@ -7661,7 +7677,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             const n = errs.filter(e => /network error/i.test(e.msg)).length;
             const rest = Math.max(0, errs.length - t - n);
             const parts = [t && `${t} timed out`, n && `${n} unreachable`, rest && `${rest} refused or empty`].filter(Boolean).join(', ');
-            const err = new Error(`${what} failed: no YouTube source answered (${tried} tried${parts ? ': ' + parts : ''}). Sources are public and go down often. Try again, or add a working one in Settings > Permissions > YouTube source.`);
+            const err = new Error(`${what} failed: no YouTube source answered (${tried} tried${parts ? ': ' + parts : ''}). Sources are public and go down often. Try again, or add a working one in Terminal > Controls > YouTube source.`);
             err.ytShort = true;
             return err;
         }
@@ -7819,9 +7835,9 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             },
             // V1.23.0: saves through saveFile (MediaStore, with progress and a real "saved" result) instead of the legacy DownloadManager call
             // that threw "Not one of standard directories: Music/Horizon". prog is an optional object that receives bytes, total, pct, uri.
-            async download(id, kind, prog) {
+            async download(id, kind, prog, fromAI) {
                 if (!/^[\w-]{11}$/.test(id)) throw new Error('Invalid YouTube video ID');
-                if (lsGet(LS.filesOn) === '0') throw new Error('Enable File access in Settings → Permissions first.');
+                if (lsGet(LS.filesOn) === '0') throw new Error('Enable File access in Terminal → Controls first.');
                 // V1.79.0: if the save fails on one YouTube route, ask a different client for a fresh link and try again (up to 3 routes)
                 const skip = [];
                 let lastErr = null;
@@ -7838,7 +7854,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                         skip.push(stream.client);
                     }
                 }
-                if (window.HorizonBridges && HorizonBridges.state().termux.enabled) return HorizonBridges.youtubeDownload(id, kind);
+                if (window.HorizonBridges && HorizonBridges.state().termux.enabled) return HorizonBridges.youtubeDownload(id, kind, !!fromAI);
                 throw lastErr || new Error('download failed');
             }
         };
@@ -8033,7 +8049,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             mirrorDl(d);
             scheduleTray();
             try {
-                const saved = await HorizonYouTube.download(d.vid, 'audio', d);
+                const saved = await HorizonYouTube.download(d.vid, 'audio', d, true);
                 d.path = saved.replace(/^Saved:\s*/, '');
                 d.status = 'done';
                 d.pct = 100;
@@ -8071,7 +8087,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         async function queueDownload(ref, hint) {
             const vid = ytId(ref);
             if (!vid) return { text: `ERROR: "${clip(ref, 60)}" is not a YouTube video id or link.` };
-            if (lsGet(LS.filesOn) === '0') return { text: 'ERROR: File access is switched off. Tell Fezzy to turn it on under Settings > PERMISSIONS.' };
+            if (lsGet(LS.filesOn) === '0') return { text: 'ERROR: File access is switched off. Tell Fezzy to turn it on under Terminal > Controls.' };
             // MediaStore creates app-owned downloads without broad read permission on Android 10+.
             const dup = state.downloads.find(d => d.vid === vid && (d.status === 'running' || d.status === 'queued'));
             if (dup) return { text: `Already downloading ${vid}.` };
@@ -8152,7 +8168,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 if (kind === 'img.search') return await imgSearchTool(arg);
                 if (kind === 'img.save') {
                     if (!window.HorizonDownloads || !HorizonDownloads.ai) return { text: 'ERROR: the Downloads module is not ready. Reopen the app.' };
-                    if (lsGet(LS.filesOn) === '0') return { text: 'ERROR: File access is switched off. Tell Fezzy to turn it on under Settings > PERMISSIONS.' };
+                    if (lsGet(LS.filesOn) === '0') return { text: 'ERROR: File access is switched off. Tell Fezzy to turn it on under Terminal > Controls.' };
                     const bar = String(arg).indexOf('|');
                     const ref = (bar < 0 ? arg : arg.slice(0, bar)).trim();
                     let name = (bar < 0 ? '' : arg.slice(bar + 1)).trim();
@@ -8161,7 +8177,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 }
                 if (kind.indexOf('get.') === 0) {
                     if (!window.HorizonDownloads || !HorizonDownloads.ai) return { text: 'ERROR: the Downloads module is not ready. Reopen the app.' };
-                    if (lsGet(LS.filesOn) === '0') return { text: 'ERROR: File access is switched off. Tell Fezzy to turn it on under Settings > PERMISSIONS.' };
+                    if (lsGet(LS.filesOn) === '0') return { text: 'ERROR: File access is switched off. Tell Fezzy to turn it on under Terminal > Controls.' };
                     return await HorizonDownloads.ai.run(kind, arg);
                 }
                 if (kind === 'yt.search') {
@@ -8676,14 +8692,14 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 },
                 srcFor: path => (window.Capacitor && typeof window.Capacitor.convertFileSrc === 'function') ? window.Capacitor.convertFileSrc('file://' + path) : 'file://' + path,
                 nativeScan: async () => {
-                    if (lsGet(LS.filesOn) === '0') return { err: 'File access is off. Enable it in Settings > Permissions.' };
+                    if (lsGet(LS.filesOn) === '0') return { err: 'File access is off. Enable it in Terminal > Controls.' };
                     if (!NATIVE) return null;
                     let st = await callNative('HorizonPerms', 'storageStatus');
                     if (!(st && st.granted)) {
                         await callNative('HorizonPerms', 'requestStorage');
                         st = await callNative('HorizonPerms', 'storageStatus');
                     }
-                    if (!(st && st.granted)) return { err: 'Allow Music and audio access (Settings > PERMISSIONS > File access) so Horizon can scan your storage.' + nerr() };
+                    if (!(st && st.granted)) return { err: 'Allow Music and audio access (Terminal > Controls > File access) so Horizon can scan your storage.' + nerr() };
                     const r = await callNative('HorizonPerms', 'scanMusic');
                     if (!r) return { err: 'The scan failed.' + nerr() };
                     return { tracks: r.tracks || [] };
@@ -9032,6 +9048,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             if (!TTS) return;
             const s = TTS.settings();
             const cloud = s.engine !== 'standard';
+            $('#ttsCloudConfig').hidden = s.engine !== 'gcloud';
             vEl.engine.value = s.engine;
             vEl.android.hidden = s.engine !== 'standard';
             vEl.pitchWrap.hidden = false;
@@ -9047,6 +9064,11 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 vEl.nVoice.appendChild(o);
             });
             vEl.nVoice.value = s.engine === 'gemini' ? s.gvoice : s.kvoice;
+            if (s.engine === 'gcloud') {
+                vEl.nVoice.hidden = true; vEl.nLbl.hidden = true;
+                vEl.nHint.textContent = 'Google Cloud · en-US Standard C. Separate Cloud TTS key and enabled billing required. Offline fallback stays available.';
+                return;
+            }
             if (s.engine === 'kokoro') {
                 vEl.nHint.textContent = eng.usable()
                     ? 'No key, no account, no limit. 8 small voices are built into Horizon. For more human voices (Kokoro has 28, plus Piper voices) download one from the Voice library below. Everything runs on your phone, so nothing you read aloud leaves it. Speed and pitch both work.'
@@ -9161,6 +9183,12 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             } catch (e) { vEl.diag.textContent = ''; }
         }
 
+        $('#ttsCloudSave').addEventListener('click', () => {
+            const key = $('#ttsCloudKey').value.trim();
+            if (key && !/^[A-Za-z0-9_.-]{20,8192}$/.test(key)) { notice('Paste one complete Cloud TTS key.', 'error'); return; }
+            lsSet('horizon_tts_gcloud_key', key); $('#ttsCloudKey').value = '';
+            notice(key ? 'Cloud TTS key saved locally.' : 'Cloud TTS key removed.');
+        });
         if (TTS) {
             vEl.engine.addEventListener('change', () => {
                 TTS.stop();                      // so Test always runs the voice you just picked
@@ -9205,7 +9233,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                     vEl.status.textContent = TTS.describe();
                 } else if (st.state === 'playing') {
                     vEl.status.classList.remove('error');
-                    vEl.status.textContent = 'Playing: ' + (st.engine === 'gemini' ? 'Gemini voice' : st.engine === 'kokoro' ? 'Built-in voice' : st.engine === 'native' ? 'Android voice' : 'Browser voice');
+                    vEl.status.textContent = 'Playing: ' + (st.engine === 'gcloud' ? 'Google Cloud Standard' : st.engine === 'gemini' ? 'Gemini voice' : st.engine === 'kokoro' ? 'Built-in voice' : st.engine === 'native' ? 'Android voice' : 'Browser voice');
                 } else if (st.state === 'idle' && !vEl.status.classList.contains('error')) {
                     vEl.status.textContent = TTS.describe();
                 }

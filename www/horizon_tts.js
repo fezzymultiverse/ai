@@ -32,8 +32,8 @@
             ['Gacrux', 'Mature'], ['Pulcherrima', 'Forward'], ['Zubenelgenubi', 'Casual'], ['Vindemiatrix', 'Gentle'], ['Sadachbia', 'Lively'], ['Sadaltager', 'Knowledgeable']
         ].map(v => ({ id: v[0], name: v[0] + ' · ' + v[1] }))
     };
-    const MAX_CHARS = { native: 3000, web: 180, gemini: 1200, kokoro: 300 };
-    const ENGINES = ['standard', 'gemini', 'kokoro'];
+    const MAX_CHARS = { native: 3000, web: 180, gemini: 1200, kokoro: 300, gcloud: 1200 };
+    const ENGINES = ['standard', 'gemini', 'kokoro', 'gcloud'];
     // V1.75.0: KITTEN nano replaces Kokoro (Kokoro was too big). Same engine id 'kokoro' so saved settings keep working. The open Kitten nano model and the sherpa-onnx runtime are packed INSIDE the APK by the build
     // (scripts/bundle-voice.sh). HorizonVoicePlugin.kt unpacks the model once into app storage, loads it, and makes each sentence on the phone.
     // Speaker ids are the order of kokoro-multi-lang-v1_0 (voices.bin): af_*, am_*, bf_*, bm_* come first, then the other languages.
@@ -114,7 +114,7 @@
     ];
     KOKORO.voices.forEach(v => { v.pack = 'builtin'; });
     const KOK_BASE = KOKORO.voices.slice();
-    const CLOUD = ['gemini', 'kokoro'];
+    const CLOUD = ['gemini', 'kokoro', 'gcloud'];
     const KEYS = {
         engine: 'horizon_tts_engine',
         voice: 'horizon_tts_voice',
@@ -152,6 +152,7 @@
         try { list = keysFn ? keysFn(id) || [] : []; } catch (e) { list = []; }
         return list.filter((k, i, a) => typeof k === 'string' && k.trim() && k !== 'free' && a.indexOf(k) === i).map(k => k.trim());
     }
+    let packsFlight = null;
     let kokIds = KOKORO.voices.map(v => v.id);
     // V1.86.0: the Built-in voice list = bundled Kitten voices + the voices of every downloaded pack. Rebuilt in place (the app holds a reference to this array).
     function packsInstalled() {
@@ -694,13 +695,16 @@
     async function packsRefresh() {
         const p = voicePlugin();
         if (!p || typeof p.packs !== 'function') return packsInstalled();
-        try {
-            const r = await p.packs();
-            const ids = (r && Array.isArray(r.installed) ? r.installed : []).filter(id => PACKS.some(pk => pk.id === id));
-            ls.set(KEYS.packs, JSON.stringify(ids));
-        } catch (e) { /* keep the last known list */ }
-        rebuildVoices();
-        return packsInstalled();
+        if (packsFlight) return packsFlight;
+        packsFlight = (async () => {
+            try {
+                const r = await withTimeout(p.packs(), 5000, 'Voice library status timed out');
+                const ids = (r && Array.isArray(r.installed) ? r.installed : []).filter(id => PACKS.some(pk => pk.id === id));
+                ls.set(KEYS.packs, JSON.stringify(ids));
+            } catch (e) { /* keep the cache; native synth still validates installation */ }
+            rebuildVoices(); return packsInstalled();
+        })();
+        try { return await packsFlight; } finally { packsFlight = null; }
     }
     async function packDownload(id, onProgress) {
         const p = voicePlugin();
@@ -713,6 +717,9 @@
             const r = await p.download({ id, url: pk.url });
             if (!r || !r.ok) throw new Error((r && r.error) || 'the download failed');
             await packsRefresh();
+            kokReady = null; kokPack = '';
+            // The completed download becomes the selected offline voice, not a stale bundled id.
+            set('kvoice', pk.voices[0][0]); set('engine', 'kokoro');
         } finally { if (ln && typeof ln.remove === 'function') { try { await ln.remove(); } catch (e) { /* ignore */ } } }
     }
     async function packRemove(id) {
@@ -738,6 +745,30 @@
         }
     }
     const runGemini = (chunks, tok, s, started) => runCloud(t => geminiSynth(t, s.gvoice), chunks, tok, s, started);
+    async function googleCloudSynth(text) {
+        const key = (ls.get('horizon_tts_gcloud_key') || '').trim();
+        if (!key) throw new Error('Add a Google Cloud Text-to-Speech key in Voice settings (separate from Gemini)');
+        const month = new Date().toISOString().slice(0, 7);
+        let usage; try { usage = JSON.parse(ls.get('horizon_tts_gcloud_usage') || '{}'); } catch (_) { usage = {}; }
+        const used = usage.month === month ? Number(usage.chars) || 0 : 0;
+        const chars = Array.from(text).length;
+        if (used + chars > 4000000) throw new Error('Horizon local Standard voice monthly cap reached. Using offline voice');
+        // Reserve before sending; conservatively count failed requests too. No retry spending.
+        const reservation = JSON.stringify({month, chars: used + chars});
+        try {
+            root.localStorage.setItem('horizon_tts_gcloud_usage', reservation);
+            if (root.localStorage.getItem('horizon_tts_gcloud_usage') !== reservation) throw new Error('not persisted');
+        } catch (_) { throw new Error('Cannot save Cloud TTS usage safely; use an offline voice or free local storage first'); }
+        const res = await withTimeout(root.fetch('https://texttospeech.googleapis.com/v1/text:synthesize', {
+            method: 'POST', headers: {'Content-Type':'application/json', 'x-goog-api-key': key},
+            body: JSON.stringify({input:{text},voice:{languageCode:'en-US',name:'en-US-Standard-C'},audioConfig:{audioEncoding:'LINEAR16'}})
+        }), 25000, 'Google Cloud voice timed out');
+        if (!res.ok) throw new Error('Google Cloud voice HTTP ' + res.status + '. Check API enablement, restricted key and billing account');
+        const data = await res.json();
+        if (!data.audioContent) throw new Error('Google Cloud returned no audio');
+        return new Blob([b64ToBytes(data.audioContent)], { type: 'audio/wav' });
+    }
+    const runGoogleCloud = (chunks, tok, s, started) => runCloud(googleCloudSynth, chunks, tok, s, started);
     const runKokoro = (chunks, tok, s, started) => runCloud(t => kokoroSynth(t, s.kvoice), chunks, tok, s, started);
 
     // Android can refuse to start audio that was not triggered by a tap, and cloud voices take seconds to arrive,
@@ -865,8 +896,8 @@
     }
 
     // ------------------------------------------------------------- orchestration
-    const RUN = { gemini: runGemini, kokoro: runKokoro, native: runNative, web: runWeb };
-    const LABEL = { gemini: 'Gemini voice', kokoro: 'Built-in voice', native: 'Android voice', web: 'Browser voice' };
+    const RUN = { gcloud: runGoogleCloud, gemini: runGemini, kokoro: runKokoro, native: runNative, web: runWeb };
+    const LABEL = { gcloud: 'Google Cloud Standard', gemini: 'Gemini voice', kokoro: 'Built-in voice', native: 'Android voice', web: 'Browser voice' };
 
     function stop(silent) {
         if (paused) {
@@ -892,6 +923,8 @@
         stop(true);
         const tok = { cancelled: false };
         cur = { id, tok };
+        if (ls.get(KEYS.engine) === 'kokoro') await packsRefresh();
+        if (tok.cancelled) return false;
         const s = settings();
         applySlot(s, opts && opts.slot);
         const text = speakable(rawText);
@@ -1032,6 +1065,7 @@
     }
     function describe() {
         const s = settings();
+        if (s.engine === 'gcloud') return 'Google Cloud Standard · optional free tier, billing account required';
         if (s.engine === 'gemini') {
             if (!cloudKeys('gemini').length) return 'Gemini voice needs a key. Using the Android voice for now.';
             return 'Natural voice (Gemini · ' + s.gvoice + ')';
@@ -1070,6 +1104,7 @@
         status: () => status,
         speakable, chunkText,
         cloud: {
+            gcloud: { voices: [], keyCount: () => ls.get('horizon_tts_gcloud_key') ? 1 : 0 },
             gemini: { voices: GEMINI.voices, keyCount: () => cloudKeys('gemini').length },
             kokoro: { voices: KOKORO.voices, usable: kokoroUsable },
         },

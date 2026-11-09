@@ -1,0 +1,20 @@
+{
+  "checks": [
+    "boot has no uncaught JavaScript errors",
+    "Permissions no longer lives in Settings",
+    "single moved permissions tree visible inside standalone Terminal",
+    "Terminal controls fit mobile viewport",
+    "Terminal input usable after controls close",
+    "Contacts tile occupies rightmost dock column",
+    "Contacts dialog opens and closes",
+    "Cloud TTS key masked, saved locally, field cleared",
+    "selected contact card reaches background send route without WhatsApp navigation",
+    "new chat clears selected recipient",
+    "music extension still opens",
+    "group chat configuration sheet still opens",
+    "late keyboard-hidden event preserves editor focus and typed text",
+    "Terminal controls and section navigation fit 320px and 768px layouts"
+  ],
+  "errors": [],
+  "androidDeviceTested": false
+}

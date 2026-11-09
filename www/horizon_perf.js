@@ -66,10 +66,19 @@
 
   var chat = document.getElementById('chatInput');
   if (chat) {
-    chat.addEventListener('focus', function () { de.classList.add('hz-kb-open'); }, { passive: true });
-    chat.addEventListener('blur', function () { de.classList.remove('hz-kb-open'); }, { passive: true });
+    // One document-wide focus owner, shared by chat, contacts and Terminal editors.
     if (document.activeElement === chat) de.classList.add('hz-kb-open');
   }
+
+  function syncEditor() {
+    var a = document.activeElement;
+    var editing = !!a && (a.tagName === 'TEXTAREA' || a.tagName === 'INPUT' || a.isContentEditable);
+    de.classList.toggle('hz-kb-open', editing);
+    window.hzEditorFocused = editing;
+  }
+  document.addEventListener('focusin', syncEditor, { passive: true });
+  document.addEventListener('focusout', function () { queueMicrotask(syncEditor); }, { passive: true });
+  syncEditor();
 
   /* ---------------------------------------------------------------- recording */
   function push(list, row) { list.push(row); if (list.length > KEEP) list.shift(); }

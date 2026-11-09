@@ -6,7 +6,7 @@
     'use strict';
     var LS_ON = 'horizon_shell_on';
     var SRC = '\\[\\[shell:\\s*((?:(?!\\]\\])[\\s\\S])*?)\\s*\\]\\]';
-    var SECRET = /AIza[\w-]{20,}|gsk_[\w]{20,}|gh[pousr]_[\w]{20,}|github_pat_[\w]{20,}|sk-[\w-]{20,}|-----BEGIN[\s\S]*?(?:-----END[^-]*-----|$)/g;
+    var SECRET = /A[Qq][.\w-]{20,}|AIza[\w-]{20,}|gsk_[\w]{20,}|gh[pousr]_[\w]{20,}|github_pat_[\w]{20,}|sk-[\w-]{20,}|-----BEGIN[\s\S]*?(?:-----END[^-]*-----|$)/g;
     var SPEEDBUMP = /\/data\/(data|user)|app_webview|shared_prefs|localstorage|leveldb|\.\.\//i;   // a speed bump only: the confirm dialog is the real gate
 
     function plugin() { var C = window.Capacitor; return C && C.Plugins && C.Plugins.HorizonShell || null; }
@@ -19,7 +19,7 @@
     function execute(cmd, opts) {
         opts = opts || {};
         cmd = String(cmd == null ? '' : cmd);
-        if (!enabled()) return Promise.reject(new Error('Shell is off. Turn it on in Settings, Permissions, Native shell.'));
+        if (!enabled()) return Promise.reject(new Error('Shell is off. Turn it on in Terminal, Controls, Native shell.'));
         if (!native()) return Promise.reject(new Error('Shell needs the Horizon Android app.'));
         return plugin().execute({ cmd: cmd, timeoutMs: opts.timeoutMs || 15000, maxBytes: opts.maxBytes || 65536 });
     }
@@ -31,7 +31,7 @@
     }
     /* AI path: asks you first, blocks the obvious reach into Horizon's own data, hides key-like text in the output. */
     function run(kind, arg) {
-        if (!enabled()) return Promise.resolve({ text: 'ERROR: shell is off. Tell Fezzy to switch on Native shell in Permissions.' });
+        if (!enabled()) return Promise.resolve({ text: 'ERROR: shell is off. Tell Fezzy to switch on Native shell in Terminal Controls.' });
         if (!arg) return Promise.resolve({ text: 'ERROR: use [[shell: command]].' });
         if (SPEEDBUMP.test(arg)) return Promise.resolve({ text: 'ERROR: that command reaches into app data and was refused.' });
         var ok = false;

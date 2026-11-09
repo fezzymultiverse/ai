@@ -150,7 +150,7 @@
     var reduce = false; try { reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { /* default */ }
     (function frame(ts) {
       rainRaf = requestAnimationFrame(frame);
-      if (term.hidden || document.hidden || reduce || ts - last < 70) return;
+      if (term.hidden || document.hidden || reduce || window.hzEditorFocused || window.hzKbBusy || term.classList.contains("hzt-controls-on") || ts - last < 70) return;
       last = ts;
       rainCtx.fillStyle = 'rgba(7,4,15,.14)'; rainCtx.fillRect(0, 0, cv.width, cv.height);
       rainCtx.font = size + 'px monospace';
@@ -172,7 +172,7 @@
     if (navigator.getBattery) navigator.getBattery().then(function (b) { batt = b; }).catch(function () { /* no battery api */ });
     function pad(n) { return String(n).padStart(2, '0'); }
     function tick() {
-      if (term.hidden) return;
+      if (term.hidden || document.hidden || window.hzEditorFocused || window.hzKbBusy) return;
       var d = new Date(), up = Math.floor((Date.now() - t0) / 1000);
       cClock.textContent = '\u25C6 ' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
       cUp.textContent = 'UP ' + pad(Math.floor(up / 60)) + ':' + pad(up % 60);

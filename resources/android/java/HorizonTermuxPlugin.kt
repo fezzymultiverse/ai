@@ -28,11 +28,14 @@ class HorizonTermuxPlugin : Plugin() {
     @PluginMethod fun status(call: PluginCall) {
         val installed = try { context.packageManager.getPackageInfo("com.termux", 0); true } catch (_: Exception) { false }
         call.resolve(JSObject().put("installed", installed).put("enabled", prefs(context).getBoolean("enabled", false))
+            .put("aiEnabled", prefs(context).getBoolean("aiEnabled", false))
             .put("permission", ContextCompat.checkSelfPermission(context, PERMISSION) == PackageManager.PERMISSION_GRANTED)
             .put("setup", "Termux must be initialized once and allow-external-apps=true enabled in ~/.termux/termux.properties. Android prevents Horizon changing that private setting."))
     }
     @PluginMethod fun configure(call: PluginCall) {
-        prefs(context).edit().putBoolean("enabled", call.getBoolean("enabled", false) == true).apply(); call.resolve()
+        val e = prefs(context).edit()
+        for (key in arrayOf("enabled", "aiEnabled")) call.getBoolean(key)?.let { e.putBoolean(key, it) }
+        e.commit(); call.resolve()
     }
     @PluginMethod fun requestAccess(call: PluginCall) { requestPermissionForAlias("termux", call, "permissionResult") }
     @PermissionCallback private fun permissionResult(call: PluginCall) {
@@ -45,7 +48,9 @@ class HorizonTermuxPlugin : Plugin() {
         } catch (e: Exception) { call.reject(e.message) }
     }
     @PluginMethod fun execute(call: PluginCall) {
-        if (!prefs(context).getBoolean("enabled", false)) { call.reject("Termux bridge is off in Permissions"); return }
+        if (HorizonLockPlugin.locked) { call.reject("Unlock Horizon to run commands"); return }
+        if (call.getBoolean("fromAI", false) == true && !prefs(context).getBoolean("aiEnabled", false)) { call.reject("AI commands are off in Terminal Controls"); return }
+        if (!prefs(context).getBoolean("enabled", false)) { call.reject("Termux bridge is off in Terminal Controls"); return }
         if (ContextCompat.checkSelfPermission(context, PERMISSION) != PackageManager.PERMISSION_GRANTED) { call.reject("Grant the Termux Run commands permission first"); return }
         val cmd = call.getString("cmd")?.trim() ?: ""
         if (cmd.isEmpty() || cmd.length > 8000 || cmd.contains('\u0000')) { call.reject("Command must contain 1–8000 characters"); return }
@@ -61,6 +66,8 @@ class HorizonTermuxPlugin : Plugin() {
         var pending: PendingIntent? = null
         val id = UUID.randomUUID().toString()
         try {
+            if (HorizonLockPlugin.locked) throw IllegalStateException("Unlock Horizon to run commands")
+            if (call.getBoolean("fromAI", false) == true && !prefs(context).getBoolean("aiEnabled", false)) throw IllegalStateException("AI command permission was revoked")
             if (!prefs(context).getBoolean("enabled", false)) throw IllegalStateException("Termux bridge was switched off")
             val callback = Intent(context, HorizonTermuxResultReceiver::class.java).apply {
                 action = "${context.packageName}.TERMUX_RESULT"

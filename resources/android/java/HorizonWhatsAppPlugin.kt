@@ -1,6 +1,14 @@
 package __APPID__
 
 import android.app.Notification
+import android.Manifest
+import android.content.pm.PackageManager
+import android.provider.ContactsContract
+import android.telephony.PhoneNumberUtils
+import androidx.core.content.ContextCompat
+import com.getcapacitor.PermissionState
+import com.getcapacitor.annotation.Permission
+import com.getcapacitor.annotation.PermissionCallback
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -60,13 +68,109 @@ internal object HorizonWhatsAppStore {
     }
 }
 
-@CapacitorPlugin(name = "HorizonWhatsApp")
+@CapacitorPlugin(name = "HorizonWhatsApp", permissions = [Permission(alias = "contacts", strings = [Manifest.permission.READ_CONTACTS])])
 class HorizonWhatsAppPlugin : Plugin() {
+    private val contactWorker = java.util.concurrent.Executors.newSingleThreadExecutor()
+    private fun samePhone(a: String, b: String): Boolean {
+        // Android's loose compare can match only a trailing subscriber fragment.
+        // Never send to a different country/number on that basis. Ambiguous local
+        // versus international formatting fails closed instead of guessing.
+        val left = PhoneNumberUtils.normalizeNumber(a).filter { it.isDigit() }
+        val right = PhoneNumberUtils.normalizeNumber(b).filter { it.isDigit() }
+        return left.length >= 8 && left == right
+    }
+    private fun requireContacts(call: PluginCall): Boolean {
+        if (HorizonLockPlugin.locked) { call.reject("Unlock Horizon to use contacts"); return false }
+        if (getPermissionState("contacts") != PermissionState.GRANTED) { call.reject("Grant Contacts in Terminal Controls first"); return false }
+        return true
+    }
+    @PluginMethod fun requestContacts(call: PluginCall) {
+        if (HorizonLockPlugin.locked) { call.reject("Unlock Horizon first"); return }
+        requestPermissionForAlias("contacts", call, "contactsResult")
+    }
+    @PermissionCallback private fun contactsResult(call: PluginCall) {
+        call.resolve(JSObject().put("granted", getPermissionState("contacts") == PermissionState.GRANTED))
+    }
+    // Bounded device-only search. No address book is sent to a provider.
+    @PluginMethod fun contacts(call: PluginCall) {
+        if (!requireContacts(call)) return
+        val query = (call.getString("query") ?: "").trim().take(100)
+        val offset = (call.getInt("offset", 0) ?: 0).coerceAtLeast(0)
+        contactWorker.execute {
+            try {
+                val phone = ContactsContract.CommonDataKinds.Phone.CONTENT_URI
+                val uri = if (query.isBlank()) phone else android.net.Uri.withAppendedPath(ContactsContract.CommonDataKinds.Phone.CONTENT_FILTER_URI, android.net.Uri.encode(query))
+                val cols = arrayOf("_id", "display_name", "data1", "contact_id")
+                val out = JSArray(); var skipped = 0; var hasMore = false
+                context.contentResolver.query(uri, cols, null, null, "display_name COLLATE LOCALIZED ASC, _id ASC")?.use { c ->
+                    while (c.moveToNext()) {
+                        if (skipped++ < offset) continue
+                        if (out.length() >= 50) { hasMore = true; break }
+                        out.put(JSObject().put("id", c.getString(0)).put("name", c.getString(1) ?: "Contact").put("phone", c.getString(2) ?: "").put("contactId", c.getString(3)))
+                    }
+                }
+                if (!requireContacts(call)) return@execute
+                call.resolve(JSObject().put("contacts", out).put("hasMore", hasMore).put("nextOffset", offset + out.length()))
+            } catch (e: Exception) { call.reject("Could not read contacts: ${e.message}") }
+        }
+    }
+    // Strict identity matching: duplicate display names/numbers must be selected by phone-row id.
+    @PluginMethod fun sendToContact(call: PluginCall) {
+        if (!requireContacts(call)) return
+        val id = call.getString("contactId") ?: ""
+        val name = (call.getString("name") ?: "").trim()
+        val text = (call.getString("text") ?: "").trim()
+        val business = call.getBoolean("business", false) == true
+        if (text.isEmpty() || text.length > 4000) { call.reject("Message must contain 1–4000 characters"); return }
+        if (id.isBlank() && name.isBlank()) { call.reject("Select a contact or provide an exact contact name"); return }
+        contactWorker.execute {
+            try {
+                val cols = arrayOf("_id", "display_name", "data1", "contact_id")
+                val selection = if (id.isNotBlank()) "_id = ?" else "display_name = ? COLLATE NOCASE"
+                val arg = if (id.isNotBlank()) id else name
+                val matches = mutableListOf<Pair<String, String>>()
+                context.contentResolver.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, cols, selection, arrayOf(arg), null)?.use { c ->
+                    while (c.moveToNext()) {
+                        val pair = Pair(c.getString(1) ?: "", c.getString(2) ?: "")
+                        if (pair !in matches) matches.add(pair)
+                        if (matches.size > 1) break
+                    }
+                }
+                if (matches.size != 1) throw IllegalStateException(if (matches.isEmpty()) "No matching contact" else "Ambiguous contact. Select the exact number in Contacts")
+                if (!requireContacts(call)) return@execute
+                val (resolvedName, number) = matches.single()
+                val pkg = if (business) "com.whatsapp.w4b" else "com.whatsapp"
+                val identities = mutableSetOf<String>()
+                context.contentResolver.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, arrayOf("contact_id", "data1"), "display_name = ? COLLATE NOCASE", arrayOf(resolvedName), null)?.use { c ->
+                    while (c.moveToNext()) identities.add(c.getString(0) + ":" + PhoneNumberUtils.normalizeNumber(c.getString(1) ?: ""))
+                }
+                val uniqueNameAndNumber = identities.size == 1
+                val rows = HorizonWhatsAppStore.rows(context)
+                val candidates = mutableListOf<JSONObject>()
+                for (i in rows.length() - 1 downTo 0) {
+                    val row = rows.getJSONObject(i)
+                    if (row.optString("package") != pkg || row.optBoolean("group", true) || !HorizonWhatsAppStore.replies.containsKey(row.optString("key"))) continue
+                    val remotePhone = row.optString("phone")
+                    // Prefer notification Person URI. Exact saved-name matching is allowed only for a direct chat.
+                    val same = if (remotePhone.isNotBlank()) samePhone(remotePhone, number)
+                        else uniqueNameAndNumber && row.optString("conversation").equals(resolvedName, true) && row.optString("sender").equals(resolvedName, true)
+                    if (same) candidates.add(row)
+                }
+                val conversations = candidates.map { it.optString("key") }.distinct()
+                if (conversations.size != 1) throw IllegalStateException(if (conversations.isEmpty()) "No active direct-chat reply notification for this contact. Background send is unavailable; WhatsApp was not opened" else "Multiple matching chats. Use an explicit inbox reply instead")
+                val row = candidates.first()
+                activity.runOnUiThread { confirmReply(call, row.optString("id"), text, row) }
+            } catch (e: Exception) { call.reject(e.message ?: "Contact send failed") }
+        }
+    }
+    override fun handleOnDestroy() { contactWorker.shutdown(); super.handleOnDestroy() }
+
     @PluginMethod fun status(call: PluginCall) {
         val p = HorizonWhatsAppStore.prefs(context)
         call.resolve(JSObject().put("access", NotificationManagerCompat.getEnabledListenerPackages(context).contains(context.packageName))
             .put("personal", p.getBoolean("personal", false)).put("business", p.getBoolean("business", false))
             .put("alerts", p.getBoolean("alerts", true)).put("replies", p.getBoolean("replies", false))
+            .put("contacts", getPermissionState("contacts") == PermissionState.GRANTED)
             .put("connected", HorizonWhatsAppListener.connected)
             .put("notifications", NotificationManagerCompat.from(context).areNotificationsEnabled()))
     }
@@ -151,20 +255,28 @@ class HorizonWhatsAppPlugin : Plugin() {
         var row: JSONObject? = null
         for (i in 0 until rows.length()) if (rows.getJSONObject(i).optString("id") == id) row = rows.getJSONObject(i)
         val found = row ?: run { call.reject("Message no longer available"); return }
-        val action = HorizonWhatsAppStore.replies[found.optString("key")] ?: run { call.reject("This notification no longer has a reply action. Open WhatsApp to send a new message."); return }
-        val inputs = action.remoteInputs?.filter { it.allowFreeFormInput }?.toTypedArray()
-        if (inputs.isNullOrEmpty()) { call.reject("WhatsApp did not expose a text reply action"); return }
-        // Native confirmation cannot be skipped by a forged AI tool or JS call.
+        confirmReply(call, id, text, found)
+    }
+    private fun confirmReply(call: PluginCall, id: String, text: String, found: JSONObject) {
+        if (HorizonLockPlugin.locked || !HorizonWhatsAppStore.prefs(context).getBoolean("replies", false) || !HorizonWhatsAppStore.enabled(context, found.optString("package"))) { call.reject("Unlock Horizon and enable confirmed replies in Terminal Controls"); return }
+        if (!HorizonWhatsAppStore.replies.containsKey(found.optString("key"))) { call.reject("No active reply notification; WhatsApp was not opened"); return }
         activity.runOnUiThread {
             android.app.AlertDialog.Builder(activity).setTitle("Reply to ${found.optString("conversation")}")
                 .setMessage(text).setNegativeButton("Cancel") { _, _ -> call.reject("Reply cancelled") }
                 .setOnCancelListener { call.reject("Reply cancelled") }
                 .setPositiveButton("Send") { _, _ ->
                     try {
+                        if (HorizonLockPlugin.locked) throw IllegalStateException("Unlock Horizon to send replies")
+                        if ((call.getString("contactId") != null || call.getString("name") != null) && getPermissionState("contacts") != PermissionState.GRANTED) throw IllegalStateException("Contacts permission was revoked")
                         if (!HorizonWhatsAppStore.enabled(context, found.optString("package")) || !HorizonWhatsAppStore.prefs(context).getBoolean("replies", false)) throw IllegalStateException("WhatsApp permission was switched off")
+                        // Re-read after approval: an action may expire while the dialog is open.
+                        val action = HorizonWhatsAppStore.replies[found.optString("key")] ?: throw IllegalStateException("Reply notification expired; WhatsApp was not opened")
+                        val inputs = action.remoteInputs?.filter { it.allowFreeFormInput }?.toTypedArray()
+                        if (inputs.isNullOrEmpty()) throw IllegalStateException("WhatsApp did not expose a text reply action")
                         val intent = Intent(); val bundle = Bundle()
                         inputs.forEach { bundle.putCharSequence(it.resultKey, text) }
                         android.app.RemoteInput.addResultsToIntent(inputs, intent, bundle)
+                        if (Build.VERSION.SDK_INT >= 31 && action.actionIntent.isActivity) throw IllegalStateException("Reply action would open WhatsApp; background send refused")
                         action.actionIntent.send(context, 0, intent)
                         call.resolve(JSObject().put("submitted", true).put("delivered", false))
                     } catch (e: Exception) { call.reject("WhatsApp reply failed: ${e.message}") }
@@ -203,14 +315,21 @@ class HorizonWhatsAppListener : NotificationListenerService() {
         val e = n.extras ?: return
         val title = e.getCharSequence(Notification.EXTRA_TITLE)?.toString() ?: "WhatsApp"
         val action = n.actions?.firstOrNull { a -> a.remoteInputs?.any { it.allowFreeFormInput } == true }
+        val retained = HorizonWhatsAppStore.rows(this)
+        val liveKeys = (0 until retained.length()).map { retained.getJSONObject(it).optString("key") }.toSet()
+        HorizonWhatsAppStore.replies.keys.removeAll { it !in liveKeys && it != sbn.key }
+        if (action == null) HorizonWhatsAppStore.replies.remove(sbn.key)
         if (action != null && HorizonWhatsAppStore.prefs(this).getBoolean("replies", false)) HorizonWhatsAppStore.replies[sbn.key] = action
         val parsed = NotificationCompat.MessagingStyle.extractMessagingStyleFromNotification(n)
+        val group = parsed == null || parsed.isGroupConversation || e.getCharSequence(Notification.EXTRA_CONVERSATION_TITLE)?.isNotBlank() == true
         val msgs = parsed?.messages
         val items = if (!msgs.isNullOrEmpty()) msgs.map { Triple(it.person?.name?.toString() ?: title, it.text?.toString() ?: "[Attachment]", it.timestamp) }
             else listOf(Triple(title, (e.getCharSequence(Notification.EXTRA_BIG_TEXT) ?: e.getCharSequence(Notification.EXTRA_TEXT))?.toString() ?: "", sbn.postTime))
         for ((sender, body, time) in items) {
             if (body.isBlank()) continue
-            val row = JSONObject().put("id", java.util.UUID.nameUUIDFromBytes("${sbn.key}|$sender|$time|$body".toByteArray()).toString())
+            val personUri = parsed?.messages?.lastOrNull { it.person?.name?.toString() == sender }?.person?.uri ?: ""
+            val phone = if (personUri.startsWith("tel:")) personUri.removePrefix("tel:").substringBefore('?') else ""
+            val row = JSONObject().put("group", group).put("phone", phone).put("id", java.util.UUID.nameUUIDFromBytes("${sbn.key}|$sender|$time|$body".toByteArray()).toString())
                 .put("key", sbn.key).put("package", pkg).put("sender", sender.take(200)).put("conversation", title.take(200))
                 .put("text", body.take(8000)).put("time", time).put("business", pkg.endsWith("w4b"))
             if (!HorizonWhatsAppStore.add(this, row)) continue

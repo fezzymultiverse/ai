@@ -1,0 +1,434 @@
+
+> horizon@1.87.1 test
+> node --test tests/*.test.cjs
+
+TAP version 13
+# Subtest: all application JavaScript parses
+ok 1 - all application JavaScript parses
+  ---
+  duration_ms: 30.647333
+  type: 'test'
+  ...
+# Subtest: bridge tools are absent from prompt when both sources are off
+ok 2 - bridge tools are absent from prompt when both sources are off
+  ---
+  duration_ms: 2.152265
+  type: 'test'
+  ...
+# Subtest: bridge parser accepts supported tools and caps each round at three
+ok 3 - bridge parser accepts supported tools and caps each round at three
+  ---
+  duration_ms: 1.260309
+  type: 'test'
+  ...
+# Subtest: WhatsApp read is blocked when permission switches are off
+ok 4 - WhatsApp read is blocked when permission switches are off
+  ---
+  duration_ms: 1.080651
+  type: 'test'
+  ...
+# Subtest: declining AI sharing never reads captured WhatsApp content
+ok 5 - declining AI sharing never reads captured WhatsApp content
+  ---
+  duration_ms: 0.791357
+  type: 'test'
+  ...
+# Subtest: approved WhatsApp read returns captured-only data, not a history claim
+ok 6 - approved WhatsApp read returns captured-only data, not a history claim
+  ---
+  duration_ms: 0.905756
+  type: 'test'
+  ...
+# Subtest: reply preserves message text containing pipes and does not claim delivery
+ok 7 - reply preserves message text containing pipes and does not claim delivery
+  ---
+  duration_ms: 0.875976
+  type: 'test'
+  ...
+# Subtest: new Business conversation is explicitly a draft, never a silent send
+ok 8 - new Business conversation is explicitly a draft, never a silent send
+  ---
+  duration_ms: 0.806548
+  type: 'test'
+  ...
+# Subtest: nonzero Termux exit code returns an AI tool error
+ok 9 - nonzero Termux exit code returns an AI tool error
+  ---
+  duration_ms: 1.240257
+  type: 'test'
+  ...
+# Subtest: Termux success requires a completed native result
+ok 10 - Termux success requires a completed native result
+  ---
+  duration_ms: 1.302943
+  type: 'test'
+  ...
+# Subtest: shell quoting preserves untrusted URLs literally
+ok 11 - shell quoting preserves untrusted URLs literally
+  ---
+  duration_ms: 4.817418
+  type: 'test'
+  ...
+# Subtest: invalid YouTube ID never reaches Termux execution
+ok 12 - invalid YouTube ID never reaches Termux execution
+  ---
+  duration_ms: 1.228823
+  type: 'test'
+  ...
+# Subtest: yt-dlp uses a literal URL, no playlist, retries, and a quoted destination
+ok 13 - yt-dlp uses a literal URL, no playlist, retries, and a quoted destination
+  ---
+  duration_ms: 0.845813
+  type: 'test'
+  ...
+# Subtest: torrent commands stop seeding and quote the entire magnet
+ok 14 - torrent commands stop seeding and quote the entire magnet
+  ---
+  duration_ms: 0.960133
+  type: 'test'
+  ...
+# Subtest: native permissions and components are wired into the generated build
+ok 15 - native permissions and components are wired into the generated build
+  ---
+  duration_ms: 0.197783
+  type: 'test'
+  ...
+# Subtest: WhatsApp reply and Termux execution both retain native confirmations
+ok 16 - WhatsApp reply and Termux execution both retain native confirmations
+  ---
+  duration_ms: 0.269273
+  type: 'test'
+  ...
+# Subtest: music library automatically scans, is single-flight and waits for initialization
+ok 17 - music library automatically scans, is single-flight and waits for initialization
+  ---
+  duration_ms: 0.555174
+  type: 'test'
+  ...
+# Subtest: keyboard fixes avoid late blur and defer measuring during composition
+ok 18 - keyboard fixes avoid late blur and defer measuring during composition
+  ---
+  duration_ms: 2.619256
+  type: 'test'
+  ...
+# Subtest: AI Termux gate refuses command before native execution
+ok 19 - AI Termux gate refuses command before native execution
+  ---
+  duration_ms: 0.772749
+  type: 'test'
+  ...
+# Subtest: AI Termux requests carry native-enforced origin flag
+ok 20 - AI Termux requests carry native-enforced origin flag
+  ---
+  duration_ms: 1.606913
+  type: 'test'
+  ...
+# Subtest: manual Termux path does not require AI toggle
+ok 21 - manual Termux path does not require AI toggle
+  ---
+  duration_ms: 0.661279
+  type: 'test'
+  ...
+# Subtest: WhatsApp contact send preserves pipes and does not open a compose draft
+ok 22 - WhatsApp contact send preserves pipes and does not open a compose draft
+  ---
+  duration_ms: 0.853432
+  type: 'test'
+  ...
+# Subtest: selected recipient resolves to explicit phone-row id
+ok 23 - selected recipient resolves to explicit phone-row id
+  ---
+  duration_ms: 0.684745
+  type: 'test'
+  ...
+# Subtest: missing selected recipient never calls native send
+ok 24 - missing selected recipient never calls native send
+  ---
+  duration_ms: 0.613754
+  type: 'test'
+  ...
+# Subtest: expired contact reply propagates error without draft fallback
+ok 25 - expired contact reply propagates error without draft fallback
+  ---
+  duration_ms: 0.795328
+  type: 'test'
+  ...
+# Subtest: new send tool remains bounded by shared bridge parser budget
+ok 26 - new send tool remains bounded by shared bridge parser budget
+  ---
+  duration_ms: 0.58862
+  type: 'test'
+  ...
+# Subtest: native contact permission, lock, exact-name disambiguation and group gates remain present
+ok 27 - native contact permission, lock, exact-name disambiguation and group gates remain present
+  ---
+  duration_ms: 0.323126
+  type: 'test'
+  ...
+# Subtest: native contact send path cannot launch WhatsApp
+ok 28 - native contact send path cannot launch WhatsApp
+  ---
+  duration_ms: 0.183421
+  type: 'test'
+  ...
+# Subtest: native engine installation cannot release on the download worker
+ok 29 - native engine installation cannot release on the download worker
+  ---
+  duration_ms: 0.133785
+  type: 'test'
+  ...
+# Subtest: speech build pins compatible phonemizer API rather than latest release
+ok 30 - speech build pins compatible phonemizer API rather than latest release
+  ---
+  duration_ms: 0.091005
+  type: 'test'
+  ...
+# Subtest: AI downloader fallback cannot bypass the AI Termux switch
+ok 31 - AI downloader fallback cannot bypass the AI Termux switch
+  ---
+  duration_ms: 0.897202
+  type: 'test'
+  ...
+# Subtest: private contact and WhatsApp inbox dialogs are excluded from automatic UI Lens text
+ok 32 - private contact and WhatsApp inbox dialogs are excluded from automatic UI Lens text
+  ---
+  duration_ms: 0.269322
+  type: 'test'
+  ...
+# Subtest: contact phone matching refuses Android loose suffix comparisons
+ok 33 - contact phone matching refuses Android loose suffix comparisons
+  ---
+  duration_ms: 0.23859
+  type: 'test'
+  ...
+# Subtest: routes legacy Gemini standalone
+ok 34 - routes legacy Gemini standalone
+  ---
+  duration_ms: 2.217569
+  type: 'test'
+  ...
+# Subtest: routes new Gemini AQ dot keys
+ok 35 - routes new Gemini AQ dot keys
+  ---
+  duration_ms: 0.59976
+  type: 'test'
+  ...
+# Subtest: accepts Aq variant for live verification
+ok 36 - accepts Aq variant for live verification
+  ---
+  duration_ms: 0.120253
+  type: 'test'
+  ...
+# Subtest: routes Groq and OpenRouter standalone
+ok 37 - routes Groq and OpenRouter standalone
+  ---
+  duration_ms: 0.757272
+  type: 'test'
+  ...
+# Subtest: does not guess ambiguous standalone owner
+ok 38 - does not guess ambiguous standalone owner
+  ---
+  duration_ms: 0.285157
+  type: 'test'
+  ...
+# Subtest: rejects mismatched provider labels
+ok 39 - rejects mismatched provider labels
+  ---
+  duration_ms: 0.140234
+  type: 'test'
+  ...
+# Subtest: rejects Gemini key in gateway field
+ok 40 - rejects Gemini key in gateway field
+  ---
+  duration_ms: 0.195411
+  type: 'test'
+  ...
+# Subtest: extracts labelled unprefixed keys
+ok 41 - extracts labelled unprefixed keys
+  ---
+  duration_ms: 0.12376
+  type: 'test'
+  ...
+# Subtest: accepts note heading and following key
+ok 42 - accepts note heading and following key
+  ---
+  duration_ms: 0.330041
+  type: 'test'
+  ...
+# Subtest: deduplicates keys
+ok 43 - deduplicates keys
+  ---
+  duration_ms: 0.355364
+  type: 'test'
+  ...
+# Subtest: extracts JSON provider note
+ok 44 - extracts JSON provider note
+  ---
+  duration_ms: 0.274088
+  type: 'test'
+  ...
+# Subtest: extracts environment style note
+ok 45 - extracts environment style note
+  ---
+  duration_ms: 0.172656
+  type: 'test'
+  ...
+# Subtest: rejects placeholders, whitespace, urls and short text
+ok 46 - rejects placeholders, whitespace, urls and short text
+  ---
+  duration_ms: 0.102852
+  type: 'test'
+  ...
+# Subtest: new JS files parse
+ok 47 - new JS files parse
+  ---
+  duration_ms: 3.69574
+  type: 'test'
+  ...
+# Subtest: all inline scripts parse
+ok 48 - all inline scripts parse
+  ---
+  duration_ms: 12.090733
+  type: 'test'
+  ...
+# Subtest: importer is privacy masked and clears notes only after success
+ok 49 - importer is privacy masked and clears notes only after success
+  ---
+  duration_ms: 3.835608
+  type: 'test'
+  ...
+# Subtest: grey reply fix scoped to actual theme and bar
+ok 50 - grey reply fix scoped to actual theme and bar
+  ---
+  duration_ms: 0.78684
+  type: 'test'
+  ...
+# Subtest: ten page requests enter section plan
+ok 51 - ten page requests enter section plan
+  ---
+  duration_ms: 5.70863
+  type: 'test'
+  ...
+# Subtest: extracts shell and PowerShell environment variables without losing AQ dot
+ok 52 - extracts shell and PowerShell environment variables without losing AQ dot
+  ---
+  duration_ms: 0.180954
+  type: 'test'
+  ...
+# Subtest: Gronkrouter spelling maps to existing GonkaRouter provider id
+ok 53 - Gronkrouter spelling maps to existing GonkaRouter provider id
+  ---
+  duration_ms: 0.082233
+  type: 'test'
+  ...
+# Subtest: cached old header mode cannot reactivate an obsolete layout
+ok 54 - cached old header mode cannot reactivate an obsolete layout
+  ---
+  duration_ms: 0.126507
+  type: 'test'
+  ...
+# Subtest: all permission hosts have exactly one owner outside Settings
+ok 55 - all permission hosts have exactly one owner outside Settings
+  ---
+  duration_ms: 4.279254
+  type: 'test'
+  ...
+# Subtest: first run picks Android standard instead of blocking on model loading
+ok 56 - first run picks Android standard instead of blocking on model loading
+  ---
+  duration_ms: 22.612151
+  type: 'test'
+  ...
+# Subtest: missing built-in pack falls back immediately for replies
+ok 57 - missing built-in pack falls back immediately for replies
+  ---
+  duration_ms: 2.852774
+  type: 'test'
+  ...
+# Subtest: built-in audio uses native WAV playback, not locked WebView audio
+ok 58 - built-in audio uses native WAV playback, not locked WebView audio
+  ---
+  duration_ms: 2.359046
+  type: 'test'
+  ...
+# Subtest: strict voice test reports missing pack instead of silently changing engine
+ok 59 - strict voice test reports missing pack instead of silently changing engine
+  ---
+  duration_ms: 2.860186
+  type: 'test'
+  ...
+# Subtest: native WAV stop does not restart through Web Audio
+ok 60 - native WAV stop does not restart through Web Audio
+  ---
+  duration_ms: 7.584745
+  type: 'test'
+  ...
+# Subtest: pause and resume use native WAV controls
+ok 61 - pause and resume use native WAV controls
+  ---
+  duration_ms: 4.064065
+  type: 'test'
+  ...
+# Subtest: downloaded voice survives stale JS pack cache on cold start
+ok 62 - downloaded voice survives stale JS pack cache on cold start
+  ---
+  duration_ms: 1.799801
+  type: 'test'
+  ...
+# Subtest: download selects the completed voice and invalidates old loader state
+ok 63 - download selects the completed voice and invalidates old loader state
+  ---
+  duration_ms: 2.091506
+  type: 'test'
+  ...
+# Subtest: switching downloaded packs loads correct pack and speaker each time
+ok 64 - switching downloaded packs loads correct pack and speaker each time
+  ---
+  duration_ms: 2.361968
+  type: 'test'
+  ...
+# Subtest: downloaded group voice stays inside its own pack
+ok 65 - downloaded group voice stays inside its own pack
+  ---
+  duration_ms: 1.698964
+  type: 'test'
+  ...
+# Subtest: Google Cloud Standard uses dedicated header key and native WAV playback with fixture audio
+ok 66 - Google Cloud Standard uses dedicated header key and native WAV playback with fixture audio
+  ---
+  duration_ms: 1.985441
+  type: 'test'
+  ...
+# Subtest: Google Cloud never borrows a Gemini key implicitly
+ok 67 - Google Cloud never borrows a Gemini key implicitly
+  ---
+  duration_ms: 1.364328
+  type: 'test'
+  ...
+# Subtest: Cloud local cap fails closed before any HTTP request
+ok 68 - Cloud local cap fails closed before any HTTP request
+  ---
+  duration_ms: 1.292005
+  type: 'test'
+  ...
+# Subtest: Cloud HTTP failure falls back to Android for normal replies
+ok 69 - Cloud HTTP failure falls back to Android for normal replies
+  ---
+  duration_ms: 1.723644
+  type: 'test'
+  ...
+# Subtest: Cloud spending fails closed if usage cannot be persisted
+ok 70 - Cloud spending fails closed if usage cannot be persisted
+  ---
+  duration_ms: 1.416684
+  type: 'test'
+  ...
+1..70
+# tests 70
+# suites 0
+# pass 70
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1558.81833

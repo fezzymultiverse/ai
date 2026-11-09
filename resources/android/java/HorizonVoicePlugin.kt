@@ -59,6 +59,8 @@ class HorizonVoicePlugin : Plugin() {
     @Volatile private var tts: OfflineTts? = null
     @Volatile private var activePack = ""
     @Volatile private var cancelDl = false
+    private val downloading = java.util.concurrent.atomic.AtomicBoolean(false)
+    @Volatile private var downloadingId = ""
     private val dlWorker = Executors.newSingleThreadExecutor { r -> Thread(r, "horizon-voice-dl").also { it.isDaemon = true } }
     private val http: OkHttpClient by lazy {
         OkHttpClient.Builder().connectTimeout(30, TimeUnit.SECONDS).readTimeout(60, TimeUnit.SECONDS).callTimeout(0, TimeUnit.SECONDS).followRedirects(true).build()
@@ -199,10 +201,13 @@ class HorizonVoicePlugin : Plugin() {
             if (!File(dir, "espeak-ng-data").exists() && bundledList().isNotEmpty()) ensureUnpacked()
             buildPackTts(dir)
         }
+        try {
+            sampleRate = t.sampleRate()
+            speakers = t.numSpeakers()
+            if (sampleRate <= 0 || speakers <= 0) throw IllegalStateException("Voice pack has invalid audio metadata")
+        } catch (e: Throwable) { t.release(); throw e }
         tts = t
         activePack = want
-        sampleRate = t.sampleRate()
-        speakers = t.numSpeakers()
         return t
     }
 
@@ -261,6 +266,7 @@ class HorizonVoicePlugin : Plugin() {
             try {
                 val t = loadNow(pack)
                 val t0 = System.currentTimeMillis()
+                if (sid < 0 || sid >= speakers) throw IllegalArgumentException("Speaker $sid is unavailable in $activePack (valid: 0–${speakers - 1})")
                 val audio = t.generate(text, sid, speed)
                 if (audio.samples.isEmpty()) { call.reject("The voice made no sound"); return@execute }
                 val o = JSObject()
@@ -301,6 +307,7 @@ class HorizonVoicePlugin : Plugin() {
     fun removePack(call: PluginCall) {
         val id = cleanId(call.getString("id", ""))
         if (id.isEmpty()) { call.reject("No voice pack was named"); return }
+        if (downloadingId == id) { call.reject("Wait for this voice download to finish before removing it"); return }
         worker.execute {
             val o = JSObject()
             try {
@@ -327,6 +334,8 @@ class HorizonVoicePlugin : Plugin() {
         val url = call.getString("url", "") ?: ""
         if (id.isEmpty()) { call.reject("No voice pack was named"); return }
         if (!url.startsWith("https://")) { call.reject("A voice pack must come from an https address"); return }
+        if (!downloading.compareAndSet(false, true)) { call.reject("Another voice download is already running"); return }
+        downloadingId = id
         cancelDl = false
         dlWorker.execute {
             val o = JSObject()
@@ -391,20 +400,32 @@ class HorizonVoicePlugin : Plugin() {
                     }
                 }
                 if (!packReady(stage)) throw IllegalStateException("The archive did not hold a usable voice (no model or tokens.txt)")
-                if (activePack == id) {
-                    try { tts?.release() } catch (e: Throwable) { /* already gone */ }
-                    tts = null
-                    activePack = ""
-                }
-                val dest = packDir(id)
-                dest.deleteRecursively()
-                if (!stage.renameTo(dest)) throw IllegalStateException("Could not move the voice into place")
+                // The download thread NEVER releases an engine in use by synthesis.
+                worker.submit(java.util.concurrent.Callable<Boolean> {
+                    if (cancelDl) throw IllegalStateException("Cancelled")
+                    if (activePack == id) {
+                        try { tts?.release() } catch (_: Throwable) { }
+                        tts = null; activePack = ""
+                    }
+                    val dest = packDir(id)
+                    val backup = File(packsRoot(), ".$id.previous")
+                    backup.deleteRecursively()
+                    if (dest.exists() && !dest.renameTo(backup)) throw IllegalStateException("Could not preserve the previous voice")
+                    if (!stage.renameTo(dest)) {
+                        backup.renameTo(dest)
+                        throw IllegalStateException("Could not move the voice into place")
+                    }
+                    backup.deleteRecursively()
+                    true
+                }).get()
                 o.put("ok", true)
             } catch (e: Throwable) {
                 stage.deleteRecursively()
                 o.put("ok", false)
                 o.put("error", if (e is OutOfMemoryError) "The phone ran out of memory while unpacking" else (e.message ?: e.javaClass.simpleName))
             } finally {
+                downloadingId = ""
+                downloading.set(false)
                 tmp.delete()
             }
             call.resolve(o)
@@ -422,8 +443,18 @@ class HorizonVoicePlugin : Plugin() {
     }
 
     override fun handleOnDestroy() {
-        try { tts?.release() } catch (e: Throwable) { /* process is ending */ }
-        tts = null
+        cancelDl = true
+        // Drain download/installation first; it may still submit its atomic swap to worker.
+        dlWorker.shutdown()
+        Thread {
+            try { dlWorker.awaitTermination(90, TimeUnit.SECONDS) } catch (_: InterruptedException) { }
+            try {
+                worker.execute {
+                    try { tts?.release() } catch (_: Throwable) { }
+                    tts = null; activePack = ""
+                }
+            } finally { worker.shutdown() }
+        }.start()
         super.handleOnDestroy()
     }
 }

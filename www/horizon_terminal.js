@@ -1,7 +1,7 @@
 /* Horizon V1.34.0: Terminal. Full-screen terminal on Horizon's own native shell (HorizonShellPlugin.kt).
  * Runs what YOU type, as Horizon's app user, in the app's private folder. No root, no Termux, no yt-dlp yet.
  * Minimize puts a strip above the chat box; Exit ends the session. Control keys edit the command line.
- * The AI-shell switch in Permissions is separate: this terminal never lets the AI run anything.
+ * Controls owns device permissions, WhatsApp and the confirmed AI/Termux bridge. The prompt remains manual Android sh.
  */
 (function () {
     'use strict';
@@ -11,15 +11,15 @@
         '\u2560\u2550\u2563\u2551 \u2551\u2560\u2566\u255D\u2551\u2554\u2550\u255D\u2551 \u2551\u2551\u2551\u2551',
         '\u2569 \u2569\u255A\u2550\u255D\u2569\u255A\u2550\u2569\u255A\u2550\u255D\u255A\u2550\u255D\u255D\u255A\u255D',
         '\u25C6 BOJACK SECURITY // SHELL \u25C6',
-        '\u26A1 no root \u00B7 no limits \u00B7 all vibes',
+        '\u26A1 no root \u00B7 your commands \u00B7 your control',
         '[SOI] Strategy Over Impulse \u00B7 999',
         '',
-        'Welcome to Termux, Fezzy.',
+        'Android shell ready, Fezzy. Termux lives in Controls.',
         'Welcome to Horizon, where your phone is the lab.',
         'Type a command, or type help.'
     ];
     var st = { built: false, open: false, alive: false, cwd: '', home: '', running: false, last: '', hist: [], hi: 0, ctrl: false, kill: '', cmds: 0,
-        rsOn: false, rsQ: '', rsI: 0, typing: null, pendingOpen: 0 };
+        rsOn: false, rsQ: '', rsI: 0, typing: null, pendingOpen: 0, controls: false, requestedControls: false };
     var el = {};
 
     function plugin() { var C = window.Capacitor; return C && C.Plugins && C.Plugins.HorizonShell || null; }
@@ -41,7 +41,8 @@
         var o = document.createElement('div'); o.id = 'hzTerm'; o.className = 'hzt'; o.hidden = true;
         o.setAttribute('role', 'dialog'); o.setAttribute('aria-modal', 'true'); o.setAttribute('aria-label', 'Terminal');
         o.innerHTML = '<header class="hzt-bar">' + LOGO
-            + '<div class="hzt-name"><b>Termux <i>&lt;</i> Horizon</b><small>Bojack Security \u00B7 no root \u00B7 \u26A1</small></div>'
+            + '<div class="hzt-name"><b>Horizon <i>/</i> Terminal</b><small>Bojack Security \u00B7 no root \u00B7 \u26A1</small></div>'
+            + '<button type="button" class="hzt-btn hzt-controls" aria-expanded="false" aria-controls="hzTerminalPermissions">Controls</button>'
             + '<span class="hzt-dot" aria-hidden="true"></span>'
             + '<button type="button" class="hzt-btn hzt-min" aria-label="Minimize terminal">\u2304</button>'
             + '<button type="button" class="hzt-btn hzt-exit" aria-label="Exit terminal">\u2715</button></header>'
@@ -51,6 +52,18 @@
             + '<div class="hzt-hint" hidden>CTRL is on. Tap a letter.</div>'
             + '<div class="hzt-keys"></div>';
         document.body.appendChild(o);
+        var controls = document.getElementById('hzTerminalPermissions');
+        if (controls) {
+            o.insertBefore(controls, o.querySelector('.hzt-out'));
+            var nav = document.createElement('nav'); nav.className = 'hzt-control-nav'; nav.setAttribute('aria-label', 'Control sections');
+            [['Device', 'permIntro'], ['WhatsApp', 'hzWaCard'], ['Termux & AI', 'hzTermuxCard']].forEach(function (item) {
+                var b = document.createElement('button'); b.type = 'button'; b.textContent = item[0];
+                b.addEventListener('click', function () { var target = document.getElementById(item[1]); if (target) target.scrollIntoView({ block: 'start' }); });
+                nav.appendChild(b);
+            });
+            controls.insertBefore(nav, controls.firstChild);
+        }
+        o.querySelector('.hzt-controls').addEventListener('click', function () { setControls(!st.controls); });
         el.o = o; el.out = o.querySelector('.hzt-out'); el.ps = o.querySelector('.hzt-ps'); el.inp = o.querySelector('.hzt-input');
         el.form = o.querySelector('.hzt-in'); el.keys = o.querySelector('.hzt-keys'); el.hint = o.querySelector('.hzt-hint');
 
@@ -174,8 +187,20 @@
         if (((ad && !ad.hidden) || (aw && !aw.hidden)) && window.HorizonAddons) { window.HorizonAddons.close(); needs = 280; }
         if (needs) { st.pendingOpen = setTimeout(function () { st.pendingOpen = 0; show(); }, needs); } else show();
     }
+    function setControls(on) {
+        st.controls = !!on;
+        var panel = document.getElementById('hzTerminalPermissions');
+        if (panel) panel.hidden = !st.controls;
+        el.o.classList.toggle('hzt-controls-on', st.controls);
+        el.o.querySelector('.hzt-controls').setAttribute('aria-expanded', String(st.controls));
+        if (st.controls) {
+            skipTyping();
+            if (window.HzPerms) window.HzPerms.refresh();
+            if (window.HorizonBridges) window.HorizonBridges.refresh();
+        }
+    }
     function show() {
-        if (st.open) return;
+        if (st.open) { if (st.requestedControls) { st.requestedControls = false; setControls(true); } return; }
         if (!(history.state && history.state.hzt)) history.pushState({ hzt: 1 }, '');
         st.open = true; el.o.hidden = false; document.documentElement.classList.add('hzt-on');
         if (window.visualViewport) el.o.style.height = Math.round(window.visualViewport.height) + 'px';
@@ -185,7 +210,8 @@
             if (window.HorizonTermLive) { try { window.HorizonTermLive.boot(el.out, native(), welcome); } catch (e) { welcome(); } } else welcome();   // V1.65.2: boot lines, then the banner
         }
         paintPs(); paintStrip();
-        setTimeout(function () { try { el.inp.focus(); } catch (e) { /* ignore */ } }, 60);
+        if (st.requestedControls) { st.requestedControls = false; setControls(true); }
+        setTimeout(function () { try { if (!st.controls && st.open) el.inp.focus(); } catch (e) { /* ignore */ } }, 60);
     }
     function minimize(fromPop) {
         if (!st.open) return;
@@ -330,7 +356,7 @@
             if (r.truncated) addLine('[output cut]', 'hzt-dim');
         }, function (e) { addLine('ERROR: ' + ((e && e.message) || e), 'hzt-err'); }).then(function () {
             st.running = false; paintPs(); paintStrip();
-            if (st.open) { try { el.inp.focus(); } catch (e) { /* ignore */ } }
+            if (st.open && !st.controls) { try { el.inp.focus(); } catch (e) { /* ignore */ } }
         });
     }
 
@@ -338,5 +364,5 @@
         var b = e.target.closest && e.target.closest('[data-term-open]');
         if (b) { e.preventDefault(); open(); }
     });
-    window.HorizonTerminal = { open: open, minimize: function () { minimize(false); }, exit: exitTerm, isOpen: function () { return st.open; } };
+    window.HorizonTerminal = { open: open, openSettings: function () { st.requestedControls = true; open(); }, minimize: function () { minimize(false); }, exit: exitTerm, isOpen: function () { return st.open; } };
 })();

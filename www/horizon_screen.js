@@ -7,7 +7,7 @@
   const setOn = v => { try { localStorage.setItem(LSK, v ? '1' : '0'); } catch (e) {} };
   const $ = s => document.querySelector(s);
   const SECRET_ATTR = /key|token|secret|passw|passphrase|\bpat\b|ssh|auth|bearer|credential|cookie|private|pin\b/i;
-  const SECRET_TXT = /AIza[\w-]{20,}|gsk_[\w]{20,}|gh[pousr]_[\w]{20,}|github_pat_[\w]{20,}|sk-[\w-]{20,}|-----BEGIN[\s\S]*?(?:-----END[^-]*-----|$)|[A-Za-z0-9+/_=-]{36,}/g;
+  const SECRET_TXT = /A[Qq][.\w-]{20,}|AIza[\w-]{20,}|gsk_[\w]{20,}|gh[pousr]_[\w]{20,}|github_pat_[\w]{20,}|sk-[\w-]{20,}|-----BEGIN[\s\S]*?(?:-----END[^-]*-----|$)|[A-Za-z0-9+/_=-]{36,}/g;
   const BLOCK = '#chatMessages, #chatInput, .tab-body[data-tab="vault"], [data-hz-private], #attInput, .att-pv';
   const clean = (s, n) => String(s || '').replace(SECRET_TXT, '[hidden]').replace(/\s+/g, ' ').trim().slice(0, n || 80);
 

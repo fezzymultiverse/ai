@@ -39,7 +39,7 @@
     const SRC = '\\[\\[vault\\.note:\\s*([^|\\]]{1,90}?)\\s*\\|\\s*((?:(?!\\]\\])[\\s\\S])*?)\\s*\\]\\]';
     // V1.40.0: [[vault.edit: Title | text]] appends to a note the AI filed itself; [[vault.edit: Title | replace: text]] rewrites it.
     const EDIT_SRC = '\\[\\[vault\\.edit:\\s*([^|\\]]{1,90}?)\\s*\\|\\s*((?:(?!\\]\\])[\\s\\S])*?)\\s*\\]\\]';
-    const SECRET_RE = /(AIza[0-9A-Za-z_-]{20,}|gsk_[A-Za-z0-9]{20,}|sk-[A-Za-z0-9_-]{20,}|ghp_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|xox[abp]-[A-Za-z0-9-]{10,}|-----BEGIN [A-Z ]*PRIVATE KEY-----)/;
+    const SECRET_RE = /(A[Qq][.A-Za-z0-9_-]{20,}|AIza[0-9A-Za-z_-]{20,}|gsk_[A-Za-z0-9]{20,}|sk-[A-Za-z0-9_-]{20,}|ghp_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|xox[abp]-[A-Za-z0-9-]{10,}|-----BEGIN [A-Z ]*PRIVATE KEY-----)/;
 
     const TYPES = [
         { id: 'ai', label: 'AI key', plural: 'AI keys', ic: 'i-spark', secret: true, svc: 'ai', valLabel: 'API key', ph: 'Paste the key' },

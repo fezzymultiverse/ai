@@ -1,0 +1,273 @@
+{
+  "originalArchiveSHA256": "a6d5e68bfce2c69777e7bc95a57827a381f99030338517ca92b8475999e6d622",
+  "protectedFiles": [
+    {
+      "file": "www/horizon_music.js",
+      "unchanged": true,
+      "sha256": "06aa4dfc50868a9e44b2e10b5cdfe609f7931c2d260cf2a34b4f45ca7ea82eb2"
+    },
+    {
+      "file": "www/horizon_group.js",
+      "unchanged": true,
+      "sha256": "b1e0c33f9c8dccd572f2f86f2fa71c7d5d7eabdbf5c2a56accb4d12bb27de827"
+    },
+    {
+      "file": "resources/android/java/HorizonMediaPlugin.java",
+      "unchanged": true,
+      "sha256": "431e4df3d3528934880c396dd96c01a26d6b252c77e27b323b5d1bdf65610d2e"
+    },
+    {
+      "file": "resources/android/java/HorizonMediaService.java",
+      "unchanged": true,
+      "sha256": "15eaf1c172a20acc62b7113a93aa87793d20d363220b0de94505ae3a512e908e"
+    }
+  ],
+  "files": [
+    {
+      "file": ".github/workflows/build-apk.yml",
+      "status": "modified",
+      "beforeBytes": 7378,
+      "afterBytes": 7619
+    },
+    {
+      "file": "package-lock.json",
+      "status": "modified",
+      "beforeBytes": 44888,
+      "afterBytes": 45855
+    },
+    {
+      "file": "package.json",
+      "status": "modified",
+      "beforeBytes": 432,
+      "afterBytes": 512
+    },
+    {
+      "file": "resources/android/java/HorizonTermuxPlugin.kt",
+      "status": "modified",
+      "beforeBytes": 7764,
+      "afterBytes": 8451
+    },
+    {
+      "file": "resources/android/java/HorizonVoicePlugin.kt",
+      "status": "modified",
+      "beforeBytes": 20636,
+      "afterBytes": 22482
+    },
+    {
+      "file": "resources/android/java/HorizonWhatsAppPlugin.kt",
+      "status": "modified",
+      "beforeBytes": 16864,
+      "afterBytes": 26110
+    },
+    {
+      "file": "scripts/apply-bridges.py",
+      "status": "modified",
+      "beforeBytes": 3543,
+      "afterBytes": 3712
+    },
+    {
+      "file": "scripts/bundle-voice.sh",
+      "status": "modified",
+      "beforeBytes": 7257,
+      "afterBytes": 7523
+    },
+    {
+      "file": "scripts/check-endpoints.py",
+      "status": "added",
+      "beforeBytes": 0,
+      "afterBytes": 2424
+    },
+    {
+      "file": "tests/bridges.test.cjs",
+      "status": "modified",
+      "beforeBytes": 7283,
+      "afterBytes": 12590
+    },
+    {
+      "file": "tests/browser.smoke.cjs",
+      "status": "added",
+      "beforeBytes": 0,
+      "afterBytes": 8435
+    },
+    {
+      "file": "tests/regression.test.cjs",
+      "status": "modified",
+      "beforeBytes": 3357,
+      "afterBytes": 4415
+    },
+    {
+      "file": "tests/tts.test.cjs",
+      "status": "modified",
+      "beforeBytes": 3705,
+      "afterBytes": 7846
+    },
+    {
+      "file": "validation/android-compile.log",
+      "status": "added",
+      "beforeBytes": 0,
+      "afterBytes": 7494
+    },
+    {
+      "file": "validation/android-wiring.log",
+      "status": "added",
+      "beforeBytes": 0,
+      "afterBytes": 652
+    },
+    {
+      "file": "validation/browser-results.json",
+      "status": "added",
+      "beforeBytes": 0,
+      "afterBytes": 840
+    },
+    {
+      "file": "validation/contacts-card-fixture.png",
+      "status": "added",
+      "beforeBytes": 0,
+      "afterBytes": 68643
+    },
+    {
+      "file": "validation/provider-endpoints.json",
+      "status": "added",
+      "beforeBytes": 0,
+      "afterBytes": 3635
+    },
+    {
+      "file": "validation/runtime-dependency-audit.json",
+      "status": "added",
+      "beforeBytes": 0,
+      "afterBytes": 361
+    },
+    {
+      "file": "validation/settings-contacts.png",
+      "status": "added",
+      "beforeBytes": 0,
+      "afterBytes": 78732
+    },
+    {
+      "file": "validation/terminal-controls.png",
+      "status": "added",
+      "beforeBytes": 0,
+      "afterBytes": 126385
+    },
+    {
+      "file": "validation/unit-tests.log",
+      "status": "added",
+      "beforeBytes": 0,
+      "afterBytes": 12808
+    },
+    {
+      "file": "www/horizon_about.js",
+      "status": "modified",
+      "beforeBytes": 70090,
+      "afterBytes": 70847
+    },
+    {
+      "file": "www/horizon_bojack.js",
+      "status": "modified",
+      "beforeBytes": 13730,
+      "afterBytes": 13885
+    },
+    {
+      "file": "www/horizon_bridges.js",
+      "status": "modified",
+      "beforeBytes": 19057,
+      "afterBytes": 22235
+    },
+    {
+      "file": "www/horizon_contacts.js",
+      "status": "added",
+      "beforeBytes": 0,
+      "afterBytes": 6657
+    },
+    {
+      "file": "www/horizon_door.css",
+      "status": "modified",
+      "beforeBytes": 6845,
+      "afterBytes": 3237
+    },
+    {
+      "file": "www/horizon_door.js",
+      "status": "modified",
+      "beforeBytes": 3127,
+      "afterBytes": 1153
+    },
+    {
+      "file": "www/horizon_downloads.js",
+      "status": "modified",
+      "beforeBytes": 49845,
+      "afterBytes": 49848
+    },
+    {
+      "file": "www/horizon_hub.css",
+      "status": "added",
+      "beforeBytes": 0,
+      "afterBytes": 3711
+    },
+    {
+      "file": "www/horizon_key_import.js",
+      "status": "modified",
+      "beforeBytes": 3355,
+      "afterBytes": 3493
+    },
+    {
+      "file": "www/horizon_lift.js",
+      "status": "modified",
+      "beforeBytes": 4224,
+      "afterBytes": 4183
+    },
+    {
+      "file": "www/horizon_lock.js",
+      "status": "modified",
+      "beforeBytes": 17659,
+      "afterBytes": 17720
+    },
+    {
+      "file": "www/horizon_perf.js",
+      "status": "modified",
+      "beforeBytes": 15703,
+      "afterBytes": 16024
+    },
+    {
+      "file": "www/horizon_screen.js",
+      "status": "modified",
+      "beforeBytes": 10555,
+      "afterBytes": 10572
+    },
+    {
+      "file": "www/horizon_shell.js",
+      "status": "modified",
+      "beforeBytes": 6421,
+      "afterBytes": 6441
+    },
+    {
+      "file": "www/horizon_terminal.js",
+      "status": "modified",
+      "beforeBytes": 21518,
+      "afterBytes": 23509
+    },
+    {
+      "file": "www/horizon_tts.js",
+      "status": "modified",
+      "beforeBytes": 66310,
+      "afterBytes": 69257
+    },
+    {
+      "file": "www/horizon_v2.js",
+      "status": "modified",
+      "beforeBytes": 8528,
+      "afterBytes": 9019
+    },
+    {
+      "file": "www/horizon_vault.js",
+      "status": "modified",
+      "beforeBytes": 42178,
+      "afterBytes": 42203
+    },
+    {
+      "file": "www/index.html",
+      "status": "modified",
+      "beforeBytes": 629321,
+      "afterBytes": 631811
+    }
+  ]
+}

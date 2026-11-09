@@ -12,6 +12,8 @@ for name in ('HorizonWhatsAppPlugin.kt', 'HorizonTermuxPlugin.kt', 'HorizonExtra
     (java / name).write_text(text)
 m = root / 'android/app/src/main/AndroidManifest.xml'
 s = m.read_text()
+if 'android.permission.READ_CONTACTS' not in s:
+    s = s.replace('</manifest>', '    <uses-permission android:name="android.permission.READ_CONTACTS" />\n</manifest>')
 if 'com.termux.permission.RUN_COMMAND' not in s:
     s = s.replace('</manifest>', '    <uses-permission android:name="com.termux.permission.RUN_COMMAND" />\n</manifest>')
 if 'android:name=".HorizonWhatsAppListener"' not in s:

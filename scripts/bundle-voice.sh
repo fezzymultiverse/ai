@@ -4,7 +4,7 @@
 #   2. sherpa-onnx Kotlin API (Tts.kt, package com.k2fsa.sherpa.onnx, same release tag)     -> android/app/src/main/java/com/k2fsa/sherpa/onnx
 #   3. Kitten nano English model (4 male + 4 female voices, small)                          -> android/app/src/main/assets/horizon_voice
 # Run after `npx cap add android` and scripts/apply-android.sh, from the project root. Needs: gh (GH_TOKEN set), curl, tar, python3.
-# Optional: SHERPA_VERSION=v1.12.x pins the sherpa-onnx release (default: the newest release).
+# Optional: SHERPA_VERSION overrides the pinned compatible v1.12.14 runtime; incompatible phonemizer APIs fail loudly.
 # Every step checks what it got and stops with a readable error, so a half-bundled APK can never ship.
 set -euo pipefail
 
@@ -31,7 +31,7 @@ command -v python3 >/dev/null 2>&1 || die "python3 is not installed"
 # ------------------------------------------------------------------------------------------
 # 0. Which sherpa-onnx release
 # ------------------------------------------------------------------------------------------
-TAG="${SHERPA_VERSION:-}"
+TAG="${SHERPA_VERSION:-v1.12.14}"
 if [ -z "$TAG" ]; then
     TAG="$(gh release view --repo "$REPO" --json tagName --jq .tagName)" || die "could not read the newest $REPO release"
 fi
@@ -69,6 +69,9 @@ done
 grep -q '^package com.k2fsa.sherpa.onnx' "$KT/Tts.kt" || die "Tts.kt has an unexpected package"
 grep -q 'class OfflineTts\b'             "$KT/Tts.kt" || die "Tts.kt has no OfflineTts class"
 grep -q 'OfflineTtsKokoroModelConfig'    "$KT/Tts.kt" || die "this sherpa-onnx release has no Kokoro support in Tts.kt"
+if grep -q 'deprecated, ignored; use lexicon or phonemeCodepoints' "$KT/Tts.kt"; then
+    die "This runtime removed the espeak phonemizer used by Horizon packs. Use SHERPA_VERSION=v1.12.14; migrate phonemization before upgrading."
+fi
 say "Kotlin API in place ($GOT)"
 
 # ------------------------------------------------------------------------------------------
