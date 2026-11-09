@@ -29,6 +29,9 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(HorizonStatsPlugin.class);
         registerPlugin(HorizonBrowserPlugin.class);
         registerPlugin(HorizonShellPlugin.class);
+        registerPlugin(HorizonWhatsAppPlugin.class);
+        registerPlugin(HorizonTermuxPlugin.class);
+        registerPlugin(HorizonExtractorPlugin.class);
         registerPlugin(HorizonLockPlugin.class);
         registerPlugin(HorizonAlarmPlugin.class);   // V1.68.0: calendar wake-up alarms
         super.onCreate(savedInstanceState);
@@ -175,6 +178,7 @@ public class MainActivity extends BridgeActivity {
                     @Override
                     public void onEnd(WindowInsetsAnimationCompat animation) {
                         if ((animation.getTypeMask() & WindowInsetsCompat.Type.ime()) == 0) return;
+                        kbAnimating = false;
                         WindowInsetsCompat now = ViewCompat.getRootWindowInsets(decor);
                         sendKeyboard(false, now != null && now.isVisible(WindowInsetsCompat.Type.ime()));
                         decor.postDelayed(coverRunner, 60);    // V1.67.1: measure once the layout has settled
@@ -197,11 +201,13 @@ public class MainActivity extends BridgeActivity {
     // The page (horizon_lift.js) uses this to keep the message box on top of the keyboard on phones that do not resize the page.
     private android.view.ViewTreeObserver.OnGlobalLayoutListener coverListener = null;
     private int lastCoverPx = -1;
+    private boolean kbAnimating = false;
     private final Runnable coverRunner = new Runnable() {
         @Override
         public void run() { reportCover(); }
     };
     private void reportCover() {
+        if (kbAnimating) return;
         try {
             final WebView wv = getBridge() != null ? getBridge().getWebView() : null;
             if (wv == null) return;
@@ -234,6 +240,7 @@ public class MainActivity extends BridgeActivity {
     }
 
     private void sendKeyboard(boolean moving, boolean visible) {
+        kbAnimating = moving;
         try {
             final WebView wv = getBridge() != null ? getBridge().getWebView() : null;
             if (wv == null) return;
@@ -300,6 +307,7 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onPause() {
         HorizonAIPlugin.foreground = false;
+        HorizonWhatsAppListener.uiVisible = false;
         HorizonPermsPlugin.paintBackdrop(this);   // V1.44.0: repaint before Android hides the page
         super.onPause();
         // Let a reply that is still being fetched finish while the app is in the background.
@@ -314,6 +322,7 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onResume() {
         HorizonAIPlugin.foreground = true;
+        HorizonWhatsAppListener.uiVisible = true;
         super.onResume();
         HorizonPermsPlugin.paintBackdrop(this);
         requestHighRefresh();

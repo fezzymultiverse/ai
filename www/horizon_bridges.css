@@ -1,0 +1,25 @@
+/* Scoped bridge UI; no theme or screen-wide layout overrides. */
+.hzb-card h2 { font-size: 16px; margin: 0 0 10px; }
+.hzb-card .settings-row-header { gap: 12px; margin: 12px 0; }
+.hzb-card .settings-row-header h3 { margin: 0; font-size: 14px; }
+.hzb-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 10px 0; }
+.hzb-action { min-height: 44px; padding: 9px 13px; border-radius: 12px; border: 1px solid var(--border-color, #65594d); color: var(--text-main, #fff); background: var(--card-bg, #24201d); font: inherit; cursor: pointer; touch-action: manipulation; }
+.hzb-action:focus-visible, .hzb-card textarea:focus-visible, .hzb-inbox textarea:focus-visible { outline: 2px solid var(--accent-cyan, #e4ac77); outline-offset: 2px; }
+.hzb-action:disabled { opacity: .55; cursor: wait; }
+.hzb-card textarea, .hzb-inbox textarea { display: block; box-sizing: border-box; width: 100%; min-height: 72px; max-height: 160px; padding: 10px; border-radius: 12px; border: 1px solid var(--border-color, #65594d); background: var(--input-bg, #171616); color: var(--text-main, #fff); font: inherit; resize: vertical; }
+.hzb-output { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 220px; overflow: auto; padding: 10px; border-radius: 12px; font: 12px/1.5 var(--mono, monospace); background: var(--input-bg, #171616); color: var(--text-main, #fff); }
+.hzb-inbox { box-sizing: border-box; width: min(640px, calc(100vw - 24px)); max-height: 85dvh; max-height: min(85dvh, 800px); padding: 16px; border-radius: 20px; border: 1px solid var(--border-color, #65594d); background: var(--panel-bg, #201e1b); color: var(--text-main, #fff); overscroll-behavior: contain; }
+.hzb-inbox::backdrop { background: rgb(0 0 0 / .6); }
+.hzb-inbox h2 { flex: 1; margin: 0; font-size: 19px; }
+.hzb-inbox .hint { font-size: 13px; line-height: 1.5; opacity: .8; }
+.hzb-message { padding: 12px; margin-top: 12px; border: 1px solid var(--border-color, #65594d); border-left: 3px solid #25d366; border-radius: 12px; }
+.hzb-message b, .hzb-message small { display: block; overflow-wrap: anywhere; }
+.hzb-message small { opacity: .7; margin-top: 4px; }
+.hzb-message p { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.45; }
+#hzToasts .hz-tt .ic:has(use[href="#i-whatsapp"]) { color: #25d366; }
+/* Avoid repaints/reflow animations while Android owns IME geometry. */
+html.hz-kb-moving .chat-input-area, html.hz-kb-moving .chat-input-area textarea { transition: none !important; animation: none !important; }
+html.hz-kb-open .chat-input-area { backdrop-filter: none; }
+@media (prefers-reduced-motion: reduce) {
+  .hzb-card *, .hzb-inbox *, #hzToasts .hz-tt { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}

@@ -9,6 +9,7 @@
 (function () {
   'use strict';
   var de = document.documentElement, raf = 0, nativeCover = 0, fitted = false, lastVis = 0;
+  var baseline = window.innerHeight, lastIH = window.innerHeight, settleTimer = 0;
   var input = document.getElementById('chatInput');
   var scroller = document.getElementById('chatScroll');
   var MIN = 60;   // less than this is not a keyboard
@@ -21,7 +22,12 @@
     raf = 0;
     var ih = window.innerHeight, vv = window.visualViewport, vis = ih;
     if (vv) vis = Math.min(vis, Math.round(vv.height + vv.offsetTop));
-    if (nativeCover > 0) vis = Math.min(vis, ih - nativeCover);
+    // A resized layout already sits above the IME. Never subtract a stale native overlap twice.
+    if (!typing() && !window.hzKbBusy && nativeCover === 0) baseline = ih;
+    if (ih > baseline) baseline = ih;
+    var layoutResized = baseline - ih > MIN;
+    if (nativeCover > 0 && !layoutResized && (!vv || Math.abs(vv.height - ih) < 2)) vis = Math.min(vis, ih - nativeCover);
+    lastIH = ih;
     var covered = ih - vis;
     var want = covered > MIN && (typing() || nativeCover > MIN);
     if (want) {
@@ -42,7 +48,15 @@
     /* a focused field must never scroll the page itself: the header would slide away */
     if (window.pageYOffset || (de.scrollTop > 0)) { window.scrollTo(0, 0); de.scrollTop = 0; if (document.body) document.body.scrollTop = 0; }
   }
-  function kick() { if (!raf) raf = requestAnimationFrame(measure); }
+  function kick() {
+    if (window.hzKbBusy) {
+      clearTimeout(settleTimer);
+      settleTimer = setTimeout(function () { if (!raf) raf = requestAnimationFrame(measure); }, 1250);
+      return;
+    }
+    clearTimeout(settleTimer);
+    if (!raf) raf = requestAnimationFrame(measure);
+  }
 
   window.hzKbCover = function (px) { nativeCover = Math.max(0, +px || 0); kick(); };
 
@@ -52,8 +66,8 @@
   }
   window.addEventListener('resize', kick, { passive: true });
   window.addEventListener('hz-kb-settled', function () { kick(); setTimeout(kick, 60); });
-  document.addEventListener('focusin', function () { kick(); setTimeout(kick, 150); setTimeout(kick, 400); setTimeout(kick, 800); }, { passive: true });
-  document.addEventListener('focusout', function () { setTimeout(kick, 60); setTimeout(kick, 400); }, { passive: true });
+  document.addEventListener('focusin', kick, { passive: true });
+  document.addEventListener('focusout', function () { setTimeout(kick, 80); }, { passive: true });
   if (input) {
     /* if you were at the newest message when you tapped the box, stay on it once the keyboard is up */
     var wasBottom = true;

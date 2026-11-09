@@ -35,10 +35,26 @@
     const waiting = []; let active = 0, pollTimer = 0;
     const live = {};      // id -> { bar, sub, pill } for the rows on screen
 
+    async function recoverNative() {
+        const c = window.Capacitor, p = c && c.Plugins && c.Plugins.HorizonAI;
+        if (!p || typeof p.downloadStatus !== 'function') return;
+        const pending = list.filter(r => r.nativeId && isActive(r.status));
+        for (const rec of pending) {
+            try {
+                const r = await p.downloadStatus({ id: String(rec.nativeId) });
+                rec.bytes = r.bytes; rec.total = Math.max(0, r.total); rec.pct = r.total > 0 ? Math.min(99, Math.round(r.bytes / r.total * 100)) : 0;
+                if (r.status === 'done') { rec.uri = r.uri; rec.mime = r.mime; finishRec(rec, r.path); }
+                else if (r.status === 'failed') failRec(rec, new Error('Android download failed: ' + r.reason));
+            } catch (e) { failRec(rec, e); }
+        }
+        if (pending.length) { save(); if (!document.hidden && !window.hzKbBusy && !window.hzTyping) touch(); }
+        if (list.some(r => r.nativeId && isActive(r.status))) setTimeout(recoverNative, 4000);
+    }
+    document.addEventListener('DOMContentLoaded', recoverNative, { once: true });
     function load() {
         try {
             const v = JSON.parse(lsGet(KEY));
-            list = (Array.isArray(v) ? v : []).filter(r => r && r.id).map(r => isActive(r.status) ? Object.assign(r, { status: 'failed', err: 'Interrupted when the app closed' }) : r);
+            list = (Array.isArray(v) ? v : []).filter(r => r && r.id).map(r => isActive(r.status) && !r.nativeId ? Object.assign(r, { status: 'failed', err: 'Interrupted when the app closed' }) : r);
         } catch (e) { list = []; }
     }
     function save() { lsSet(KEY, JSON.stringify(list.slice(0, MAX), (k, v) => (k === 'ref' ? undefined : v))); }
@@ -78,6 +94,7 @@
         if (visible()) { if (tab === 'mine') render(); else paintTabs(); }
     }
     function tick() {
+        if (window.hzKbBusy || window.hzTyping || document.hidden) return;
         const changed = syncRefs();
         if (changed) { touch(); return; }
         if (visible() && tab === 'mine') paintLive();
@@ -149,6 +166,7 @@
         if (!r) { say('Nothing to retry for this one.', 'error'); return; }
         if (r.op === 'yt') runRec(rec, () => { if (!window.HorizonYouTube) throw new Error('YouTube source bridge is not ready. Reopen the app.'); return window.HorizonYouTube.download(r.id, r.kind, rec); });
         else if (r.op === 'url') runRec(rec, () => h.save(rec, r.url, r.filename, r.kind));
+        else if (r.op === 'termuxTorrent') runRec(rec, async () => (await HorizonBridges.torrent(r.url)).text);
         else if (r.op === 'magnet') runRec(rec, async () => { await openLink(r.url); return ''; });
     }
     async function openRec(rec) {
@@ -164,6 +182,7 @@
 
     // ---------- public API (YouTube terminal and chat AI use these) ----------
     window.HorizonDownloads = {
+        persist: save,
         show() { syncRefs(); tab = list.length ? 'mine' : 'get'; source = ''; filter = 'all'; touch(); render(); },
         // used by the YouTube terminal: begin() returns a record that saveFile fills in (bytes, total, pct, uri)
         begin(meta) {
@@ -241,7 +260,7 @@
     }
     async function aiUrl(arg) {
         const bar = String(arg).indexOf('|');
-        const ref = (bar < 0 ? arg : arg.slice(0, bar)).trim(), hint = (bar < 0 ? '' : arg.slice(bar + 1)).trim();
+        let ref = (bar < 0 ? arg : arg.slice(0, bar)).trim(); let hint = (bar < 0 ? '' : arg.slice(bar + 1)).trim();
         if (!ref) return aiFail('use [[get.url: https://link | name.ext]].');
         if (!host()) return aiFail('Downloads are not ready.');
         let m;
@@ -253,7 +272,15 @@
         if ((m = /^archive:([\w.\-]+)$/i.exec(ref))) return aiArchive(m[1], hint);
         if (/^magnet:\?/i.test(ref)) return aiMagnet(ref);
         if (/youtu\.?be/i.test(ref)) return aiFail('that is a YouTube link. Use [[yt.download: VIDEO_ID | Title]] instead.');
-        if (/^https:\/\/(?:www\.)?(?:github|gitlab)\.com\/[^/?#]+\/[^/?#]+\/?$/i.test(ref)) return aiFail('that is a repo. Fezzy pulls repos from the GitHub widget in the right panel.');
+        const repo = /^https:\/\/(?:www\.)?github\.com\/([\w.-]+)\/([\w.-]+?)(?:\.git)?\/?$/i.exec(ref);
+        if (repo) {
+            if (!aiAsk('Download the GitHub repository ZIP for ' + repo[1] + '/' + repo[2] + '?')) return aiFail('Repository download declined.');
+            const meta = await getJSON('https://api.github.com/repos/' + enc(repo[1]) + '/' + enc(repo[2]));
+            if (!meta.default_branch) return aiFail('GitHub did not return a default branch. Private repositories need an authenticated download URL.');
+            ref = 'https://codeload.github.com/' + enc(repo[1]) + '/' + enc(repo[2]) + '/zip/refs/heads/' + enc(meta.default_branch);
+            hint = hint || repo[2] + '.zip';
+            aiTrusted.add(ref);
+        }
         if (!/^https:\/\/[^\s/]+/i.test(ref)) return aiFail('only full https:// links can be saved.');
         if (!AI_TRUSTED.test(ref) && !aiTrusted.has(ref) && !aiAsk('The AI wants to save this link to your phone:\n\n' + ref.slice(0, 300) + '\n\nSave it?')) return aiFail('Fezzy declined that download.');
         const isTor = /\.torrent(?:[?#]|$)/i.test(ref) || /^torrent$/i.test(hint);
@@ -267,6 +294,7 @@
         if (!/^magnet:\?xt=urn:/i.test(raw)) return aiFail('that is not a magnet link.');
         const name = (/[?&]dn=([^&]+)/i.exec(raw) || [])[1];
         let label = 'a torrent'; try { if (name) label = decodeURIComponent(name.replace(/\+/g, ' ')); } catch (e) { /* keep default */ }
+        if (window.HorizonBridges && HorizonBridges.state().termux.enabled) return HorizonBridges.torrent(raw);
         if (!aiAsk('The AI wants to send this magnet link to your torrent app:\n\n' + label.slice(0, 200) + '\n\nHorizon has no torrent engine; your torrent app does the download. Only do this for files you have the right to download. Send it?')) return aiFail('Fezzy declined that magnet link.');
         add({ type: 'torrent', src: 'torrent', title: label.slice(0, 80), sub: 'Handed to your torrent app', retry: { op: 'magnet', url: raw } }, async () => { await openLink(raw); return ''; });
         return { text: 'Magnet link sent to the torrent app (if one is installed). Horizon cannot see its progress; say "sent", not "downloaded".' };
@@ -604,12 +632,16 @@
 
     // Torrent: magnet link to a torrent app, or a .torrent file saved to the phone
     function srcTorrent() {
-        shell('🧲 Torrent', 'Horizon has no torrent engine of its own. A magnet link is handed to a torrent app on your phone (for example LibreTorrent or Flud), and a .torrent link is saved so that app can open it.');
+        shell('🧲 Torrent', 'With Termux bridge enabled, aria2 downloads magnets after native approval. Otherwise a magnet opens your torrent app, and a .torrent link is saved for it. Only download files you have the right to share.');
         const i = input('magnet:?xt=… or https://….torrent');
         const note = el('div', 'dlx-note'); note.hidden = true;
         const go = btn('Go', 'pri', () => {
             const raw = i.value.trim(); note.hidden = true; if (!raw) return;
             if (/^magnet:\?/i.test(raw)) {
+                if (window.HorizonBridges && HorizonBridges.state().termux.enabled) {
+                    add({ type: 'torrent', src: 'torrent', title: 'Termux torrent', sub: 'aria2 · confirmation required', retry: { op: 'termuxTorrent', url: raw } }, async () => (await HorizonBridges.torrent(raw)).text);
+                    i.value = ''; note.hidden = false; note.className = 'dlx-note ok'; note.textContent = 'Awaiting approval / running in Termux. Completion appears in Downloads and Recent jobs.'; return;
+                }
                 const dn = (raw.match(/[?&]dn=([^&]+)/i) || [])[1];
                 let title = 'Magnet link'; try { if (dn) title = decodeURIComponent(dn.replace(/\+/g, ' ')); } catch (e) { /* keep default */ }
                 add({ type: 'torrent', src: 'torrent', title, sub: 'Handed to your torrent app', retry: { op: 'magnet', url: raw } }, async () => { await openLink(raw); return ''; });

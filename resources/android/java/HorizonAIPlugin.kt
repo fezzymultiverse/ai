@@ -293,9 +293,10 @@ class HorizonAIPlugin : Plugin() {
             if (!url.startsWith("https://")) throw IllegalArgumentException("Downloads require HTTPS")
             val filename = (call.getString("filename") ?: "horizon-media").replace(Regex("[\\\\/:*?\"<>|\\p{Cntrl}]"), "_").take(120)
             val video = call.getBoolean("video", false) == true
-            val folder = if (video) "Movies/Horizon" else "Music/Horizon"
+            val kind = call.getString("kind") ?: if (video) "video" else "audio"
+            val folder = when (kind) { "file" -> "Download/Horizon"; "image" -> "Pictures/Horizon"; "video" -> "Movies/Horizon"; else -> "Music/Horizon" }
             // V1.23.0: DownloadManager wants a STANDARD directory type plus a sub-path. "Music/Horizon" as the type threw "Not one of standard directories".
-            val stdDir = if (video) Environment.DIRECTORY_MOVIES else Environment.DIRECTORY_MUSIC
+            val stdDir = when (kind) { "file" -> Environment.DIRECTORY_DOWNLOADS; "image" -> Environment.DIRECTORY_PICTURES; "video" -> Environment.DIRECTORY_MOVIES; else -> Environment.DIRECTORY_MUSIC }
             val request = DownloadManager.Request(Uri.parse(url))
                 .setTitle(call.getString("title") ?: filename)
                 .setDescription("Horizon · ${if (video) "video" else "audio"}")
@@ -304,9 +305,35 @@ class HorizonAIPlugin : Plugin() {
                 .setAllowedOverMetered(true)
                 .setAllowedOverRoaming(false)
             val manager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+            call.getString("ua")?.takeIf { it.length < 300 && !it.contains('\n') && !it.contains('\r') }?.let { request.addRequestHeader("User-Agent", it) }
             val id = manager.enqueue(request)
+            context.getSharedPreferences("horizon_transfers", Context.MODE_PRIVATE).edit().putString(id.toString(), "$folder/$filename").apply()
             call.resolve(JSObject().put("id", id.toString()).put("path", "$folder/$filename"))
         } catch (e: Exception) { call.reject("Could not queue download: ${e.message}") }
+    }
+
+    /** Android-owned transfers survive activity/process death; query only this app's download IDs. */
+    @PluginMethod
+    fun downloadStatus(call: PluginCall) {
+        try {
+            val id = call.getString("id")?.toLongOrNull() ?: throw IllegalArgumentException("Invalid download ID")
+            val path = context.getSharedPreferences("horizon_transfers", Context.MODE_PRIVATE).getString(id.toString(), null)
+                ?: throw IllegalArgumentException("Unknown Horizon download")
+            val dm = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+            dm.query(DownloadManager.Query().setFilterById(id)).use { cursor ->
+                if (!cursor.moveToFirst()) throw IllegalStateException("Android download was removed")
+                val state = cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS))
+                val bytes = cursor.getLong(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR))
+                val total = cursor.getLong(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_TOTAL_SIZE_BYTES))
+                val reason = cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_REASON))
+                call.resolve(JSObject().put("id", id.toString()).put("status", when (state) {
+                    DownloadManager.STATUS_SUCCESSFUL -> "done"; DownloadManager.STATUS_FAILED -> "failed";
+                    DownloadManager.STATUS_PAUSED -> "paused"; else -> "working"
+                }).put("bytes", bytes).put("total", total).put("reason", reason).put("path", path)
+                    .put("uri", if (state == DownloadManager.STATUS_SUCCESSFUL) dm.getUriForDownloadedFile(id)?.toString() ?: "" else "")
+                    .put("mime", if (state == DownloadManager.STATUS_SUCCESSFUL) dm.getMimeTypeForDownloadedFile(id) ?: "application/octet-stream" else ""))
+            }
+        } catch (e: Exception) { call.reject("Could not check download: ${e.message}") }
     }
 
     /** V1.21.1: saves a media URL into Music/Horizon or Movies/Horizon through MediaStore. Android 10+ needs no storage permission and no folder is created by hand,
@@ -325,6 +352,7 @@ class HorizonAIPlugin : Plugin() {
         scope.launch {
             val resolver = context.contentResolver
             var target: Uri? = null
+            var downloadConnection: HttpURLConnection? = null
             try {
                 if (Build.VERSION.SDK_INT < 29) throw IllegalStateException("needs Android 10 or newer")
                 val ext = filename.substringAfterLast('.', "").lowercase()
@@ -345,6 +373,7 @@ class HorizonAIPlugin : Plugin() {
                 val out0 = resolver.insert(coll, cv) ?: throw IOException("Android refused to create the file in $rel")
                 target = out0
                 val conn = URL(url).openConnection() as HttpURLConnection
+                downloadConnection = conn
                 conn.connectTimeout = 20000
                 conn.readTimeout = 60000
                 conn.instanceFollowRedirects = true
@@ -381,6 +410,8 @@ class HorizonAIPlugin : Plugin() {
                 try { target?.let { resolver.delete(it, null, null) } } catch (_: Exception) { }
                 call.reject(if (e is CancellationException) "The save was cancelled" else "Could not save the media: ${e.message ?: e.javaClass.simpleName}")
                 if (e is CancellationException) throw e
+            } finally {
+                downloadConnection?.disconnect()
             }
         }
     }

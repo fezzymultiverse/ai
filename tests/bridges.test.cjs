@@ -1,0 +1,38 @@
+const {test}=require('node:test');
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const vm=require('node:vm');
+const path=require('node:path');
+const {spawnSync}=require('node:child_process');
+const root=path.resolve(__dirname,'..');
+const source=fs.readFileSync(path.join(root,'www/horizon_bridges.js'),'utf8');
+function harness({wa={},tm={},approve=true,methods={}}={}) {
+  const calls=[];
+  const document={readyState:'loading',hidden:false,addEventListener(){},querySelectorAll(){return []},getElementById(){return null}};
+  const plugins={
+    HorizonWhatsApp:{status:async()=>({personal:false,business:false,...wa}),read:async a=>{calls.push(['read',a]);return {messages:[{id:'m1',sender:'Friend',text:'<script>untrusted</script>'}]};},reply:async a=>{calls.push(['reply',a]);return {submitted:true,delivered:false};},compose:async a=>{calls.push(['compose',a]);return {prepared:true,sent:false};}},
+    HorizonTermux:{status:async()=>({enabled:false,permission:false,...tm}),execute:async a=>{calls.push(['execute',a]);return {jobId:'job1'};},result:async()=>({status:'complete',exitCode:0,stdout:'OK',stderr:''})}
+  };
+  for(const [name,fn] of Object.entries(methods)) plugins.HorizonTermux[name]=fn;
+  const window={document,addEventListener(){},confirm:()=>approve,Capacitor:{isNativePlatform:()=>true,Plugins:plugins}};
+  vm.runInNewContext(source,{window,document,console,setTimeout,clearTimeout,Date,Promise});
+  return {api:window.HorizonBridges,calls,window,plugins};
+}
+test('all application JavaScript parses',()=>{for(const name of fs.readdirSync(path.join(root,'www')).filter(n=>n.endsWith('.js')))new vm.Script(fs.readFileSync(path.join(root,'www',name),'utf8'),{filename:name});});
+test('bridge tools are absent from prompt when both sources are off',async()=>{const h=harness();await h.api.refresh();assert.equal(h.api.block(),'');});
+test('bridge parser accepts supported tools and caps each round at three',()=>{const h=harness();const c=h.api.parse('[[whatsapp.read: all]][[whatsapp.reply: id | hi]][[termux.status]][[termux.run: pwd]]');assert.equal(c.length,3);assert.equal(c[0].kind,'whatsapp.read');assert.equal(h.api.parse('[[whatsapp.delete: all]]').length,0);});
+test('WhatsApp read is blocked when permission switches are off',async()=>{const h=harness();assert.match((await h.api.run('whatsapp.read','all')).text,/ERROR/);assert.equal(h.calls.length,0);});
+test('declining AI sharing never reads captured WhatsApp content',async()=>{const h=harness({wa:{personal:true},approve:false});const r=await h.api.run('whatsapp.read','all');assert.match(r.text,/declined/);assert.equal(h.calls.length,0);});
+test('approved WhatsApp read returns captured-only data, not a history claim',async()=>{const h=harness({wa:{personal:true}});const r=await h.api.run('whatsapp.read','Friend');assert.match(r.text,/NOTIFICATION PREVIEWS ONLY/);assert.equal(h.calls[0][1].query,'Friend');assert.equal(h.calls[0][1].limit,300);});
+test('reply preserves message text containing pipes and does not claim delivery',async()=>{const h=harness({wa:{personal:true}});const r=await h.api.run('whatsapp.reply','m1 | one | two');assert.equal(h.calls[0][1].text,'one | two');assert.match(r.text,/Delivery\/read status is unknown/);});
+test('new Business conversation is explicitly a draft, never a silent send',async()=>{const h=harness({wa:{business:true}});const r=await h.api.run('whatsapp.compose','+12345678901 | hello | business');assert.equal(h.calls[0][1].business,true);assert.equal(h.calls[0][1].text,'hello');assert.match(r.text,/NOT sent/);});
+test('nonzero Termux exit code returns an AI tool error',async()=>{const h=harness({tm:{enabled:true,permission:true},methods:{result:async()=>({status:'complete',exitCode:7,stdout:'',stderr:'failed'})}});const r=await h.api.run('termux.run','false');assert.match(r.text,/^ERROR: exit 7/);});
+test('Termux success requires a completed native result',async()=>{const h=harness({tm:{enabled:true,permission:true}});const r=await h.api.run('termux.run','pwd');assert.match(r.text,/^exit 0/);assert.equal(h.calls[0][1].cmd,'pwd');});
+test('shell quoting preserves untrusted URLs literally',()=>{const h=harness();for(const s of ["https://example.org/a'b.zip",'$(printf injected); & | `id` " \\ \n']){const r=spawnSync('/bin/sh',['-c','printf %s '+h.api.quote(s)],{encoding:'utf8'});assert.equal(r.status,0);assert.equal(r.stdout,s);}});
+test('invalid YouTube ID never reaches Termux execution',async()=>{const h=harness({tm:{enabled:true,permission:true}});await assert.rejects(h.api.youtubeDownload('bad;command','audio'),/Invalid video ID/);assert.equal(h.calls.length,0);});
+test('yt-dlp uses a literal URL, no playlist, retries, and a quoted destination',async()=>{const h=harness({tm:{enabled:true,permission:true}});await h.api.youtubeDownload('dQw4w9WgXcQ','audio');const cmd=h.calls[0][1].cmd;assert.match(cmd,/--no-playlist/);assert.match(cmd,/--retries 3/);assert.match(cmd,/-P "\$DEST"/);assert.match(cmd,/-- 'https:\/\/www.youtube.com\/watch\?v=dQw4w9WgXcQ'/);});
+test('torrent commands stop seeding and quote the entire magnet',async()=>{const h=harness({tm:{enabled:true,permission:true}});const ref='magnet:?xt=urn:btih:0123456789abcdef0123456789abcdef01234567&dn=legal';await h.api.torrent(ref);const cmd=h.calls[0][1].cmd;assert.match(cmd,/--seed-time=0/);assert.ok(cmd.endsWith(h.api.quote(ref)));});
+test('native permissions and components are wired into the generated build',()=>{const main=fs.readFileSync(path.join(root,'resources/android/java/MainActivity.java'),'utf8');const patch=fs.readFileSync(path.join(root,'scripts/apply-bridges.py'),'utf8');for(const name of ['HorizonWhatsAppPlugin','HorizonTermuxPlugin','HorizonExtractorPlugin']){assert.ok(main.includes('registerPlugin('+name+'.class)'));assert.ok(patch.includes(name+'.kt'));}assert.ok(patch.includes('BIND_NOTIFICATION_LISTENER_SERVICE'));assert.ok(patch.includes('com.termux.permission.RUN_COMMAND'));assert.ok(patch.includes('coreLibraryDesugaringEnabled true'));});
+test('WhatsApp reply and Termux execution both retain native confirmations',()=>{const wa=fs.readFileSync(path.join(root,'resources/android/java/HorizonWhatsAppPlugin.kt'),'utf8');const tm=fs.readFileSync(path.join(root,'resources/android/java/HorizonTermuxPlugin.kt'),'utf8');assert.match(wa,/setPositiveButton\("Send"/);assert.match(tm,/setPositiveButton\("Run"/);assert.match(tm,/FLAG_MUTABLE/);assert.match(tm,/HorizonTermuxResultReceiver::class.java/);});
+test('music library automatically scans, is single-flight and waits for initialization',()=>{const s=fs.readFileSync(path.join(root,'www/horizon_music.js'),'utf8');assert.ok(s.includes('await ready;'));assert.ok(s.includes('if (!lib.length) await scan();'));assert.ok(s.includes('return scanFlight;'));assert.ok(s.includes('function confirmPlayback(t, start)'));assert.ok(!s.includes('Tell Fezzy to open the Music tab and tap Scan storage'));});
+test('keyboard fixes avoid late blur and defer measuring during composition',()=>{const perf=fs.readFileSync(path.join(root,'www/horizon_perf.js'),'utf8');const html=fs.readFileSync(path.join(root,'www/index.html'),'utf8');assert.ok(!perf.includes('a.blur()'));assert.ok(html.includes('if (composingInput || window.hzKbBusy) return;'));});

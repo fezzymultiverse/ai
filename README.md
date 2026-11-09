@@ -12,6 +12,69 @@
   <img alt="Capacitor 6" src="https://img.shields.io/badge/Capacitor-6-00e5ff">
 </p>
 
+## V1.87.0 integration patch — WhatsApp, Termux, downloads and keyboard
+
+This ZIP is updated **project source**, not a production APK. Rebuild using the existing GitHub Actions **Build Android APK** workflow. It calls `scripts/apply-android.sh`, which now also runs the idempotent `scripts/apply-bridges.py`; do not copy Kotlin files manually. The unchanged voice-bundling step remains necessary for the full release APK. Existing providers, API-key import, speech, PDFs, Vault, app lock and chat logic were not re-authored.
+
+### Where the features live
+
+Open **Settings → Permissions**. Two new cards appear below the existing permission rows:
+
+**WhatsApp bridge**
+
+- Independent WhatsApp personal and WhatsApp Business switches, plus background alerts and confirmed replies.
+- **Grant access** opens Android's notification-listener settings. Android describes this as broad notification access; Horizon's listener filters to `com.whatsapp` and `com.whatsapp.w4b` and only captures enabled sources. **Allow pop-up alerts** requests Horizon's notification permission and opens its settings if blocked. Android notification channel settings, Do Not Disturb, force-stop, managed-device rules and OEM battery restrictions can still suppress delivery/banner presentation.
+- **Message inbox** shows sender, conversation, time and notification text. Foreground message banners use the WhatsApp symbol; background alerts use an Android notification with WhatsApp icon, sender and an expandable preview. Tapping opens the inbox. No unreliable background custom Toast or overlay permission is used.
+- Capture is notification-based: it cannot unlock the WhatsApp encrypted database, load all historical conversations, recover hidden previews, retrieve media attachments, or see messages that produce no readable notification. Active previews can be collected on connection; this is not a full-history import.
+- Captured previews stay in private app preferences, with at most 300 messages and a seven-day rolling read/capture window. Expired entries are purged on the next access/capture, not by an exact-time deletion alarm. Turning a source off purges its captured rows. **Clear inbox** removes all stored previews. These preferences and Termux result preferences are excluded from Android cloud/device backups by the added rules. No extra server is involved.
+- The AI is not automatically sent new messages. Each AI read asks before sharing with the selected chat provider; its results are paginated to avoid flooding the prompt. After sharing, those tool results enter the normal chat/provider processing flow; clearing the capture inbox is not deletion from a provider or existing chat history.
+- Replies use WhatsApp's live notification RemoteInput action and always require native confirmation with recipient/conversation and exact text. A removed/expired reply action requires opening WhatsApp. A successful handoff means **submitted**, not delivered/read. To start a new conversation, the AI can open a WhatsApp draft with an international phone number; you must tap **Send in WhatsApp**. No accessibility auto-clicking, unsupported silent-send API or Business API credentials are assumed.
+
+Examples to ask your AI: “Read my captured WhatsApp messages from Alex”, “Check all captured messages, continue through all pages”, “Reply to Alex: I will call in ten minutes”, or “Prepare a WhatsApp Business message to +[international number]”.
+
+**Your Termux · native bridge**
+
+- Uses your standard `com.termux` installation, its official RUN_COMMAND service and the `com.termux.permission.RUN_COMMAND` runtime permission. It is separate from Horizon's original limited native shell, which stays intact.
+- **One-time external prerequisite:** standard Termux must be installed and initialized, and `allow-external-apps=true` must be enabled in `~/.termux/termux.properties`. Grant Horizon **Run commands**. Android's app sandbox prevents Horizon editing Termux's private properties before that bridge is allowed. “Open Termux setup” opens Termux; it cannot bypass the prerequisite or silently enable it. After setup there is no need to reopen Termux or paste commands for ordinary jobs.
+- Turn on the bridge, tap **Grant permission**, then **Test bridge**. Permission alone does not prove Termux accepts external commands; the actual test result does.
+- **Install download tools** offers `pkg install -y python ffmpeg aria2` and installs/upgrades yt-dlp through Python. Approve the displayed native command. Package repositories/network access and a compatible Termux distribution are required.
+- **Review & run command** and AI commands show the exact command in a native confirmation. This executes with Termux's access, not root and not an isolated shell sandbox. Do not approve commands you do not trust.
+- Commands run as background Termux tasks with an explicit mutable one-shot PendingIntent directed at a non-exported result receiver. Exit code/stdout/stderr are captured, limited and stored for recovery. **Recent jobs / results** retrieves recent submissions after a WebView restart. Old results are pruned on a subsequent submission; the list shows the newest 20.
+- A UI timeout means completion is **unknown**, not cancellation. Do not blindly repeat an install, send or download; use Recent jobs or check Termux first. Turning the bridge off prevents new jobs; it does not kill jobs already running in Termux. Android battery/force-stop restrictions can still interrupt Termux.
+
+### Music playback
+
+AI music commands wait for the library cache to initialize and automatically scan storage when the library is empty. Concurrent requests share one scan. If Android needs Music/audio permission, the existing permission request is used and a refusal returns a specific error. A cache-open watchdog prevents a blocked IndexedDB open from hanging all commands. `music.scan` can refresh manually through the AI tool.
+
+An empty local library no longer means the app cannot play music. Local playback is attempted through the actual player; AI play/resume only reports success after playback progress, and returns an error when it does not start. YouTube streaming remains separately controlled by the per-chat YouTube switch and source availability. No access to private/age-restricted/DRM content is promised.
+
+### Downloads
+
+- Direct HTTPS files, ZIPs and images use Android DownloadManager for durable system-owned transfers, retry/wait handling and completion notifications. The Downloads history reattaches these native jobs after a reload instead of declaring them interrupted. Files go to `Download/Horizon`, images to `Pictures/Horizon`. Existing MediaStore paths remain for other audio/video saves.
+- File/image/repository AI tools follow **File access**, not the YouTube-specific switch. Unknown direct links still ask for approval. A bare public GitHub repository URL is resolved through GitHub's API to its actual default branch and downloaded as ZIP. Private/authenticated/rate-limited repositories need an authorized accessible download URL; no token-bypass is attempted.
+- YouTube extraction tries pinned native NewPipeExtractor **v0.27.0**, then the existing direct clients and public sources. Both extraction failures and save failures enter retry handling. When enabled, Termux/yt-dlp is the final confirmed download fallback, with FFmpeg for adaptive streams/conversion. YouTube changes may still require future extractor/yt-dlp updates; no implementation can guarantee every video or site.
+- Magnets use aria2 through Termux when enabled, after native command approval; otherwise the existing external torrent-app handoff remains. `.torrent` files can be saved/opened with an installed torrent client, and Termux's command box can run aria2 on a permitted URL/file. The Download screen's torrent flow uses the same bridge. Seeding stops after the download (`--seed-time=0`). Use only material you have permission to download/share.
+- Termux downloads use shared `~/storage/downloads/Horizon` **if already accessible**, otherwise `~/horizon-downloads` inside Termux. The latter is private to Termux and will not automatically appear in Horizon's Files picker or Android's Downloads folder. Configure Termux shared-storage access if you want public files. Completion/result text reports the path. Termux download byte progress is not a native torrent progress dashboard.
+- “Queued”, “submitted”, “completed” and “unknown/timed out” are kept distinct. A partial or failed job is not reported as a finished download.
+
+### Keyboard and performance
+
+Android adjustResize remains the primary layout owner. Native overlap measurements are suppressed while the IME animates; the web fallback avoids subtracting a stale keyboard cover from an already-resized viewport. The delayed blur that could cancel a new keyboard opening was removed. Textarea measurements are deferred during composition and keyboard movement. Download history repaints back off while typing/keyboard movement is active. WhatsApp notification parsing/storage runs on its own worker, not Android's UI thread. New interface styling is scoped, uses existing theme variables and respects reduced motion. This is targeted contention reduction, not a claim of a universal JavaScript speed multiplier or a measured FPS guarantee on your phone.
+
+### Verification and limits
+
+- `npm test`: **42/42** passed (24 retained existing tests plus 18 new checks).
+- Mobile Chromium: **14 integration checks** passed, including clean boot, permission cards, safe message rendering, consent refusal, bounded read tool routing, no false reply delivery claim, keyboard focus/composition and single-flight music scanning/playback failure reporting. Native WhatsApp/Termux/audio boundaries were mocked for these UI tests.
+- All application JavaScript and inline scripts passed syntax checks. The Android patch script was applied repeatedly to check idempotent component/dependency wiring.
+- Actual Android Kotlin/Java compilation, manifest/resource merging, desugaring, dex merging and debug packaging passed with Java 17 / Android SDK 34. For local compile/packaging verification only, the pre-existing voice API source was fetched; the large original voice binaries/models were **not** bundled locally. The resulting development APK is deliberately not supplied as a complete replacement. Use the unchanged existing release workflow, including its voice-bundling step.
+- Not device-verified here: real WhatsApp/Business notification formats/reply action expiry, notification delivery under OEM battery limits, actual Termux authorization/setup/package installs, real yt-dlp/torrent transfers, and keyboard smoothness on your device. These need a rebuilt APK and your phone. No production signing key or provider credentials were requested.
+
+### Third-party licensing
+
+The original Horizon source license is retained. NewPipeExtractor is **GPL-3.0-or-later**, not MIT. Distributing an APK linked with it carries GPL obligations for the combined work, including corresponding-source/licence requirements; do not describe that combined binary as MIT-only. The upstream licence is included at `resources/android/NEWPIPE-LICENSE.txt`. Source: https://github.com/TeamNewPipe/NewPipeExtractor/tree/v0.27.0 . Review distribution obligations before publishing.
+
+Upstream technical references: https://github.com/termux/termux-app/wiki/RUN_COMMAND-Intent ; https://developer.android.com/reference/android/service/notification/NotificationListenerService ; https://developer.android.com/reference/android/app/RemoteInput ; https://developer.android.com/guide/topics/ui/notifiers/toasts .
+
 ## What's new in V1.87.0
 
 - **Speech reliability:** Android MediaPlayer playback for generated WAV audio bypasses WebView audio locks. Standard Android voice is the first-run default. Missing bundled voices fail fast; replies fall back, while the explicit voice Test reports the selected engine's error. Native WAV pause, resume, stop, cleanup and watchdogs are included. Rebuild the APK to include the native changes.

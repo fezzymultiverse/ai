@@ -293,4 +293,5 @@ need "$MANIFEST" 'android:windowSoftInputMode="adjustResize"' "Could not pin the
 need "$JAVA_DIR/MainActivity.java" "requestHighRefresh" "MainActivity ($JAVA_DIR/MainActivity.java) has no 90 Hz request"
 say "Keyboard resize mode and 90 Hz request applied (verified)."
 
+python3 scripts/apply-bridges.py
 say "All Android patches applied and verified."

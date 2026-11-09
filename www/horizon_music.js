@@ -18,7 +18,7 @@
 
     const LS = { ai: 'horizon_music_ai', hear: 'horizon_ears_hear', len: 'horizon_ears_len', from: 'horizon_ears_from', tool: 'horizon_ears_tool', liked: 'horizon_music_liked', recent: 'horizon_music_recent', last: 'horizon_music_last',
         shuffle: 'horizon_music_shuffle', repeat: 'horizon_music_repeat', all: 'horizon_music_all', sort: 'horizon_music_sort' };
-    const SRC = '\\[\\[music\\.(search|play|queue|pause|resume|next|prev|now|listen)(?::\\s*((?:(?!\\]\\])[\\s\\S])*?))?\\s*\\]\\]';
+    const SRC = '\\[\\[music\\.(search|play|queue|pause|resume|next|prev|now|listen|scan)(?::\\s*((?:(?!\\]\\])[\\s\\S])*?))?\\s*\\]\\]';
     const PAGE = 80;
 
     let host = { lsGet: () => null, lsSet() {}, notice() {}, onChange() {}, askAI() {}, openLeftTab() {}, nativeScan: null, srcFor: p => p };
@@ -33,6 +33,11 @@
     let shuffle = false, repeat = 0, allAudio = false, sortBy = 'title';
     let view = 'songs', filter = null, search = '', shown = PAGE;
     let scanning = false, scanNote = '', scanTs = 0;
+    let scanFlight = null, ready = Promise.resolve();
+    function scan() {
+        if (!scanFlight) scanFlight = scanCore().finally(() => { scanFlight = null; });
+        return scanFlight;
+    }
     let errRun = 0, seeking = false, loadedId = '';
     const au = window.HorizonAudio ? window.HorizonAudio() : new Audio();
     au.preload = 'metadata';
@@ -50,9 +55,11 @@
         if (!dbp) dbp = new Promise((res, rej) => {
             if (!window.indexedDB) { rej(new Error('no IndexedDB')); return; }
             const r = indexedDB.open('horizon_music', 1);
+            const deadline = setTimeout(() => rej(new Error('Music cache open timed out')), 5000);
+            r.onblocked = () => { clearTimeout(deadline); rej(new Error('Music cache is blocked')); };
             r.onupgradeneeded = () => { if (!r.result.objectStoreNames.contains('kv')) r.result.createObjectStore('kv'); };
-            r.onsuccess = () => res(r.result);
-            r.onerror = () => rej(r.error);
+            r.onsuccess = () => { clearTimeout(deadline); res(r.result); };
+            r.onerror = () => { clearTimeout(deadline); rej(r.error); };
         });
         return dbp;
     }
@@ -78,7 +85,7 @@
             path: r.path || '', size: Number(r.size) || 0, added: Number(r.added) || 0, music: !!r.music
         };
     }
-    async function scan() {
+    async function scanCore() {
         if (scanning) return;
         scanning = true; scanNote = 'Scanning your storage for music...'; paintLib();
         try {
@@ -804,7 +811,7 @@
     function block(by) {
         if (!seesAi()) return 'MUSIC PLAYER\nHidden by Fezzy (the red eye in the music widget). You cannot see what is playing and you have no music tools. If he asks about his music, tell him to tap the eye to show it.';
         const out = ['MUSIC PLAYER (Fezzy\'s own player, live; the red eye is on so you can see it)'];
-        out.push(lib.length ? `Library: ${visible().length} songs.` : 'Library: not scanned yet (Music tab, Scan storage).');
+        out.push(lib.length ? `Library: ${visible().length} songs.` : 'Library: loading/not scanned yet. music.search and music.play automatically load the cache and scan storage (Android may request music permission). Use the tool; do not refuse just because the library is not loaded.');
         if (cur) {
             const dur = (au.duration > 0 && isFinite(au.duration)) ? au.duration : cur.dur;
             out.push(`NOW PLAYING (${state()}): ${line(cur)} at ${fmt(au.currentTime)}${dur ? ' of ' + fmt(dur) : ''}. id=${cur.id}${liked.has(cur.id) ? ', he liked it' : ''}`);
@@ -845,6 +852,8 @@
     async function run(kind, arg, by) {
         if (!seesAi()) return { text: 'ERROR: music is hidden from you. Tell Fezzy to tap the red eye.' };
         try {
+            await ready;
+            if (kind === 'music.scan') { await scan(); return { text: scanTs ? scanNote : 'ERROR: ' + scanNote }; }
             if (kind === 'music.now') return { text: cur ? `${state()}: ${line(cur)} at ${fmt(au.currentTime)} id=${cur.id}` : 'Nothing is playing.' };
             if (kind === 'music.listen') {
                 if (!cur) return { text: 'Nothing is playing.' };
@@ -854,10 +863,11 @@
                 return { text: 'GEMINI LISTENED to ' + r.secs + ' s starting at ' + fmt(r.from) + ' and says:\n' + r.text };
             }
             if (kind === 'music.pause') { au.pause(); return { text: cur ? 'Paused.' : 'Nothing was playing.' }; }
-            if (kind === 'music.resume') { if (!cur) return { text: 'ERROR: nothing is loaded. Use music.play first.' }; if (au.paused) toggle(); return { text: 'Playing: ' + line(cur) }; }
+            if (kind === 'music.resume') { if (!cur) return { text: 'ERROR: nothing is loaded. Use music.play first.' }; if (!au.paused) return { text: 'Already playing: ' + line(cur) }; return confirmPlayback(cur, toggle); }
             if (kind === 'music.next') { if (!next(false)) return { text: 'ERROR: nothing queued.' }; return { text: 'Now playing: ' + line(cur) }; }
             if (kind === 'music.prev') { prev(); return { text: cur ? 'Now playing: ' + line(cur) : 'Nothing to go back to.' }; }
-            if (!lib.length) return { text: 'ERROR: the library is empty. Tell Fezzy to open the Music tab and tap Scan storage.' };
+            if (!lib.length) await scan();
+            if (!lib.length) return { text: 'ERROR: ' + (scanNote || 'No local songs found after scanning.') + ' If YouTube is enabled use yt.search then yt.play; an empty local library does not block streaming.' };
             if (kind === 'music.search') {
                 if (!arg) return { text: 'ERROR: use [[music.search: words]].' };
                 const r = find(arg, 10);
@@ -896,10 +906,22 @@
             paintLib();
         });
     }
-    function playTool(t) {
-        playId(t.id, sorted(visible()).map(x => x.id));
-        return { text: `Started: ${line(t)}. If Android blocks autoplay it may need a tap on play.` };
+    function confirmPlayback(t, start) {
+        return new Promise(resolve => {
+            let done = false;
+            const finish = ok => {
+                if (done) return; done = true;
+                clearTimeout(timer); au.removeEventListener('timeupdate', progress); au.removeEventListener('error', failed);
+                resolve({ text: ok ? `Playing: ${line(t)}` : `ERROR: playback did not start for ${line(t)}. The library is loaded; check the file, audio permission or tap Play. Do not claim it played.` });
+            };
+            const progress = () => { if (cur && cur.id === t.id && !au.paused && au.currentTime > 0.15) finish(true); };
+            const failed = () => finish(false);
+            const timer = setTimeout(() => finish(!!cur && cur.id === t.id && !au.paused && au.currentTime > 0.15), 12000);
+            au.addEventListener('timeupdate', progress); au.addEventListener('error', failed);
+            try { start(); } catch (_) { finish(false); }
+        });
     }
+    function playTool(t) { return confirmPlayback(t, () => playId(t.id, sorted(visible()).map(x => x.id))); }
 
     // ---------- init ----------
     // V1.40.0: swipe the now-playing strip to the right to remove it (it comes back with the next song, or when you press play again).
@@ -971,5 +993,5 @@
     function playingNow() { return !!cur && !au.paused; }
     function pauseNow() { if (!playingNow()) return false; try { au.pause(); return true; } catch (_) { return false; } }
 
-    window.HorizonMusic = { init, SRC, parse, run, block, seesAi, setAi, openTab, scan, openEars, playingNow, pauseNow, playRemote };
+    window.HorizonMusic = { init: h => { ready = init(h); return ready; }, SRC, parse, run, block, seesAi, setAi, openTab, scan, openEars, playingNow, pauseNow, playRemote };
 })();

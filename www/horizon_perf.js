@@ -57,7 +57,8 @@
     kbTimer = setTimeout(function () {
       kbSettle();
       var a = document.activeElement;
-      if (!visible && a && a.tagName === 'TEXTAREA' && a.id === 'chatInput') { try { a.blur(); } catch (e) { /* ignore */ } }
+      // Keep editor focus: a late hidden-IME event must not cancel a new focus/composition.
+      // Android Back owns dismissal, not a delayed JavaScript blur.
     }, 40);
   };
   window.addEventListener('resize', kbCheck, { passive: true });
