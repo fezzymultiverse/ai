@@ -1,6 +1,6 @@
 /* HORIZON · direct YouTube source · V1.79.0
  *
- * Why: the public Piped and Invidious servers Horizon used for YouTube are mostly down or blocked, so
+ * Why: the public Piped and Invidious servers Horizon once used for YouTube were mostly down or blocked (removed in V1.91.0), so
  * search, download and play kept failing. This talks to YouTube's own app API (InnerTube) straight from
  * the phone. CapacitorHttp is on, so fetch() here goes through the native stack: no CORS, and the
  * User-Agent header is really sent.

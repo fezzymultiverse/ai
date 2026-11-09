@@ -1,0 +1,22 @@
+HORIZON V1.91.0 — YOUTUBE FOR THE AI, OLD PARTS REMOVED, LIGHTER BACKGROUND
+Source patch on Horizon V1.90.0
+
+CHANGES
+1. YouTube for the AI: [[yt.download: ID | Title | video]] saves mp4 (up to 720p); the 2-part form still saves audio. The old runner
+   always forced audio, now it honours the kind. When Termux AI is on, the know-how text carries exact yt-dlp recipes (mp3, mp4,
+   playlist, list formats, search, 403 / sign-in fix with pip upgrade and player_client).
+2. Route order is NewPipe (Kotlin) -> YouTube app API -> Termux yt-dlp. New HorizonBridges.youtubeSearch is the yt-dlp search fallback.
+3. Removed: public Piped / Invidious layer (instance lists, discovery fetch, racing, proxies), its 3 stored keys (cleaned on release),
+   the stale "Uses your Piped / Invidious sources" sentence in the YouTube app, 110 unused CSS rules (42 dead classes), 4 unused icons.
+4. Background: header clock, dashboard loop and suggestion chips skip their timers while the app is hidden.
+5. Termux guard (Auto mode) also pauses: quoted rm of home/PREFIX, rm ./*, find -delete/-exec rm, $(curl)/<(curl), download-then-run.
+6. Tests: tests/guard.test.cjs reads the real Kotlin list; tests/youtube.test.cjs; fixed one stale V1.90.0 assertion (was failing before).
+
+TESTED: node --check on every JS and both inline scripts, node unit tests 105/105, CSS brace balance.
+NOT TESTED: Kotlin compile, APK build, on-device downloads, tests/browser.smoke.cjs (needs Playwright), real startup time.
+
+LEFT UNDONE
+- README.md line 1 still says V1.90.0 (left untouched on purpose).
+- #snoozeBtn is still looked up by horizon_screen.js and index.html (null-safe, element no longer exists).
+- Phase 3 speed work (lazy-loading 63 scripts) needs a real-phone profile first, as the V1.89.0 plan says.
+- Web/scraped text can still steer AI-run commands in AUTO mode (prompt-level defence only); ASK mode is the safe setting.

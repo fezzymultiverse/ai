@@ -1,11 +1,16 @@
 /* Horizon V1.26.0: ABOUT & UPDATES page: version, release check, backup export/import, changelog, privacy awareness + reminder switch. */
 (function () {
     'use strict';
-    var VERSION = 'V1.89.0';
+    var VERSION = 'V1.92.0';
     var LSK = 'horizon_privacy_notice';
     var REPO_API = 'https://api.github.com/repos/fezzymultiverse/ai';
     var LOG = [
-        ['V1.89.0', ['AI PROVIDER FIX: AnyAPI, Routeway and GonkaRouter now send messages. The Android AI bridge was refusing their addresses with "Unsupported AI endpoint" before any request left the phone; their three hosts are now allowed. GonkaRouter background replies also show in notifications. Needs an APK rebuild; device sending still needs testing.']],
+        ['V1.92.0', ['WHATSAPP: silent background send (off by default), reply actions survive dismissal, tap-to-send notification when silent send is impossible, optional AI auto-read of new previews.','COLORS: light greens replaced by one neon-purple token on dark pills; readable on every theme.','CLEANUP: overridden duplicate CSS declarations removed, chat saving debounced, Lite mode on low-RAM phones, AI now tells you how to switch the terminal on.']],
+        ['V1.91.0', ['YOUTUBE: the AI can now download VIDEO as well as audio ([[yt.download: ID | Title | video]], mp4 up to 720p), and when Termux is on it is taught exact yt-dlp commands for audio, video, playlists, quality and the 403 / sign-in fix. If NewPipe and the YouTube app API both fail, search and downloads fall through to yt-dlp in Termux.',
+            'OLD PARTS REMOVED: the dead public Piped / Invidious server layer (it burned 12 seconds per batch of timeouts before any fallback ran), its stored keys, 110 unused style rules, 4 unused icons and the stale YouTube source sentence in the YouTube app.',
+            'FASTER IN THE BACKGROUND: the header clock, dashboard loop and suggestion chips no longer wake the phone every second while Horizon is hidden.',
+            'SAFER AUTO MODE: the command guard now also stops quoted rm of home or PREFIX, rm of the current folder contents, find -delete, running downloaded code through $(curl ...) or <(curl ...), and download-then-run. Needs an APK rebuild; device testing still pending.']],
+        ['V1.90.0', ['AI PROVIDER FIX: AnyAPI, Routeway and GonkaRouter now send messages. The Android AI bridge was refusing their addresses with "Unsupported AI endpoint" before any request left the phone; their three hosts are now allowed. GonkaRouter background replies also show in notifications. Needs an APK rebuild; device sending still needs testing.']],
         ['V1.88.0', ['ONE TERMUX TERMINAL: real commands, AI approval and download tools share one execution path. No second Android shell or small Termux prompt.', 'PERMISSIONS: Device/native check and WhatsApp Personal/Business live only in Settings Permissions. Five app tiles share one row.', 'KEY NOTES: Web Scraping has a local masked extractor with explicit review and provider-side verification. Ambiguous keys require labels.', 'PERFORMANCE: batched terminal output, lazy terminal controls, event-driven AI mounting, reduced decorative polling, and versioned assets. Native device checks are still required.']],
         ['V1.87.1', ['TERMINAL HUB: permissions and integration toggles now live only inside standalone Terminal Controls, with an explicit AI Termux gate and per-command approval.', 'CONTACTS: local name search and recipient cards; approved background replies use active direct-chat notifications and never fall back to opening WhatsApp.', 'VOICE: serialized pack installation and synthesis, fresh installed-pack selection and pinned compatible sherpa-onnx runtime. Optional Google Cloud Standard free tier has billing and quota notices.', 'PERFORMANCE: removed legacy drawer layout switching and unused drawer CSS; decorative work backs off in every editor. Regression tests and Android compilation included; real-device validation is still required.']],
         ['V1.87.0', ['TTS: native WAV playback bypasses WebView audio locks, safe Android default, missing voice-pack preflight, pause/resume and startup watchdog fixes. Needs APK rebuild; device playback still needs testing.', 'KEYS: local note importer at the bottom of API Providers; Gemini AIza and AQ keys; standalone and backup keys are verified before saving. Public model lists no longer validate gateway keys.', 'GREY THEME: readable, muted green quick replies and subdued starter cards. Three decorative details stay inside the existing layout.', 'PDF: smaller section builds, ten-page wording support, real page-count checks, empty-section protection, cancellation, and up to ten scanned pages for vision models.'] ],
@@ -219,6 +224,7 @@
         });
     }
     function collect() {
+        try { if (window.HorizonFlushChats) window.HorizonFlushChats(); } catch (e) { /* ignore */ }
         var ls = {}, n = 0, skipped = 0;
         try {
             for (var i = 0; i < localStorage.length; i++) {
@@ -341,6 +347,7 @@
         } catch (e) { return inc; }
     }
     function applyBackup() {
+        try { if (window.HorizonFlushChats) window.HorizonFlushChats(); } catch (e) { /* ignore */ }
         var b = pending;
         if (!b || bkBusy) return;
         bkBusy = true; render();

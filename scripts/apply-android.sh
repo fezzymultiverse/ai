@@ -60,6 +60,7 @@ for d in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
     done
 done
 [ ! -e "$DEST/drawable-v24/ic_launcher_foreground.xml" ] || die "Stale default icon still present"
+[ -s "$DEST/raw/horizon_live.sh" ] || die "Live runner script missing: res/raw/horizon_live.sh"
 say "Horizon icons and splash applied (verified)."
 
 # ------------------------------------------------------------------------------------------

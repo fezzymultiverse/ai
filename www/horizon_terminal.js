@@ -15,7 +15,7 @@
         'Type a command, or type help.'
     ];
     var st = { built: false, open: false, alive: false, cwd: '', home: '', running: false, last: '', hist: [], hi: 0, ctrl: false, kill: '', cmds: 0,
-        rsOn: false, rsQ: '', rsI: 0, typing: null, pendingOpen: 0, controls: false, requestedControls: false };
+        rsOn: false, rsQ: '', rsI: 0, typing: null, lastOut: '', pendingOpen: 0, controls: false, requestedControls: false };
     var el = {};
 
     function plugin() { var C = window.Capacitor; return C && C.Plugins && C.Plugins.HorizonTermux || null; }
@@ -142,7 +142,7 @@
     function paintStrip() {
         if (!el.strip) return;
         el.strip.hidden = !(st.alive && !st.open);
-        el.stTxt.textContent = st.running ? 'running: ' + st.last.slice(0, 40) : 'Terminal \u00B7 idle \u00B7 ' + st.cmds + (st.cmds === 1 ? ' command' : ' commands');
+        el.stTxt.textContent = st.running ? '\u25B6 ' + (st.lastOut || st.last).slice(0, 44) : 'Terminal \u00B7 idle \u00B7 ' + st.cmds + (st.cmds === 1 ? ' command' : ' commands');
         if (el.o) el.o.classList.toggle('hzt-busy', st.running);
     }
 
@@ -265,7 +265,7 @@
         else if (l === 'e') setVal(v);
         else if (l === 'b') setVal(v, Math.max(0, c - 1));
         else if (l === 'f') setVal(v, Math.min(v.length, c + 1));
-        else if (l === 'c') { if (st.running) addLine('No PTY/stdin: Ctrl+C cannot cancel a submitted Termux job. Stop it in Termux itself.', 'hzt-err'); else { echo(v + '^C'); setVal(''); st.rsOn = false; } }
+        else if (l === 'c') { if (st.running) { if (window.HorizonBridges && HorizonBridges.liveCapable()) { addLine('^C \u00B7 stopping the run\u2026', 'hzt-dim'); HorizonBridges.kill(); } else addLine('Ctrl+C cannot cancel a legacy Termux job. Stop it in Termux itself.', 'hzt-err'); } else { echo(v + '^C'); setVal(''); st.rsOn = false; } }
         else if (l === 'd') { if (!v) exitTerm(); else if (c < v.length) setVal(v.slice(0, c) + v.slice(c + 1), c); }
         else if (l === 'k') { st.kill = v.slice(c); setVal(v.slice(0, c)); }
         else if (l === 'u') { st.kill = v.slice(0, c); setVal(v.slice(c), 0); }
@@ -310,12 +310,13 @@
         addText('One unified TERMINAL runs real commands in your installed Termux, with native confirmation.\n'
             + 'Controls / Options: enable bridge, grant Run commands, enable AI (optional), test, install tools, inspect recent jobs.\n'
             + 'Downloads: yt-dlp + FFmpeg for supported music/video; aria2c and curl for other files. Install required packages first.\n'
-            + 'cd persists as a working-directory path. Shell variables, jobs, aliases and interactive stdin do not persist: this is not a PTY.\n'
+            + 'Output streams live. Every run is checked with bash -n first and traced (\u276F lines). cp -v / mv -v / rm -v / mkdir -pv show each file operation. Ctrl+C stops the run. cd persists; variables and aliases do not; no PTY or stdin.\n'
             + 'help, clear, exit are local. Unknown completion is not cancelled; do not repeat it. No root.', 'hzt-dim');
     }
     function exec(cmd, timeout) {
         if (!native() || !window.HorizonBridges) { addText('Real commands require the Horizon Android app, standard Termux and bridge permission. Browser preview cannot execute commands.', 'hzt-err'); paintStrip(); return Promise.resolve(); }
         if (window.HorizonBridges.busy()) { addText('A Termux job is still pending. Check Controls / Options → Recent jobs / results.', 'hzt-err'); return Promise.resolve(); }
+        if (window.HorizonBridges.liveCapable()) return window.HorizonBridges.termux(cmd, timeout || 600000, false, { cwd: st.cwd }).catch(function () { /* the live event stream already printed the error */ });
         var pre = st.cwd ? "cd '" + q(st.cwd) + "' || exit\n" : '';
         var wrapped = pre + cmd + "\n__hz_rc=$?\nprintf '\\n__HZCWD__%s\\n' \"$(pwd)\"\nexit $__hz_rc";
         return window.HorizonBridges.termux(wrapped, timeout || 120000, false).catch(function () { /* Shared event logger displays errors exactly once. */ });
@@ -333,11 +334,66 @@
         } else { st.running = d.phase === 'unknown'; addText(d.error || 'Unknown command state', 'hzt-err'); }
         paintPs(); paintStrip();
     }
+
+    /* ---- V1.90.0 live runs: merged output streams in as it happens (\r progress bars overwrite, ANSI stripped) ---- */
+    var live = { node: null, cur: '', cr: false };
+    function follow() { try { return localStorage.getItem('hzTermFollow') || 'open'; } catch (e) { return 'open'; } }
+    function commitLive() {
+        var t = live.cur, c = window.HorizonRunLog ? HorizonRunLog.classify(t) : null;
+        if (!live.node) live.node = addLine('');
+        if (c) { live.node.textContent = c.text; live.node.className = 'hzt-l ' + c.cls; t = c.text; } else live.node.textContent = t;
+        if (t.trim()) st.lastOut = t.trim();
+        live.node = null; live.cur = ''; live.cr = false; paintStrip();
+    }
+    function liveFeed(text) {
+        var s = window.HorizonRunLog ? HorizonRunLog.stripAnsi(text) : text;
+        s.split(/(\r\n|\n|\r)/).forEach(function (seg) {
+            if (seg === '\n' || seg === '\r\n') commitLive();
+            else if (seg === '\r') live.cr = true;
+            else if (seg) {
+                if (live.cr) { live.cur = ''; live.cr = false; }
+                live.cur += seg;
+                if (!live.node) live.node = addLine('');
+                live.node.textContent = live.cur;
+            }
+        });
+        el.out.scrollTop = el.out.scrollHeight;
+    }
+    function runEvent(e) {
+        var d = e.detail || {}; build();
+        if (d.phase === 'start') {
+            if (!st.alive) { st.alive = true; el.out.textContent = ''; }
+            skipTyping(); st.running = true; st.last = String(d.command || '').split('\n')[0]; st.lastOut = '';
+            if (d.fromAI && follow() === 'open' && !st.open) open();
+        } else if (d.phase === 'run') {
+            if (d.fromAI) {
+                addLine('┌ AI ▸ running in your Termux', 'hzt-ai-hd');
+                String(d.command || '').split('\n').slice(0, 12).forEach(function (l) { addLine('│ ' + l, 'hzt-ai-cmd'); });
+                if (String(d.command || '').split('\n').length > 12) addLine('│ …', 'hzt-ai-cmd');
+            }
+        } else if (d.phase === 'bash') addLine('[' + String(d.text || '').replace(/^\d+ /, 'bash ') + ']', 'hzt-dim');
+        else if (d.phase === 'note') addLine(d.text, 'hzt-dim');
+        else if (d.phase === 'chunk') liveFeed(d.text || '');
+        else if (d.phase === 'end') {
+            if (live.cur || live.node) commitLive();
+            var r = d.result || {}, ops = r.ops || [], n = { copied: 0, moved: 0, removed: 0, created: 0, linked: 0 };
+            ops.forEach(function (o) { n[o.kind] = (n[o.kind] || 0) + 1; });
+            if (ops.length) addLine('⧉ ' + n.copied + ' copied · ' + n.moved + ' moved · ' + n.removed + ' removed · ' + n.created + ' folders', 'hzt-op');
+            if (r.error) addLine(r.error, 'hzt-err');
+            addLine((d.fromAI ? '└ ' : '') + '[exit ' + r.exitCode + ' · ' + ((r.ms || 0) / 1000).toFixed(1) + 's]', r.exitCode === 0 ? 'hzt-dim' : 'hzt-err');
+            if (r.cwd) st.cwd = r.cwd;
+            st.running = false;
+        } else if (d.phase === 'error' || d.phase === 'unknown') {
+            st.running = d.phase === 'unknown'; addText(d.error || 'Unknown command state', 'hzt-err');
+        }
+        paintPs(); paintStrip();
+    }
+    window.addEventListener('horizon-run', runEvent);
     window.addEventListener('horizon-terminal-command', commandEvent);
 
     document.addEventListener('click', function (e) {
         var b = e.target.closest && e.target.closest('[data-term-open]');
         if (b) { e.preventDefault(); open(); }
     });
-    window.HorizonTerminal = { open: open, openSettings: function () { st.requestedControls = true; open(); }, minimize: function () { minimize(false); }, exit: exitTerm, run: function (cmd, timeout) { build(); skipTyping(); setControls(false); return exec(cmd, timeout); }, showOutput: function (text) { build(); skipTyping(); setControls(false); st.alive = true; addText(text); paintStrip(); }, isOpen: function () { return st.open; } };
+    window.HorizonTerminal = { cwd: function () { return st.cwd; }, open: open, openSettings: function () { st.requestedControls = true; open(); }, minimize: function () { minimize(false); }, exit: exitTerm, run: function (cmd, timeout) { build(); skipTyping(); setControls(false); return exec(cmd, timeout); }, showOutput: function (text) { build(); skipTyping(); setControls(false); st.alive = true; addText(text); paintStrip(); }, isOpen: function () { return st.open; } };
 })();

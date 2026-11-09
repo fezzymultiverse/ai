@@ -55,7 +55,7 @@
         raf = 0;
         if (!speaking()) { btn.style.boxShadow = ''; return; }
         var p = (ms / 1000 % 1.2) / 1.2;
-        btn.style.boxShadow = '0 0 0 ' + (p * 8).toFixed(2) + 'px rgba(34,197,94,' + (0.5 * (1 - p)).toFixed(3) + ')';
+        btn.style.boxShadow = '0 0 0 ' + (p * 8).toFixed(2) + 'px rgba(var(--neon-rgb),' + (0.5 * (1 - p)).toFixed(3) + ')';
         raf = requestAnimationFrame(frame);
     }
     function kick() { if (!raf && speaking()) raf = requestAnimationFrame(frame); else if (!speaking()) btn.style.boxShadow = ''; }

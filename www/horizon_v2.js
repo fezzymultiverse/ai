@@ -29,7 +29,7 @@
     b.addEventListener('click', function () { tap(target); }); return b;
   }
   var browser = sq('Browser', '#3d8bff', '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/>', '#hzbOpen');
-  var group = sq('AI Group Chat', '#2bff88', '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6M16 4.8a3.5 3.5 0 0 1 0 6.4M18 14.3c2.3.7 3.5 2.6 3.5 5.7"/>', '#groupBtn');
+  var group = sq('AI Group Chat', 'var(--neon)', '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6M16 4.8a3.5 3.5 0 0 1 0 6.4M18 14.3c2.3.7 3.5 2.6 3.5 5.7"/>', '#groupBtn');
   if (logo) { logo.insertAdjacentElement('afterend', browser); browser.insertAdjacentElement('afterend', group); }
   else { header.insertBefore(group, header.firstChild); header.insertBefore(browser, header.firstChild); }
 

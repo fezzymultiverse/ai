@@ -363,7 +363,7 @@
         if (!arc || !txt || !ring) return;
         const C = 2 * Math.PI * 17;
         arc.setAttribute('stroke-dasharray', `${(C * pct) / 100} ${C}`);
-        arc.setAttribute('stroke', pct >= 90 ? '#ff3b30' : pct >= 70 ? '#f59e0b' : '#22c55e');
+        arc.setAttribute('stroke', pct >= 90 ? '#ff3b30' : pct >= 70 ? '#f59e0b' : 'var(--neon)');
         txt.textContent = pct + '%';
         ring.setAttribute('aria-label', `Vault ${pct}% used, ${fmtBytes(u)} of ${fmtBytes(BUDGET)}`);
         ring.title = `${fmtBytes(u)} of ${fmtBytes(BUDGET)} used`;

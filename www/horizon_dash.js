@@ -283,7 +283,7 @@
         if (s.storTotal) { var su = s.storTotal - s.storFree; stPct = 100 * su / s.storTotal; stTxt = gb(s.storFree) + ' free'; }
         g.appendChild(stat('STORAGE', stPct, stTxt, level(stPct || 0) || '#22d3ee', s.web ? 'Space Horizon may use on this device' : ''));
         var bp = s.batPct != null ? s.batPct : null;
-        g.appendChild(stat('BATTERY', bp, bp == null ? '--' : bp + '%' + (s.batCharging ? ' \u26A1' : '') + (s.batTempC ? ' \u00B7 ' + Math.round(s.batTempC) + '\u00B0' : ''), level(bp == null ? 0 : bp, true) || '#22c55e'));
+        g.appendChild(stat('BATTERY', bp, bp == null ? '--' : bp + '%' + (s.batCharging ? ' \u26A1' : '') + (s.batTempC ? ' \u00B7 ' + Math.round(s.batTempC) + '\u00B0' : ''), level(bp == null ? 0 : bp, true) || 'var(--neon)'));
         var cp = null, ct = '--', ctip = '';
         if (s.cpuSys != null && s.cpuSys >= 0) { cp = s.cpuSys; ct = cp + '%' + (s.cores ? ' \u00B7 ' + s.cores + ' cores' : ''); }
         else if (s.cpuApp != null && s.cpuApp >= 0) { cp = s.cpuApp; ct = cp + '% app'; ctip = 'Android hides total CPU from apps, so this is Horizon\'s own share'; }
@@ -755,7 +755,7 @@
         window.addEventListener('horizon-resume', function () { checkDue(); S.netAt = 0; if (seen()) onOpen(); });
         window.addEventListener('online', function () { S.netAt = 0; refreshNet(true); });
         try { if (navigator.connection && navigator.connection.addEventListener) navigator.connection.addEventListener('change', function () { S.netAt = 0; refreshNet(true); }); } catch (e) { /* ignore */ }
-        setInterval(loop, 1000);
+        setInterval(function () { if (!document.hidden) loop(); }, 1000);
         // first look: cheap, and it lets the collapsed widget show weather the first time the menu opens
         setTimeout(function () { refreshNet(false); pollStats(); checkDue(); }, 1500);
         // re-arm phone notifications for reminders that were saved before the app restarted

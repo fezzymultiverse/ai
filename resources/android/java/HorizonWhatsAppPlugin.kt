@@ -157,19 +157,65 @@ class HorizonWhatsAppPlugin : Plugin() {
                     if (same) candidates.add(row)
                 }
                 val conversations = candidates.map { it.optString("key") }.distinct()
-                if (conversations.size != 1) throw IllegalStateException(if (conversations.isEmpty()) "No active direct-chat reply notification for this contact. Background send is unavailable; WhatsApp was not opened" else "Multiple matching chats. Use an explicit inbox reply instead")
+                if (conversations.isEmpty()) {
+                    notifyManual(resolvedName, number, text, pkg)
+                    throw IllegalStateException("Cannot send silently: $resolvedName has no live WhatsApp reply notification (they must message first, and Allow confirmed replies must be ON). WhatsApp was not opened. A tap-to-send notification was posted for the user; tell the user to tap it. Nothing was sent")
+                }
+                if (conversations.size != 1) throw IllegalStateException("Multiple matching chats. Use an explicit inbox reply instead")
                 val row = candidates.first()
-                activity.runOnUiThread { confirmReply(call, row.optString("id"), text, row) }
+                if (HorizonWhatsAppStore.prefs(context).getBoolean("silent", false)) submitSilently(call, row, text)
+                else activity.runOnUiThread { confirmReply(call, row.optString("id"), text, row) }
             } catch (e: Exception) { call.reject(e.message ?: "Contact send failed") }
         }
     }
     override fun handleOnDestroy() { contactWorker.shutdown(); super.handleOnDestroy() }
+    // V1.92.0 silent path: no dialog, no activity, WhatsApp never opens. Off unless the user enables it.
+    private fun submitSilently(call: PluginCall, found: JSONObject, text: String) {
+        try {
+            val p = HorizonWhatsAppStore.prefs(context)
+            if (HorizonLockPlugin.locked) throw IllegalStateException("Unlock Horizon to send")
+            if (!p.getBoolean("replies", false) || !HorizonWhatsAppStore.enabled(context, found.optString("package"))) throw IllegalStateException("WhatsApp permission was switched off")
+            val now = System.currentTimeMillis()
+            val recent = (p.getString("sent_log", "") ?: "").split(',').mapNotNull { it.toLongOrNull() }.filter { now - it < 3600000L }
+            if (recent.size >= 10) throw IllegalStateException("Silent send limit reached (10 per hour)")
+            val action = HorizonWhatsAppStore.replies[found.optString("key")] ?: throw IllegalStateException("Reply notification expired; WhatsApp was not opened")
+            val inputs = action.remoteInputs?.filter { it.allowFreeFormInput }?.toTypedArray()
+            if (inputs.isNullOrEmpty()) throw IllegalStateException("WhatsApp did not expose a text reply action")
+            val intent = Intent(); val bundle = Bundle()
+            inputs.forEach { bundle.putCharSequence(it.resultKey, text) }
+            android.app.RemoteInput.addResultsToIntent(inputs, intent, bundle)
+            if (Build.VERSION.SDK_INT >= 31 && action.actionIntent.isActivity) throw IllegalStateException("Reply action would open WhatsApp; background send refused")
+            action.actionIntent.send(context, 0, intent)
+            p.edit().putString("sent_log", (recent + now).joinToString(",")).apply()
+            call.resolve(JSObject().put("submitted", true).put("delivered", false))
+        } catch (e: Exception) { call.reject("WhatsApp reply failed: ${e.message}. Nothing was sent") }
+    }
+    // Tells the user when a silent send is impossible: one tap opens the prepared draft.
+    private fun notifyManual(name: String, number: String, text: String, pkg: String) {
+        try {
+            val digits = number.filter { it.isDigit() }
+            if (digits.length < 7 || !NotificationManagerCompat.from(context).areNotificationsEnabled()) return
+            val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            if (Build.VERSION.SDK_INT >= 26) nm.createNotificationChannel(NotificationChannel("horizon_whatsapp_v1", "WhatsApp message alerts", NotificationManager.IMPORTANCE_HIGH))
+            val uri = android.net.Uri.parse("https://wa.me/$digits").buildUpon().appendQueryParameter("text", text).build()
+            val id = digits.hashCode() and 0x7fff
+            val pi = PendingIntent.getActivity(context, 7500 + id, Intent(Intent.ACTION_VIEW, uri).setPackage(pkg).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+            val locked = HorizonLockPlugin.locked
+            val body = if (locked) "Unlock Horizon, then tap to send" else "Tap to open the draft, then press Send: $text"
+            nm.notify(7600 + id, NotificationCompat.Builder(context, "horizon_whatsapp_v1")
+                .setSmallIcon(R.drawable.ic_horizon_whatsapp).setColor(0xff25d366.toInt())
+                .setContentTitle(if (locked) "Horizon could not send silently" else "Horizon could not send silently to $name")
+                .setContentText(body).setStyle(NotificationCompat.BigTextStyle().bigText(body))
+                .setContentIntent(pi).setAutoCancel(true).setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
+                .setPriority(NotificationCompat.PRIORITY_HIGH).build())
+        } catch (_: Exception) { }
+    }
 
     @PluginMethod fun status(call: PluginCall) {
         val p = HorizonWhatsAppStore.prefs(context)
         call.resolve(JSObject().put("access", NotificationManagerCompat.getEnabledListenerPackages(context).contains(context.packageName))
             .put("personal", p.getBoolean("personal", false)).put("business", p.getBoolean("business", false))
-            .put("alerts", p.getBoolean("alerts", true)).put("replies", p.getBoolean("replies", false))
+            .put("alerts", p.getBoolean("alerts", true)).put("replies", p.getBoolean("replies", false)).put("silent", p.getBoolean("silent", false))
             .put("contacts", getPermissionState("contacts") == PermissionState.GRANTED)
             .put("connected", HorizonWhatsAppListener.connected)
             .put("notifications", NotificationManagerCompat.from(context).areNotificationsEnabled()))
@@ -177,7 +223,7 @@ class HorizonWhatsAppPlugin : Plugin() {
     @PluginMethod fun configure(call: PluginCall) {
         val p = HorizonWhatsAppStore.prefs(context)
         val e = p.edit()
-        for (key in arrayOf("personal", "business", "alerts", "replies")) call.getBoolean(key)?.let { e.putBoolean(key, it) }
+        for (key in arrayOf("personal", "business", "alerts", "replies", "silent")) call.getBoolean(key)?.let { e.putBoolean(key, it) }
         e.commit()
         // Turning either source off purges its captured content immediately.
         synchronized(HorizonWhatsAppStore) { p.edit().putString("messages", HorizonWhatsAppStore.rows(context).toString()).apply() }
@@ -306,7 +352,8 @@ class HorizonWhatsAppListener : NotificationListenerService() {
         if (Build.VERSION.SDK_INT >= 24) requestRebind(android.content.ComponentName(this, javaClass))
     }
     override fun onNotificationPosted(sbn: StatusBarNotification) { enqueue { capture(sbn, true) } }
-    override fun onNotificationRemoved(sbn: StatusBarNotification) { HorizonWhatsAppStore.replies.remove(sbn.key) }
+    // V1.92.0: keep the action. WhatsApp often leaves the PendingIntent valid; a cancelled one fails cleanly at send time.
+    override fun onNotificationRemoved(sbn: StatusBarNotification) { }
     private fun capture(sbn: StatusBarNotification, alert: Boolean) {
         val pkg = sbn.packageName
         if (!HorizonWhatsAppStore.enabled(this, pkg)) return

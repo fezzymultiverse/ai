@@ -180,7 +180,7 @@
       cNet.textContent = (navigator.onLine ? 'NET ' + ((c && (c.effectiveType || '').toUpperCase()) || 'ON') : 'NET OFF');
       cBat.textContent = batt ? 'BAT ' + Math.round(batt.level * 100) + '%' + (batt.charging ? '\u26A1' : '') : 'BAT --';
     }
-    tick(); setInterval(tick, 1000);
+    tick(); setInterval(function () { if (!document.hidden) tick(); }, 1000);
   }
   function watchTerminal() {
     var term = document.getElementById('hzTerm');

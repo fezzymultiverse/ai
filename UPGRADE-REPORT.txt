@@ -1,100 +1,22 @@
-HORIZON V1.88.0 — CONSOLIDATED TERMINAL / PERMISSIONS RELEASE
-Source upgrade from the uploaded Horizon V1.87.1 archive
+HORIZON V1.91.0 — YOUTUBE FOR THE AI, OLD PARTS REMOVED, LIGHTER BACKGROUND
+Source patch on Horizon V1.90.0
 
-DELIVERY
-This is updated SOURCE, not an APK and not an installation on your phone.
-Use the existing GitHub Build Android APK workflow to produce the new APK. Update
-with the same application ID and signing key to preserve the existing installation.
-Do not clear application data to fix a layout: that could erase your local keys/chats.
-The version is now 1.88.0. About & Updates displays this version.
+CHANGES
+1. YouTube for the AI: [[yt.download: ID | Title | video]] saves mp4 (up to 720p); the 2-part form still saves audio. The old runner
+   always forced audio, now it honours the kind. When Termux AI is on, the know-how text carries exact yt-dlp recipes (mp3, mp4,
+   playlist, list formats, search, 403 / sign-in fix with pip upgrade and player_client).
+2. Route order is NewPipe (Kotlin) -> YouTube app API -> Termux yt-dlp. New HorizonBridges.youtubeSearch is the yt-dlp search fallback.
+3. Removed: public Piped / Invidious layer (instance lists, discovery fetch, racing, proxies), its 3 stored keys (cleaned on release),
+   the stale "Uses your Piped / Invidious sources" sentence in the YouTube app, 110 unused CSS rules (42 dead classes), 4 unused icons.
+4. Background: header clock, dashboard loop and suggestion chips skip their timers while the app is hidden.
+5. Termux guard (Auto mode) also pauses: quoted rm of home/PREFIX, rm ./*, find -delete/-exec rm, $(curl)/<(curl), download-then-run.
+6. Tests: tests/guard.test.cjs reads the real Kotlin list; tests/youtube.test.cjs; fixed one stale V1.90.0 assertion (was failing before).
 
-WHAT CHANGED
-1. Five right-panel app tiles are side by side in ONE row: Music, Terminal, Lens,
-   YouTube, Contacts. Checked at 320, 412 and 768 CSS pixels.
-2. Settings > Permissions is back as a real settings page. Device/native check,
-   existing device access controls and WhatsApp Personal/Business live there.
-   The Device check was moved from Vault rather than cloned. The existing WhatsApp
-   source switches, inbox, contacts, confirmed replies and privacy gates remain.
-3. One large TERMINAL owns Termux commands. The small Termux command textarea,
-   duplicate output view and Horizon's separate Android-native shell were removed.
-   Its native plugin registration, source and obsolete AI shell.exec path were removed.
-   A single bridge routes manual commands, AI commands and Termux download helpers.
-   Approval is still mandatory. Concurrent submissions within the active WebView
-   are refused; unknown completion is not treated as cancelled.
-4. TERMINAL > Controls / Options contains bridge enablement, Run commands permission,
-   Termux setup, optional AI gate, Test bridge, Install download tools and Recent jobs.
-   Setup actions write their results into the large terminal, not a second shell box.
-5. AI instructions now explain supported music/audio/video/file downloads, yt-dlp,
-   FFmpeg, aria2c and curl, installation requirements, safe destination paths and
-   truthful completion reporting. Existing YouTube, music and file-download routes
-   remain in place. Commands do not bypass root, DRM, authentication or Android.
-6. One paste/review box at the BOTTOM of Web Scraping handles both AI and scraper
-   API keys. The API Providers importer now links to that same box; no second note
-   editor, secret parser or credential store was added. It supports labelled notes,
-   JSON, environment variables, markdown, common copied HTML and zero-width debris.
-   Matches are deduplicated and masked; ambiguous opaque keys require service labels.
-   Extract never saves or sends anything. Verify & save sends each selected key only
-   to its matching provider. Existing AI keys stay intact; verified extras are backups.
-   Existing scraper keys require replacement confirmation. Failed/mixed notes remain
-   available for correction. Full raw notes are never sent to the AI or logged.
-7. Fixed Firecrawl validation treating certain HTTP errors as a successful save.
-8. Three lightweight chat visuals: role-colour rails + metadata badges; a static
-   dot-grid canvas; improved code/table reading surfaces. No image generation,
-   animated canvas, duplicate message renderer or new chat polling loop.
-9. The old stylesheet patch pile is replaced by ONE canonical www/horizon_app.css.
-   Its existing cascade order is preserved; old individual CSS files were removed.
-   Conflicting old three-column app dock rules were removed rather than hidden.
-   JS/CSS assets are release-versioned. An upgrade clears resource cache only, plus
-   known obsolete layout/shell preferences; chats, Vault, keys and databases are kept.
-   Legacy Horizon service-worker/cache cleanup is bounded to identified app resources.
-10. Terminal output is inserted in batches, history is bounded, terminal AI attaches
-    through a dedicated event instead of a body observer, Termux options build lazily,
-    laser decoration no longer wakes an idle 300ms timer, and decorative work respects
-    background/editor/reduced-motion states. Background music/downloads are not disabled.
+TESTED: node --check on every JS and both inline scripts, node unit tests 105/105, CSS brace balance.
+NOT TESTED: Kotlin compile, APK build, on-device downloads, tests/browser.smoke.cjs (needs Playwright), real startup time.
 
-VALIDATION
-- 93 automated unit/regression tests: PASS.
-- 22 browser scenario checks: PASS.
-- No uncaught JS errors or missing local assets in the browser checks.
-- All live DOM IDs unique at startup; one permissions tree and one terminal verified.
-- Manual + AI command dispatch tested with native bridge MOCKS, not a real Termux run.
-- Existing Contacts, WhatsApp routing, Cloud TTS settings, Music, Group chat and
-  keyboard focus behaviours are covered by browser or existing regression tests.
-- npx cap add android, apply-android.sh, set-version.sh, cap sync android: PASS.
-- Shell-script syntax checks: PASS.
-- npm audit --omit=dev: zero reported runtime dependency advisories at this check.
-  This is not a claim that every source file is vulnerability-free.
-- Native compilation was ATTEMPTED and stopped because the Android SDK is not installed
-  in this environment. See validation/android-compile-attempt.log. No APK is included.
-- No physical Android-device, WhatsApp delivery, actual Termux command, live music
-  extraction, microphone, installed voice-pack or APK-upgrade test was performed here.
-
-PERFORMANCE EVIDENCE — LIMITED LOCAL BENCHMARK
-Local Chromium, 412x915, 4x CPU throttle, five fresh contexts per build, alternating order, external services blocked. NOT Android/device speed or live API latency.
-Median DOMContentLoaded: 983 ms before / 821 ms after.
-Median page load: 986 ms before / 831 ms after.
-Stylesheet requests: 42 before / 1 after.
-Resource count: 99 before / 58 after.
-These are local-browser measurements, NOT a speed guarantee for your phone or AI APIs.
-Raw runs and the repeatable benchmark are included.
-
-IMPORTANT TERMUX LIMITS
-Initialize the standard Termux app once, enable allow-external-apps=true in
-~/.termux/termux.properties, enable Horizon's bridge and grant Run commands.
-Use Install download tools to install Python, FFmpeg, aria2, curl and yt-dlp.
-Shared Downloads access additionally needs Termux storage access; otherwise files go
-under $HOME/horizon-downloads. Run termux-setup-storage in Termux itself if needed.
-This bridge runs real bash commands, but it is not an interactive PTY: no interactive
-stdin, SSH editor, password prompt or persistent aliases/environment. cd is retained
-as a path between manual commands. Ctrl+C cannot cancel a submitted background job;
-stop it in Termux. Timeouts can mean it is still running. Inspect Recent jobs/results
-and Termux before retrying, especially after process death or an interrupted setup.
-No responsible source-only audit can guarantee zero bugs across all Android devices.
-
-PRESERVATION
-The supplied AI providers, chat, Vault storage, music, voice, downloads, group and
-contacts logic were not replaced with stubs. Necessary ownership/routing changes
-are recorded in validation/change-audit.json; unchanged files are hash-audited there.
-Original license and bundled third-party notices are retained.
-
-999. RIP Juice WRLD.
+LEFT UNDONE
+- README.md line 1 still says V1.90.0 (left untouched on purpose).
+- #snoozeBtn is still looked up by horizon_screen.js and index.html (null-safe, element no longer exists).
+- Phase 3 speed work (lazy-loading 63 scripts) needs a real-phone profile first, as the V1.89.0 plan says.
+- Web/scraped text can still steer AI-run commands in AUTO mode (prompt-level defence only); ASK mode is the safe setting.

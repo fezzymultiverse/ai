@@ -40,7 +40,7 @@
         h.anchor.parentNode.insertBefore(bar, h.anchor);
         var cm = document.getElementById('chatMessages');
         if (cm && window.MutationObserver) new MutationObserver(paint).observe(cm, { childList: true });
-        var busyWatch = setInterval(paint, 700);   // the working state changes without touching the message list
+        var busyWatch = setInterval(function () { if (!document.hidden) paint(); }, 1500);   // the working state changes without touching the message list
         document.addEventListener('visibilitychange', paint);
         window.addEventListener('beforeunload', function () { clearInterval(busyWatch); });
         paint();

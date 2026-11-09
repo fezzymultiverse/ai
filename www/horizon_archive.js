@@ -6,7 +6,7 @@
   const DB = 'horizon_archive_db', STORE = 'items', ON_KEY = 'horizon_archive_on';
   const MAX_ITEMS = 40, MAX_ITEM_CHARS = 120000, MAX_TOTAL_CHARS = 700000, CHUNK = 900, BUDGET = 7000, INDEX_MAX = 40;
   const KINDS = { pdf: 'PDF', docx: 'DOC', md: 'MD', txt: 'TXT', html: 'HTML', image: 'IMG', link: 'URL', note: 'NOTE' };
-  const COLORS = { pdf: '#fa0f00', docx: '#2b6cb0', md: '#8b5cf6', txt: '#64748b', html: '#f97316', image: '#00b8d4', link: '#16a34a', note: '#d946ef' };
+  const COLORS = { pdf: '#fa0f00', docx: '#2b6cb0', md: '#8b5cf6', txt: '#64748b', html: '#f97316', image: '#00b8d4', link: 'var(--neon-deep)', note: '#d946ef' };
   const STOP = new Set('the and for are but not you your with that this from have has was were will would can could should about into what when where which who whom how why they them their there then than just like some any all out our its also been being does did done get got let make made more most much many only over such very here need want use used using please tell show give'.split(' '));
 
   let host = {}, items = [], idb = null, query = '', mem = false, ui = {}, openId = '';
