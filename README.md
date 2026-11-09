@@ -12,6 +12,52 @@
   <img alt="Capacitor 6" src="https://img.shields.io/badge/Capacitor-6-00e5ff">
 </p>
 
+## What's new in V1.86.0
+
+- **Voice library (human voices you download).** Settings > Voice > *Natural: On-phone voices* now has a Voice library. Packs are the official sherpa-onnx voices from the `tts-models` release: **Kokoro** (28 English voices, US and UK, about 130 MB), **Piper** Lessac and Ryan in high (about 110 MB) and medium (about 60 MB), plus Amy, Joe and Alan (medium), and small Lessac, Ryan and Amy, plus HFC, Kristin, Norman, John, Kusal, LJSpeech, Danny, Kathleen, Alan (small), GLaDOS and LibriTTS-R (many speakers; first 12 listed) (roughly 20-30 MB, not checked). A pack downloads once, unpacks into app storage and runs offline through the same sherpa-onnx runtime as the bundled Kitten voice. Delete removes it. The 8 Kitten voices stay bundled as the default.
+- **How:** `HorizonVoicePlugin.kt` gains `packs`, `download`, `cancelDownload`, `removePack`, and `load` / `synth` take a `pack` (`builtin` or a pack id). A pack with `voices.bin` is loaded as Kokoro, any other as Piper (VITS). Only one model is held in memory. `scripts/apply-android.sh` adds `commons-compress` (to unpack `.tar.bz2`). `horizon_tts.js` adds the catalog (`PACKS`) and `HorizonTTS.packs`; `index.html` adds the Voice library rows.
+- *Tested:* JS syntax; the voice-list rebuild, download, remove and fallback against a stubbed plugin in Node. *Not tested:* the Kotlin was not compiled here (no Android toolchain) and nothing ran on a phone, so the CI build is the first compile. Not checked against the live release: the exact archive sizes, that each archive name still exists, and the Kokoro speaker order (af 0-10, am 11-19, bf 20-23, bm 24-27; if a gender is swapped, change that voice's `sid` in `PACKS`). Big packs can speak slowly on a weak phone: that is a phone limit, so pick a medium Piper voice for speed.
+
+## What's new in V1.85.0
+
+- **V14 Typing indicator styles.** New Settings card (`horizon_ind.js`, `horizon_ind.css`). Dots, Laser, Orbiting diamond or Terminal cursor, kept in `horizon_ind` and applied through `html[data-ind]`.
+- **P1 Live step text.** `horizon_v2.js`: while a reply runs, the pill shows the thinking bubble's current step (detail after the colon dropped) and clears it afterwards. Checked every 300 ms from the pill's existing animation frame, no new observer.
+- Already in the app, nothing changed: F25 undo toast, F6 pinned banner, F3 swipe quote.
+- *Tested:* JS syntax; the four styles and their Settings previews drawn in Chromium; picker click sets the attribute and storage; pill step text appears, updates and clears. *Not tested:* a build or the phone.
+
+## What's new in V1.84.0
+
+- **Speed pack.** The typewriter (`index.html`) now changes one text node per step and moves the caret only when needed; before, every step rewrote every text node from the top, which woke every page observer and forced a layout each time. `horizon_fold.js` batches its height reads and writes. `horizon_bojack.js` and `horizon_msgmenu.js` wait for changes to settle instead of reacting to each one. `horizon_perf.css` skips layout and paint for replies far above the screen (`content-visibility`) and animates only the newest three messages when a chat opens.
+- **Fixed:** `horizon_downloads.js` threw `Cannot access 'trust' before initialization` at load, so `HorizonDownloads` was never created.
+- *Tested:* JS syntax everywhere; typewriter output identical old vs new in Chromium (0 differences over 89 checks); DOM mutation events per reply 5560 to 403; headless boot with a 80-message chat shows no page errors. *Not tested:* a build or the behaviour on the phone.
+
+## What's new in V1.83.0
+
+- **Group rounds keep the page awake in the background.** `HorizonAIService` now publishes `holding` (true while a held turn runs, false when it is released or destroyed). `MainActivity.onPause` already kept the WebView running for the background switch and read-aloud; it now does the same while `HorizonAIService.holding` is true. Before, a group round held the foreground service but the page itself could still be throttled between two AIs.
+- *Tested:* JS syntax everywhere; the edits re-read by eye against the surrounding Kotlin and Java. *Not tested:* a Kotlin/Java compile (the sandbox has no Android SDK, the GitLab build is the first compile) and the behaviour on a phone.
+- *Not changed:* audio focus, SuperSonic handling, refresh rate (already asks for 90 Hz, the X5b's maximum) and any removal of old code, see the notes in chat.
+
+## What's new in V1.82.0
+
+- **Routeway provider** (`api.routeway.ai/v1`). Free models only: the list is filtered to ids ending `:free` and any other id is swapped for `deepseek-v4.1-flash:free` before sending. The nine built-in ids come from a real `/v1/models` call (287 models, 9 free). Free models are documented as about 200 requests a day.
+- Wired into key cards, AI sheet, usage colours, auto-switch on rate limits, group chat and the widget chat. No picture input.
+- *Tested:* JS syntax everywhere; the model list from a real call; the free-only swap and request shape against stubs. *Not tested:* a real Routeway chat reply, and the new card inside the running app.
+
+## What's new in V1.81.0
+
+- **AnyAPI provider** (`api.anyapi.ai/v1`). The model list is filtered to ids ending `:free`, and the chat call swaps any non-free id for the default free one, so it cannot spend credit. Eight free ids from a real `/models` call are the built-in fallback list.
+- **GonkaRouter provider** (`api.gonkarouter.io/v1`). Three models: GLM-5.3 Flash, DeepSeek V4 Flash 0731, MiniMax M2.7. The 1,000,000 free tokens are a one-time grant; a 402 shows a clear out-of-balance message.
+- Both are wired into the key cards, AI sheet, usage dashboard colours, auto-switch on rate limits, group chat and the widget chat. Neither sees pictures (images are not sent to them).
+- *Tested:* JS syntax everywhere; the key test and model list on a real phone key (HTTP 200, 3 Gonka models, 12 AnyAPI models of which 8 are free, a Gonka chat reply). *Not tested:* an AnyAPI chat reply, and the new cards inside the running app (the build sandbox has no network and no device).
+
+## What's new in V1.80.0
+
+- **YouTube routes** (`horizon_ytdirect.js`). Seven player clients (Android VR 1.65 and 1.60, iOS, Android test, Android, TV embedded, TV) instead of two. Each link gets a 2-byte Range probe first; a 403 or 410 means that route needs a token, so the next one is tried. visitorData from the search answer is reused. Audio falls back to a combined stream when no audio-only link works.
+- **Retry on failure.** `yt.play` and downloads ask a different route for a fresh link when the player or the saver refuses one (up to 3 routes). Songs the player will not stream directly are pulled in 2 MB Range chunks (`HzYtDirect.fetchBlob`) and played from that copy.
+- **Better errors.** When the direct routes and the public servers all fail, the error carries `HzYtDirect.diag()` (what each route answered), so the cause is visible.
+- **PDF page count.** Requests for 4+ pages (was 8+) use the section-by-section build, aimed at about 470 words a page. After the build `fitPages` counts the real pages (`HorizonPDF.pageCount`); if short it asks for extra new sections and counts again, twice at most. "up to / at most N pages" is left alone. It adds, it never trims, so a run can land one page over.
+- *Tested:* JS syntax everywhere, the page-request pattern. *Not tested:* on a phone or against live YouTube (the build sandbox cannot reach YouTube), and the client versions are from memory of what worked in 2025, so some routes may be stale. If it still fails, send `HzYtDirect.diag()`.
+
 ## What's new in V1.78.0
 
 - **YouTube works again.** The public Piped and Invidious servers Horizon relied on are mostly down or blocked, which is why the AI could not search or download. New `www/horizon_ytdirect.js` asks YouTube's own app API (InnerTube) straight from the phone through the native HTTP layer (`CapacitorHttp`, so no CORS and the User-Agent is really sent). Search, audio and video use it first; the old public servers are only the backup. The stream link is locked to the client that asked, so the native saver (`HorizonAIPlugin.saveMedia`) now takes a `ua` and sends it.

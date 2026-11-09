@@ -702,6 +702,18 @@
                 const c = ((j.choices || [])[0] || {}).message;
                 return (c && (Array.isArray(c.content) ? c.content.map(p => p.text || '').join('') : c.content)) || '(empty reply)';
             }
+            if (id === 'anyapi' || id === 'gonka' || id === 'routeway') {
+                const gw = id === 'routeway' ? { n: 'Routeway', u: 'https://api.routeway.ai/v1/chat/completions', d: 'deepseek-v4.1-flash:free' } : id === 'anyapi' ? { n: 'AnyAPI', u: 'https://api.anyapi.ai/v1/chat/completions', d: 'google/gemma-4-26b-a4b-it:free' } : { n: 'GonkaRouter', u: 'https://api.gonkarouter.io/v1/chat/completions', d: 'zai-org/GLM-5.3-Flash' };
+                if (!key) throw new Error('Add your ' + gw.n + ' key in Horizon settings, or switch provider.');
+                let gm = model || gw.d;
+                if ((id === 'anyapi' || id === 'routeway') && !/:free$/.test(gm)) gm = gw.d;
+                const om = [{ role: 'system', content: system }].concat(history_.map(m => ({ role: m.role === 'ai' ? 'assistant' : 'user', content: m.text })), [{ role: 'user', content: question }]);
+                const r = await fetch(gw.u, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + key }, signal: ctl.signal, body: JSON.stringify({ model: gm, messages: om }) });
+                const j = await r.json().catch(() => ({}));
+                if (!r.ok || (j.error && !(j.choices || []).length)) throw new Error((j.error && (j.error.message || j.error)) || (gw.n + ' error ' + r.status));
+                const c = ((j.choices || [])[0] || {}).message;
+                return (c && (Array.isArray(c.content) ? c.content.map(p => p.text || '').join('') : c.content)) || '(empty reply)';
+            }
             if (id === 'openrouter') {
                 if (!key) throw new Error('Add your OpenRouter key in Horizon settings, or switch provider.');
                 const om = [{ role: 'system', content: system }].concat(history_.map(m => ({ role: m.role === 'ai' ? 'assistant' : 'user', content: m.text })), [{ role: 'user', content: question }]);

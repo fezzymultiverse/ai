@@ -94,3 +94,14 @@ html.hz-kb-open .hzp-hint { display: none; }
   background: var(--accent-cyan, #00e5ff); color: var(--btn-fg, #001014);
 }
 .hzp-b.ghost { background: transparent; color: var(--accent-cyan, #00e5ff); }
+
+/* ---- 5. V1.84.0 speed pack. ----
+   a) Opening a chat used to start a fade-in animation on every message at once. Only the newest three animate now.
+   b) Replies far above the screen are not laid out or painted until you scroll near them (content-visibility). The newest six are
+      excluded, so the live reply, its glow ring and the typing caret are never clipped. contain-intrinsic-size "auto" remembers the
+      real height once a reply has been drawn, so the scrollbar settles after the first pass. */
+.chat-messages > .message:not(:nth-last-child(-n+3)) { animation: none; }
+.chat-messages > .message:not(:nth-last-child(-n+6)):not(.hz-reading) {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 140px;
+}

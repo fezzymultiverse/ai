@@ -34,15 +34,29 @@
             btn.setAttribute('aria-label', f ? 'Open reply' : 'Fold reply');
             btn.title = f ? 'Open reply' : 'Fold reply';
         }
-        function check() {
-            var tall = bubble.scrollHeight > LIMIT;
-            if (tall && !btn) make();
-            else if (!tall && btn && !wrap.classList.contains('hz-folded')) { btn.remove(); btn = null; }
-        }
+        // V1.84.0: measuring is batched. Every reply queues one job; the flush reads all heights first and only then changes the page,
+        // so opening a long chat costs one layout instead of one per reply, and typing animation re-checks at most ~6 times a second.
+        var job = {
+            q: false,
+            measure: function () { return bubble.scrollHeight > LIMIT; },
+            apply: function (tall) {
+                if (tall && !btn) make();
+                else if (!tall && btn && !wrap.classList.contains('hz-folded')) { btn.remove(); btn = null; }
+            }
+        };
+        function check() { enqueue(job); }
         if (window.ResizeObserver) { try { new ResizeObserver(check).observe(bubble); } catch (_) { /* older WebView */ } }
         new MutationObserver(check).observe(bubble, { childList: true, subtree: true, characterData: true });
         check();
     }
+    var jobs = [], jobT = 0;
+    function flushJobs() {
+        jobT = 0;
+        var list = jobs; jobs = [];
+        var out = list.map(function (j) { j.q = false; return j.measure(); });
+        list.forEach(function (j, i) { j.apply(out[i]); });
+    }
+    function enqueue(j) { if (!j.q) { j.q = true; jobs.push(j); } if (!jobT) jobT = setTimeout(flushJobs, 160); }
     function scan() { box.querySelectorAll(':scope > .message.ai').forEach(attach); }
     new MutationObserver(scan).observe(box, { childList: true });
     scan();

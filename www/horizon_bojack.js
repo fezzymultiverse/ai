@@ -103,7 +103,11 @@
     paint(false);
     if (au.src) decodePeaks(au.src).then(function (p) { peaks = p; paint(!au.paused); }).catch(function () { /* keep the generated shape */ });
   }
-  new MutationObserver(function () { $$('.att-pv-body audio').forEach(decorateVoice); }).observe(document.body, { childList: true, subtree: true });
+  var pvT = 0;   // V1.84.0: this watches the whole page, so the search runs once after the changes settle instead of after every one
+  new MutationObserver(function () {
+    if (pvT) return;
+    pvT = setTimeout(function () { pvT = 0; $$('.att-pv-body audio').forEach(decorateVoice); }, 200);
+  }).observe(document.body, { childList: true, subtree: true });
 
   /* ---------------------------------------------------------------- 3. coloured tool icons */
   var ICONS = {

@@ -180,7 +180,7 @@
             rec.ref = d; rec.ts = d.ts || rec.ts;
             touch();
         },
-        ai: { run: aiRun, trust },
+        ai: { run: aiRun, trust: urls => trust(urls) },   // V1.84.0: `trust` is declared further down; naming it here threw at load and killed this whole module
         count() { return list.length; },
         failed() { return list.filter(r => r.status === 'failed').length; }
     };

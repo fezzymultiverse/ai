@@ -18,7 +18,7 @@
     + 'Never ask for, show or repeat API keys, passphrases or Vault contents. Keep answers short and practical. Use Markdown (short lists, bold names). End insight answers with one improvement idea only when it is genuinely useful.';
 
   var FEATURES = [
-    'Chat with replies from Gemini, Groq, Cohere, Mistral, OpenRouter or free Pollinations (pick in the AI sheet from the header pill; keys live in Settings > API PROVIDERS PLUS KEYS).',
+    'Chat with replies from Gemini, Groq, Cohere, Mistral, OpenRouter, AnyAPI and Routeway (free models only), GonkaRouter or free Pollinations (pick in the AI sheet from the header pill; keys live in Settings > API PROVIDERS PLUS KEYS).',
     'Thinking switch, web scraping tools (SerpAPI, Firecrawl, ScraperBee, Browserless), memories and a persona/reply-preferences prompt, and an Archive of uploaded PDFs, notes, links and pictures the AI reads from.',
     'PDF artifacts (A4 documents), HTML preview + Save, and Markdown blocks with Raw/Converted + Save.',
     'Apps dock on the right panel: GitHub (pull repos for the AI), YouTube, music player, Terminal, Downloads, and more.',

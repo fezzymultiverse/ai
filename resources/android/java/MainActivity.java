@@ -306,7 +306,7 @@ public class MainActivity extends BridgeActivity {
         try {
             WebView wv = getBridge() != null ? getBridge().getWebView() : null;
             // Also keep the WebView running while read-aloud is playing, so cloud audio and the next chunk are not frozen.
-            if (wv != null && (HorizonBgService.wanted || HorizonSpeakService.active)) { wv.onResume(); wv.resumeTimers(); }
+            if (wv != null && (HorizonBgService.wanted || HorizonSpeakService.active || HorizonAIService.holding)) { wv.onResume(); wv.resumeTimers(); }   // V1.83.0: a held group round keeps the page running too
         } catch (Exception ignored) {
             // nothing to do
         }

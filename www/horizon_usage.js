@@ -8,7 +8,7 @@
     'use strict';
     var KEY = 'horizon_usage_v1';
     var MAXLAT = 40, MAXT = 40, KEEP_DAYS = 30;
-    var COLORS = { gemini: '#4f8cff', groq: '#f97316', cohere: '#a855f7', mistral: '#ff8205', openrouter: '#8b5cf6', pollinations: '#22c55e' };
+    var COLORS = { gemini: '#4f8cff', groq: '#f97316', cohere: '#a855f7', mistral: '#ff8205', openrouter: '#8b5cf6', anyapi: '#22d3ee', gonka: '#fbbf24', routeway: '#a78bfa', pollinations: '#22c55e' };
     var EXTRA = ['#06b6d4', '#eab308', '#ec4899', '#14b8a6'];
     var cfg = null, live = null, tick = 0, saveT = 0, root = null;
     var net = { busy: false, data: null, err: '', at: 0 };

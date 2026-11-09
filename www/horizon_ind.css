@@ -1,0 +1,43 @@
+/* HORIZON V1.85.0 · V14 typing indicator styles. html[data-ind] is set by horizon_ind.js: dots (default) | laser | orbit | cursor.
+   The same rules draw the live indicator in the thinking bubble (.th-top) and the small preview in Settings (.ind-pv). */
+
+/* ---- preview chip in Settings ---- */
+.ind-pv { flex: 0 0 auto; position: relative; width: 62px; height: 38px; border-radius: 11px; background: #04100f; border: 1px solid var(--border-highlight, rgba(255,255,255,.15)); display: grid; place-items: center; overflow: hidden; }
+.ind-pv .typing-indicator { height: auto; padding: 0; gap: 4px; }
+.ind-pv .typing-indicator span { width: 5px; height: 5px; }
+.ind-pv .ind-bar { display: none; width: 40px; height: 3px; border-radius: 2px; background: rgba(34,197,94,.22); position: relative; overflow: hidden; }
+.ind-pv .ind-bar::after { content: ""; position: absolute; top: 0; bottom: 0; width: 14px; border-radius: 2px; background: #39ff14; box-shadow: 0 0 6px #39ff14; animation: hzIndBar 1.2s ease-in-out infinite alternate; }
+@keyframes hzIndBar { from { left: -2px; } to { left: 28px; } }
+.ind-pv[data-ind="laser"] .typing-indicator { display: none; }
+.ind-pv[data-ind="laser"] .ind-bar { display: block; }
+
+/* ---- laser: no dots, the thought bar under the status line is the indicator ---- */
+html[data-ind="laser"] .th-top .typing-indicator { display: none; }
+
+/* ---- orbit and cursor: the three dots give way to one pseudo-element ---- */
+:is(html[data-ind="orbit"] .th-top, .ind-pv[data-ind="orbit"]) .typing-indicator { position: relative; width: 28px; min-width: 28px; justify-content: center; }
+:is(html[data-ind="orbit"] .th-top, .ind-pv[data-ind="orbit"]) .typing-indicator span { display: none; }
+:is(html[data-ind="orbit"] .th-top, .ind-pv[data-ind="orbit"]) .typing-indicator::before {
+  content: ""; position: absolute; left: 50%; top: 50%; width: 6px; height: 6px; margin: -3px 0 0 -3px;
+  background: var(--accent-cyan); box-shadow: 0 0 7px var(--accent-cyan-glow, var(--accent-cyan));
+  transform: rotate(0deg) translateX(9px) rotate(45deg); animation: hzIndOrbit 1.3s linear infinite; will-change: transform;
+}
+:is(html[data-ind="orbit"] .th-top, .ind-pv[data-ind="orbit"]) .typing-indicator::after {
+  content: ""; position: absolute; left: 50%; top: 50%; width: 18px; height: 18px; margin: -9px 0 0 -9px; border-radius: 50%;
+  border: 1px solid var(--accent-cyan); opacity: .25;
+}
+@keyframes hzIndOrbit { to { transform: rotate(360deg) translateX(9px) rotate(45deg); } }
+
+:is(html[data-ind="cursor"] .th-top, .ind-pv[data-ind="cursor"]) .typing-indicator { width: 20px; min-width: 20px; justify-content: center; }
+:is(html[data-ind="cursor"] .th-top, .ind-pv[data-ind="cursor"]) .typing-indicator span { display: none; }
+:is(html[data-ind="cursor"] .th-top, .ind-pv[data-ind="cursor"]) .typing-indicator::before {
+  content: ""; width: 9px; height: 15px; background: #39ff14; box-shadow: 0 0 7px rgba(57,255,20,.6); animation: hzIndBlink 1s steps(1) infinite;
+}
+@keyframes hzIndBlink { 50% { opacity: 0; } }
+
+/* the keyboard guard and Android's reduce-motion setting freeze the decoration like every other animation */
+:is(.hz-kb-open, .hz-kb-moving) :is(.th-top, .ind-pv) .typing-indicator::before { animation-play-state: paused; }
+@media (prefers-reduced-motion: reduce) { :is(.th-top, .ind-pv) .typing-indicator::before, .ind-pv .ind-bar::after { animation: none; } }
+
+/* ---- P1 live step text: the pill shows what Horizon is doing right now, only while it works ---- */
+.hzc-cap.busy .hzc-md { display: block !important; flex: 1 1 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 500 11px/1 system-ui, sans-serif; color: var(--text-muted, #9fb0bd); }

@@ -217,7 +217,7 @@ say "Native plugin sources verified."
 
 # ------------------------------------------------------------------------------------------
 # 6. Gradle libraries: biometric (V1.43.0), OkHttp (V1.62.0), coroutines (V1.63.0)
-#    V1.47.0: Piper / sherpa-onnx stay removed (no native voice libraries, no commons-compress).
+#    V1.86.0: commons-compress is back, only to unpack downloaded voice packs (.tar.bz2).
 # ------------------------------------------------------------------------------------------
 python3 - <<'PY'
 import sys
@@ -232,6 +232,8 @@ for dep in (
     "implementation 'com.squareup.okhttp3:okhttp:4.12.0'",
     "implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1'",
     "implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1'",
+    # V1.86.0: voice library unpacks downloaded .tar.bz2 voice packs
+    "implementation 'org.apache.commons:commons-compress:1.26.2'",
     # V1.63.2: LeakCanary removed (the app closed on launch after it shipped).
 ):
     artifact = dep.split("'")[1].rsplit(':', 1)[0]
@@ -242,6 +244,7 @@ PY
 need "$APP_GRADLE" "androidx.biometric:biometric"        "biometric library missing from app/build.gradle"
 need "$APP_GRADLE" "com.squareup.okhttp3:okhttp"         "okhttp library missing from app/build.gradle"
 need "$APP_GRADLE" "kotlinx-coroutines-android"          "coroutines library missing from app/build.gradle"
+need "$APP_GRADLE" "org.apache.commons:commons-compress"   "commons-compress library missing from app/build.gradle"
 say "Gradle libraries applied (verified)."
 
 # ------------------------------------------------------------------------------------------

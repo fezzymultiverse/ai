@@ -33,6 +33,8 @@ import java.util.concurrent.ConcurrentHashMap
 class HorizonAIService : Service() {
     companion object {
         @Volatile private var instance: HorizonAIService? = null
+        /** V1.83.0: true while a group round or other held turn is running, so MainActivity keeps the page alive when you leave the app. */
+        @JvmField @Volatile var holding = false
         fun releaseTurn() { instance?.let { service -> service.main.post { service.releaseHoldSoon() } } }
         private const val JOB_TIMEOUT_MS = 300_000L
         private class Pending(val block: () -> Unit, val onFail: (Throwable) -> Unit)
@@ -63,6 +65,7 @@ class HorizonAIService : Service() {
     }
     private fun releaseHold() {
         held = false
+        holding = false
         main.removeCallbacks(watchdog)
         turnLock?.let { if (it.isHeld) it.release() }
         turnLock = null
@@ -82,6 +85,7 @@ class HorizonAIService : Service() {
         else startForeground(4108, notification)
         if (intent?.action == "hold") {
             held = true
+            holding = true
             main.removeCallbacks(graceStop)
             if (turnLock == null) {
                 val pm = getSystemService(POWER_SERVICE) as PowerManager
@@ -121,6 +125,7 @@ class HorizonAIService : Service() {
     }
     override fun onDestroy() {
         instance = null
+        holding = false
         main.removeCallbacks(watchdog)
         main.removeCallbacks(graceStop)
         turnLock?.let { if (it.isHeld) it.release() }

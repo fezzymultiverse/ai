@@ -366,6 +366,14 @@
   W.addEventListener('popstate', () => closeView(true));
   D.addEventListener('keydown', e => { if (e.key === 'Escape' && ov) closeView(); });
 
-  W.HorizonPDF = { parse, toDoc, build, card, view, download, close: closeView, setSaver: f => { saver = f; } };
+  // V1.80.0: real page count of an artifact (renders it once, reads the page count, drops the cached blob). 0 if it could not be built.
+  async function pageCount(a) {
+    const k = keyOf(a);
+    try { await build(a); } catch (e) { return 0; }
+    const n = pagesOf.get(k) || 0;
+    built.delete(k);
+    return n;
+  }
+  W.HorizonPDF = { parse, toDoc, build, card, view, download, close: closeView, pageCount, setSaver: f => { saver = f; } };
   W.EmberArtifacts = { parse, view, download, card, build, render: card }; // names ember_artbox.js expects
 })();

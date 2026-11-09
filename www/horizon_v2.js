@@ -60,9 +60,19 @@
   st.addEventListener('click', function () { badge.click(); });
 
   /* the speaker pulses with JavaScript, so a phone's "remove animations" setting cannot freeze it */
-  var raf = 0, a1 = spk.querySelector('.a1'), a2 = spk.querySelector('.a2');
+  var raf = 0, a1 = spk.querySelector('.a1'), a2 = spk.querySelector('.a2'), stepAt = 0;
+  /* V1.85.0 P1: live step text. While Horizon works, the pill says what it is doing (Searching, Reading, Writing section 2/5...), taken from the
+     thinking bubble's own label with the detail after the colon dropped. It clears itself when the reply is done. */
+  function stepText() {
+    var lab = document.getElementById('loadingLabel');
+    var t = lab ? String(lab.textContent || '').replace(/\s+/g, ' ').trim() : '';
+    t = t.split(':')[0].replace(/(\.{3}|…)$/, '').trim();
+    var v = t ? '· ' + t + '...' : '';
+    if (md.textContent !== v) md.textContent = v;
+  }
   function frame(ms) {
     raf = 0; if (!cap.classList.contains('busy')) return;
+    if (ms - stepAt > 300) { stepAt = ms; stepText(); }
     var t = ms / 1000;
     a1.style.opacity = (0.3 + 0.7 * (0.5 + 0.5 * Math.sin(t * 7))).toFixed(2);
     a2.style.opacity = (0.2 + 0.8 * (0.5 + 0.5 * Math.sin(t * 7 - 1.4))).toFixed(2);
@@ -74,7 +84,7 @@
     var q = function (s) { return badge.querySelector(s); };
     var p = window.HzPick || {}, n = q('.hzb-name'), m = q('.hzb-model'), r = q('.hzb-read'), d = q('.hzu-dot');
     nm.textContent = n ? n.textContent : (p.name || 'Horizon');
-    md.textContent = '';   // V1.67.10: the pill never shows the model or the group's AI names. The reply carries provider + model.
+    // V1.67.10: the pill never shows the model or the group's AI names. V1.85.0: it shows the live step while working (stepText), nothing otherwise.
     var lt = window.HzLast, wasBusy = cap.classList.contains('busy');
     var full = (lt && !q('.hzb-pill.busy')) ? (lt.est ? '~' : '') + '\u2191' + tok(lt.i) + ' \u2193' + tok(lt.o) + ' ' + Math.round(lt.ms || 0) + 'ms' : (r ? r.textContent : 'ready');
     var compact = (lt && !q('.hzb-pill.busy')) ? (lt.est ? '~' : '') + '\u2193' + tok(lt.o) + ' ' + Math.round(lt.ms || 0) + 'ms' : full;
@@ -84,6 +94,7 @@
     dot.className = 'hzc-dot ' + (d ? d.className.replace('hzu-dot', '').trim() : ''); dot.style.setProperty('--pc', d ? d.style.getPropertyValue('--pc') : '');
     var busy = !!(q('.hzb-pill.busy') || (d && /\brun\b/.test(d.className)));
     cap.classList.toggle('busy', busy);
+    if (busy) stepText(); else if (md.textContent) md.textContent = '';
     if (wasBusy && !busy && window.HzLaser) window.HzLaser.sweep(cap, 560);   /* T4: one last pass, then the pill settles */
     if (busy && !raf) raf = requestAnimationFrame(frame);
     /* one line: if the name would be cut, the status drops the tokens-in count and keeps tokens-out + ms */

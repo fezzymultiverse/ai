@@ -9,9 +9,19 @@ import com.getcapacitor.annotation.CapacitorPlugin
 import com.k2fsa.sherpa.onnx.OfflineTts
 import com.k2fsa.sherpa.onnx.OfflineTtsConfig
 import com.k2fsa.sherpa.onnx.OfflineTtsKittenModelConfig
+import com.k2fsa.sherpa.onnx.OfflineTtsKokoroModelConfig
+import com.k2fsa.sherpa.onnx.OfflineTtsVitsModelConfig
 import com.k2fsa.sherpa.onnx.OfflineTtsModelConfig
+import com.getcapacitor.JSArray
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
+import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream
+import java.io.BufferedInputStream
 import java.io.File
+import java.io.FileInputStream
 import java.io.FileOutputStream
+import java.util.concurrent.TimeUnit
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.concurrent.Executors
@@ -28,6 +38,13 @@ import java.util.concurrent.Executors
  *  - synth():   { wav, sampleRate, ms }             text + sid (speaker id) in, a 16-bit mono WAV (base64) out. Rejects on failure.
  *  - release(): frees the model (a small amount of memory).
  *
+ * V1.86.0 VOICE LIBRARY. Besides the bundled Kitten voice (pack "builtin") the phone can hold downloaded packs (files/horizon_packs/<id>):
+ *  - packs():          { installed: [id, ...] }   packs that are fully unpacked
+ *  - download():       { id, url } -> { ok } | { ok:false, error }   one https .tar.bz2 from the sherpa-onnx tts-models release; sends "packProgress" { id, pct, note }
+ *  - cancelDownload(), removePack({ id })
+ *  - load({ pack }) / synth({ pack, sid, text, speed }) pick which model is loaded. A pack with voices.bin is Kokoro, any other pack with a .onnx is a Piper (VITS) model.
+ *    Only one model is held in memory: switching pack releases the old one first.
+ *
  * All model work runs on one background thread (the native object is not thread-safe, and the bridge thread must never block).
  */
 @CapacitorPlugin(name = "HorizonVoice")
@@ -40,10 +57,22 @@ class HorizonVoicePlugin : Plugin() {
 
     private val worker = Executors.newSingleThreadExecutor { r -> Thread(r, "horizon-voice").also { it.isDaemon = true } }
     @Volatile private var tts: OfflineTts? = null
+    @Volatile private var activePack = ""
+    @Volatile private var cancelDl = false
+    private val dlWorker = Executors.newSingleThreadExecutor { r -> Thread(r, "horizon-voice-dl").also { it.isDaemon = true } }
+    private val http: OkHttpClient by lazy {
+        OkHttpClient.Builder().connectTimeout(30, TimeUnit.SECONDS).readTimeout(60, TimeUnit.SECONDS).callTimeout(0, TimeUnit.SECONDS).followRedirects(true).build()
+    }
     private var sampleRate = 24000
     private var speakers = 0
 
     private fun modelDir(): File = File(context.filesDir, ASSET_DIR)
+
+    private fun packsRoot(): File = File(context.filesDir, "horizon_packs")
+    private fun cleanId(id: String?): String = (id ?: "").lowercase().filter { it.isLetterOrDigit() || it == '-' || it == '_' }.take(60)
+    private fun packDir(id: String): File = File(packsRoot(), id)
+    private fun packReady(dir: File): Boolean =
+        File(dir, "tokens.txt").exists() && (dir.listFiles() ?: emptyArray()).any { it.isFile && it.name.endsWith(".onnx") }
 
     private fun bundledList(): Array<String> = try { context.assets.list(ASSET_DIR) ?: emptyArray() } catch (e: Exception) { emptyArray() }
 
@@ -121,13 +150,57 @@ class HorizonVoicePlugin : Plugin() {
         return OfflineTts(null, cfg)
     }
 
-    /** Runs on the worker thread. */
-    private fun loadNow(): OfflineTts {
-        tts?.let { return it }
+    /** A downloaded pack: voices.bin means Kokoro, otherwise a Piper (VITS) model. Both read espeak-ng-data from the pack itself. */
+    private fun buildPackTts(dir: File): OfflineTts {
+        val model = (dir.listFiles() ?: emptyArray()).filter { it.isFile && it.name.endsWith(".onnx") }.minByOrNull { it.name }
+            ?: throw IllegalStateException("No model file was found in this voice pack")
+        val tokens = File(dir, "tokens.txt")
+        if (!tokens.exists()) throw IllegalStateException("This voice pack has no tokens.txt")
+        val espeak = File(dir, "espeak-ng-data")
+        val threads = Runtime.getRuntime().availableProcessors().coerceIn(2, 4)
+        val voices = File(dir, "voices.bin")
+        val mc = if (voices.exists()) {
+            val lex = listOf("lexicon-us-en.txt", "lexicon-zh.txt").map { File(dir, it) }.filter { it.exists() }.joinToString(",") { it.absolutePath }
+            val dict = File(dir, "dict")
+            val kokoro = OfflineTtsKokoroModelConfig(
+                model = model.absolutePath,
+                voices = voices.absolutePath,
+                tokens = tokens.absolutePath,
+                dataDir = if (espeak.exists()) espeak.absolutePath else File(modelDir(), "espeak-ng-data").absolutePath,
+                dictDir = if (dict.exists()) dict.absolutePath else "",
+                lexicon = lex
+            )
+            OfflineTtsModelConfig(kokoro = kokoro, numThreads = threads, debug = false, provider = "cpu")
+        } else {
+            val vits = OfflineTtsVitsModelConfig(
+                model = model.absolutePath,
+                tokens = tokens.absolutePath,
+                dataDir = if (espeak.exists()) espeak.absolutePath else File(modelDir(), "espeak-ng-data").absolutePath
+            )
+            OfflineTtsModelConfig(vits = vits, numThreads = threads, debug = false, provider = "cpu")
+        }
+        return OfflineTts(null, OfflineTtsConfig(model = mc))
+    }
+
+    /** Runs on the worker thread. pack = "builtin" (the bundled Kitten voice) or the id of a downloaded pack. */
+    private fun loadNow(pack: String = "builtin"): OfflineTts {
+        val want = if (pack.isBlank()) "builtin" else pack
+        tts?.let { if (activePack == want) return it }
+        // only one model lives in memory: let the old one go before the new one loads
+        try { tts?.release() } catch (e: Throwable) { /* already gone */ }
+        tts = null
+        activePack = ""
         note("Starting the voice...")
-        val dir = ensureUnpacked()
-        val t = buildTts(dir)
+        val t = if (want == "builtin") {
+            buildTts(ensureUnpacked())
+        } else {
+            val dir = packDir(cleanId(want))
+            if (!packReady(dir)) throw IllegalStateException("That voice is not downloaded on this phone. Download it again from the Voice library")
+            if (!File(dir, "espeak-ng-data").exists() && bundledList().isNotEmpty()) ensureUnpacked()
+            buildPackTts(dir)
+        }
         tts = t
+        activePack = want
         sampleRate = t.sampleRate()
         speakers = t.numSpeakers()
         return t
@@ -153,6 +226,7 @@ class HorizonVoicePlugin : Plugin() {
         o.put("bundled", bundledList().isNotEmpty())
         o.put("unpacked", File(modelDir(), "tokens.txt").exists())
         o.put("loaded", tts != null)
+        o.put("pack", activePack)
         call.resolve(o)
     }
 
@@ -161,7 +235,7 @@ class HorizonVoicePlugin : Plugin() {
         worker.execute {
             val o = JSObject()
             try {
-                loadNow()
+                loadNow(call.getString("pack", "builtin") ?: "builtin")
                 o.put("ready", true)
                 o.put("sampleRate", sampleRate)
                 o.put("speakers", speakers)
@@ -181,10 +255,11 @@ class HorizonVoicePlugin : Plugin() {
         val text = call.getString("text", "") ?: ""
         val sid = call.getInt("sid", 0) ?: 0
         val speed = (call.getFloat("speed", 1.0f) ?: 1.0f).coerceIn(0.5f, 2.0f)
+        val pack = call.getString("pack", "builtin") ?: "builtin"
         if (text.isBlank()) { call.reject("There is no text to speak"); return }
         worker.execute {
             try {
-                val t = loadNow()
+                val t = loadNow(pack)
                 val t0 = System.currentTimeMillis()
                 val audio = t.generate(text, sid, speed)
                 if (audio.samples.isEmpty()) { call.reject("The voice made no sound"); return@execute }
@@ -199,11 +274,149 @@ class HorizonVoicePlugin : Plugin() {
         }
     }
 
+    private fun packNote(id: String, pct: Int, text: String) {
+        val o = JSObject()
+        o.put("id", id)
+        o.put("pct", pct)
+        o.put("note", text)
+        notifyListeners("packProgress", o)
+    }
+
+    @PluginMethod
+    fun packs(call: PluginCall) {
+        val arr = JSArray()
+        (packsRoot().listFiles() ?: emptyArray()).filter { it.isDirectory && !it.name.startsWith(".") && packReady(it) }.sortedBy { it.name }.forEach { arr.put(it.name) }
+        val o = JSObject()
+        o.put("installed", arr)
+        call.resolve(o)
+    }
+
+    @PluginMethod
+    fun cancelDownload(call: PluginCall) {
+        cancelDl = true
+        call.resolve()
+    }
+
+    @PluginMethod
+    fun removePack(call: PluginCall) {
+        val id = cleanId(call.getString("id", ""))
+        if (id.isEmpty()) { call.reject("No voice pack was named"); return }
+        worker.execute {
+            val o = JSObject()
+            try {
+                if (activePack == id) {
+                    try { tts?.release() } catch (e: Throwable) { /* already gone */ }
+                    tts = null
+                    activePack = ""
+                }
+                packDir(id).deleteRecursively()
+                File(packsRoot(), ".$id.part").deleteRecursively()
+                o.put("ok", true)
+            } catch (e: Throwable) {
+                o.put("ok", false)
+                o.put("error", e.message ?: e.javaClass.simpleName)
+            }
+            call.resolve(o)
+        }
+    }
+
+    /** Downloads one https .tar.bz2 and unpacks it into files/horizon_packs/<id>. Never leaves a half-unpacked pack behind. */
+    @PluginMethod
+    fun download(call: PluginCall) {
+        val id = cleanId(call.getString("id", ""))
+        val url = call.getString("url", "") ?: ""
+        if (id.isEmpty()) { call.reject("No voice pack was named"); return }
+        if (!url.startsWith("https://")) { call.reject("A voice pack must come from an https address"); return }
+        cancelDl = false
+        dlWorker.execute {
+            val o = JSObject()
+            val tmp = File(context.cacheDir, "pack-$id.tar.bz2")
+            val stage = File(packsRoot(), ".$id.part")
+            try {
+                packsRoot().mkdirs()
+                tmp.delete()
+                stage.deleteRecursively()
+                packNote(id, 0, "Downloading: 0%")
+                http.newCall(Request.Builder().url(url).header("User-Agent", "Horizon").build()).execute().use { resp ->
+                    if (!resp.isSuccessful) throw IllegalStateException("The download server answered " + resp.code + ". The voice link may have moved")
+                    val body = resp.body ?: throw IllegalStateException("The download was empty")
+                    val total = body.contentLength()
+                    var got = 0L
+                    var lastPct = -1
+                    body.byteStream().use { input ->
+                        FileOutputStream(tmp).use { out ->
+                            val buf = ByteArray(256 * 1024)
+                            while (true) {
+                                if (cancelDl) throw IllegalStateException("Cancelled")
+                                val n = input.read(buf)
+                                if (n < 0) break
+                                out.write(buf, 0, n)
+                                got += n
+                                val pct = if (total > 0) (got * 100 / total).toInt() else -1
+                                if (pct != lastPct && (pct < 0 || pct % 2 == 0)) {
+                                    lastPct = pct
+                                    packNote(id, pct, if (pct >= 0) "Downloading: $pct%" else "Downloading: " + (got / (1024 * 1024)) + " MB")
+                                }
+                            }
+                        }
+                    }
+                }
+                if (tmp.length() < 1024) throw IllegalStateException("The download is too small to be a voice")
+                packNote(id, -1, "Unpacking, this can take a minute...")
+                stage.mkdirs()
+                val stageCanon = stage.canonicalPath
+                var files = 0
+                TarArchiveInputStream(BZip2CompressorInputStream(BufferedInputStream(FileInputStream(tmp), 256 * 1024))).use { tar ->
+                    while (true) {
+                        if (cancelDl) throw IllegalStateException("Cancelled")
+                        val entry = tar.nextTarEntry ?: break
+                        // drop the archive's top folder: vits-piper-xxx/tokens.txt -> tokens.txt
+                        val rel = entry.name.replace('\\', '/').trimStart('/').substringAfter('/', "")
+                        if (rel.isEmpty()) continue
+                        val dest = File(stage, rel)
+                        if (!dest.canonicalPath.startsWith(stageCanon + File.separator)) continue   // never write outside the pack folder
+                        if (entry.isDirectory) { dest.mkdirs(); continue }
+                        if (!entry.isFile) continue
+                        dest.parentFile?.mkdirs()
+                        FileOutputStream(dest).use { out ->
+                            val buf = ByteArray(256 * 1024)
+                            while (true) {
+                                val n = tar.read(buf)
+                                if (n < 0) break
+                                out.write(buf, 0, n)
+                            }
+                        }
+                        files++
+                        if (files % 200 == 0) packNote(id, -1, "Unpacking: $files files...")
+                    }
+                }
+                if (!packReady(stage)) throw IllegalStateException("The archive did not hold a usable voice (no model or tokens.txt)")
+                if (activePack == id) {
+                    try { tts?.release() } catch (e: Throwable) { /* already gone */ }
+                    tts = null
+                    activePack = ""
+                }
+                val dest = packDir(id)
+                dest.deleteRecursively()
+                if (!stage.renameTo(dest)) throw IllegalStateException("Could not move the voice into place")
+                o.put("ok", true)
+            } catch (e: Throwable) {
+                stage.deleteRecursively()
+                o.put("ok", false)
+                o.put("error", if (e is OutOfMemoryError) "The phone ran out of memory while unpacking" else (e.message ?: e.javaClass.simpleName))
+            } finally {
+                tmp.delete()
+            }
+            call.resolve(o)
+        }
+    }
+
     @PluginMethod
     fun release(call: PluginCall) {
         worker.execute {
             try { tts?.release() } catch (e: Throwable) { /* already gone */ }
             tts = null
+            activePack = ""
             call.resolve()
         }
     }

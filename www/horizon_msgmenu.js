@@ -304,7 +304,7 @@
 
   /* chat switches, new replies and re-renders all change #chatMessages */
   var pend = 0;
-  function later() { if (pend) return; pend = requestAnimationFrame(function () { pend = 0; try { decorate(); paintPin(); } catch (e) { /* never break the chat */ } }); }
+  function later() { if (pend) return; pend = setTimeout(function () { pend = 0; try { decorate(); paintPin(); } catch (e) { /* never break the chat */ } }, 150); }   // V1.84.0: settles first, no scan on every frame while a reply types
   try { new MutationObserver(later).observe(msgs, { childList: true, subtree: true }); } catch (e) { /* no observer */ }
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeSheet(); });
   later();

@@ -1,5 +1,8 @@
 /* HORIZON · text to speech · V1.75.0
  *
+ * V1.86.0: VOICE LIBRARY. Under Voice > Built-in voice you can download human-sounding voices (Kokoro, Piper) once; they then run offline through the same sherpa-onnx
+ *   runtime as the bundled Kitten voice. The plugin downloads and unpacks them into app storage (HorizonVoice.download / packs / removePack).
+ *
  * Engines. You pick one under Voice; Horizon always falls back to the Android voice if it fails:
  *   1. Gemini   natural voice, 30 voices, uses your Gemini key(s) from API PROVIDERS PLUS KEYS
  *   2. Kokoro   V1.75.0: Kitten nano, 8 English voices (4 female + 4 male), built INTO the app (sherpa-onnx, native). Small. NO key, NO download, NO limit, offline.
@@ -44,6 +47,73 @@
             ['kt_m1', 0, 'Male 1 \u00b7 clear'], ['kt_m2', 2, 'Male 2'], ['kt_m3', 4, 'Male 3'], ['kt_m4', 6, 'Male 4']
         ].map(v => ({ id: v[0], sid: v[1], name: v[2] }))
     };
+    // V1.86.0: VOICE LIBRARY. Downloaded packs add voices to the Built-in list. A pack is one official sherpa-onnx archive (k2-fsa/sherpa-onnx, release tts-models).
+    // Kokoro speaker ids follow kokoro-multi-lang-v1_0 (voices.bin): af 0-10, am 11-19, bf 20-23, bm 24-27. Piper packs have one speaker (sid 0).
+    // Sizes are approximate. If a download link ever dies it is a one-line fix here, or the plugin shows the HTTP error.
+    const REL = 'https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/';
+    const kok = (n, sid, label) => ['kk_' + n, sid, label];
+    const PACKS = [
+        { id: 'kokoro', name: 'Kokoro', size: 'about 130 MB', url: REL + 'kokoro-int8-multi-lang-v1_0.tar.bz2',
+          note: 'The most human voices here: 28 English voices, US and UK. The biggest pack and the slowest to speak on a weak phone.',
+          voices: [
+            kok('af_heart', 3, 'Heart \u00b7 US female'), kok('af_bella', 2, 'Bella \u00b7 US female'), kok('af_nicole', 6, 'Nicole \u00b7 US female'), kok('af_sarah', 9, 'Sarah \u00b7 US female'),
+            kok('af_sky', 10, 'Sky \u00b7 US female'), kok('af_nova', 7, 'Nova \u00b7 US female'), kok('af_kore', 5, 'Kore \u00b7 US female'), kok('af_alloy', 0, 'Alloy \u00b7 US female'),
+            kok('af_aoede', 1, 'Aoede \u00b7 US female'), kok('af_jessica', 4, 'Jessica \u00b7 US female'), kok('af_river', 8, 'River \u00b7 US female'),
+            kok('am_michael', 16, 'Michael \u00b7 US male'), kok('am_adam', 11, 'Adam \u00b7 US male'), kok('am_eric', 13, 'Eric \u00b7 US male'), kok('am_liam', 15, 'Liam \u00b7 US male'),
+            kok('am_fenrir', 14, 'Fenrir \u00b7 US male'), kok('am_puck', 18, 'Puck \u00b7 US male'), kok('am_onyx', 17, 'Onyx \u00b7 US male'), kok('am_echo', 12, 'Echo \u00b7 US male'), kok('am_santa', 19, 'Santa \u00b7 US male'),
+            kok('bf_emma', 21, 'Emma \u00b7 UK female'), kok('bf_isabella', 22, 'Isabella \u00b7 UK female'), kok('bf_alice', 20, 'Alice \u00b7 UK female'), kok('bf_lily', 23, 'Lily \u00b7 UK female'),
+            kok('bm_george', 26, 'George \u00b7 UK male'), kok('bm_fable', 25, 'Fable \u00b7 UK male'), kok('bm_daniel', 24, 'Daniel \u00b7 UK male'), kok('bm_lewis', 27, 'Lewis \u00b7 UK male')
+          ] },
+        { id: 'piper-lessac-high', name: 'Lessac (high)', size: 'about 110 MB', url: REL + 'vits-piper-en_US-lessac-high.tar.bz2',
+          note: 'US English, female, calm and clear. Piper high quality, one voice.', voices: [['pp_lessac_high', 0, 'Lessac \u00b7 US female']] },
+        { id: 'piper-ryan-high', name: 'Ryan (high)', size: 'about 110 MB', url: REL + 'vits-piper-en_US-ryan-high.tar.bz2',
+          note: 'US English, male, natural and steady. Piper high quality, one voice.', voices: [['pp_ryan_high', 0, 'Ryan \u00b7 US male']] },
+        { id: 'piper-lessac-low', name: 'Lessac (small)', size: 'small, roughly 20-30 MB', url: REL + 'vits-piper-en_US-lessac-low.tar.bz2',
+          note: 'US English, female. The lightest and fastest, a clear step up from the Android voice. Try this first.', voices: [['pp_lessac_low', 0, 'Lessac \u00b7 US female (small)']] },
+        { id: 'piper-ryan-low', name: 'Ryan (small)', size: 'small, roughly 20-30 MB', url: REL + 'vits-piper-en_US-ryan-low.tar.bz2',
+          note: 'US English, male. Light and fast.', voices: [['pp_ryan_low', 0, 'Ryan \u00b7 US male (small)']] },
+        { id: 'piper-amy-low', name: 'Amy (small)', size: 'small, roughly 20-30 MB', url: REL + 'vits-piper-en_US-amy-low.tar.bz2',
+          note: 'US English, female, warm. Light and fast.', voices: [['pp_amy_low', 0, 'Amy \u00b7 US female (small)']] },
+        { id: 'piper-lessac-medium', name: 'Lessac (medium)', size: 'about 60 MB', url: REL + 'vits-piper-en_US-lessac-medium.tar.bz2',
+          note: 'Same voice as Lessac high, smaller and quicker.', voices: [['pp_lessac_medium', 0, 'Lessac \u00b7 US female (light)']] },
+        { id: 'piper-ryan-medium', name: 'Ryan (medium)', size: 'about 60 MB', url: REL + 'vits-piper-en_US-ryan-medium.tar.bz2',
+          note: 'Same voice as Ryan high, smaller and quicker.', voices: [['pp_ryan_medium', 0, 'Ryan \u00b7 US male (light)']] },
+        { id: 'piper-amy-medium', name: 'Amy (medium)', size: 'about 60 MB', url: REL + 'vits-piper-en_US-amy-medium.tar.bz2',
+          note: 'US English, female, warm.', voices: [['pp_amy_medium', 0, 'Amy \u00b7 US female']] },
+        { id: 'piper-joe-medium', name: 'Joe (medium)', size: 'about 60 MB', url: REL + 'vits-piper-en_US-joe-medium.tar.bz2',
+          note: 'US English, male, relaxed.', voices: [['pp_joe_medium', 0, 'Joe \u00b7 US male']] },
+        { id: 'piper-alan-medium', name: 'Alan (medium)', size: 'about 60 MB', url: REL + 'vits-piper-en_GB-alan-medium.tar.bz2',
+          note: 'British English, male.', voices: [['pp_alan_medium', 0, 'Alan \u00b7 UK male']] },
+        { id: 'piper-hfc-female-medium', name: 'HFC Female (medium)', size: 'about 60 MB', url: REL + 'vits-piper-en_US-hfc_female-medium.tar.bz2',
+          note: 'US English, female.', voices: [['pp_hfc_f', 0, 'HFC \u00b7 US female']] },
+        { id: 'piper-hfc-male-medium', name: 'HFC Male (medium)', size: 'about 60 MB', url: REL + 'vits-piper-en_US-hfc_male-medium.tar.bz2',
+          note: 'US English, male.', voices: [['pp_hfc_m', 0, 'HFC \u00b7 US male']] },
+        { id: 'piper-kristin-medium', name: 'Kristin (medium)', size: 'about 60 MB', url: REL + 'vits-piper-en_US-kristin-medium.tar.bz2',
+          note: 'US English, female.', voices: [['pp_kristin', 0, 'Kristin \u00b7 US female']] },
+        { id: 'piper-norman-medium', name: 'Norman (medium)', size: 'about 60 MB', url: REL + 'vits-piper-en_US-norman-medium.tar.bz2',
+          note: 'US English, male.', voices: [['pp_norman', 0, 'Norman \u00b7 US male']] },
+        { id: 'piper-john-medium', name: 'John (medium)', size: 'about 60 MB', url: REL + 'vits-piper-en_US-john-medium.tar.bz2',
+          note: 'US English, male.', voices: [['pp_john', 0, 'John \u00b7 US male']] },
+        { id: 'piper-kusal-medium', name: 'Kusal (medium)', size: 'about 60 MB', url: REL + 'vits-piper-en_US-kusal-medium.tar.bz2',
+          note: 'US English, male.', voices: [['pp_kusal', 0, 'Kusal \u00b7 US male']] },
+        { id: 'piper-ljspeech-medium', name: 'LJSpeech (medium)', size: 'about 60 MB', url: REL + 'vits-piper-en_US-ljspeech-medium.tar.bz2',
+          note: 'US English, female, audiobook style.', voices: [['pp_lj_medium', 0, 'LJSpeech \u00b7 US female']] },
+        { id: 'piper-ljspeech-high', name: 'LJSpeech (high)', size: 'about 110 MB', url: REL + 'vits-piper-en_US-ljspeech-high.tar.bz2',
+          note: 'Same voice, higher quality.', voices: [['pp_lj_high', 0, 'LJSpeech \u00b7 US female (high)']] },
+        { id: 'piper-danny-low', name: 'Danny (small)', size: 'small, roughly 20-30 MB', url: REL + 'vits-piper-en_US-danny-low.tar.bz2',
+          note: 'US English, male. Light and fast.', voices: [['pp_danny_low', 0, 'Danny \u00b7 US male (small)']] },
+        { id: 'piper-kathleen-low', name: 'Kathleen (small)', size: 'small, roughly 20-30 MB', url: REL + 'vits-piper-en_US-kathleen-low.tar.bz2',
+          note: 'US English, female. Light and fast.', voices: [['pp_kathleen_low', 0, 'Kathleen \u00b7 US female (small)']] },
+        { id: 'piper-alan-low', name: 'Alan (small)', size: 'small, roughly 20-30 MB', url: REL + 'vits-piper-en_GB-alan-low.tar.bz2',
+          note: 'British English, male. Light and fast.', voices: [['pp_alan_low', 0, 'Alan \u00b7 UK male (small)']] },
+        { id: 'piper-glados', name: 'GLaDOS', size: 'about 60 MB', url: REL + 'vits-piper-en_US-glados.tar.bz2',
+          note: 'The Portal robot voice, just for fun.', voices: [['pp_glados', 0, 'GLaDOS \u00b7 robot']] },
+        { id: 'piper-libritts-r-medium', name: 'LibriTTS-R (medium, many speakers)', size: 'about 60 MB', url: REL + 'vits-piper-en_US-libritts_r-medium.tar.bz2',
+          note: 'Hundreds of different real speakers in one pack. The first 12 are listed as Speaker 1-12, so you can hear which sound good.',
+          voices: [['pp_ltr_0', 0, 'Speaker 1'], ['pp_ltr_1', 1, 'Speaker 2'], ['pp_ltr_2', 2, 'Speaker 3'], ['pp_ltr_3', 3, 'Speaker 4'], ['pp_ltr_4', 4, 'Speaker 5'], ['pp_ltr_5', 5, 'Speaker 6'], ['pp_ltr_6', 6, 'Speaker 7'], ['pp_ltr_7', 7, 'Speaker 8'], ['pp_ltr_8', 8, 'Speaker 9'], ['pp_ltr_9', 9, 'Speaker 10'], ['pp_ltr_10', 10, 'Speaker 11'], ['pp_ltr_11', 11, 'Speaker 12']] }
+    ];
+    KOKORO.voices.forEach(v => { v.pack = 'builtin'; });
+    const KOK_BASE = KOKORO.voices.slice();
     const CLOUD = ['gemini', 'kokoro'];
     const KEYS = {
         engine: 'horizon_tts_engine',
@@ -54,7 +124,8 @@
         gvoice: 'horizon_tts_gemini_voice',
         gmodel: 'horizon_tts_gemini_model',
         kvoice: 'horizon_tts_kokoro_voice',
-        nengine: 'horizon_tts_native_engine'
+        nengine: 'horizon_tts_native_engine',
+        packs: 'horizon_tts_packs'
     };
 
     // ----------------------------------------------------------------- helpers
@@ -81,7 +152,22 @@
         try { list = keysFn ? keysFn(id) || [] : []; } catch (e) { list = []; }
         return list.filter((k, i, a) => typeof k === 'string' && k.trim() && k !== 'free' && a.indexOf(k) === i).map(k => k.trim());
     }
-    const kokIds = KOKORO.voices.map(v => v.id);
+    let kokIds = KOKORO.voices.map(v => v.id);
+    // V1.86.0: the Built-in voice list = bundled Kitten voices + the voices of every downloaded pack. Rebuilt in place (the app holds a reference to this array).
+    function packsInstalled() {
+        try { const a = JSON.parse(ls.get(KEYS.packs) || '[]'); return Array.isArray(a) ? a.filter(x => typeof x === 'string') : []; } catch (e) { return []; }
+    }
+    function rebuildVoices() {
+        const have = packsInstalled();
+        KOKORO.voices.length = 0;
+        KOK_BASE.forEach(v => KOKORO.voices.push(v));
+        PACKS.forEach(pk => {
+            if (have.indexOf(pk.id) < 0) return;
+            pk.voices.forEach(v => KOKORO.voices.push({ id: v[0], sid: v[1], name: v[2] + (pk.id === 'kokoro' ? ' (Kokoro)' : ' (Piper)'), pack: pk.id }));
+        });
+        kokIds = KOKORO.voices.map(v => v.id);
+    }
+    rebuildVoices();
     function settings() {
         const gv = ls.get(KEYS.gvoice), kv = ls.get(KEYS.kvoice);
         let eng = ls.get(KEYS.engine);
@@ -112,7 +198,7 @@
         s.slot = slot > 0 ? slot : 0;
         if (!s.slot) return s;
         if (s.engine === 'gemini') s.gvoice = slotPick(geminiIds, s.gvoice, s.slot);
-        else if (s.engine === 'kokoro') s.kvoice = slotPick(kokIds, s.kvoice, s.slot);
+        else if (s.engine === 'kokoro') { const cv = KOKORO.voices.find(x => x.id === s.kvoice); const same = KOKORO.voices.filter(x => !cv || x.pack === cv.pack).map(x => x.id); s.kvoice = slotPick(same, s.kvoice, s.slot); }
         return s;
     }
     // the Android / browser voice list loads later, so those engines resolve the slot where the list is in hand
@@ -551,11 +637,13 @@
 
     // ---- Kokoro (V1.73.0): native, built into the APK. The plugin unpacks the model once, loads it, then every sentence is made on the phone
     // and comes back as a WAV that the normal cloud player plays (so speed, pitch, pause and stop work like every other voice).
-    let kokReady = null, kokLastNote = '';
+    let kokReady = null, kokPack = '', kokLastNote = '';
     const voicePlugin = () => { if (!NATIVE || !plugFn) return null; try { return plugFn('HorizonVoice'); } catch (e) { return null; } };
     const kokoroUsable = () => !!voicePlugin();
-    async function kokLoad() {
-        if (kokReady) return kokReady;
+    async function kokLoad(pack) {
+        pack = pack || 'builtin';
+        if (kokReady && kokPack === pack) return kokReady;
+        kokPack = pack;
         const p = voicePlugin();
         if (!p) throw new Error('the built-in voice is not part of this build. Install the latest Horizon APK');
         kokReady = (async () => {
@@ -569,26 +657,61 @@
                 }
             } catch (e) { ln = null; }
             try {
-                const r = await withTimeout(p.load(), KOKORO.loadMs, 'the built-in voice took too long to start');
+                const r = await withTimeout(p.load({ pack }), KOKORO.loadMs, 'the built-in voice took too long to start');
                 if (!r || !r.ready) throw new Error((r && r.error) || 'the built-in voice did not start');
                 return r;
             } finally { if (ln && typeof ln.remove === 'function') { try { await ln.remove(); } catch (e) { /* ignore */ } } }
         })();
-        kokReady.catch(() => { kokReady = null; });   // a failed start can be tried again
+        kokReady.catch(() => { if (kokPack === pack) { kokReady = null; kokPack = ''; } });   // a failed start can be tried again
         return kokReady;
     }
     async function kokoroSynth(text, voice) {
-        await kokLoad();
-        const p = voicePlugin();
         const v = KOKORO.voices.find(x => x.id === voice) || KOKORO.voices[0];
+        await kokLoad(v.pack);
+        const p = voicePlugin();
         let r;
-        try { r = await withTimeout(p.synth({ text, sid: v.sid, speed: 1.0 }), KOKORO.genMs, 'the built-in voice took too long to speak'); }
+        try { r = await withTimeout(p.synth({ text, sid: v.sid, pack: v.pack || 'builtin', speed: 1.0 }), KOKORO.genMs, 'the built-in voice took too long to speak'); }
         catch (e) { if (isMissing(e)) throw new Error('the built-in voice is not part of this build. Install the latest Horizon APK'); throw e; }
         if (!r || !r.wav) throw new Error('the built-in voice made no sound');
         const bytes = b64ToBytes(r.wav);
         if (bytes.length < 100) throw new Error('the built-in voice made no sound');
         return new Blob([bytes], { type: 'audio/wav' });
     }
+
+    // ---- V1.86.0 Voice library: the plugin downloads one official archive, unpacks it into app storage and reports progress.
+    async function packsRefresh() {
+        const p = voicePlugin();
+        if (!p || typeof p.packs !== 'function') return packsInstalled();
+        try {
+            const r = await p.packs();
+            const ids = (r && Array.isArray(r.installed) ? r.installed : []).filter(id => PACKS.some(pk => pk.id === id));
+            ls.set(KEYS.packs, JSON.stringify(ids));
+        } catch (e) { /* keep the last known list */ }
+        rebuildVoices();
+        return packsInstalled();
+    }
+    async function packDownload(id, onProgress) {
+        const p = voicePlugin();
+        const pk = PACKS.find(x => x.id === id);
+        if (!p || typeof p.download !== 'function') throw new Error('this build has no voice library. Install the latest Horizon APK');
+        if (!pk) throw new Error('unknown voice pack');
+        let ln = null;
+        try { if (typeof p.addListener === 'function') ln = await p.addListener('packProgress', ev => { if (ev && ev.id === id && onProgress) onProgress(ev); }); } catch (e) { ln = null; }
+        try {
+            const r = await p.download({ id, url: pk.url });
+            if (!r || !r.ok) throw new Error((r && r.error) || 'the download failed');
+            await packsRefresh();
+        } finally { if (ln && typeof ln.remove === 'function') { try { await ln.remove(); } catch (e) { /* ignore */ } } }
+    }
+    async function packRemove(id) {
+        const p = voicePlugin();
+        if (!p || typeof p.removePack !== 'function') throw new Error('this build has no voice library');
+        if (kokPack === id) { kokReady = null; kokPack = ''; }
+        const r = await p.removePack({ id });
+        if (r && r.ok === false) throw new Error(r.error || 'could not remove the voice');
+        await packsRefresh();
+    }
+    function packCancel() { const p = voicePlugin(); if (p && typeof p.cancelDownload === 'function') { try { p.cancelDownload(); } catch (e) { /* ignore */ } } }
 
     async function runCloud(synth, chunks, tok, s, started) {
         let next = queued(tok, () => synth(chunks[0]));
@@ -878,6 +1001,7 @@
         if (s.engine === 'kokoro') {
             if (!kokoroUsable()) return 'The built-in voice is missing from this build. Using the Android voice for now.';
             const v = KOKORO.voices.find(x => x.id === s.kvoice);
+            if (v && v.pack && v.pack !== 'builtin') return 'Natural voice (' + v.name + ' \u00b7 downloaded, offline)';
             return 'Natural voice (Built-in \u00b7 ' + (v ? v.name.split(' \u00b7 ')[0] : s.kvoice) + ' \u00b7 built in, offline)';
         }
         if (nativeUsable()) return 'Standard voice (Android)';
@@ -910,6 +1034,7 @@
         cloud: {
             gemini: { voices: GEMINI.voices, keyCount: () => cloudKeys('gemini').length },
             kokoro: { voices: KOKORO.voices, usable: kokoroUsable },
-        }
+        },
+        packs: { catalog: PACKS, installed: packsInstalled, refresh: packsRefresh, download: packDownload, remove: packRemove, cancel: packCancel }
     };
 })(window);

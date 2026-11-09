@@ -1035,6 +1035,18 @@
         .img-actions button:disabled { opacity: 0.5; }
         /* voice card extras */
         .tts-diag { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
+        /* V1.86.0 voice library */
+        .tts-lib { margin-top: 14px; }
+        .tts-lib-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid var(--border, rgba(255,255,255,.08)); }
+        .tts-lib-row:first-of-type { border-top: 0; }
+        .tts-lib-info { flex: 1; min-width: 0; }
+        .tts-lib-name { font-weight: 600; font-size: 14px; }
+        .tts-lib-note { font-size: 12.5px; color: var(--text-muted); line-height: 1.45; margin-top: 2px; }
+        .tts-lib-state { font-size: 12.5px; margin-top: 4px; color: var(--text-muted); }
+        .tts-lib-state.bad { color: #ff6b6b; }
+        .tts-lib-bar { height: 4px; border-radius: 2px; background: rgba(255,255,255,.1); margin-top: 6px; overflow: hidden; }
+        .tts-lib-bar > i { display: block; height: 100%; width: 0; background: var(--accent, #00e5ff); transition: width .25s ease; }
+        .tts-lib-row .use-btn { flex: none; }
         .tts-more { margin-top: 2px; }
 
         /* ===== V1.6.0 ===== */
@@ -1080,6 +1092,12 @@
         .model-tag.prov-cohere .ic { color: #ff8a70; }
         .avatar.prov-openrouter { --ring: linear-gradient(135deg, #6366f1, #8b5cf6, #22d3ee); --ring-glow: rgba(124, 92, 246, 0.5); }
         .model-tag.prov-openrouter .ic { color: #8b8cf8; }
+        .avatar.prov-anyapi { --ring: linear-gradient(135deg, #0ea5e9, #22d3ee, #34d399); --ring-glow: rgba(34, 211, 238, 0.5); }
+        .model-tag.prov-anyapi .ic { color: #22d3ee; }
+        .avatar.prov-gonka { --ring: linear-gradient(135deg, #f59e0b, #fbbf24, #f97316); --ring-glow: rgba(251, 191, 36, 0.5); }
+        .model-tag.prov-gonka .ic { color: #fbbf24; }
+        .avatar.prov-routeway { --ring: linear-gradient(135deg, #7c3aed, #a78bfa, #f472b6); --ring-glow: rgba(167, 139, 250, 0.5); }
+        .model-tag.prov-routeway .ic { color: #a78bfa; }
         .avatar.prov-mistral { --ring: linear-gradient(135deg, #ffd800, #ff8205, #e10500); --ring-glow: rgba(255, 130, 5, 0.5); }
         .model-tag.prov-mistral .ic { color: #ff8205; }
         .model-tag.prov-pollinations .ic { color: #c8e63a; }
@@ -1494,6 +1512,7 @@
     <link rel="stylesheet" href="horizon_autoread.css">
     <link rel="stylesheet" href="horizon_hdr2.css">
     <link rel="stylesheet" href="horizon_perf.css">
+    <link rel="stylesheet" href="horizon_ind.css">
     <link rel="stylesheet" href="horizon_toolgrid.css">
     <link rel="stylesheet" href="horizon_door.css">
     <link rel="stylesheet" href="horizon_speakwave.css">
@@ -1531,6 +1550,9 @@
             <symbol id="i-b-groq" viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#F05037" stroke="none"/><path d="M15.4 9.2a3.9 3.9 0 1 0 0 5.6M15.4 8v9.2c0 2-1.5 3-3.4 3-1.2 0-2.2-.4-2.9-1" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></symbol>
             <symbol id="i-b-mistral" viewBox="0 0 24 24"><rect width="24" height="24" rx="6" fill="#0b0b0b" stroke="none"/><g stroke="none"><rect x="4.0" y="4.0" width="3.2" height="3.2" fill="#FFD800"/><rect x="16.8" y="4.0" width="3.2" height="3.2" fill="#FFD800"/><rect x="4.0" y="7.2" width="3.2" height="3.2" fill="#FFAF00"/><rect x="7.2" y="7.2" width="3.2" height="3.2" fill="#FFAF00"/><rect x="13.6" y="7.2" width="3.2" height="3.2" fill="#FFAF00"/><rect x="16.8" y="7.2" width="3.2" height="3.2" fill="#FFAF00"/><rect x="4.0" y="10.4" width="3.2" height="3.2" fill="#FF8205"/><rect x="10.4" y="10.4" width="3.2" height="3.2" fill="#FF8205"/><rect x="16.8" y="10.4" width="3.2" height="3.2" fill="#FF8205"/><rect x="4.0" y="13.6" width="3.2" height="3.2" fill="#FA500F"/><rect x="16.8" y="13.6" width="3.2" height="3.2" fill="#FA500F"/><rect x="4.0" y="16.8" width="3.2" height="3.2" fill="#E10500"/><rect x="16.8" y="16.8" width="3.2" height="3.2" fill="#E10500"/></g></symbol>
             <symbol id="i-b-openrouter" viewBox="0 0 24 24"><rect width="24" height="24" rx="6" fill="#0f1020" stroke="none"/><g fill="none" stroke="#8b8cf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 13h4.2c2 0 3.2-1 4.6-3.2s2.6-3.2 4.7-3.2h2.5"/><path d="M3.5 13h4.2c2 0 3.2 1 4.6 3.2s2.6 3.2 4.7 3.2h2.5"/><path d="M17.8 4.4 20.6 7l-2.8 2.6" stroke-width="1.8"/><path d="M17.8 14.4l2.8 2.6-2.8 2.6" stroke-width="1.8"/></g></symbol>
+            <symbol id="i-b-anyapi" viewBox="0 0 24 24"><rect width="24" height="24" rx="6" fill="#0b1a1f" stroke="none"/><g fill="none" stroke="#22d3ee" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 12 6l5 11"/><path d="M9 13.5h6"/></g></symbol>
+            <symbol id="i-b-gonka" viewBox="0 0 24 24"><rect width="24" height="24" rx="6" fill="#1a1208" stroke="none"/><g fill="none" stroke="#fbbf24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 8.5A5.5 5.5 0 1 0 16.5 15.5V12H12"/></g></symbol>
+            <symbol id="i-b-routeway" viewBox="0 0 24 24"><rect width="24" height="24" rx="6" fill="#0f0b1f" stroke="none"/><g fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6.5" cy="17" r="1.8"/><circle cx="17.5" cy="7" r="1.8"/><path d="M8.3 17H13a3 3 0 0 0 0-6h-2a3 3 0 0 1 0-6h4.2"/></g></symbol>
             <symbol id="i-users" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
             <symbol id="i-ear" viewBox="0 0 24 24"><path d="M6 8.5a6 6 0 0 1 12 0c0 2.6-1.4 3.7-2.6 4.8-1 .9-1.4 1.6-1.4 3a3.2 3.2 0 0 1-6.2 1"/><path d="M9.5 8.8a2.5 2.5 0 0 1 5 0c0 1.3-.8 1.8-1.5 2.4"/></symbol>
             <symbol id="i-b-cohere" viewBox="0 0 24 24"><rect x=".5" y=".5" width="23" height="23" rx="6" fill="#fff" stroke="#e3e5e8"/><path d="M6 6.2c0-1.3 1.6-2.2 4.2-2.2h4.3c2.4 0 3.7 1.2 3.7 2.8 0 2-1.9 3.2-4.4 3.2H9.5C7.4 10 6 8.6 6 6.2z" fill="#39594D" stroke="none"/><circle cx="8" cy="16.4" r="3" fill="#FF7759" stroke="none"/><ellipse cx="16" cy="15.6" rx="3.6" ry="3.2" fill="#D18EE2" stroke="none"/></symbol>
@@ -1878,7 +1900,7 @@
             </div>
             <div class="settings-home" id="settingsHome" data-home role="tablist" aria-label="Settings sections">
                 <button class="set-row" role="tab" data-tab="providers" aria-selected="false" type="button">
-                    <span class="set-text"><h3>API PROVIDERS PLUS KEYS</h3><p>Gemini, Groq, Cohere, Mistral and OpenRouter keys, plus free Pollinations (no key). Pick the model and choose which engine answers.</p></span>
+                    <span class="set-text"><h3>API PROVIDERS PLUS KEYS</h3><p>Gemini, Groq, Cohere, Mistral, OpenRouter, AnyAPI and Routeway (free models only) and GonkaRouter keys, plus free Pollinations (no key). Pick the model and choose which engine answers.</p></span>
                     <svg class="ic set-chev" aria-hidden="true"><use href="#i-chev-r"/></svg>
                 </button>
                 <button class="set-row" role="tab" data-tab="web" aria-selected="false" type="button">
@@ -2036,6 +2058,21 @@
                     </div>
                 </section>
 
+                <section class="provider-card" id="indCard">
+                    <div class="settings-row-header">
+                        <div class="settings-row-content">
+                            <h3><svg class="ic" aria-hidden="true"><use href="#i-spark"/></svg> Typing indicator</h3>
+                            <p id="indStatus">Pick the waiting animation</p>
+                        </div>
+                    </div>
+                    <div class="theme-list" id="indMenu" role="radiogroup" aria-label="Typing indicator style">
+                        <button class="theme-opt" type="button" role="radio" aria-checked="false" data-ind-opt="dots"><span class="ind-pv" data-ind="dots"><span class="typing-indicator"><span></span><span></span><span></span></span></span><span class="to-tx"><b>Dots</b><small>Default</small></span></button>
+                        <button class="theme-opt" type="button" role="radio" aria-checked="false" data-ind-opt="laser"><span class="ind-pv" data-ind="laser"><span class="typing-indicator"><span></span><span></span><span></span></span><span class="ind-bar"></span></span><span class="to-tx"><b>Laser</b><small>A green beam sweeps the step bar</small></span></button>
+                        <button class="theme-opt" type="button" role="radio" aria-checked="false" data-ind-opt="orbit"><span class="ind-pv" data-ind="orbit"><span class="typing-indicator"><span></span><span></span><span></span></span></span><span class="to-tx"><b>Orbiting diamond</b><small>A small diamond circles a ring</small></span></button>
+                        <button class="theme-opt" type="button" role="radio" aria-checked="false" data-ind-opt="cursor"><span class="ind-pv" data-ind="cursor"><span class="typing-indicator"><span></span><span></span><span></span></span></span><span class="to-tx"><b>Terminal cursor</b><small>A blinking block</small></span></button>
+                    </div>
+                </section>
+
                 <section class="provider-card" id="daemonCard">
                     <div class="settings-row-header">
                         <div class="settings-row-content">
@@ -2073,13 +2110,18 @@
                     <label class="field-label" for="ttsEngine">Voice</label>
                     <select id="ttsEngine">
                         <option value="gemini">Natural: Gemini (30 voices)</option>
-                        <option value="kokoro">Natural: Built-in voice (8 voices, male + female, offline, no key)</option>
+                        <option value="kokoro">Natural: On-phone voices (8 built in + downloadable library, offline)</option>
                         <option value="standard">Standard: Android voice (free, offline)</option>
                     </select>
                     <div class="tts-nat" id="ttsNat" hidden>
                         <label class="field-label" id="ttsNVoiceLbl" for="ttsNVoice">Natural voice</label>
                         <select id="ttsNVoice"></select>
                         <p class="hint" id="ttsNatHint"></p>
+                        <div class="tts-lib" id="ttsLib" hidden>
+                            <label class="field-label">Voice library</label>
+                            <p class="hint">Download a more human voice once, on Wi-Fi. It is stored on your phone and then works offline. Bigger packs sound better but take longer to speak on a slow phone. Delete one any time to free the space.</p>
+                            <div id="ttsLibList"></div>
+                        </div>
                     </div>
                     <div id="ttsAndroid">
                         <label class="field-label" for="ttsNEngine">Android speech engine</label>
@@ -2768,6 +2810,109 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 }
             }
         };
+        // V1.81.0: AnyAPI (free models only) and GonkaRouter. Both speak the OpenAI chat format, so one builder serves both.
+        const oaiGateway = cfg => ({
+            name: cfg.name,
+            icon: cfg.icon,
+            placeholder: cfg.placeholder,
+            keyUrl: cfg.keyUrl,
+            defaultModel: cfg.defaultModel,
+            fallbackModels: cfg.fallbackModels,
+            modelsUrl: cfg.base + '/models',
+            headers: k => ({ Authorization: `Bearer ${k}` }),
+            parseModels: d => {
+                const ids = Array.from(new Set((d && d.data || []).filter(m => m && m.id).map(m => m.id)))
+                    .filter(id => !/embed|moderation|whisper|tts|rerank/i.test(id))
+                    .filter(id => !cfg.freeOnly || /:free$/.test(id));
+                return ids.sort((a, b) => a.localeCompare(b));
+            },
+            wrongKey: k => /^gsk_/.test(k) ? 'That looks like a Groq key.' : /^AIza/.test(k) ? 'That looks like a Gemini key.' : /^sk-or-/.test(k) ? 'That looks like an OpenRouter key.' : '',
+            async chat(key, model, history) {
+                const T = curTurn; turnCheck(T);
+                if (cfg.freeOnly && !/:free$/.test(model)) model = cfg.defaultModel;   // never spend credit: only :free ids go out
+                const sys = getSystemPrompt();
+                const cap = docMode ? 8000 : 0;
+                let lastWhy = 'Request failed';
+                const sleep = ms => new Promise(r => setTimeout(r, ms));
+                for (let attempt = 0; attempt < 3; attempt++) {
+                    turnCheck(T);
+                    const body = {
+                        model,
+                        temperature: 0.8,
+                        messages: [{ role: 'system', content: sys }].concat(history.map(m => ({ role: m.role === 'user' ? 'user' : 'assistant', content: window.HorizonAttach ? HorizonAttach.openaiContent(m, false) : m.text })))
+                    };
+                    if (cap) body.max_tokens = cap;
+                    const res = await timed(aiFetch(cfg.base + '/chat/completions', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', Accept: 'application/json', Authorization: `Bearer ${key}` },
+                        body: JSON.stringify(body)
+                    }), docMode ? 240000 : 120000);
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data && data.error && !(data.choices && data.choices.length)) {
+                            const em = (typeof data.error === 'string' ? data.error : (data.error.message || 'Upstream error'));
+                            const err = new Error(em + (data.error.code ? ` (${data.error.code})` : ''));
+                            err.status = Number(data.error.code) || 502;
+                            throw err;
+                        }
+                        noteUsage(data.usage && data.usage.prompt_tokens, data.usage && data.usage.completion_tokens);
+                        noteCut(data.choices && data.choices[0] && data.choices[0].finish_reason);
+                        const c = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+                        const out = (Array.isArray(c) ? c.map(p => (p && p.text) || '').join('') : (c || '')).trim();
+                        if (!out) throw new Error('Empty response' + (data.model ? ` from ${data.model}` : ''));
+                        return out;
+                    }
+                    const why = await errorText(res.clone());
+                    lastWhy = `${why} (HTTP ${res.status})`;
+                    if ((res.status === 429 || res.status === 502 || res.status === 503) && attempt < 2) {
+                        const h = Number(res.headers && res.headers.get ? res.headers.get('retry-after') : 0);
+                        const w = h > 0 ? h : 4 * (attempt + 1);
+                        if (w <= 45) {
+                            setLoading(`${cfg.name} is busy, retrying in ${Math.ceil(w)}s`);
+                            await sleep(Math.ceil(w * 1000) + 300);
+                            continue;
+                        }
+                    }
+                    if (res.status === 401 || res.status === 403) throw new Error(`${cfg.name} rejected the key. Check it at ${cfg.keyUrl}.`);
+                    if (res.status === 402) throw new Error(cfg.noCredit);
+                    throw new Error(lastWhy);
+                }
+                throw new Error(lastWhy);
+            }
+        });
+        PROVIDERS.anyapi = oaiGateway({
+            name: 'AnyAPI',
+            icon: 'i-b-anyapi',
+            base: 'https://api.anyapi.ai/v1',
+            placeholder: 'AnyAPI key',
+            keyUrl: 'https://anyapi.ai',
+            freeOnly: true,
+            defaultModel: 'google/gemma-4-26b-a4b-it:free',
+            fallbackModels: ['google/gemma-4-26b-a4b-it:free', 'nvidia/nemotron-3-ultra-550b-a55b:free', 'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free', 'nvidia/nemotron-3.5-lightning:free', 'dots-studio/dots-3-note-preview:free', 'recursive/flint-v1.0:free', 'xingchen-agi/xing4.0-29b-a4b:free', 'respan/span-01-lite:free'],
+            noCredit: 'AnyAPI says this needs credit. Horizon only sends :free models, so check your AnyAPI dashboard.'
+        });
+        PROVIDERS.gonka = oaiGateway({
+            name: 'GonkaRouter',
+            icon: 'i-b-gonka',
+            base: 'https://api.gonkarouter.io/v1',
+            placeholder: 'sk-...',
+            keyUrl: 'https://gonkarouter.io',
+            freeOnly: false,
+            defaultModel: 'zai-org/GLM-5.3-Flash',
+            fallbackModels: ['zai-org/GLM-5.3-Flash', 'deepseek-ai/DeepSeek-V4-Flash-0731', 'MiniMaxAI/MiniMax-M2.7'],
+            noCredit: 'GonkaRouter says your balance is empty. The 1,000,000 free tokens are a one-time grant. Top up in the GonkaRouter dashboard.'
+        });
+        PROVIDERS.routeway = oaiGateway({
+            name: 'Routeway',
+            icon: 'i-b-routeway',
+            base: 'https://api.routeway.ai/v1',
+            placeholder: 'sk-...',
+            keyUrl: 'https://routeway.ai/dashboard',
+            freeOnly: true,
+            defaultModel: 'deepseek-v4.1-flash:free',
+            fallbackModels: ['deepseek-v4.1-flash:free', 'minimax-m3.1-flash:free', 'muse-glimmer-30b:free', 'gemma-4-26b-a4b-it-chimerax:free', 'gemma-4-26b-a4b-it-darksoul:free', 'gemma-4-26b-a4b-it-luminous:free', 'gemma-4-26b-a4b-it-moonlight:free', 'gemma-4-26b-a4b-it-musica:free', 'gemma-4-26b-a4b-it-meromero:free'],
+            noCredit: 'Routeway says this needs credit. Horizon only sends :free models, so check your Routeway dashboard.'
+        });
         const PROVIDER_IDS = Object.keys(PROVIDERS);
         // V1.18.0: every provider call is timed and counted for the USAGE & ENGINE dashboard.
         // V1.22.0: backup keys per provider + auto-switch to the next provider when one is rate limited.
@@ -3776,19 +3921,24 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                     for (let el = seg.pseudo ? seg.el : seg.node.parentNode; el && el !== bubble; el = el.parentNode) el.style.display = '';
                 }
 
+                // V1.84.0: incremental. Finished segments are never touched again and the caret only moves when it has to, so a tick changes
+                // one text node instead of rewriting every node from the top (which woke every observer and forced a layout each time).
+                let si = 0, base = 0, curNode = null;
                 function paint(upTo) {
-                    let left = upTo;
-                    let lastNode = null;
-                    for (const s of segs) {
-                        if (left <= 0) break;
-                        if (s.pseudo) { reveal(s); continue; }
-                        const take = Math.min(left, s.full.length);
-                        s.node.nodeValue = s.full.slice(0, take);
+                    while (si < segs.length) {
+                        const s = segs[si];
+                        const avail = upTo - base;
+                        if (avail <= 0) break;
+                        if (s.pseudo) { reveal(s); si++; continue; }
+                        const take = Math.min(avail, s.full.length);
+                        if (s.cur !== take) { s.node.nodeValue = s.full.slice(0, take); s.cur = take; }
                         reveal(s);
-                        left -= take;
-                        lastNode = s.node;
+                        curNode = s.node;
+                        if (take < s.full.length) break;
+                        base += s.full.length;
+                        si++;
                     }
-                    if (lastNode && lastNode.parentNode) lastNode.parentNode.insertBefore(caret, lastNode.nextSibling);
+                    if (curNode && curNode.parentNode && caret.previousSibling !== curNode) curNode.parentNode.insertBefore(caret, curNode.nextSibling);
                 }
 
                 function finish() {
@@ -4949,6 +5099,25 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 if (has(/magistral/)) return 'Reasoning Mistral. Thinks step by step before answering.';
                 return 'Mistral model for general chat.';
             }
+            if (prov === 'anyapi') {
+                if (has(/nemotron.*ultra/)) return 'NVIDIA Nemotron Ultra. The biggest free model here, strong at hard questions and code. Free.';
+                if (has(/nemotron/)) return 'NVIDIA Nemotron. Quick reasoning model for everyday chat. Free.';
+                if (has(/gemma/)) return 'Google Gemma. Light, quick all-rounder for everyday chat. Free.';
+                return 'Free model through AnyAPI. Can be slow or busy at times.';
+            }
+            if (prov === 'routeway') {
+                if (has(/deepseek/)) return 'DeepSeek Flash. Step-by-step reasoning, good at maths and code. Free, 200 requests a day.';
+                if (has(/minimax/)) return 'MiniMax Flash. Quick long answers and agent-style work. Free, 200 requests a day.';
+                if (has(/muse/)) return 'Muse Glimmer. Light, quick everyday chat. Free, 200 requests a day.';
+                if (has(/gemma/)) return 'Gemma community variant. Light everyday chat. Free, 200 requests a day.';
+                return 'Free model through Routeway, 200 requests a day.';
+            }
+            if (prov === 'gonka') {
+                if (has(/glm/)) return 'GLM Flash. Fast general chat and code. Uses your free tokens.';
+                if (has(/deepseek/)) return 'DeepSeek Flash. Step-by-step reasoning, good at maths and code. Uses your free tokens.';
+                if (has(/minimax/)) return 'MiniMax. Long answers and agent-style work. Uses your free tokens.';
+                return 'Model served through GonkaRouter. Uses your free tokens.';
+            }
             if (prov === 'openrouter') {
                 if (n === 'openrouter/free') return 'Picks a free model for each message. Costs nothing, but free models are slow or busy at times.';
                 if (n === 'openrouter/auto') return 'OpenRouter picks the best model for each message for you. Can use paid models, so it may need credits.';
@@ -5927,13 +6096,13 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
 
         // --- V1.4.3: long documents (section by section) and auto-continue when a reply is cut off ---
         const pagesWanted = t => { const m = /(\d{1,3})\s*(?:-|\s)?\s*pages?\b/i.exec(t); return m ? Math.min(60, +m[1]) : 0; };
-        const longPlan = t => !/\b(?:cv|resume|letter|invoice)\b/i.test(t) && (pagesWanted(t) >= 8 || /\b(?:long|detailed|comprehensive|in-depth|thorough|full report|ebook)\b/i.test(t));
+        const longPlan = t => !/\b(?:cv|resume|letter|invoice)\b/i.test(t) && (pagesWanted(t) >= 4 || /\b(?:long|detailed|comprehensive|in-depth|thorough|full report|ebook)\b/i.test(t));
         const lastUserText = chat => { const b = buildHistory(chat.messages, chat); return b.length ? b[b.length - 1].text : ''; };
 
         async function runLong(chat, p, key, model, text) {
             const P = pagesWanted(text) || 12;
             const n = Math.max(4, Math.min(14, Math.ceil(P / 2.5)));
-            const words = Math.round(P * 430 / n / 10) * 10;
+            const words = Math.round(P * 470 / n / 10) * 10;   // V1.80.0: aim a little high, headings and spacing eat space
             const base = buildHistory(chat.messages, chat);
             const ask0 = lastUserText(chat);
             setLoading('Outlining the document', 'Planning the title, theme and section list before writing anything');
@@ -5960,6 +6129,41 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             }
             const raw = 'Here is your document: ' + title + '.\n<artifact type="pdf" title="' + title + '.pdf">\n---\ntheme: ' + theme + '\ntoc: true\n---\n# ' + title + '\n\n' + parts.join('\n\n') + '\n</artifact>';
             return { raw, sources: [], titles: {} };
+        }
+
+        // V1.80.0: after the document is written, count the REAL pages. If the user asked for N pages and it came out shorter,
+        // ask the model for extra new sections (never a rewrite) and re-count, up to two passes.
+        async function fitPages(chat, p, key, model, text, raw) {
+            const P = pagesWanted(text);
+            if (!P || P < 2 || !window.HorizonPDF || !HorizonPDF.pageCount) return raw;
+            if (/\b(?:up to|at most|no more than|max(?:imum)?|under|less than|fewer than)\s+\d{1,3}\s*(?:-|\s)?\s*pages?\b/i.test(text)) return raw;
+            const ask0 = lastUserText(chat);
+            let out = raw;
+            for (let k = 0; k < 3; k++) {
+                const items = HorizonPDF.parse(out).items;
+                if (!items.length || items[items.length - 1].open) return out;
+                const a = items[items.length - 1];
+                setLoading('Checking the page count', 'Rendering the PDF to count real pages');
+                const n = await HorizonPDF.pageCount(a);
+                if (!n) return out;
+                if (n >= P) { thoughtAdd('i-check', `Length checked: ${n} page${n === 1 ? '' : 's'}`, true, `You asked for ${P}${k ? ` \u00b7 expanded ${k} time${k === 1 ? '' : 's'}` : ''}`); return out; }
+                if (k === 2) { thoughtAdd('i-layers', `Length: ${n} of ${P} pages`, true, 'Still short after two expansions. Ask for "longer" and it will add more'); return out; }
+                const need = P - n, wordsNeeded = Math.max(150, Math.round(need * 480 / 10) * 10);
+                const heads = [...a.content.matchAll(/^#{1,3}\s+(.+)$/gm)].map(m => m[1].replace(/\*\*/g, '').trim()).slice(0, 40).join(' | ');
+                setLoading(`Only ${n} of ${P} pages. Adding about ${wordsNeeded} words`, 'New sections only, nothing rewritten');
+                const ask = ask0 + '\n\n[APP INSTRUCTION] The document "' + a.title.replace(/\.pdf$/i, '') + '" was written but renders at only ' + n + ' page' + (n === 1 ? '' : 's') + ', and Fezzy asked for ' + P + '. It already has these headings: ' + (heads || '(none)') + '.\nWrite ONLY new sections that add about ' + wordsNeeded + ' words of real, useful detail on topics NOT already covered (worked examples, comparisons, tables, practical steps, pitfalls). Do not repeat or rewrite anything. Start each with a line "## Heading". No <artifact> tag, no front matter, no title, no intro or closing remarks.';
+                let more = '';
+                try { more = (await p.chat(key, model, [{ role: 'user', text: ask }])).trim(); } catch (e) { return out; }
+                more = more.replace(/<\/?artifact[^>]*>/gi, '').replace(/^---[\s\S]*?\n---\s*/, '').trim();
+                if (!more || (more.match(/\S+/g) || []).length < wordsNeeded * 0.3) return out;
+                if (!/^#{1,3}\s/.test(more)) more = '## More detail\n\n' + more;
+                more = more.replace(/^#{1,3}\s/gm, '## ');
+                const at = out.toLowerCase().lastIndexOf('</artifact');
+                if (at < 0) return out;
+                out = out.slice(0, at).replace(/\s+$/, '') + '\n\n' + more + '\n' + out.slice(at);
+                thoughtAdd('i-layers', `Added ${(more.match(/\S+/g) || []).length.toLocaleString()} words`, true, `Was ${n} of ${P} pages, checking again`);
+            }
+            return out;
         }
 
         async function finishCut(raw, chat, p, key, model) {
@@ -6309,9 +6513,9 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 }
                 const model = state.models[id];
                 const turn = await raceStop(T, (async () => {
-                    if (docMode && longPlan(text)) return await runLong(chat, p, key, model, text);
+                    if (docMode && longPlan(text)) { const tl = await runLong(chat, p, key, model, text); tl.raw = await fitPages(chat, p, key, model, text, tl.raw); return tl; }
                     const t1 = await runTurn(chat, p, key, model);
-                    if (docMode) t1.raw = await finishCut(t1.raw, chat, p, key, model);
+                    if (docMode) { t1.raw = await finishCut(t1.raw, chat, p, key, model); t1.raw = await fitPages(chat, p, key, model, text, t1.raw); }
                     return t1;
                 })());
                 const ms = Date.now() - t0;
@@ -7408,7 +7612,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         }
         async function ytSearch(q) {
             const d = await ytTryDirect(() => window.HzYtDirect.search(q));
-            return d || ytSearchPublic(q);
+            return d || ytWithDiag(() => ytSearchPublic(q));
         }
         function ytSearchPublic(q) {
             return ytRace('Search', async inst => {
@@ -7446,9 +7650,18 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             } catch (e) { return u; }
         }
 
-        async function ytStream(id) {
-            const d = await ytTryDirect(() => window.HzYtDirect.audio(id));
-            return d || ytStreamPublic(id);
+        // V1.79.0: when the direct client AND the public servers both fail, the error carries what the direct client said.
+        async function ytWithDiag(fn) {
+            try { return await fn(); } catch (e) {
+                let extra = '';
+                try { if (window.HzYtDirect) extra = ' | ' + window.HzYtDirect.diag().replace(/\n\s*/g, ' ; '); } catch (_) { /* ignore */ }
+                const err = new Error(String((e && e.message) || e) + extra);
+                throw err;
+            }
+        }
+        async function ytStream(id, opts) {
+            const d = await ytTryDirect(() => window.HzYtDirect.audio(id, opts));
+            return d || ytWithDiag(() => ytStreamPublic(id));
         }
         function ytStreamPublic(id) {
             return ytRace('Download', async inst => {
@@ -7475,9 +7688,9 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             });
         }
 
-        async function ytVideoStream(id) {
-            const d = await ytTryDirect(() => window.HzYtDirect.video(id));
-            return d || ytVideoStreamPublic(id);
+        async function ytVideoStream(id, opts) {
+            const d = await ytTryDirect(() => window.HzYtDirect.video(id, opts));
+            return d || ytWithDiag(() => ytVideoStreamPublic(id));
         }
         function ytVideoStreamPublic(id) {
             return ytRace('Video download', async inst => {
@@ -7504,10 +7717,22 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             async download(id, kind, prog) {
                 if (!/^[\w-]{11}$/.test(id)) throw new Error('Invalid YouTube video ID');
                 if (lsGet(LS.filesOn) === '0') throw new Error('Enable File access in Settings → Permissions first.');
-                const stream = kind === 'video' ? await ytVideoStream(id) : await ytStream(id);
-                const filename = safeName((stream.artist ? stream.artist + ' - ' : '') + (stream.title || id)) + '.' + stream.ext;
-                const path = await saveFile(prog || {}, stream.url, filename, kind === 'video' ? 'video' : 'audio', stream.ua);
-                return 'Saved: ' + path;
+                // V1.79.0: if the save fails on one YouTube route, ask a different client for a fresh link and try again (up to 3 routes)
+                const skip = [];
+                let lastErr = null;
+                for (let attempt = 0; attempt < 3; attempt++) {
+                    const stream = kind === 'video' ? await ytVideoStream(id, { skip }) : await ytStream(id, { skip });
+                    const filename = safeName((stream.artist ? stream.artist + ' - ' : '') + (stream.title || id)) + '.' + stream.ext;
+                    try {
+                        const path = await saveFile(prog || {}, stream.url, filename, kind === 'video' ? 'video' : 'audio', stream.ua);
+                        return 'Saved: ' + path;
+                    } catch (e) {
+                        lastErr = e;
+                        if (!stream.client) break;   // a public-server link: nothing else to switch to
+                        skip.push(stream.client);
+                    }
+                }
+                throw lastErr || new Error('download failed');
             }
         };
 
@@ -7760,20 +7985,27 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             const vid = ytId(parts[0]);
             if (!vid) return { text: 'ERROR: give a VIDEO_ID from yt.search, like [[yt.play: VIDEO_ID | Title]].' };
             const hint = (parts[1] || '').trim();
-            const st = await ytStream(vid);
-            const info = { id: vid, title: st.title || hint || vid, artist: st.artist || '', url: st.url, dur: st.dur || 0 };
-            let r = await HorizonMusic.playRemote(info);
-            if (!r.ok && st.ua) {
-                try {
-                    const res = await timed(fetch(st.url, { headers: { 'User-Agent': st.ua } }), 90000);
-                    if (res.ok) {
-                        const blob = await res.blob();
-                        if (blob.size > 0 && blob.size < 60 * 1048576) r = await HorizonMusic.playRemote(Object.assign({}, info, { url: URL.createObjectURL(blob.type ? blob : new Blob([blob], { type: 'audio/mp4' })) }));
-                    }
-                } catch (e) { /* report the failure below */ }
+            const skip = [];
+            let st = await ytStream(vid), info = null, r = { ok: false };
+            for (let attempt = 0; attempt < 3 && st; attempt++) {
+                info = { id: vid, title: st.title || hint || vid, artist: st.artist || '', url: st.url, dur: st.dur || 0 };
+                r = await HorizonMusic.playRemote(info);
+                if (!r.ok && st.ua) {
+                    // the player refused the link: pull the song through the native layer in small chunks and play that copy
+                    try {
+                        const blob = window.HzYtDirect && HzYtDirect.fetchBlob
+                            ? await HzYtDirect.fetchBlob(st.url, st.ua, st.size)
+                            : await (await timed(fetch(st.url, { headers: { 'User-Agent': st.ua } }), 90000)).blob();
+                        if (blob && blob.size > 0 && blob.size < 80 * 1048576) r = await HorizonMusic.playRemote(Object.assign({}, info, { url: URL.createObjectURL(blob.type ? blob : new Blob([blob], { type: 'audio/mp4' })) }));
+                    } catch (e) { /* try the next client below */ }
+                }
+                if (r.ok) break;
+                // still silent: ask for a link from a different YouTube client and try again
+                if (st.client) skip.push(st.client);
+                st = (window.HzYtDirect && st.client) ? await ytTryDirect(() => window.HzYtDirect.audio(vid, { skip })) : null;
             }
             return r.ok ? { text: `Started: ${r.title}${r.artist ? ' - ' + r.artist : ''}. It is streaming now through the music player (not saved to the phone).` }
-                : { text: 'ERROR: the song would not start. Tell Fezzy in one short sentence, and offer to download it instead.' };
+                : { text: 'ERROR: the song would not start after trying ' + (skip.length + 1) + ' YouTube route(s). Tell Fezzy in one short sentence, and offer to download it instead. ' + (window.HzYtDirect ? HzYtDirect.diag().replace(/\n\s*/g, ' ; ') : '') };
         }
 
         // V1.78.0: image search for the chat AI. Openverse first (openly licensed), Wikimedia Commons as the backup.
@@ -8412,6 +8644,9 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             'card-cohere': 'Cohere Command models. Add a key (a free trial key works) and pick a model.',
             'card-mistral': 'Mistral Studio. Small, Medium, Large and Codestral models. Add a Studio API key and pick a model.',
             'card-openrouter': 'OpenRouter. One key for hundreds of models, including free ones (names ending in :free). Add a key and pick a model.',
+            'card-anyapi': 'AnyAPI. Only the free models (ending in :free) are listed and sent, so it never spends credit. Add a key and pick a model.',
+            'card-routeway': 'Routeway. Only the free models (ending in :free) are listed and sent, so it never spends credit. Free models allow about 200 requests a day. Add a key and pick a model.',
+            'card-gonka': 'GonkaRouter. 1,000,000 free tokens once, then it is paid. Add a key and pick GLM, DeepSeek or MiniMax.',
             'card-pollinations': 'Free chat, no key. One request at a time, about 30 seconds apart. Also draws images from the + menu.'
         };
         function enhanceCard(card) {
@@ -8614,6 +8849,61 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         };
         const fmtX = v => (+v).toFixed(2).replace(/\.?0+$/, '') + '\u00d7';
 
+        // V1.86.0: voice library rows (download / remove) under the Built-in voice list
+        const libBusy = {};
+        function paintLib() {
+            const box = $('#ttsLib'), list = $('#ttsLibList');
+            if (!box || !list || !TTS || !TTS.packs) return;
+            const s = TTS.settings();
+            box.hidden = !(NATIVE && s.engine === 'kokoro' && TTS.cloud.kokoro.usable());
+            if (box.hidden) return;
+            const have = TTS.packs.installed();
+            list.replaceChildren();
+            TTS.packs.catalog.forEach(pk => {
+                const row = document.createElement('div'); row.className = 'tts-lib-row';
+                const info = document.createElement('div'); info.className = 'tts-lib-info';
+                const nm = document.createElement('div'); nm.className = 'tts-lib-name'; nm.textContent = pk.name + ' \u00b7 ' + pk.size;
+                const nt = document.createElement('div'); nt.className = 'tts-lib-note'; nt.textContent = pk.note;
+                const st = document.createElement('div'); st.className = 'tts-lib-state';
+                const bar = document.createElement('div'); bar.className = 'tts-lib-bar'; bar.hidden = true;
+                const fill = document.createElement('i'); bar.appendChild(fill);
+                info.append(nm, nt, st, bar);
+                const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'use-btn';
+                const installed = have.indexOf(pk.id) >= 0;
+                const busy = !!libBusy[pk.id];
+                st.textContent = busy ? (libBusy[pk.id].note || 'Starting...') : (installed ? 'Installed. Pick it in the list above.' : '');
+                if (busy && libBusy[pk.id].pct >= 0) { bar.hidden = false; fill.style.width = libBusy[pk.id].pct + '%'; }
+                btn.textContent = busy ? 'Cancel' : (installed ? 'Delete' : 'Download');
+                btn.addEventListener('click', async () => {
+                    if (libBusy[pk.id]) { TTS.packs.cancel(); return; }
+                    try {
+                        if (installed) {
+                            if (!window.confirm('Delete the ' + pk.name + ' voice from this phone?')) return;
+                            TTS.stop();
+                            await TTS.packs.remove(pk.id);
+                            ttsToast(pk.name + ' deleted.');
+                        } else {
+                            libBusy[pk.id] = { note: 'Starting...', pct: -1 };
+                            paintLib();
+                            await TTS.packs.download(pk.id, ev => {
+                                libBusy[pk.id] = { note: ev.note || '', pct: typeof ev.pct === 'number' ? ev.pct : -1 };
+                                paintLib();
+                            });
+                            ttsToast(pk.name + ' is ready. Pick it in the voice list, then tap Test.');
+                        }
+                    } catch (e) {
+                        st.classList.add('bad');
+                        ttsToast('Voice library: ' + (e && e.message ? e.message : e), true);
+                    } finally {
+                        delete libBusy[pk.id];
+                        paintEngine();
+                    }
+                });
+                row.append(info, btn);
+                list.appendChild(row);
+            });
+        }
+
         // V1.25.0: the voice card shows the Android pickers for the Standard voice and one voice list for a natural engine
         function paintEngine() {
             if (!TTS) return;
@@ -8624,6 +8914,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             vEl.pitchWrap.hidden = false;
             vEl.nat.hidden = !cloud;
             if (!cloud) return;
+            paintLib();
             const eng = TTS.cloud[s.engine];
             vEl.nVoice.hidden = false; vEl.nLbl.hidden = false;
             vEl.nVoice.replaceChildren();
@@ -8635,7 +8926,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             vEl.nVoice.value = s.engine === 'gemini' ? s.gvoice : s.kvoice;
             if (s.engine === 'kokoro') {
                 vEl.nHint.textContent = eng.usable()
-                    ? 'No key, no account, no download, no limit. 28 English voices (US and UK, female and male) are built into Horizon and run on your phone, so nothing you read aloud leaves it. The first time you use it, Horizon unpacks the voice (a few seconds), then it starts fast every time. Speed and pitch both work.'
+                    ? 'No key, no account, no limit. 8 small voices are built into Horizon. For more human voices (Kokoro has 28, plus Piper voices) download one from the Voice library below. Everything runs on your phone, so nothing you read aloud leaves it. Speed and pitch both work.'
                     : 'The built-in voice is not part of this build. Install the latest Horizon APK from the build page.';
             } else {
                 const n = eng.keyCount();
@@ -8657,6 +8948,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             vEl.status.textContent = TTS.describe();
             vEl.status.classList.remove('error');
             paintEngine();
+            if (TTS.packs && NATIVE) TTS.packs.refresh().then(() => { paintEngine(); vEl.status.textContent = TTS.describe(); }).catch(() => { /* keep the last list */ });
             try {
                 await fillEngines();
                 voiceList = await TTS.listVoices();
@@ -8916,6 +9208,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
     <script src="horizon_termai.js"></script>
     <script src="horizon_typing.js"></script>
     <script src="horizon_perf.js"></script>
+    <script src="horizon_ind.js"></script>
     <script src="horizon_toolgrid.js"></script>
     <script src="horizon_bojack.js"></script>
     <script src="horizon_header.js"></script>
