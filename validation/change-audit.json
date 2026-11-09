@@ -1,273 +1,197 @@
 {
-  "originalArchiveSHA256": "a6d5e68bfce2c69777e7bc95a57827a381f99030338517ca92b8475999e6d622",
-  "protectedFiles": [
-    {
-      "file": "www/horizon_music.js",
-      "unchanged": true,
-      "sha256": "06aa4dfc50868a9e44b2e10b5cdfe609f7931c2d260cf2a34b4f45ca7ea82eb2"
-    },
-    {
-      "file": "www/horizon_group.js",
-      "unchanged": true,
-      "sha256": "b1e0c33f9c8dccd572f2f86f2fa71c7d5d7eabdbf5c2a56accb4d12bb27de827"
-    },
-    {
-      "file": "resources/android/java/HorizonMediaPlugin.java",
-      "unchanged": true,
-      "sha256": "431e4df3d3528934880c396dd96c01a26d6b252c77e27b323b5d1bdf65610d2e"
-    },
-    {
-      "file": "resources/android/java/HorizonMediaService.java",
-      "unchanged": true,
-      "sha256": "15eaf1c172a20acc62b7113a93aa87793d20d363220b0de94505ae3a512e908e"
-    }
+  "release": "1.88.0",
+  "changed": [
+    ".github/workflows/build-apk.yml",
+    "README.md",
+    "package-lock.json",
+    "package.json",
+    "resources/android/java/MainActivity.java",
+    "scripts/apply-android.sh",
+    "tests/browser.smoke.cjs",
+    "tests/regression.test.cjs",
+    "www/horizon_about.js",
+    "www/horizon_bridges.js",
+    "www/horizon_key_import.js",
+    "www/horizon_laser.js",
+    "www/horizon_termai.js",
+    "www/horizon_terminal.js",
+    "www/horizon_termlive.js",
+    "www/index.html"
   ],
-  "files": [
-    {
-      "file": ".github/workflows/build-apk.yml",
-      "status": "modified",
-      "beforeBytes": 7378,
-      "afterBytes": 7619
-    },
-    {
-      "file": "package-lock.json",
-      "status": "modified",
-      "beforeBytes": 44888,
-      "afterBytes": 45855
-    },
-    {
-      "file": "package.json",
-      "status": "modified",
-      "beforeBytes": 432,
-      "afterBytes": 512
-    },
-    {
-      "file": "resources/android/java/HorizonTermuxPlugin.kt",
-      "status": "modified",
-      "beforeBytes": 7764,
-      "afterBytes": 8451
-    },
-    {
-      "file": "resources/android/java/HorizonVoicePlugin.kt",
-      "status": "modified",
-      "beforeBytes": 20636,
-      "afterBytes": 22482
-    },
-    {
-      "file": "resources/android/java/HorizonWhatsAppPlugin.kt",
-      "status": "modified",
-      "beforeBytes": 16864,
-      "afterBytes": 26110
-    },
-    {
-      "file": "scripts/apply-bridges.py",
-      "status": "modified",
-      "beforeBytes": 3543,
-      "afterBytes": 3712
-    },
-    {
-      "file": "scripts/bundle-voice.sh",
-      "status": "modified",
-      "beforeBytes": 7257,
-      "afterBytes": 7523
-    },
-    {
-      "file": "scripts/check-endpoints.py",
-      "status": "added",
-      "beforeBytes": 0,
-      "afterBytes": 2424
-    },
-    {
-      "file": "tests/bridges.test.cjs",
-      "status": "modified",
-      "beforeBytes": 7283,
-      "afterBytes": 12590
-    },
-    {
-      "file": "tests/browser.smoke.cjs",
-      "status": "added",
-      "beforeBytes": 0,
-      "afterBytes": 8435
-    },
-    {
-      "file": "tests/regression.test.cjs",
-      "status": "modified",
-      "beforeBytes": 3357,
-      "afterBytes": 4415
-    },
-    {
-      "file": "tests/tts.test.cjs",
-      "status": "modified",
-      "beforeBytes": 3705,
-      "afterBytes": 7846
-    },
-    {
-      "file": "validation/android-compile.log",
-      "status": "added",
-      "beforeBytes": 0,
-      "afterBytes": 7494
-    },
-    {
-      "file": "validation/android-wiring.log",
-      "status": "added",
-      "beforeBytes": 0,
-      "afterBytes": 652
-    },
-    {
-      "file": "validation/browser-results.json",
-      "status": "added",
-      "beforeBytes": 0,
-      "afterBytes": 840
-    },
-    {
-      "file": "validation/contacts-card-fixture.png",
-      "status": "added",
-      "beforeBytes": 0,
-      "afterBytes": 68643
-    },
-    {
-      "file": "validation/provider-endpoints.json",
-      "status": "added",
-      "beforeBytes": 0,
-      "afterBytes": 3635
-    },
-    {
-      "file": "validation/runtime-dependency-audit.json",
-      "status": "added",
-      "beforeBytes": 0,
-      "afterBytes": 361
-    },
-    {
-      "file": "validation/settings-contacts.png",
-      "status": "added",
-      "beforeBytes": 0,
-      "afterBytes": 78732
-    },
-    {
-      "file": "validation/terminal-controls.png",
-      "status": "added",
-      "beforeBytes": 0,
-      "afterBytes": 126385
-    },
-    {
-      "file": "validation/unit-tests.log",
-      "status": "added",
-      "beforeBytes": 0,
-      "afterBytes": 12808
-    },
-    {
-      "file": "www/horizon_about.js",
-      "status": "modified",
-      "beforeBytes": 70090,
-      "afterBytes": 70847
-    },
-    {
-      "file": "www/horizon_bojack.js",
-      "status": "modified",
-      "beforeBytes": 13730,
-      "afterBytes": 13885
-    },
-    {
-      "file": "www/horizon_bridges.js",
-      "status": "modified",
-      "beforeBytes": 19057,
-      "afterBytes": 22235
-    },
-    {
-      "file": "www/horizon_contacts.js",
-      "status": "added",
-      "beforeBytes": 0,
-      "afterBytes": 6657
-    },
-    {
-      "file": "www/horizon_door.css",
-      "status": "modified",
-      "beforeBytes": 6845,
-      "afterBytes": 3237
-    },
-    {
-      "file": "www/horizon_door.js",
-      "status": "modified",
-      "beforeBytes": 3127,
-      "afterBytes": 1153
-    },
-    {
-      "file": "www/horizon_downloads.js",
-      "status": "modified",
-      "beforeBytes": 49845,
-      "afterBytes": 49848
-    },
-    {
-      "file": "www/horizon_hub.css",
-      "status": "added",
-      "beforeBytes": 0,
-      "afterBytes": 3711
-    },
-    {
-      "file": "www/horizon_key_import.js",
-      "status": "modified",
-      "beforeBytes": 3355,
-      "afterBytes": 3493
-    },
-    {
-      "file": "www/horizon_lift.js",
-      "status": "modified",
-      "beforeBytes": 4224,
-      "afterBytes": 4183
-    },
-    {
-      "file": "www/horizon_lock.js",
-      "status": "modified",
-      "beforeBytes": 17659,
-      "afterBytes": 17720
-    },
-    {
-      "file": "www/horizon_perf.js",
-      "status": "modified",
-      "beforeBytes": 15703,
-      "afterBytes": 16024
-    },
-    {
-      "file": "www/horizon_screen.js",
-      "status": "modified",
-      "beforeBytes": 10555,
-      "afterBytes": 10572
-    },
-    {
-      "file": "www/horizon_shell.js",
-      "status": "modified",
-      "beforeBytes": 6421,
-      "afterBytes": 6441
-    },
-    {
-      "file": "www/horizon_terminal.js",
-      "status": "modified",
-      "beforeBytes": 21518,
-      "afterBytes": 23509
-    },
-    {
-      "file": "www/horizon_tts.js",
-      "status": "modified",
-      "beforeBytes": 66310,
-      "afterBytes": 69257
-    },
-    {
-      "file": "www/horizon_v2.js",
-      "status": "modified",
-      "beforeBytes": 8528,
-      "afterBytes": 9019
-    },
-    {
-      "file": "www/horizon_vault.js",
-      "status": "modified",
-      "beforeBytes": 42178,
-      "afterBytes": 42203
-    },
-    {
-      "file": "www/index.html",
-      "status": "modified",
-      "beforeBytes": 629321,
-      "afterBytes": 631811
-    }
-  ]
+  "added": [
+    "PERFORMANCE-PLAN.txt",
+    "UPGRADE-REPORT.txt",
+    "tests/performance.compare.cjs",
+    "tests/unified.test.cjs",
+    "www/horizon_app.css",
+    "www/horizon_release.js"
+  ],
+  "removed": [
+    "resources/android/java/HorizonShellPlugin.kt",
+    "www/horizon_about.css",
+    "www/horizon_addons.css",
+    "www/horizon_archive.css",
+    "www/horizon_attach.css",
+    "www/horizon_autoread.css",
+    "www/horizon_bojack.css",
+    "www/horizon_bridges.css",
+    "www/horizon_browser.css",
+    "www/horizon_chatq.css",
+    "www/horizon_chips.css",
+    "www/horizon_creator.css",
+    "www/horizon_dash.css",
+    "www/horizon_door.css",
+    "www/horizon_downloads.css",
+    "www/horizon_ears.css",
+    "www/horizon_fix.css",
+    "www/horizon_fold.css",
+    "www/horizon_group.css",
+    "www/horizon_hdr2.css",
+    "www/horizon_header.css",
+    "www/horizon_htmlview.css",
+    "www/horizon_hub.css",
+    "www/horizon_ind.css",
+    "www/horizon_lens.css",
+    "www/horizon_lock.css",
+    "www/horizon_mdview.css",
+    "www/horizon_msgmenu.css",
+    "www/horizon_operator.css",
+    "www/horizon_perf.css",
+    "www/horizon_robust.css",
+    "www/horizon_setai.css",
+    "www/horizon_shell.js",
+    "www/horizon_slash.css",
+    "www/horizon_speakwave.css",
+    "www/horizon_termai.css",
+    "www/horizon_terminal.css",
+    "www/horizon_termlive.css",
+    "www/horizon_tidy.css",
+    "www/horizon_toolgrid.css",
+    "www/horizon_usage.css",
+    "www/horizon_v2.css",
+    "www/horizon_v3.css",
+    "www/horizon_voice.css"
+  ],
+  "unchangedCount": 118,
+  "unchanged": [
+    ".gitignore",
+    "LICENSE",
+    "capacitor.config.json",
+    "resources/android/NEWPIPE-LICENSE.txt",
+    "resources/android/java/HorizonAIPlugin.kt",
+    "resources/android/java/HorizonAIService.kt",
+    "resources/android/java/HorizonAlarmBootReceiver.kt",
+    "resources/android/java/HorizonAlarmPlugin.kt",
+    "resources/android/java/HorizonAlarmReceiver.kt",
+    "resources/android/java/HorizonAlarmService.kt",
+    "resources/android/java/HorizonAlarms.kt",
+    "resources/android/java/HorizonArt.java",
+    "resources/android/java/HorizonBgService.java",
+    "resources/android/java/HorizonBrowserPlugin.java",
+    "resources/android/java/HorizonCanary.kt",
+    "resources/android/java/HorizonDaemonPlugin.kt",
+    "resources/android/java/HorizonExtractorPlugin.kt",
+    "resources/android/java/HorizonLensPlugin.java",
+    "resources/android/java/HorizonLockPlugin.kt",
+    "resources/android/java/HorizonMediaPlugin.java",
+    "resources/android/java/HorizonMediaService.java",
+    "resources/android/java/HorizonNotify.kt",
+    "resources/android/java/HorizonPermsPlugin.java",
+    "resources/android/java/HorizonReplyReceiver.kt",
+    "resources/android/java/HorizonScopes.kt",
+    "resources/android/java/HorizonSpeakService.kt",
+    "resources/android/java/HorizonSpeechPlugin.java",
+    "resources/android/java/HorizonStatsPlugin.java",
+    "resources/android/java/HorizonTermuxPlugin.kt",
+    "resources/android/java/HorizonVoicePlugin.kt",
+    "resources/android/java/HorizonWhatsAppPlugin.kt",
+    "resources/android/res/drawable/ic_horizon_whatsapp.xml",
+    "resources/android/res/drawable/splash.xml",
+    "resources/android/res/mipmap-anydpi-v26/ic_launcher.xml",
+    "resources/android/res/mipmap-anydpi-v26/ic_launcher_round.xml",
+    "resources/android/res/mipmap-hdpi/ic_launcher.png",
+    "resources/android/res/mipmap-hdpi/ic_launcher_foreground.png",
+    "resources/android/res/mipmap-hdpi/ic_launcher_round.png",
+    "resources/android/res/mipmap-mdpi/ic_launcher.png",
+    "resources/android/res/mipmap-mdpi/ic_launcher_foreground.png",
+    "resources/android/res/mipmap-mdpi/ic_launcher_round.png",
+    "resources/android/res/mipmap-xhdpi/ic_launcher.png",
+    "resources/android/res/mipmap-xhdpi/ic_launcher_foreground.png",
+    "resources/android/res/mipmap-xhdpi/ic_launcher_round.png",
+    "resources/android/res/mipmap-xxhdpi/ic_launcher.png",
+    "resources/android/res/mipmap-xxhdpi/ic_launcher_foreground.png",
+    "resources/android/res/mipmap-xxhdpi/ic_launcher_round.png",
+    "resources/android/res/mipmap-xxxhdpi/ic_launcher.png",
+    "resources/android/res/mipmap-xxxhdpi/ic_launcher_foreground.png",
+    "resources/android/res/mipmap-xxxhdpi/ic_launcher_round.png",
+    "resources/android/res/values/ic_launcher_background.xml",
+    "resources/android/res/xml/horizon_bridge_backup.xml",
+    "resources/android/res/xml/horizon_bridge_extraction.xml",
+    "resources/icon-foreground.png",
+    "resources/icon.png",
+    "scripts/apply-bridges.py",
+    "scripts/bundle-voice.sh",
+    "scripts/check-endpoints.py",
+    "scripts/make_icons.py",
+    "scripts/set-version.sh",
+    "tests/bridges.test.cjs",
+    "tests/tts.test.cjs",
+    "www/ember_artbox.js",
+    "www/ember_document_engine.js",
+    "www/horizon_addons.js",
+    "www/horizon_archive.js",
+    "www/horizon_attach.js",
+    "www/horizon_autoread.js",
+    "www/horizon_bojack.js",
+    "www/horizon_browser.js",
+    "www/horizon_chips.js",
+    "www/horizon_contacts.js",
+    "www/horizon_creator.js",
+    "www/horizon_daemon.js",
+    "www/horizon_dash.js",
+    "www/horizon_door.js",
+    "www/horizon_downloads.js",
+    "www/horizon_fab.js",
+    "www/horizon_fold.js",
+    "www/horizon_geo.js",
+    "www/horizon_github.js",
+    "www/horizon_group.js",
+    "www/horizon_hdr2.js",
+    "www/horizon_header.js",
+    "www/horizon_htmlview.js",
+    "www/horizon_ind.js",
+    "www/horizon_lens.js",
+    "www/horizon_lift.js",
+    "www/horizon_lock.js",
+    "www/horizon_mdview.js",
+    "www/horizon_msgmenu.js",
+    "www/horizon_music.js",
+    "www/horizon_native_audio.js",
+    "www/horizon_operator.js",
+    "www/horizon_pdf.js",
+    "www/horizon_perf.js",
+    "www/horizon_plus.js",
+    "www/horizon_screen.js",
+    "www/horizon_setai.js",
+    "www/horizon_slash.js",
+    "www/horizon_speakwave.js",
+    "www/horizon_toast.js",
+    "www/horizon_toolgrid.js",
+    "www/horizon_tts.js",
+    "www/horizon_typing.js",
+    "www/horizon_usage.js",
+    "www/horizon_v2.js",
+    "www/horizon_vault.js",
+    "www/horizon_voice.js",
+    "www/horizon_youtube.js",
+    "www/horizon_ytdirect.js",
+    "www/icon.png",
+    "www/vendor/pdfjs/LICENSE.txt",
+    "www/vendor/pdfjs/pdf.mjs",
+    "www/vendor/pdfjs/pdf.worker.mjs",
+    "www/vendor/pdfmake-0.2.20-fonts.js",
+    "www/vendor/pdfmake-0.2.20.min.js",
+    "www/vendor/pdfmake-LICENSE.txt"
+  ],
+  "missingLocalAssets": []
 }

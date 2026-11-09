@@ -1,8 +1,4 @@
-/* Horizon V1.34.0: Terminal. Full-screen terminal on Horizon's own native shell (HorizonShellPlugin.kt).
- * Runs what YOU type, as Horizon's app user, in the app's private folder. No root, no Termux, no yt-dlp yet.
- * Minimize puts a strip above the chat box; Exit ends the session. Control keys edit the command line.
- * Controls owns device permissions, WhatsApp and the confirmed AI/Termux bridge. The prompt remains manual Android sh.
- */
+/* Unified Termux terminal. One prompt and shared execution owner; settings hold only Termux options. */
 (function () {
     'use strict';
     var MAXLINES = 1500;
@@ -10,11 +6,11 @@
         '\u2566 \u2566\u2554\u2550\u2557\u2566\u2550\u2557\u2566\u2554\u2550\u2557\u2554\u2550\u2557\u2554\u2557\u2554',
         '\u2560\u2550\u2563\u2551 \u2551\u2560\u2566\u255D\u2551\u2554\u2550\u255D\u2551 \u2551\u2551\u2551\u2551',
         '\u2569 \u2569\u255A\u2550\u255D\u2569\u255A\u2550\u2569\u255A\u2550\u255D\u255A\u2550\u255D\u255D\u255A\u255D',
-        '\u25C6 BOJACK SECURITY // SHELL \u25C6',
-        '\u26A1 no root \u00B7 your commands \u00B7 your control',
+        '\u25C6 BOJACK SECURITY // TERMUX \u25C6',
+        '\u26A1 Termux \u00B7 your commands \u00B7 your control',
         '[SOI] Strategy Over Impulse \u00B7 999',
         '',
-        'Android shell ready, Fezzy. Termux lives in Controls.',
+        'One Termux terminal, Fezzy. Setup lives in Controls / Options.',
         'Welcome to Horizon, where your phone is the lab.',
         'Type a command, or type help.'
     ];
@@ -22,7 +18,7 @@
         rsOn: false, rsQ: '', rsI: 0, typing: null, pendingOpen: 0, controls: false, requestedControls: false };
     var el = {};
 
-    function plugin() { var C = window.Capacitor; return C && C.Plugins && C.Plugins.HorizonShell || null; }
+    function plugin() { var C = window.Capacitor; return C && C.Plugins && C.Plugins.HorizonTermux || null; }
     function native() { var C = window.Capacitor; return !!(plugin() && C.isNativePlatform && C.isNativePlatform()); }
     function q(s) { return String(s).replace(/'/g, "'\\''"); }
     function reduced() { try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; } }
@@ -42,7 +38,7 @@
         o.setAttribute('role', 'dialog'); o.setAttribute('aria-modal', 'true'); o.setAttribute('aria-label', 'Terminal');
         o.innerHTML = '<header class="hzt-bar">' + LOGO
             + '<div class="hzt-name"><b>Horizon <i>/</i> Terminal</b><small>Bojack Security \u00B7 no root \u00B7 \u26A1</small></div>'
-            + '<button type="button" class="hzt-btn hzt-controls" aria-expanded="false" aria-controls="hzTerminalPermissions">Controls</button>'
+            + '<button type="button" class="hzt-btn hzt-controls" aria-expanded="false" aria-controls="hzTerminalOptions">Controls / Options</button>'
             + '<span class="hzt-dot" aria-hidden="true"></span>'
             + '<button type="button" class="hzt-btn hzt-min" aria-label="Minimize terminal">\u2304</button>'
             + '<button type="button" class="hzt-btn hzt-exit" aria-label="Exit terminal">\u2715</button></header>'
@@ -52,16 +48,10 @@
             + '<div class="hzt-hint" hidden>CTRL is on. Tap a letter.</div>'
             + '<div class="hzt-keys"></div>';
         document.body.appendChild(o);
-        var controls = document.getElementById('hzTerminalPermissions');
+        var controls = document.getElementById('hzTerminalOptions');
         if (controls) {
             o.insertBefore(controls, o.querySelector('.hzt-out'));
-            var nav = document.createElement('nav'); nav.className = 'hzt-control-nav'; nav.setAttribute('aria-label', 'Control sections');
-            [['Device', 'permIntro'], ['WhatsApp', 'hzWaCard'], ['Termux & AI', 'hzTermuxCard']].forEach(function (item) {
-                var b = document.createElement('button'); b.type = 'button'; b.textContent = item[0];
-                b.addEventListener('click', function () { var target = document.getElementById(item[1]); if (target) target.scrollIntoView({ block: 'start' }); });
-                nav.appendChild(b);
-            });
-            controls.insertBefore(nav, controls.firstChild);
+            if (window.HorizonBridges) window.HorizonBridges.mountTermux(controls);
         }
         o.querySelector('.hzt-controls').addEventListener('click', function () { setControls(!st.controls); });
         el.o = o; el.out = o.querySelector('.hzt-out'); el.ps = o.querySelector('.hzt-ps'); el.inp = o.querySelector('.hzt-input');
@@ -125,6 +115,7 @@
         });
         if (window.HorizonTermLive) { try { window.HorizonTermLive.attach(el); } catch (e) { /* colour only */ } }   // V1.65.2
         st.built = true;
+        window.dispatchEvent(new Event('horizon-terminal-ready'));
     }
 
     /* ---- output ---- */
@@ -135,7 +126,7 @@
         el.out.scrollTop = el.out.scrollHeight;
         return d;
     }
-    function addText(blob, cls) { String(blob).replace(/\r/g, '').replace(/\n+$/, '').split('\n').forEach(function (ln) { addLine(ln, cls); }); }
+    function addText(blob, cls) { var frag = document.createDocumentFragment(); String(blob).replace(/\r/g, '').replace(/\n+$/, '').split('\n').slice(-MAXLINES).forEach(function (ln) { var row = document.createElement('div'); row.className = 'hzt-l' + (cls ? ' ' + cls : ''); row.textContent = ln; frag.appendChild(row); }); el.out.appendChild(frag); while (el.out.childNodes.length > MAXLINES) el.out.firstChild.remove(); el.out.scrollTop = el.out.scrollHeight; }
     function psText() {
         var c = st.cwd || '', h = st.home || '', shown = '~';
         if (c && h && c !== h) shown = c.indexOf(h + '/') === 0 ? '~' + c.slice(h.length) : c;
@@ -189,13 +180,12 @@
     }
     function setControls(on) {
         st.controls = !!on;
-        var panel = document.getElementById('hzTerminalPermissions');
+        var panel = document.getElementById('hzTerminalOptions');
         if (panel) panel.hidden = !st.controls;
         el.o.classList.toggle('hzt-controls-on', st.controls);
         el.o.querySelector('.hzt-controls').setAttribute('aria-expanded', String(st.controls));
         if (st.controls) {
             skipTyping();
-            if (window.HzPerms) window.HzPerms.refresh();
             if (window.HorizonBridges) window.HorizonBridges.refresh();
         }
     }
@@ -206,7 +196,7 @@
         if (window.visualViewport) el.o.style.height = Math.round(window.visualViewport.height) + 'px';
         if (!st.alive) {
             st.alive = true; el.out.textContent = '';
-            if (native()) { try { plugin().cwd().then(function (r) { st.cwd = st.home = r.cwd || ''; paintPs(); }, function () { }); } catch (e) { /* ignore */ } }
+            st.cwd = st.home = ''; // Resolved from the Termux command result, never Android app storage.
             if (window.HorizonTermLive) { try { window.HorizonTermLive.boot(el.out, native(), welcome); } catch (e) { welcome(); } } else welcome();   // V1.65.2: boot lines, then the banner
         }
         paintPs(); paintStrip();
@@ -224,6 +214,7 @@
         if (!st.built) return;
         skipTyping();
         var wasOpen = st.open;
+        if (window.HorizonBridges && window.HorizonBridges.busy()) { addLine('A Termux job is still pending. Minimize instead; Exit cannot cancel it.', 'hzt-err'); return; }
         st.alive = false; st.running = false; st.cmds = 0; st.hist = []; st.hi = 0; st.last = ''; st.cwd = st.home;
         el.out.textContent = ''; el.inp.value = ''; setCtrl(false);
         if (wasOpen) minimize(false);
@@ -274,7 +265,7 @@
         else if (l === 'e') setVal(v);
         else if (l === 'b') setVal(v, Math.max(0, c - 1));
         else if (l === 'f') setVal(v, Math.min(v.length, c + 1));
-        else if (l === 'c') { echo(v + '^C'); setVal(''); st.rsOn = false; }
+        else if (l === 'c') { if (st.running) addLine('No PTY/stdin: Ctrl+C cannot cancel a submitted Termux job. Stop it in Termux itself.', 'hzt-err'); else { echo(v + '^C'); setVal(''); st.rsOn = false; } }
         else if (l === 'd') { if (!v) exitTerm(); else if (c < v.length) setVal(v.slice(0, c) + v.slice(c + 1), c); }
         else if (l === 'k') { st.kill = v.slice(c); setVal(v.slice(0, c)); }
         else if (l === 'u') { st.kill = v.slice(0, c); setVal(v.slice(c), 0); }
@@ -296,24 +287,8 @@
 
     /* ---- TAB completion (file names in the current folder) ---- */
     function complete() {
-        if (!native() || st.running) return;
-        var v = el.inp.value, pos = caret(), left = v.slice(0, pos), tok = (/(\S*)$/.exec(left) || ['', ''])[1];
-        if (/['"$`\\~*?]/.test(tok)) return;
-        var sl = tok.lastIndexOf('/'), dir = sl >= 0 ? tok.slice(0, sl + 1) : '', base = tok.slice(sl + 1);
-        var cmd = (st.cwd ? "cd '" + q(st.cwd) + "' 2>/dev/null; " : '') + "ls -1ap -- '" + q(dir || '.') + "' 2>/dev/null";
-        plugin().execute({ cmd: cmd, timeoutMs: 3000, maxBytes: 32768 }).then(function (r) {
-            var names = String(r.stdout || '').split('\n').filter(function (n) { return n && n !== './' && n !== '../' && n.indexOf(base) === 0 && (base || n.charAt(0) !== '.'); });
-            if (!names.length) return;
-            var pre = names[0];
-            names.forEach(function (n) { while (n.indexOf(pre) !== 0) pre = pre.slice(0, -1); });
-            if (names.length === 1) {
-                var add = dir + names[0] + (names[0].slice(-1) === '/' ? '' : ' ');
-                setVal(v.slice(0, pos - tok.length) + add + v.slice(pos), pos - tok.length + add.length);
-            } else {
-                if (pre.length > base.length) setVal(v.slice(0, pos - tok.length) + dir + pre + v.slice(pos), pos - tok.length + dir.length + pre.length);
-                else addText(names.join('   '), 'hzt-dim');
-            }
-        }, function () { });
+        // No second hidden shell for tab completion. This bridge has no interactive stdin/PTY.
+        addLine('TAB completion requires an interactive PTY. Use the Termux app for interactive programs.', 'hzt-dim');
     }
 
     /* ---- running commands ---- */
@@ -323,46 +298,46 @@
         echo(cmd);
         if (!cmd.trim()) return;
         if (st.hist[st.hist.length - 1] !== cmd) st.hist.push(cmd);
+        if (st.hist.length > 300) st.hist.shift();
         st.hi = st.hist.length; st.cmds++;
         var w = cmd.trim().split(/\s+/)[0];
         if (w === 'clear' || w === 'cls') { el.out.textContent = ''; paintStrip(); return; }
         if (w === 'exit' || w === 'quit' || w === 'logout') { exitTerm(); return; }
         if (w === 'help') { help(); paintStrip(); return; }
-        if (w === 'yt-dlp' || w === 'ytdlp') {
-            addText('yt-dlp is not built into Horizon yet (planned). Android\u2019s own shell has no Python, so it cannot run here.\nFor now use the YouTube app: search a song, tap \u2193 Music.', 'hzt-err'); paintStrip(); return;
-        }
         exec(cmd);
     }
     function help() {
-        addText('Horizon terminal. Runs /system/bin/sh as Horizon\u2019s app user in the app\u2019s private folder.\n'
-            + 'Works: ls, cat, grep, sed, find, ps, df, ping, and the other built-in Android tools. cd stays between commands.\n'
-            + 'Does not work: python, git, curl, pkg, root, programs that wait for input (there is no stdin).\n'
-            + 'Built in: help, clear, exit. TAB completes file names. Up/Down is history. CTRL then a letter edits the line (^A ^E ^K ^U ^W ^Y ^L ^R ^C ^D).\n'
-            + 'yt-dlp: planned, not installed. Commands stop after 30 seconds.', 'hzt-dim');
+        addText('One unified TERMINAL runs real commands in your installed Termux, with native confirmation.\n'
+            + 'Controls / Options: enable bridge, grant Run commands, enable AI (optional), test, install tools, inspect recent jobs.\n'
+            + 'Downloads: yt-dlp + FFmpeg for supported music/video; aria2c and curl for other files. Install required packages first.\n'
+            + 'cd persists as a working-directory path. Shell variables, jobs, aliases and interactive stdin do not persist: this is not a PTY.\n'
+            + 'help, clear, exit are local. Unknown completion is not cancelled; do not repeat it. No root.', 'hzt-dim');
     }
-    function exec(cmd) {
-        if (!native()) { addText('This terminal needs the Horizon Android app. A browser preview cannot run shell commands.', 'hzt-err'); paintStrip(); return; }
-        if (st.running) { addText('A command is still running. Wait for it to finish.', 'hzt-err'); return; }
-        st.running = true; st.last = cmd; paintStrip();
-        var pre = st.cwd ? "cd '" + q(st.cwd) + "' 2>/dev/null\n" : '';
+    function exec(cmd, timeout) {
+        if (!native() || !window.HorizonBridges) { addText('Real commands require the Horizon Android app, standard Termux and bridge permission. Browser preview cannot execute commands.', 'hzt-err'); paintStrip(); return Promise.resolve(); }
+        if (window.HorizonBridges.busy()) { addText('A Termux job is still pending. Check Controls / Options → Recent jobs / results.', 'hzt-err'); return Promise.resolve(); }
+        var pre = st.cwd ? "cd '" + q(st.cwd) + "' || exit\n" : '';
         var wrapped = pre + cmd + "\n__hz_rc=$?\nprintf '\\n__HZCWD__%s\\n' \"$(pwd)\"\nexit $__hz_rc";
-        plugin().execute({ cmd: wrapped, timeoutMs: 30000, maxBytes: 131072 }).then(function (r) {
-            var out = String(r.stdout || ''), i = out.lastIndexOf('\n__HZCWD__');
-            if (i >= 0) { var nc = out.slice(i + 10).split('\n')[0].trim(); if (nc) st.cwd = nc; out = out.slice(0, i); }
-            if (out) addText(out);
-            if (r.stderr) addText(r.stderr, 'hzt-err');
-            if (r.timedOut) addLine('[timed out after 30 s]', 'hzt-dim');
-            else if (r.exitCode) addLine('[exit ' + r.exitCode + ']', 'hzt-dim');
-            if (r.truncated) addLine('[output cut]', 'hzt-dim');
-        }, function (e) { addLine('ERROR: ' + ((e && e.message) || e), 'hzt-err'); }).then(function () {
-            st.running = false; paintPs(); paintStrip();
-            if (st.open && !st.controls) { try { el.inp.focus(); } catch (e) { /* ignore */ } }
-        });
+        return window.HorizonBridges.termux(wrapped, timeout || 120000, false).catch(function () { /* Shared event logger displays errors exactly once. */ });
     }
+    function commandEvent(e) {
+        var d = e.detail || {}; build();
+        if (!st.alive) { st.alive = true; el.out.textContent = ''; }
+        skipTyping();
+        if (d.phase === 'start') { st.running = true; st.last = String(d.command || '').split('\n')[0]; addLine('[Termux · ' + (d.fromAI ? 'AI · approval required' : 'approval required') + '] ' + st.last, 'hzt-dim'); }
+        else if (d.phase === 'complete' || d.phase === 'recovered') {
+            st.running = false; var r = d.result || {}, out = String(r.stdout || ''), i = out.lastIndexOf('\n__HZCWD__');
+            if (i >= 0) { st.cwd = out.slice(i + 10).split('\n')[0].trim() || st.cwd; out = out.slice(0, i); }
+            if (out) addText(out); if (r.stderr) addText(r.stderr, 'hzt-err');
+            if (r.error) addText(r.error, 'hzt-err'); addLine('[exit ' + r.exitCode + ']', 'hzt-dim');
+        } else { st.running = d.phase === 'unknown'; addText(d.error || 'Unknown command state', 'hzt-err'); }
+        paintPs(); paintStrip();
+    }
+    window.addEventListener('horizon-terminal-command', commandEvent);
 
     document.addEventListener('click', function (e) {
         var b = e.target.closest && e.target.closest('[data-term-open]');
         if (b) { e.preventDefault(); open(); }
     });
-    window.HorizonTerminal = { open: open, openSettings: function () { st.requestedControls = true; open(); }, minimize: function () { minimize(false); }, exit: exitTerm, isOpen: function () { return st.open; } };
+    window.HorizonTerminal = { open: open, openSettings: function () { st.requestedControls = true; open(); }, minimize: function () { minimize(false); }, exit: exitTerm, run: function (cmd, timeout) { build(); skipTyping(); setControls(false); return exec(cmd, timeout); }, showOutput: function (text) { build(); skipTyping(); setControls(false); st.alive = true; addText(text); paintStrip(); }, isOpen: function () { return st.open; } };
 })();

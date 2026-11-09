@@ -1,3 +1,5 @@
+> **Current source release: V1.89.0.** AnyAPI, Routeway and GonkaRouter can send messages again: the native AI bridge now allows their hosts. Earlier V1.88.0 notes follow. Five app tiles in one row; Device + WhatsApp only in Settings → Permissions; one large Termux terminal with Controls / Options. One canonical stylesheet and one shared API-key paste box at the bottom of Web Scraping. Read [UPGRADE-REPORT.txt](UPGRADE-REPORT.txt) for changes, setup and verification limits, and [PERFORMANCE-PLAN.txt](PERFORMANCE-PLAN.txt) for the measured results and real-phone test plan. This ZIP contains source, not an APK. Older version descriptions below are historical.
+
 <p align="center">
   <img src="resources/icon.png" alt="Horizon" width="128">
 </p>
@@ -11,6 +13,18 @@
   <img alt="Platform: Android" src="https://img.shields.io/badge/platform-Android-000000">
   <img alt="Capacitor 6" src="https://img.shields.io/badge/Capacitor-6-00e5ff">
 </p>
+
+## V1.89.0 provider endpoint fix
+
+AnyAPI, Routeway and GonkaRouter all failed with **Unsupported AI endpoint**. Cause: `HorizonAIPlugin.kt` only allowed six hosts (Gemini, Groq, Cohere, Mistral, OpenRouter, Pollinations), so the native bridge rejected the three gateway hosts before sending anything.
+
+- **Implemented:** `api.anyapi.ai`, `api.routeway.ai` and `api.gonkarouter.io` added to the allowlist in `request()`. Still HTTPS only; redirects are still not followed, so keys never go to a redirect host.
+- **Implemented:** the background-notification text parser now reads GonkaRouter's Anthropic-style reply (`content` array).
+- **Implemented:** `tests/endpoint-allowlist.test.cjs` fails the build if a provider base URL in `www/index.html` is missing from the native allowlist.
+- **Tested here:** `node --test tests/*.test.cjs` passes.
+- **Not tested:** Kotlin compile and on-device sending. Rebuild with the existing workflow, then send one message on each provider.
+- **Planned check:** GonkaRouter uses `/v1/messages` with an `x-api-key` header. Its `/v1/chat/completions` path was confirmed working from Termux; `/v1/messages` was not.
+- Validation logs under `validation/` are from V1.88.0 and were not regenerated.
 
 ## V1.87.0 integration patch — WhatsApp, Termux, downloads and keyboard
 

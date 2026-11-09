@@ -106,7 +106,7 @@ jobs:
           unzip -q -o "$UNSIGNED" 'classes*.dex' -d "$RUNNER_TEMP/dexcheck"
           echo "dex files:"; ls -l "$RUNNER_TEMP"/dexcheck/
           MISSING=""
-          for cls in HorizonAIPlugin HorizonAIService HorizonMediaPlugin HorizonSpeechPlugin HorizonVoicePlugin HorizonDaemonPlugin OfflineTtsKittenModelConfig HorizonPermsPlugin HorizonNotify HorizonScopes HorizonCanary HorizonLockPlugin HorizonShellPlugin HorizonBrowserPlugin HorizonWhatsAppPlugin HorizonWhatsAppListener HorizonTermuxPlugin HorizonTermuxResultReceiver HorizonExtractorPlugin; do
+          for cls in HorizonAIPlugin HorizonAIService HorizonMediaPlugin HorizonSpeechPlugin HorizonVoicePlugin HorizonDaemonPlugin OfflineTtsKittenModelConfig HorizonPermsPlugin HorizonNotify HorizonScopes HorizonCanary HorizonLockPlugin HorizonBrowserPlugin HorizonWhatsAppPlugin HorizonWhatsAppListener HorizonTermuxPlugin HorizonTermuxResultReceiver HorizonExtractorPlugin; do
             if grep -aq "$cls" "$RUNNER_TEMP"/dexcheck/classes*.dex; then
               echo "  ok       $cls"
             else

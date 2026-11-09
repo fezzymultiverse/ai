@@ -1,20 +1,18 @@
-/* HORIZON V1.76.0 · Laser pulse (Thought process bar + header pill).
-   A thin hot line with bloom sweeps over the dotted segments while the AI thinks, and along the bottom edge of the pill while a reply runs.
-   JavaScript moves the beam every frame (it sets --lx on the element), so Android's "Remove animations" / reduce-motion
-   setting can not freeze it. The ::after of .th-bar and the .hzc-lz element in the pill draw the beam from --lx (see index.html and horizon_v2.css).
-   The loop starts by itself when a live target exists and stops by itself when none is left.
-   window.HzLaser.sweep(el, ms): one last fast pass (T4). Used when a thought bar finishes and when the pill goes idle. */
+/* Event-driven thought/header pulse. No idle polling. Respects reduced motion, editors and background state. */
 (function () {
   'use strict';
   var SWEEP = 0.85;   /* seconds the beam takes to cross while thinking */
   var GAP = 0.2;      /* short rest before the next sweep */
   var FROM = -0.55, TO = 1.55; /* --lx range: beam starts fully left of the element and ends fully right of it */
   var LIVE = '.th-bar:not(.done), .hzc-cap.busy';
-  var raf = 0, watch = 0;
+  var raf = 0, watching = false, targets = [];
+  var motion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  function paused() { return document.hidden || window.hzEditorFocused || window.hzKbBusy || motion.matches; }
 
   function frame(ms) {
     raf = 0;
-    var els = document.querySelectorAll(LIVE);
+    if (paused()) return;
+    var els = targets.filter(function (el) { return el.isConnected && el.matches(LIVE); });
     if (!els.length) return;
     var t = (ms / 1000) % (SWEEP + GAP);
     var p = Math.min(1, t / SWEEP);
@@ -25,15 +23,16 @@
     raf = requestAnimationFrame(frame);
   }
   function kick() { if (!raf) raf = requestAnimationFrame(frame); }
-  function check() { if (!raf && document.querySelector(LIVE)) kick(); }
+  function check() { if (paused()) return; targets = Array.from(document.querySelectorAll(LIVE)); if (!raf && targets.length) kick(); }
 
   /* T4: one fast pass left to right, then the beam is gone and the element keeps its settled look */
   function sweep(el, ms) {
-    if (!el) return;
+    if (!el || paused()) return;
     ms = ms || 520;
     el.classList.add('lz-final');
     var t0 = 0;
     function step(now) {
+      if (!el.isConnected || paused()) { el.classList.remove('lz-final'); el.style.removeProperty('--lx'); return; }
       if (!t0) t0 = now;
       var p = Math.min(1, (now - t0) / ms);
       var e = p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
@@ -46,8 +45,15 @@
   window.HzLaser = { sweep: sweep };
 
   function start() {
-    if (watch) return;
-    watch = setInterval(check, 300);
+    if (watching) return; watching = true;
+    var messages = document.getElementById('chatMessages'), pill = document.querySelector('.hzc-cap');
+    var observer = new MutationObserver(check);
+    if (messages) observer.observe(messages, {childList:true, subtree:true, attributes:true, attributeFilter:['class']});
+    if (pill) observer.observe(pill, {attributes:true, attributeFilter:['class']});
+    document.addEventListener('visibilitychange', check);
+    document.addEventListener('focusout', function () { queueMicrotask(check); });
+    window.addEventListener('hz-kb-settled', check);
+    if (motion.addEventListener) motion.addEventListener('change', check);
     check();
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();

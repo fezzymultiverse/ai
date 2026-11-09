@@ -28,13 +28,20 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(HorizonLensPlugin.class);
         registerPlugin(HorizonStatsPlugin.class);
         registerPlugin(HorizonBrowserPlugin.class);
-        registerPlugin(HorizonShellPlugin.class);
         registerPlugin(HorizonWhatsAppPlugin.class);
         registerPlugin(HorizonTermuxPlugin.class);
         registerPlugin(HorizonExtractorPlugin.class);
         registerPlugin(HorizonLockPlugin.class);
         registerPlugin(HorizonAlarmPlugin.class);   // V1.68.0: calendar wake-up alarms
         super.onCreate(savedInstanceState);
+        try {
+            String release = getPackageManager().getPackageInfo(getPackageName(), 0).versionName;
+            android.content.SharedPreferences assets = getSharedPreferences("horizon_assets", MODE_PRIVATE);
+            if (!release.equals(assets.getString("release", ""))) {
+                if (getBridge() != null && getBridge().getWebView() != null) getBridge().getWebView().clearCache(true);
+                assets.edit().putString("release", release).apply();
+            }
+        } catch (Exception ignored) { /* Do not erase user storage or block launch. */ }
         handleAlarmIntent(getIntent());           // V1.68.0: opened by a ringing alarm: show over the lock screen
         showLastCrash();                          // V1.63.2: a saved crash report from the last run, if any
         HorizonPermsPlugin.paintBackdrop(this);   // V1.44.0: theme colour behind the page, no white flash

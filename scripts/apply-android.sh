@@ -128,7 +128,7 @@ JAVA_DIR="android/app/src/main/java/${APPID//./\/}"
 [ -d "$JAVA_DIR" ] || die "Missing $JAVA_DIR (appId mismatch? Capacitor made a different package folder)"
 
 # A Kotlin MainActivity from the template would clash with the Java one we install.
-rm -f "$JAVA_DIR/MainActivity.kt"
+rm -f "$JAVA_DIR/MainActivity.kt" "$JAVA_DIR/HorizonShellPlugin.kt"
 
 # put_sources FILE...: copy each source into the app package with the real appId, and verify it landed.
 put_sources() {
@@ -142,7 +142,7 @@ put_sources() {
 }
 
 JAVA_SOURCES="HorizonPermsPlugin.java HorizonBgService.java HorizonMediaPlugin.java HorizonMediaService.java HorizonArt.java HorizonSpeechPlugin.java HorizonLensPlugin.java HorizonStatsPlugin.java HorizonBrowserPlugin.java MainActivity.java"
-KOTLIN_SOURCES="HorizonAlarms.kt HorizonAlarmReceiver.kt HorizonAlarmBootReceiver.kt HorizonAlarmService.kt HorizonAlarmPlugin.kt HorizonAIPlugin.kt HorizonAIService.kt HorizonReplyReceiver.kt HorizonSpeakService.kt HorizonShellPlugin.kt HorizonLockPlugin.kt HorizonNotify.kt HorizonScopes.kt HorizonCanary.kt HorizonVoicePlugin.kt HorizonDaemonPlugin.kt"
+KOTLIN_SOURCES="HorizonAlarms.kt HorizonAlarmReceiver.kt HorizonAlarmBootReceiver.kt HorizonAlarmService.kt HorizonAlarmPlugin.kt HorizonAIPlugin.kt HorizonAIService.kt HorizonReplyReceiver.kt HorizonSpeakService.kt HorizonLockPlugin.kt HorizonNotify.kt HorizonScopes.kt HorizonCanary.kt HorizonVoicePlugin.kt HorizonDaemonPlugin.kt"
 
 # shellcheck disable=SC2086
 put_sources $JAVA_SOURCES
@@ -202,7 +202,7 @@ say "Horizon Kotlin AI jobs and reply notifications applied."
 for f in $JAVA_SOURCES $KOTLIN_SOURCES; do
     [ -s "$JAVA_DIR/$f" ] || die "Native source missing after apply: $f"
 done
-for p in HorizonAIPlugin HorizonLensPlugin HorizonStatsPlugin HorizonShellPlugin HorizonBrowserPlugin HorizonVoicePlugin HorizonDaemonPlugin; do
+for p in HorizonAIPlugin HorizonLensPlugin HorizonStatsPlugin HorizonBrowserPlugin HorizonVoicePlugin HorizonDaemonPlugin; do
     need "$JAVA_DIR/MainActivity.java" "registerPlugin($p.class)" "MainActivity does not register $p"
 done
 need "$MANIFEST" 'android:name=".HorizonReplyReceiver"' "Reply receiver missing from the manifest"

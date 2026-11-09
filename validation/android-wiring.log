@@ -1,3 +1,17 @@
+✔ Adding native android project in android in 28.96ms
+✔ add in 29.45ms
+✔ Copying web assets from www to android/app/src/main/assets/public in 32.36ms
+✔ Creating capacitor.config.json in android/app/src/main/assets in 300.92μs
+✔ copy android in 38.48ms
+✔ Updating Android plugins in 1.12ms
+[info] Found 2 Capacitor plugins for android:
+       @capacitor/filesystem@6.0.4
+       @capacitor/local-notifications@6.1.3
+✔ update android in 24.19ms
+✔ Syncing Gradle in 230.69μs
+[success] android platform added!
+Follow the Developer Workflow guide to get building:
+https://capacitorjs.com/docs/basics/workflow
 [apply-android] Horizon icons and splash applied (verified).
 [apply-android] Manifest permissions applied (verified).
 [apply-android] Horizon permissions and native plugin applied.
@@ -8,3 +22,13 @@
 [apply-android] Keyboard resize mode and 90 Hz request applied (verified).
 [apply-bridges] WhatsApp, Termux and NewPipe sources + manifest + dependencies verified.
 [apply-android] All Android patches applied and verified.
+versionName=1.88.0 versionCode=188000001
+✔ Copying web assets from www to android/app/src/main/assets/public in 30.79ms
+✔ Creating capacitor.config.json in android/app/src/main/assets in 556.29μs
+✔ copy android in 42.45ms
+✔ Updating Android plugins in 1.29ms
+[info] Found 2 Capacitor plugins for android:
+       @capacitor/filesystem@6.0.4
+       @capacitor/local-notifications@6.1.3
+✔ update android in 29.75ms
+[info] Sync finished in 0.091s

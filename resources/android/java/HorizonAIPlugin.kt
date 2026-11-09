@@ -125,7 +125,7 @@ class HorizonAIPlugin : Plugin() {
         val url = call.getString("url") ?: return call.reject("Missing request URL")
         // Only the existing AI provider endpoints may receive stored credentials.
         val host = try { URL(url).host } catch (_: Exception) { "" }
-        if (!url.startsWith("https://") || host !in setOf("generativelanguage.googleapis.com", "api.groq.com", "api.cohere.com", "api.mistral.ai", "openrouter.ai", "text.pollinations.ai")) {
+        if (!url.startsWith("https://") || host !in setOf("generativelanguage.googleapis.com", "api.groq.com", "api.cohere.com", "api.mistral.ai", "openrouter.ai", "text.pollinations.ai", "api.anyapi.ai", "api.routeway.ai", "api.gonkarouter.io")) {
             call.reject("Unsupported AI endpoint")
             return
         }
@@ -231,6 +231,11 @@ class HorizonAIPlugin : Plugin() {
                                 "api.cohere.com" -> {
                                     val parts = data.optJSONObject("message")?.optJSONArray("content")
                                     (0 until (parts?.length() ?: 0)).joinToString("") { parts?.optJSONObject(it)?.optString("text", "") ?: "" }
+                                }
+                                "api.gonkarouter.io" -> {
+                                    val parts = data.optJSONArray("content")
+                                    (0 until (parts?.length() ?: 0)).filter { parts?.optJSONObject(it)?.optString("type", "") == "text" }
+                                        .joinToString("") { parts?.optJSONObject(it)?.optString("text", "") ?: "" }
                                 }
                                 else -> data.optJSONArray("choices")?.optJSONObject(0)?.optJSONObject("message")?.optString("content", "") ?: ""
                             }

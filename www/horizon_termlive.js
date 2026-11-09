@@ -81,8 +81,8 @@
     var reduce = false; try { reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { /* ignore */ }
     var rows = [
       ['ok', ' ok ', 'Bojack online'],
-      isNative ? ['ok', ' ok ', 'shell ready  /system/bin/sh'] : ['warn', 'warn', 'preview mode: commands need the Horizon app'],
-      ['ok', ' ok ', 'private folder, no root']
+      isNative ? ['ok', ' ok ', 'Termux bridge available · check Controls / Options'] : ['warn', 'warn', 'preview mode: commands need the Horizon app'],
+      ['ok', ' ok ', 'one terminal · real commands · no root']
     ];
     var first = null, i = 0;
     function step() {
