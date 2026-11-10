@@ -578,30 +578,8 @@
                         </div>
                         <button class="use-btn" id="ttsTest" type="button">Test</button>
                     </div>
-                    <p class="hint">Tap the speaker beside the time on any Horizon reply to hear it. The voice works with every chat provider. If a natural voice fails or runs out, Horizon switches to the Android voice and tells you why.</p>
-                    <div class="tts-hd" id="ttsHd" hidden>
-                        <div class="tts-hd-top"><b>HD voice &middot; Kokoro</b><span class="tts-hd-badge">open source &middot; free</span></div>
-                        <p class="hint" id="ttsHdText"></p>
-                        <div class="tts-lib-bar" id="ttsHdBar" hidden><i></i></div>
-                        <div class="card-actions"><button class="use-btn" id="ttsHdBtn" type="button">Get HD voice</button></div>
-                    </div>
-                    <label class="field-label" for="ttsEngine">Voice</label>
-                    <select id="ttsEngine">
-                        <option value="gemini">Natural: Gemini (30 voices)</option>
-                        <option value="kokoro">Natural: On-phone voices (HD Kokoro, offline)</option>
-                        <option value="gcloud">Google Cloud Standard · optional free tier</option>
-                        <option value="standard">Standard: Android voice (free, offline)</option>
-                    </select>
-                    <div class="tts-nat" id="ttsNat" hidden>
-                        <label class="field-label" id="ttsNVoiceLbl" for="ttsNVoice">Natural voice</label>
-                        <select id="ttsNVoice"></select>
-                        <p class="hint" id="ttsNatHint"></p>
-                        <div class="tts-lib" id="ttsLib" hidden>
-                            <label class="field-label">Voice library</label>
-                            <p class="hint">Download a more human voice once, on Wi-Fi. It is stored on your phone and then works offline. Bigger packs sound better but take longer to speak on a slow phone. Delete one any time to free the space.</p>
-                            <div id="ttsLibList"></div>
-                        </div>
-                    </div>
+                    <p class="hint">Android text-to-speech only. Choose an installed Android voice, then shape it locally. Offline use requires downloaded Android voice data; voices marked online may use your Android engine's network service.</p>
+                    <input id="ttsEngine" type="hidden" value="standard">
                     <div id="ttsAndroid">
                         <label class="field-label" for="ttsNEngine">Android speech engine</label>
                         <select id="ttsNEngine"><option value="">Phone default</option></select>
@@ -617,16 +595,17 @@
                     </div>
                     <label class="field-label" for="ttsRate">Speed<span class="tts-val" id="ttsRateVal">1&times;</span></label>
                     <input class="hz-range" type="range" id="ttsRate" min="0.5" max="2" step="0.05" value="1">
-                    <div id="ttsCloudConfig" hidden data-hz-private>
-                        <label class="field-label" for="ttsCloudKey">Google Cloud TTS restricted API key</label>
-                        <input id="ttsCloudKey" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" data-hz-private placeholder="Separate Cloud TTS key, not a Gemini key">
-                        <button id="ttsCloudSave" type="button" class="use-btn">Save Cloud TTS key</button>
-                        <p class="hint">Optional: Standard voices have a 4-million-character monthly free tier. Google requires billing and can charge beyond its allowance. Horizon caps its own requests at 4 million characters per UTC month; this does NOT include other apps, resets or devices. Set provider-side quotas. Text leaves your phone only when you select this engine. Key is stored locally and sent only to Google Cloud TTS.</p>
-                        <a href="https://cloud.google.com/text-to-speech/pricing" target="_blank" rel="noopener noreferrer">Google Cloud pricing and setup</a>
-                    </div>
                     <div id="ttsPitchWrap">
                         <label class="field-label" for="ttsPitch">Pitch<span class="tts-val" id="ttsPitchVal">1&times;</span></label>
                         <input class="hz-range" type="range" id="ttsPitch" min="0.5" max="2" step="0.05" value="1">
+                    </div>
+                    <div id="ttsStudio">
+                        <label class="field-label" for="ttsPreset">Character preset</label>
+                        <select id="ttsPreset"></select>
+                        <p class="hint" id="ttsPresetHint">Stylised sound design using your selected Android voice, not a voice clone.</p>
+                        <div id="ttsFxControls"></div>
+                        <button class="use-btn" type="button" id="ttsFxReset">Reset to neutral</button>
+                        <p class="hint">10 controls: speed, pitch, bass, presence, treble, compression, reverb, echo, robot tone, and experimental chromatic pitch-snap (autotune-style). Effects are rendered locally per short sentence. Neutral bypasses rendering for fastest playback. Pitch-snap is an effect, not studio-grade singing correction.</p>
                     </div>
                 </section>
 
@@ -5842,7 +5821,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             const out = document.getElementById('nativeCheckOut');
             if (!btn || !out) return;
             const WEB_VERSION = '1.14.1';
-            const NAMES = ['HorizonPerms', 'HorizonAI', 'HorizonMedia', 'HorizonSpeech', 'HorizonVoice', 'HorizonDaemon', 'HorizonLens', 'HorizonStats'];
+            const NAMES = ['HorizonPerms', 'HorizonAI', 'HorizonMedia', 'HorizonSpeech', 'HorizonDaemon', 'HorizonLens', 'HorizonStats'];
             let running = false;
             async function probe(name) {
                 const cap = window.Capacitor;
@@ -7381,168 +7360,22 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         const vEl = {
             status: $('#ttsStatus'), test: $('#ttsTest'), engine: $('#ttsEngine'), voice: $('#ttsVoice'), lang: $('#ttsLang'), diag: $('#ttsDiag'), more: $('#ttsMore'),
             rate: $('#ttsRate'), rateVal: $('#ttsRateVal'), pitch: $('#ttsPitch'), pitchVal: $('#ttsPitchVal'), pitchWrap: $('#ttsPitchWrap'),
-            android: $('#ttsAndroid'), nat: $('#ttsNat'), nVoice: $('#ttsNVoice'), nHint: $('#ttsNatHint'),
-            nLbl: $('#ttsNVoiceLbl'),
+            android: $('#ttsAndroid'),
             nEngine: $('#ttsNEngine'), nEngineHint: $('#ttsNEngineHint')
         };
         const fmtX = v => (+v).toFixed(2).replace(/\.?0+$/, '') + '\u00d7';
 
-        // V1.86.0: voice library rows (download / remove) under the Built-in voice list
-        const libBusy = {};
-        function paintLib() {
-            const box = $('#ttsLib'), list = $('#ttsLibList');
-            if (!box || !list || !TTS || !TTS.packs) return;
-            const s = TTS.settings();
-            box.hidden = !(NATIVE && s.engine === 'kokoro' && TTS.cloud.kokoro.usable());
-            if (box.hidden) return;
-            const have = TTS.packs.installed();
-            list.replaceChildren();
-            TTS.packs.catalog.forEach(pk => {
-                const row = document.createElement('div'); row.className = 'tts-lib-row';
-                const info = document.createElement('div'); info.className = 'tts-lib-info';
-                const nm = document.createElement('div'); nm.className = 'tts-lib-name'; nm.textContent = pk.name + ' \u00b7 ' + pk.size;
-                const nt = document.createElement('div'); nt.className = 'tts-lib-note'; nt.textContent = pk.note;
-                const st = document.createElement('div'); st.className = 'tts-lib-state';
-                const bar = document.createElement('div'); bar.className = 'tts-lib-bar'; bar.hidden = true;
-                const fill = document.createElement('i'); bar.appendChild(fill);
-                info.append(nm, nt, st, bar);
-                const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'use-btn';
-                const installed = have.indexOf(pk.id) >= 0;
-                const busy = !!libBusy[pk.id];
-                st.textContent = busy ? (libBusy[pk.id].note || 'Starting...') : (installed ? 'Installed. Pick it in the list above.' : '');
-                if (busy && libBusy[pk.id].pct >= 0) { bar.hidden = false; fill.style.width = libBusy[pk.id].pct + '%'; }
-                btn.textContent = busy ? 'Cancel' : (installed ? 'Delete' : 'Download');
-                btn.addEventListener('click', async () => {
-                    if (libBusy[pk.id]) { TTS.packs.cancel(); return; }
-                    try {
-                        if (installed) {
-                            if (!window.confirm('Delete the ' + pk.name + ' voice from this phone?')) return;
-                            TTS.stop();
-                            await TTS.packs.remove(pk.id);
-                            ttsToast(pk.name + ' deleted.');
-                        } else {
-                            libBusy[pk.id] = { note: 'Starting...', pct: -1 };
-                            paintLib();
-                            await TTS.packs.download(pk.id, ev => {
-                                libBusy[pk.id] = { note: ev.note || '', pct: typeof ev.pct === 'number' ? ev.pct : -1 };
-                                paintLib();
-                            });
-                            ttsToast(pk.name + ' is ready. Pick it in the voice list, then tap Test.');
-                        }
-                    } catch (e) {
-                        st.classList.add('bad');
-                        ttsToast('Voice library: ' + (e && e.message ? e.message : e), true);
-                    } finally {
-                        delete libBusy[pk.id];
-                        paintEngine();
-                    }
-                });
-                row.append(info, btn);
-                list.appendChild(row);
-            });
-        }
-
-        // V1.93.0: HD voice card. One tap downloads Kokoro (the same pack as the Voice library row), selects it and is ready for Test.
-        function paintHd() {
-            const box = $('#ttsHd');
-            if (!box || !TTS || !TTS.hd) return;
-            const usable = !!(NATIVE && TTS.cloud.kokoro.usable());
-            box.hidden = !usable;
-            if (!usable) return;
-            const id = TTS.hd.pack, info = TTS.hd.info(), btn = $('#ttsHdBtn'), txt = $('#ttsHdText'), bar = $('#ttsHdBar');
-            const fill = bar.firstElementChild, busy = libBusy[id];
-            if (busy) {
-                txt.textContent = busy.note || 'Starting...';
-                bar.hidden = !(busy.pct >= 0); fill.style.width = Math.max(0, busy.pct) + '%';
-                btn.textContent = 'Cancel';
-                return;
-            }
-            bar.hidden = true;
-            if (!TTS.hd.installed()) {
-                txt.textContent = 'The most human voices Horizon can use: 28 English voices, US and UK. Free, no key, no limit, and offline once downloaded. One download of ' + info.size + ', best on Wi-Fi.';
-                btn.textContent = 'Get HD voice';
-            } else if (TTS.hd.active()) {
-                txt.textContent = 'HD voice is on. Pick a voice in the list below (★ marks the best) and tap Test. Speed is made inside the voice, so it stays clean.';
-                btn.textContent = 'Test HD voice';
-            } else {
-                txt.textContent = 'HD voice is downloaded but another voice is selected.';
-                btn.textContent = 'Use HD voice';
-            }
-        }
-        (function wireHd() {
-            const btn = $('#ttsHdBtn');
-            if (!btn) return;
-            btn.addEventListener('click', async () => {
-                if (!TTS || !TTS.hd) return;
-                const id = TTS.hd.pack;
-                if (libBusy[id]) { TTS.packs.cancel(); return; }
-                if (TTS.hd.installed()) {
-                    if (TTS.hd.active()) { vEl.test.click(); return; }
-                    TTS.hd.use();
-                    await paintVoice();
-                    ttsToast('HD voice selected. Tap Test.');
-                    return;
-                }
-                libBusy[id] = { note: 'Starting...', pct: -1 };
-                paintEngine();
-                try {
-                    await TTS.hd.get(ev => {
-                        libBusy[id] = { note: ev.note || '', pct: typeof ev.pct === 'number' ? ev.pct : -1 };
-                        paintEngine();
-                    });
-                    ttsToast('HD voice is ready. Tap Test to hear it.');
-                } catch (e) {
-                    ttsToast('HD voice: ' + (e && e.message ? e.message : e), true);
-                } finally {
-                    delete libBusy[id];
-                    paintVoice();
-                }
-            });
-        })();
-
-        // V1.25.0: the voice card shows the Android pickers for the Standard voice and one voice list for a natural engine
         function paintEngine() {
             if (!TTS) return;
-            const s = TTS.settings();
-            const cloud = s.engine !== 'standard';
-            $('#ttsCloudConfig').hidden = s.engine !== 'gcloud';
-            vEl.engine.value = s.engine;
-            vEl.android.hidden = s.engine !== 'standard';
+            vEl.engine.value = 'standard';
+            vEl.android.hidden = false;
             vEl.pitchWrap.hidden = false;
-            vEl.nat.hidden = !cloud;
-            paintHd();
-            if (!cloud) return;
-            paintLib();
-            const eng = TTS.cloud[s.engine];
-            vEl.nVoice.hidden = false; vEl.nLbl.hidden = false;
-            vEl.nVoice.replaceChildren();
-            eng.voices.forEach(v => {
-                const o = document.createElement('option');
-                o.value = v.id; o.textContent = v.name;
-                vEl.nVoice.appendChild(o);
-            });
-            vEl.nVoice.value = s.engine === 'gemini' ? s.gvoice : s.kvoice;
-            if (s.engine === 'gcloud') {
-                vEl.nVoice.hidden = true; vEl.nLbl.hidden = true;
-                vEl.nHint.textContent = 'Google Cloud · en-US Standard C. Separate Cloud TTS key and enabled billing required. Offline fallback stays available.';
-                return;
-            }
-            if (s.engine === 'kokoro') {
-                vEl.nHint.textContent = eng.usable()
-                    ? 'No key, no account, no limit. 8 small voices are built into Horizon. For the best sound get the HD voice (Kokoro, 28 voices) in the card at the top, or pick a Piper voice from the Voice library below. Everything runs on your phone, so nothing you read aloud leaves it. Speed and pitch both work.'
-                    : 'The built-in voice is not part of this build. Install the latest Horizon APK from the build page.';
-            } else {
-                const n = eng.keyCount();
-                vEl.nHint.textContent = n
-                    ? `Uses your Gemini key${n === 1 ? '' : 's'} from API PROVIDERS PLUS KEYS (${n} found). Google's free tier has limits. When it runs out, Horizon switches to the Android voice. Speed and pitch both work (pitch also shifts speed a little on natural voices).`
-                    : 'No Gemini key found. Add one under API PROVIDERS PLUS KEYS, or pick another voice.';
-            }
         }
 
         async function paintVoice() {
             if (!TTS) {
                 vEl.status.textContent = 'The voice engine did not load. Install the latest build.';
-                [vEl.test, vEl.engine, vEl.voice, vEl.lang, vEl.more, vEl.rate, vEl.pitch, vEl.nVoice, vEl.nEngine].forEach(x => { x.disabled = true; });
+                [vEl.test, vEl.engine, vEl.voice, vEl.lang, vEl.more, vEl.rate, vEl.pitch, vEl.nEngine].forEach(x => { x.disabled = true; });
                 return;
             }
             const s = TTS.settings();
@@ -7551,7 +7384,6 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             vEl.status.textContent = TTS.describe();
             vEl.status.classList.remove('error');
             paintEngine();
-            if (TTS.packs && NATIVE) TTS.packs.refresh().then(() => { paintEngine(); vEl.status.textContent = TTS.describe(); }).catch(() => { /* keep the last list */ });
             try {
                 await fillEngines();
                 voiceList = await TTS.listVoices();
@@ -7568,7 +7400,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             vEl.nEngine.replaceChildren();
             const d = document.createElement('option');
             d.value = '';
-            const defLabel = (r.engines.find(e => e.name === r.def) || {}).label;
+            const defLabel = r.defaultLabel || (r.engines.find(e => e.name === r.def) || {}).label;
             d.textContent = defLabel ? `Phone default (${defLabel})` : 'Phone default';
             vEl.nEngine.appendChild(d);
             r.engines.forEach(e => {
@@ -7577,9 +7409,8 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 vEl.nEngine.appendChild(o);
             });
             vEl.nEngine.value = r.engines.some(e => e.name === r.selected) ? r.selected : '';
-            vEl.nEngineHint.textContent = r.engines.length > 1
-                ? `${r.engines.length} speech engines on this phone. Install an engine app (Kokoro, Samsung, Google) and it shows up here. Horizon starts the engine only while it reads and lets it go after a short idle, so no second app keeps running.`
-                : 'Only the phone default engine was found. Install another speech engine app and it will show up here.';
+            vEl.nEngine.disabled = true;
+            vEl.nEngineHint.textContent = 'Android default service only. Use Get more Android voices to change the system service or download voice data. No cloud TTS or bundled model is included.';
         }
 
         // V1.8.0: every voice and accent Android reports, grouped by accent, with friendly names
@@ -7634,19 +7465,13 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 const bits = [];
                 if (d.source === 'native') bits.push(`Android voices found: ${d.count} in ${d.langCount} accent${d.langCount === 1 ? '' : 's'}/language${d.langCount === 1 ? '' : 's'}`);
                 else if (d.nativePlugin) bits.push('Android gave no voice list. Tap Get more Android voices and install voice data');
-                else bits.push(d.native ? 'The Android voice plugin is missing from this build' : 'Not running inside the app, so only browser voices exist');
+                else bits.push(d.native ? 'The Android voice plugin is missing from this build' : 'Android speech is available in the APK, not the browser preview');
                 if (d.source === 'web') bits.push(`browser voices: ${d.count}`);
                 bits.push(`audio: ${d.audio}`);
                 vEl.diag.textContent = bits.join(' · ');
             } catch (e) { vEl.diag.textContent = ''; }
         }
 
-        $('#ttsCloudSave').addEventListener('click', () => {
-            const key = $('#ttsCloudKey').value.trim();
-            if (key && !/^[A-Za-z0-9_.-]{20,8192}$/.test(key)) { notice('Paste one complete Cloud TTS key.', 'error'); return; }
-            lsSet('horizon_tts_gcloud_key', key); $('#ttsCloudKey').value = '';
-            notice(key ? 'Cloud TTS key saved locally.' : 'Cloud TTS key removed.');
-        });
         if (TTS) {
             vEl.engine.addEventListener('change', () => {
                 TTS.stop();                      // so Test always runs the voice you just picked
@@ -7662,10 +7487,6 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 vEl.status.textContent = TTS.describe();
                 ttsToast('Engine changed. Tap Test to hear it.');
             });
-            vEl.nVoice.addEventListener('change', () => {
-                TTS.set(TTS.settings().engine === 'gemini' ? 'gvoice' : 'kvoice', vEl.nVoice.value);
-                vEl.status.textContent = TTS.describe();
-            });
             vEl.voice.addEventListener('change', () => TTS.set('voice', vEl.voice.value));
             vEl.lang.addEventListener('change', () => { TTS.set('lang', vEl.lang.value); fillVoices(); });
             vEl.more.addEventListener('click', async () => {
@@ -7676,6 +7497,28 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             });
             vEl.rate.addEventListener('input', () => { TTS.set('rate', vEl.rate.value); vEl.rateVal.textContent = fmtX(vEl.rate.value); });
             vEl.pitch.addEventListener('input', () => { TTS.set('pitch', vEl.pitch.value); vEl.pitchVal.textContent = fmtX(vEl.pitch.value); });
+            const preset = $('#ttsPreset');
+            const custom = document.createElement('option'); custom.value = 'custom'; custom.textContent = 'Custom'; preset.appendChild(custom);
+            TTS.presets.forEach(p => { const o = document.createElement('option'); o.value = p.id; o.textContent = p.name; preset.appendChild(o); });
+            const fxNodes = [];
+            function syncStudio() {
+                const s = TTS.settings(); preset.value = s.preset;
+                vEl.rate.value = s.rate; vEl.rateVal.textContent = fmtX(s.rate);
+                vEl.pitch.value = s.pitch; vEl.pitchVal.textContent = fmtX(s.pitch);
+                fxNodes.forEach(c => { c.input.value = s[c.key]; c.out.textContent = s[c.key] + c.unit; });
+            }
+            TTS.controls.filter(c => c.key !== 'rate' && c.key !== 'pitch').forEach(c => {
+                const label = document.createElement('label'); label.className = 'field-label'; label.htmlFor = 'ttsFx_' + c.key; label.textContent = c.label;
+                const out = document.createElement('span'); out.className = 'tts-val'; label.appendChild(out);
+                const input = document.createElement('input'); input.type = 'range'; input.className = 'hz-range'; input.id = label.htmlFor;
+                input.min = c.min; input.max = c.max; input.step = c.step;
+                input.addEventListener('input', () => { TTS.set(c.key, input.value); syncStudio(); });
+                $('#ttsFxControls').append(label, input); fxNodes.push({input, out, key:c.key, unit:c.unit});
+            });
+            preset.addEventListener('change', () => { if (preset.value !== 'custom') { TTS.stop(); TTS.applyPreset(preset.value); syncStudio(); vEl.status.textContent = TTS.describe(); } });
+            $('#ttsFxReset').addEventListener('click', () => { TTS.stop(); TTS.applyPreset('neutral'); syncStudio(); vEl.status.textContent = TTS.describe(); });
+            [vEl.rate, vEl.pitch].forEach(input => input.addEventListener('input', syncStudio));
+            syncStudio();
             vEl.test.addEventListener('click', () => TTS.test());
             TTS.onState(st => {
                 paintSpeakButtons(st);
@@ -7691,7 +7534,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                     vEl.status.textContent = TTS.describe();
                 } else if (st.state === 'playing') {
                     vEl.status.classList.remove('error');
-                    vEl.status.textContent = 'Playing: ' + (st.engine === 'gcloud' ? 'Google Cloud Standard' : st.engine === 'gemini' ? 'Gemini voice' : st.engine === 'kokoro' ? 'Built-in voice' : st.engine === 'native' ? 'Android voice' : 'Browser voice');
+                    vEl.status.textContent = 'Playing: Android voice' + (TTS.hasEffects() ? ' · local voice studio' : '');
                 } else if (st.state === 'idle' && !vEl.status.classList.contains('error')) {
                     vEl.status.textContent = TTS.describe();
                 }

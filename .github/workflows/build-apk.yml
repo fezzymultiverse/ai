@@ -50,12 +50,15 @@ jobs:
         run: npm ci --no-audit --no-fund
 
       - name: Bridge, voice and credential regression tests
-        run: npm test
+        run: |
+          npm test
+          npm run test:voice-dsp
 
       - name: Browser navigation and privacy regression tests
         run: |
           npx playwright install --with-deps chromium
           npm run test:browser
+          npm run test:voice-browser
 
       - name: Apply app identity from repo variables
         env:
@@ -79,12 +82,6 @@ jobs:
       - name: Apply icons and splash
         run: bash scripts/apply-android.sh
 
-      - name: Bundle the built-in voice (sherpa-onnx + Kitten)
-        env:
-          GH_TOKEN: ${{ github.token }}
-          SHERPA_VERSION: ${{ vars.SHERPA_VERSION }}
-        run: bash scripts/bundle-voice.sh
-
       - name: Set version
         run: bash scripts/set-version.sh "${{ github.run_number }}"
 
@@ -106,7 +103,7 @@ jobs:
           unzip -q -o "$UNSIGNED" 'classes*.dex' -d "$RUNNER_TEMP/dexcheck"
           echo "dex files:"; ls -l "$RUNNER_TEMP"/dexcheck/
           MISSING=""
-          for cls in HorizonAIPlugin HorizonAIService HorizonMediaPlugin HorizonSpeechPlugin HorizonVoicePlugin HorizonDaemonPlugin OfflineTtsKittenModelConfig HorizonPermsPlugin HorizonNotify HorizonScopes HorizonLockPlugin HorizonBrowserPlugin HorizonWhatsAppPlugin HorizonWhatsAppListener HorizonTermuxPlugin HorizonTermuxResultReceiver HorizonExtractorPlugin; do
+          for cls in HorizonAIPlugin HorizonAIService HorizonMediaPlugin HorizonSpeechPlugin HorizonDaemonPlugin HorizonVoiceDsp HorizonPermsPlugin HorizonNotify HorizonScopes HorizonLockPlugin HorizonBrowserPlugin HorizonWhatsAppPlugin HorizonWhatsAppListener HorizonTermuxPlugin HorizonTermuxResultReceiver HorizonExtractorPlugin; do
             if grep -aq "$cls" "$RUNNER_TEMP"/dexcheck/classes*.dex; then
               echo "  ok       $cls"
             else
@@ -119,13 +116,9 @@ jobs:
             exit 1
           fi
           echo "All native plugins present in the APK."
-          echo "Built-in voice payload:"
-          LIST="$(unzip -l "$UNSIGNED")"
-          for f in lib/arm64-v8a/libsherpa-onnx-jni.so lib/arm64-v8a/libonnxruntime.so assets/horizon_voice/tokens.txt assets/horizon_voice/voices.bin assets/horizon_voice/VERSION; do
-            if grep -qF "$f" <<<"$LIST"; then echo "  ok       $f"; else echo "::error::Missing from the APK: $f"; exit 1; fi
-          done
-          grep -qE 'assets/horizon_voice/model[a-z0-9._]*\.onnx' <<<"$LIST" || { echo "::error::Voice model is not in the APK"; exit 1; }
-          echo "  ok       Voice model"
+          if unzip -l "$UNSIGNED" | grep -E 'libsherpa|libonnxruntime|assets/horizon_voice/'; then
+            echo "::error::Removed neural TTS payload is still present"; exit 1
+          fi
 
       - name: Sign APK with release keystore
         env:

@@ -22,7 +22,6 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(HorizonAIPlugin.class);
         registerPlugin(HorizonMediaPlugin.class);
         registerPlugin(HorizonSpeechPlugin.class);
-        registerPlugin(HorizonVoicePlugin.class);    // V1.73.0: built-in Kitten voice (sherpa-onnx)
         registerPlugin(HorizonDaemonPlugin.class);   // V1.74.0: Proactive Daemon (battery + heat watcher)
         registerPlugin(HorizonLensPlugin.class);
         registerPlugin(HorizonStatsPlugin.class);
@@ -37,9 +36,9 @@ public class MainActivity extends BridgeActivity {
         try {
             String release = getPackageManager().getPackageInfo(getPackageName(), 0).versionName;
             android.content.SharedPreferences assets = getSharedPreferences("horizon_assets", MODE_PRIVATE);
-            if (!release.equals(assets.getString("release", ""))) {
+            if (!release.equals(assets.getString("release", "")) || !assets.getBoolean("android_voice_studio_v1", false)) {
                 if (getBridge() != null && getBridge().getWebView() != null) getBridge().getWebView().clearCache(true);
-                assets.edit().putString("release", release).apply();
+                assets.edit().putString("release", release).putBoolean("android_voice_studio_v1", true).apply();
             }
         } catch (Exception ignored) { /* Do not erase user storage or block launch. */ }
         handleAlarmIntent(getIntent());           // V1.68.0: opened by a ringing alarm: show over the lock screen
@@ -50,13 +49,20 @@ public class MainActivity extends BridgeActivity {
         requestHighRefresh();
         watchKeyboard();
 
-        // V1.47.0: Piper is gone. Delete the offline voices an older version downloaded (about 80 MB each).
-        new Thread(() -> {
-            try { deleteTree(new java.io.File(getFilesDir(), "sherpa")); } catch (Throwable ignored) { /* tries again next launch */ }
-        }, "horizon-cleanup").start();
+        // One-time Android-only migration. No chats, keys, attachments or recordings are touched.
+        final android.content.SharedPreferences migration = getSharedPreferences("horizon_voice_migration", MODE_PRIVATE);
+        if (!migration.getBoolean("android_only_v1", false)) {
+            new Thread(() -> {
+                boolean cleaned = true;
+                for (String dir : new String[]{"horizon_voice", "horizon_packs", "sherpa"}) {
+                    try { java.io.File oldVoice = new java.io.File(getFilesDir(), dir); deleteTree(oldVoice); if (oldVoice.exists()) cleaned = false; }
+                    catch (Throwable ignored) { cleaned = false; }
+                }
+                if (cleaned) migration.edit().putBoolean("android_only_v1", true).apply();
+            }, "horizon-voice-cleanup").start();
+        }
 
-        // V1.8.0: let the WebView start audio without a fresh tap. Read-aloud with a cloud voice plays
-        // seconds after the tap that asked for it, and Android refuses that unless this is false.
+        // Keep existing music/voice-note autoplay behaviour; Android TTS no longer uses WebView audio.
         try {
             WebView media = getBridge() != null ? getBridge().getWebView() : null;
             if (media != null) media.getSettings().setMediaPlaybackRequiresUserGesture(false);

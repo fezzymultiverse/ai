@@ -1,95 +1,39 @@
-const {test}=require('node:test');const assert=require('node:assert/strict');const vm=require('node:vm');const fs=require('node:fs');
+const {test}=require('node:test'),assert=require('node:assert/strict'),vm=require('node:vm'),fs=require('node:fs');
 function setup(opts={}){
-const listeners=new Map(),store=new Map(Object.entries(opts.saved||{})),calls=[],synths=[],plays=[];
-const speech={setEngine:async()=>({engine:''}),getSupportedVoices:async()=>({voices:[]}),stop:async()=>{calls.push('stop');if(speech.pending){speech.pending.reject(new Error('Speech cancelled'));speech.pending=null;}},addListener:async(type,fn)=>{listeners.set(type,fn);return{remove:async()=>listeners.delete(type)};},speak:async o=>{calls.push('speak');listeners.get('speechStart')?.({id:o.utteranceId});},playAudio:async o=>{plays.push(o);calls.push('playAudio');listeners.get('speechStart')?.({id:o.utteranceId});},pauseAudio:async()=>{calls.push('pauseAudio')},resumeAudio:async()=>{calls.push('resumeAudio')}};
-let installed=opts.installed||[];
-const voice={status:async()=>({bundled:!opts.missing}),packs:async()=>({installed}),download:async a=>{installed=[...installed,a.id];return{ok:true}},load:async a=>{calls.push('load:'+a.pack);return{ready:true}},synth:async a=>{synths.push(a);calls.push('synth:'+a.pack+':'+a.sid);return{wav:Buffer.alloc(144,1).toString('base64')}}};
-const root={fetch:opts.fetch,localStorage:{getItem:k=>store.get(k)||null,setItem:(k,v)=>{if(opts.blockWrites)throw Error('quota');store.set(k,v)}},addEventListener:()=>{},atob:s=>Buffer.from(s,'base64').toString('binary'),btoa:s=>Buffer.from(s,'binary').toString('base64')};
-const ctx={window:root,setTimeout,clearTimeout,Blob,Uint8Array,DataView,ArrayBuffer,Promise,console};vm.runInNewContext(fs.readFileSync(require.resolve('../www/horizon_tts.js'),'utf8'),ctx);
-root.HorizonTTS.init({native:true,plug:n=>n==='HorizonSpeech'?speech:n==='HorizonVoice'?voice:null,keys:()=>opts.keys||[]});
-return{T:root.HorizonTTS,calls,speech,voice,store,listeners,synths,plays};
+ const store=new Map(Object.entries(opts.saved||{})),events=new Map(),calls=[],spoken=[],states=[];
+ const voices=opts.voices||[{name:'en-us-local',lang:'en-US',network:false},{name:'en-us-other',lang:'en-US',network:false},{name:'fr-fr-network',lang:'fr-FR',network:true}];
+ const speech={getEngines:async()=>({default:'android.default',engines:[]}),getSupportedVoices:async()=>{calls.push('voices');if(opts.noVoices)throw Error('Engine not ready');return{voices};},
+ addListener:async(n,fn)=>{events.set(n,fn);return{remove:async()=>events.delete(n)};},
+ speak:async args=>{spoken.push(args);events.get('speechStart')?.({id:args.utteranceId});if(opts.fail)throw Error('Android voice data missing');if(opts.pending)return new Promise((resolve,reject)=>{speech.pending={resolve,reject}});},
+ stop:async()=>{calls.push('stop');if(speech.pending){speech.pending.reject(Error('Speech cancelled'));speech.pending=null;}},
+ pauseAudio:async()=>calls.push('pause'),resumeAudio:async()=>calls.push('resume')};
+ const root={navigator:{language:'en-US'},localStorage:{getItem:k=>store.get(k)||null,setItem:(k,v)=>{if(opts.blockWrites)throw Error('blocked');store.set(k,v)},removeItem:k=>store.delete(k)},addEventListener:()=>{},fetch:()=>{throw Error('TTS must never access network')},speechSynthesis:{speak:()=>{throw Error('No browser speech permitted')}}};
+ vm.runInNewContext(fs.readFileSync(require.resolve('../www/horizon_tts.js'),'utf8'),{window:root,setTimeout,clearTimeout,console});
+ const T=root.HorizonTTS;T.init({native:opts.native!==false,plug:n=>n==='HorizonSpeech'?speech:null});T.onState(s=>states.push(s));return{T,speech,store,calls,spoken,states,events};
 }
-test('first run picks Android standard instead of blocking on model loading',async()=>{const{T,calls}=setup();assert.equal(T.settings().engine,'standard');assert.equal(await T.speak('one','Hello.'),true);assert.ok(calls.includes('speak'));});
-test('missing built-in pack falls back immediately for replies',async()=>{const{T,calls}=setup({missing:true});T.set('engine','kokoro');assert.equal(await T.speak('two','Hello.'),true);assert.ok(calls.includes('speak'));assert.equal(calls.includes('playAudio'),false);});
-test('built-in audio uses native WAV playback, not locked WebView audio',async()=>{const{T,calls}=setup();T.set('engine','kokoro');assert.equal(await T.speak('three','Hello there.'),true);assert.ok(calls.includes('playAudio'),JSON.stringify({calls,status:T.status()}));});
-test('strict voice test reports missing pack instead of silently changing engine',async()=>{const{T,calls}=setup({missing:true});T.set('engine','kokoro');assert.equal(await T.test(),false);assert.equal(calls.includes('speak'),false);});
-test('native WAV stop does not restart through Web Audio',async()=>{const{T,calls,speech}=setup();T.set('engine','kokoro');speech.playAudio=o=>new Promise((resolve,reject)=>{speech.pending={resolve,reject};calls.push('playAudio');});const run=T.speak('four','Hello.');for(let i=0;!speech.pending&&i<100;i++)await new Promise(r=>setTimeout(r,1));assert.ok(speech.pending,JSON.stringify(T.status()));T.stop();assert.equal(await run,false);assert.equal(calls.filter(x=>x==='playAudio').length,1);assert.equal(T.status().state,'idle');});
-test('pause and resume use native WAV controls',async()=>{const{T,calls,speech,listeners}=setup();T.set('engine','kokoro');speech.playAudio=o=>new Promise((resolve,reject)=>{speech.pending={resolve,reject};listeners.get('speechStart')?.({id:o.utteranceId});});const run=T.speak('five','Hello.');for(let i=0;!speech.pending&&i<100;i++)await new Promise(r=>setTimeout(r,1));assert.ok(speech.pending,JSON.stringify(T.status()));T.pause();T.resume();assert.ok(calls.includes('pauseAudio'));assert.ok(calls.includes('resumeAudio'));speech.pending.resolve();speech.pending=null;assert.equal(await run,true);});
+const tick=()=>new Promise(r=>setTimeout(r,0));
+async function pending(h){for(let i=0;i<100&&!h.speech.pending;i++)await tick();assert.ok(h.speech.pending);}
 
-test('downloaded voice survives stale JS pack cache on cold start',async()=>{
- const {T,calls}=setup({missing:true,installed:['piper-lessac-low'],saved:{horizon_tts_engine:'kokoro',horizon_tts_kokoro_voice:'pp_lessac_low'}});
- assert.equal(await T.speak('cold','Hello.',{strict:true}),true);
- assert.ok(calls.includes('load:piper-lessac-low'));assert.ok(calls.includes('synth:piper-lessac-low:0'));assert.ok(calls.includes('playAudio'));assert.ok(!calls.includes('load:builtin'));
-});
-test('download selects the completed voice and invalidates old loader state',async()=>{
- const {T,calls}=setup();await T.packs.download('piper-ryan-low');
- assert.equal(T.settings().engine,'kokoro');assert.equal(T.settings().kvoice,'pp_ryan_low');
- assert.equal(await T.speak('newpack','Hello.',{strict:true}),true);assert.ok(calls.includes('synth:piper-ryan-low:0'));
-});
-test('switching downloaded packs loads correct pack and speaker each time',async()=>{
- const {T,calls}=setup({installed:['piper-lessac-low','piper-ryan-low']});await T.packs.refresh();T.set('engine','kokoro');
- T.set('kvoice','pp_lessac_low');await T.speak('a','Hello.',{strict:true});T.set('kvoice','pp_ryan_low');await T.speak('b','Hello.',{strict:true});
- assert.ok(calls.includes('synth:piper-lessac-low:0'));assert.ok(calls.includes('synth:piper-ryan-low:0'));
-});
-test('downloaded group voice stays inside its own pack',async()=>{
- const {T}=setup({installed:['piper-lessac-low']});await T.packs.refresh();T.set('engine','kokoro');T.set('kvoice','pp_lessac_low');
- assert.equal(T.voiceFor(9).kokoro,'pp_lessac_low');
-});
-test('Google Cloud Standard uses dedicated header key and native WAV playback with fixture audio',async()=>{
- let request;const {T,calls,store}=setup({saved:{horizon_tts_gcloud_key:'restricted-cloud-key-fixture'},fetch:async(url,options)=>{request={url,options};return{ok:true,json:async()=>({audioContent:Buffer.alloc(144,1).toString('base64')})}}});
- T.set('engine','gcloud');assert.equal(await T.speak('cloud','Hello.',{strict:true}),true,JSON.stringify(T.status()));
- assert.equal(request.url,'https://texttospeech.googleapis.com/v1/text:synthesize');assert.equal(request.options.headers['x-goog-api-key'],'restricted-cloud-key-fixture');
- const body=JSON.parse(request.options.body);assert.equal(body.voice.name,'en-US-Standard-C');assert.equal(body.audioConfig.audioEncoding,'LINEAR16');assert.ok(calls.includes('playAudio'));assert.ok(JSON.parse(store.get('horizon_tts_gcloud_usage')).chars>0);
-});
-test('Google Cloud never borrows a Gemini key implicitly',async()=>{
- let count=0;const {T}=setup({keys:['AQ.synthetic-gemini-key-fixture'],fetch:async()=>{count++;throw Error('must not fetch')}});T.set('engine','gcloud');
- assert.equal(await T.speak('no-key','Hello.',{strict:true}),false);assert.equal(count,0);
-});
-test('Cloud local cap fails closed before any HTTP request',async()=>{
- let count=0;const {T}=setup({saved:{horizon_tts_gcloud_key:'fixture',horizon_tts_gcloud_usage:JSON.stringify({month:new Date().toISOString().slice(0,7),chars:4000000})},fetch:async()=>{count++;}});T.set('engine','gcloud');
- assert.equal(await T.speak('cap','Hello.',{strict:true}),false);assert.equal(count,0);
-});
-test('Cloud HTTP failure falls back to Android for normal replies',async()=>{
- const {T,calls}=setup({saved:{horizon_tts_gcloud_key:'fixture'},fetch:async()=>({ok:false,status:403})});T.set('engine','gcloud');
- assert.equal(await T.speak('fallback','Hello.'),true);assert.ok(calls.includes('speak'));
-});
-
-test('Cloud spending fails closed if usage cannot be persisted',async()=>{
- let requests=0;const {T}=setup({blockWrites:true,saved:{horizon_tts_engine:'gcloud',horizon_tts_gcloud_key:'fixture'},fetch:async()=>{requests++;}});
- assert.equal(await T.speak('storage','Hello.',{strict:true}),false);assert.equal(requests,0);
-});
-
-// ---- V1.93.0 HD voice
-test('HD voice: one call downloads Kokoro, selects Heart and turns the HD engine on',async()=>{
- const {T}=setup();assert.equal(T.hd.installed(),false);assert.equal(T.hd.pack,'kokoro');
- await T.hd.get();assert.equal(T.hd.installed(),true);assert.equal(T.hd.active(),true);
- assert.equal(T.settings().engine,'kokoro');assert.equal(T.settings().kvoice,'kk_af_heart');
- assert.match(T.describe(),/^HD voice \(Heart \u00b7 US female \u00b7 Kokoro, offline\)$/);
-});
-test('HD voice: hd.use() picks a Kokoro voice again after another engine was chosen, and keeps a Kokoro voice already picked',async()=>{
- const {T}=setup({installed:['kokoro'],saved:{horizon_tts_engine:'standard',horizon_tts_kokoro_voice:'kk_bf_emma'}});await T.packs.refresh();
- assert.equal(T.hd.active(),false);assert.equal(T.hd.use(),true);assert.equal(T.hd.active(),true);assert.equal(T.settings().kvoice,'kk_bf_emma');
- const c=setup();assert.equal(c.T.hd.use(),false);
-});
-test('HD voice: all 28 Kokoro voices are listed once, best first, with the speaker ids of kokoro-multi-lang-v1_0',async()=>{
- const {T}=setup({installed:['kokoro']});await T.packs.refresh();
- const v=T.cloud.kokoro.voices.filter(x=>x.pack==='kokoro');assert.equal(v.length,28);
- assert.equal(new Set(v.map(x=>x.id)).size,28);assert.equal(JSON.stringify(v.map(x=>x.sid).sort((a,b)=>a-b)),JSON.stringify(Array.from({length:28},(_,i)=>i)));
- assert.equal(v[0].id,'kk_af_heart');assert.equal(v[0].sid,3);
- const sid=id=>v.find(x=>x.id===id).sid;
- assert.equal(sid('kk_af_alloy'),0);assert.equal(sid('kk_am_adam'),11);assert.equal(sid('kk_bf_alice'),20);assert.equal(sid('kk_bm_daniel'),24);assert.equal(sid('kk_bm_lewis'),27);assert.equal(sid('kk_am_michael'),16);assert.equal(sid('kk_bf_emma'),21);
-});
-test('on-phone voices make the speed inside the model and play at 1x, pitch stays a playback control',async()=>{
- const {T,synths,plays}=setup({installed:['piper-lessac-low'],saved:{horizon_tts_engine:'kokoro',horizon_tts_kokoro_voice:'pp_lessac_low',horizon_tts_rate:'1.5',horizon_tts_pitch:'1.2'}});
- await T.packs.refresh();assert.equal(await T.speak('rate','Hello there.',{strict:true}),true);
- assert.equal(synths[0].speed,1.5);assert.equal(plays[0].rate,1);assert.equal(plays[0].pitch,1.2);
-});
-test('on-phone voice speed is clamped to the model range',async()=>{
- const {T,synths}=setup({saved:{horizon_tts_engine:'kokoro',horizon_tts_rate:'2'}});await T.speak('clamp','Hello.',{strict:true});assert.equal(synths[0].speed,2);
-});
-test('the first piece of an on-phone voice is short so sound starts sooner, the rest stays whole',async()=>{
- const long='This is the first sentence of the reply and it is fairly long. Here comes the second sentence which is also quite long indeed. And a third one follows it closely behind.';
- const {T,synths}=setup({saved:{horizon_tts_engine:'kokoro'}});assert.equal(await T.speak('ff',long,{strict:true}),true);
- assert.ok(synths.length>=2,JSON.stringify(synths.map(x=>x.text)));assert.ok(synths[0].text.length<=90,synths[0].text);
- assert.equal(synths.map(x=>x.text).join(' ').replace(/\s+/g,' '),long);
-});
+test('first run uses only direct Android speech and reports actual native start',async()=>{const h=setup();assert.equal(h.T.settings().engine,'standard');assert.equal(await h.T.speak('a','Hello.'),true);assert.equal(h.spoken.length,1);assert.ok(h.states.some(s=>s.state==='playing'));assert.equal(h.T.status().state,'idle');assert.equal(h.events.size,0);});
+test('all legacy engine selections migrate to Android, never cloud or neural packs',async()=>{for(const engine of ['gemini','gcloud','kokoro','sherpa','openai']){const h=setup({saved:{horizon_tts_engine:engine,horizon_tts_gcloud_key:'old-key',horizon_tts_nengine:'old.custom'}});assert.equal(h.T.settings().engine,'standard');assert.equal(h.store.has('horizon_tts_gcloud_key'),false);assert.equal(h.T.settings().nengine,'');assert.equal(await h.T.speak('a','Hello.'),true);}});
+test('Android-only controller does not expose model packs, cloud voices or HD downloads',()=>{const {T}=setup();assert.equal(T.packs,undefined);assert.equal(T.cloud,undefined);assert.equal(T.hd,undefined);const s=fs.readFileSync(require.resolve('../www/horizon_tts.js'),'utf8');assert.ok(!s.includes('fetch('));assert.ok(!s.includes('speechSynthesis'));});
+test('exactly ten bounded sound controls and ten distinct character presets',()=>{const {T}=setup();assert.equal(T.controls.length,10);assert.equal(T.presets.length,10);const values=new Set();for(const p of T.presets){assert.equal(T.applyPreset(p.id),true);const s=T.settings();for(const c of T.controls)assert.ok(s[c.key]>=c.min&&s[c.key]<=c.max);values.add(JSON.stringify(T.controls.map(c=>s[c.key])));}assert.equal(values.size,10);});
+test('neutral bypasses DSP; every sound effect selects the processing path',()=>{const {T}=setup();assert.equal(T.hasEffects(),false);for(const c of T.controls.filter(c=>!['rate','pitch'].includes(c.key))){T.applyPreset('neutral');T.set(c.key,5);assert.equal(T.hasEffects(),true,c.key);}T.applyPreset('neutral');T.set('rate',1.5);T.set('pitch',1.2);assert.equal(T.hasEffects(),false);});
+test('controls clamp invalid stored and live input without NaN or infinity',()=>{const {T}=setup({saved:{horizon_tts_rate:'NaN',horizon_tts_pitch:'Infinity',horizon_tts_bass:'-100'}});assert.equal(T.settings().rate,1);assert.equal(T.settings().pitch,1);assert.equal(T.settings().bass,-12);T.set('rate',999);T.set('reverb',-100);assert.equal(T.settings().rate,2);assert.equal(T.settings().reverb,0);assert.equal(T.settings().preset,'custom');assert.equal(T.set('unknown',1),false);});
+test('preset controls go to Android speech once, with no second speed or pitch transform',async()=>{const h=setup();h.T.applyPreset('villain');assert.equal(await h.T.speak('a','Hello.'),true);const a=h.spoken[0];assert.equal(a.rate,.85);assert.equal(a.pitch,.65);assert.equal(a.effects.bass,6);assert.equal(a.effects.reverb,23);});
+test('effects use short segments and preserve all words',async()=>{const h=setup();h.T.applyPreset('robot');const text=Array(110).fill('word').join(' ');assert.equal(await h.T.speak('a',text),true);assert.ok(h.spoken.length>1);assert.ok(h.spoken.every(a=>a.text.length<=240));assert.equal(h.spoken.map(a=>a.text).join(' ').replace(/\.$/,''),text);});
+test('hard split never drops characters in long unbroken text',()=>{const {T}=setup();const s='0123456789'.repeat(70);assert.equal(T.chunkText(s,120).join(''),s);assert.ok(T.chunkText(s,120).every(s=>s.length<=120));});
+test('Markdown speech cleaning skips code, strips markup, avoids reading URLs',()=>{const {T}=setup();const out=T.speakable('# Title\n```js\nsecret()\n```\n[hello](https://example.com) **world** https://site.invalid');assert.ok(out.includes('Code block skipped.'));assert.ok(!out.includes('secret'));assert.ok(!out.includes('https://'));assert.ok(!out.includes('**'));});
+test('stop cancels pending native speech without fallback or stale events',async()=>{const h=setup({pending:true});const run=h.T.speak('a','Hello.');await pending(h);h.T.stop();assert.equal(await run,false);assert.equal(h.spoken.length,1);assert.equal(h.T.status().state,'idle');assert.equal(h.events.size,0);});
+test('effects pause and resume retain audio position through native player controls',async()=>{const h=setup({pending:true});h.T.applyPreset('ghost');const run=h.T.speak('a','Hello.');await pending(h);h.T.pause();await tick();assert.equal(h.T.isPaused(),true);h.T.resume();await tick();assert.ok(h.calls.includes('pause'));assert.ok(h.calls.includes('resume'));h.speech.pending.resolve();h.speech.pending=null;assert.equal(await run,true);});
+test('direct Android speech pause resumes the current chunk instead of dropping it',async()=>{const h=setup({pending:true});const run=h.T.speak('a','Hello.');await pending(h);h.T.pause();await tick();assert.equal(h.T.isPaused(),true);h.T.resume();await pending(h);assert.equal(h.spoken.length,2);h.speech.pending.resolve();h.speech.pending=null;assert.equal(await run,true);});
+test('Android failure is reported honestly and does not use another provider',async()=>{const h=setup({fail:true});assert.equal(await h.T.test(),false);assert.ok(h.states.some(s=>/voice data missing/.test(s.error)));assert.equal(h.spoken.length,1);});
+test('browser preview never uses browser synthesis or pretends Android is available',async()=>{const h=setup({native:false});assert.equal(await h.T.test(),false);assert.equal(h.spoken.length,0);assert.ok(h.states.some(s=>/Android app only/.test(s.error)));});
+test('stable voice names and group voice slots preserve language',async()=>{const h=setup();h.T.set('voice','en-us-local');await h.T.speak('a','Hello.',{slot:1});assert.equal(h.spoken[0].voiceName,'en-us-other');assert.equal(h.spoken[0].lang,'en-US');});
+test('voice enumeration is cached and concurrent requests coalesce',async()=>{const h=setup();await Promise.all([h.T.listVoices(),h.T.listVoices(),h.T.listVoices()]);assert.equal(h.calls.filter(c=>c==='voices').length,1);await h.T.listVoices(true);assert.equal(h.calls.filter(c=>c==='voices').length,2);});
+test('online Android voices are labelled and no offline guarantee is invented',async()=>{const h=setup();const l=await h.T.listVoices();assert.ok(l.voices.find(v=>v.id==='fr-fr-network').label.includes('online'));});
+test('blocked local storage does not break speech',async()=>{const h=setup({blockWrites:true});h.T.applyPreset('robot');assert.equal(await h.T.speak('a','Hello.'),true);});
+test('missing voice list fails cleanly, with no browser fallback',async()=>{const h=setup({noVoices:true});assert.equal(await h.T.test(),false);assert.equal(h.spoken.length,0);});
+test('rapid replacement allows only the most recent request to reach Android speak',async()=>{const h=setup();const a=h.T.speak('old','Old.');const b=h.T.speak('new','New.');assert.equal(await a,false);assert.equal(await b,true);assert.equal(h.spoken.length,1);assert.equal(h.spoken[0].text,'New.');});
+test('immediate direct pause-resume does not lose the current chunk to a cancellation race',async()=>{const h=setup({pending:true});const run=h.T.speak('a','Hello.');await pending(h);h.T.pause();h.T.resume();await pending(h);assert.equal(h.spoken.length,2);h.speech.pending.resolve();h.speech.pending=null;assert.equal(await run,true);});
+test('listeners can unsubscribe and unsafe mutation of presets is prevented',()=>{const h=setup();let n=0;const unsub=h.T.onState(()=>n++);unsub();h.T.stop();assert.equal(n,0);assert.ok(Object.isFrozen(h.T.presets));assert.ok(Object.isFrozen(h.T.presets[0].values));});

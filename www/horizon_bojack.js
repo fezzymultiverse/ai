@@ -41,14 +41,14 @@
     });
     wasOn = on;
   }
-  var waveSkip = 0;   // V1.38.0: while typing, the wave runs at a fifth of its speed so the keyboard stays smooth
-  var idleSkip = 0;   // V1.47.0: with nothing playing the wave only looks again every 4th beat (about 4 DOM searches per 70 ms before)
-  setInterval(function () {
-    if (document.hidden) return;
-    if (window.hzTyping || window.hzKbBusy || window.hzEditorFocused) return;   // V1.58.2: the wave rests completely while you type or the keyboard slides. V1.93.1: and while a field has focus
-    if (wasOn === false && (++idleSkip % 4)) return;
-    waveTick();
-  }, 70);
+  var waveTimer = 0;
+  function nextWave() {
+    clearTimeout(waveTimer);
+    if (!document.hidden && !window.hzTyping && !window.hzKbBusy && !window.hzEditorFocused) waveTick();
+    waveTimer = setTimeout(nextWave, document.hidden ? 2000 : (wasOn ? 90 : 650));
+  }
+  document.addEventListener('visibilitychange', nextWave);
+  nextWave();
 
   /* ---------------------------------------------------------------- 2. voice note waveform */
   var N = 56;
@@ -103,10 +103,24 @@
     paint(false);
     if (au.src) decodePeaks(au.src).then(function (p) { peaks = p; paint(!au.paused); }).catch(function () { /* keep the generated shape */ });
   }
-  var pvT = 0;   // V1.84.0: this watches the whole page, so the search runs once after the changes settle instead of after every one
-  new MutationObserver(function () {
-    if (pvT) return;
-    pvT = setTimeout(function () { pvT = 0; $$('.att-pv-body audio').forEach(decorateVoice); }, 200);
+  // Streaming text is not a reason to rescan the whole document.
+  var added = new Set(), pvT = 0;
+  function inspectAdded() {
+    pvT = 0;
+    added.forEach(function (node) {
+      if (!node.isConnected) return;
+      if (node.matches('.att-pv-body audio')) decorateVoice(node);
+      if (node.querySelector('audio')) $$('.att-pv-body audio', node).forEach(decorateVoice);
+    });
+    added.clear();
+  }
+  new MutationObserver(function (records) {
+    records.forEach(function (record) { Array.prototype.forEach.call(record.addedNodes, function (node) {
+      if (node.nodeType !== 1) return;
+      if (node.id === 'hzTerm') watchTerminal();
+      if (node.tagName === 'AUDIO' || node.querySelector('audio')) added.add(node);
+    }); });
+    if (added.size && !pvT) pvT = setTimeout(inspectAdded, 200);
   }).observe(document.body, { childList: true, subtree: true });
 
   /* ---------------------------------------------------------------- 3. coloured tool icons */
@@ -153,8 +167,10 @@
     window.addEventListener('resize', rzSoon, { passive: true });
     var reduce = false; try { reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { /* default */ }
     (function frame(ts) {
+      var resting = term.hidden || document.hidden || reduce || window.hzEditorFocused || window.hzKbBusy || term.classList.contains("hzt-controls-on");
+      if (resting) { rainRaf = 0; setTimeout(function () { frame(performance.now()); }, 500); return; }
       rainRaf = requestAnimationFrame(frame);
-      if (term.hidden || document.hidden || reduce || window.hzEditorFocused || window.hzKbBusy || term.classList.contains("hzt-controls-on") || ts - last < 70) return;
+      if (ts - last < 70) return;
       last = ts;
       rainCtx.fillStyle = 'rgba(7,4,15,.14)'; rainCtx.fillRect(0, 0, cv.width, cv.height);
       rainCtx.font = size + 'px monospace';
@@ -196,6 +212,5 @@
   function sweep() { paintToolIcons(); paintType(); $$('.att-pv-body audio').forEach(decorateVoice); watchTerminal(); }
   document.addEventListener('DOMContentLoaded', sweep);
   window.addEventListener('load', sweep);
-  setInterval(function () { if (!window.hzTyping && !window.hzKbBusy && !document.hidden) sweep(); }, 1500);   // V1.47.0: also not while the app is hidden   // V1.38.0: no sweep while typing
   sweep();
 })();

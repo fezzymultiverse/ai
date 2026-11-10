@@ -127,6 +127,9 @@ public class HorizonBrowserPlugin extends Plugin {
         s.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
         s.setAllowFileAccess(false);
         s.setAllowContentAccess(false);
+        s.setAllowFileAccessFromFileURLs(false);
+        s.setAllowUniversalAccessFromFileURLs(false);
+        if (android.os.Build.VERSION.SDK_INT >= 26) s.setSafeBrowsingEnabled(true);
         s.setJavaScriptCanOpenWindowsAutomatically(popups);
         s.setSupportMultipleWindows(false);
         s.setMediaPlaybackRequiresUserGesture(true);
@@ -164,6 +167,7 @@ public class HorizonBrowserPlugin extends Plugin {
         w.setBackgroundColor(Color.BLACK);
         applySettings(w);
         w.setDownloadListener((url, ua, cd, mime, len) -> {
+            if (!webUrl(url)) return; // Never launch intent:, file:, content: or a custom scheme from a download.
             try {
                 Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
                 i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -289,6 +293,16 @@ public class HorizonBrowserPlugin extends Plugin {
         if (w != null) { applyBounds(w); w.bringToFront(); }
     }
 
+    private static boolean webUrl(String url) {
+        if (url == null || url.length() > 16384) return false;
+        try {
+            Uri uri = Uri.parse(url);
+            String scheme = uri.getScheme();
+            return ("https".equalsIgnoreCase(scheme) || "http".equalsIgnoreCase(scheme))
+                && uri.getHost() != null && !uri.getHost().isEmpty() && uri.getUserInfo() == null;
+        } catch (Exception ignored) { return false; }
+    }
+
     private String normalise(String url) {
         if (url == null) return "";
         String u = url.trim();
@@ -303,6 +317,8 @@ public class HorizonBrowserPlugin extends Plugin {
         getActivity().runOnUiThread(() -> {
             try {
                 WebView w = views.get(id);
+                if (!url.isEmpty() && !webUrl(url)) { call.reject("Only HTTP(S) web addresses without embedded credentials are allowed"); return; }
+                if (w == null && views.size() >= 8) { call.reject("Close a browser tab before opening another (8-tab memory limit)"); return; }
                 if (w == null) w = create(id);
                 visible = true;
                 showOnly(id);
@@ -321,6 +337,7 @@ public class HorizonBrowserPlugin extends Plugin {
         getActivity().runOnUiThread(() -> {
             WebView w = views.get(id);
             if (w == null) { call.reject("no such tab"); return; }
+            if (!webUrl(url)) { call.reject("Only HTTP(S) web addresses without embedded credentials are allowed"); return; }
             w.loadUrl(url, headers());
             call.resolve();
         });
@@ -343,7 +360,7 @@ public class HorizonBrowserPlugin extends Plugin {
     public void hide(final PluginCall call) {
         getActivity().runOnUiThread(() -> {
             visible = false;
-            for (WebView w : views.values()) w.setVisibility(View.GONE);
+            for (WebView w : views.values()) { w.setVisibility(View.GONE); w.onPause(); }
             call.resolve();
         });
     }

@@ -112,11 +112,15 @@ const server = http.createServer((req, res) => {
     await page.locator('#hzDock .hz-contacts-open').click();assert.ok(await page.locator('#hzContacts').isVisible());
     await page.getByRole('button',{name:'Close',exact:true}).last().click();checks.push('existing Contacts dialog still opens and closes');
     await page.locator('#settingsHome [data-tab="personalisation"]').click();
-    if(!(await page.locator('#ttsEngine').isVisible()))await page.locator('#ttsCard > .settings-row-header').click();
-    await page.locator('#ttsEngine').selectOption('gcloud');assert.ok(await page.locator('#ttsCloudConfig').isVisible());
-    await page.locator('#ttsCloudKey').fill('AIzaSyntheticKeyOnlyForLocalUITest012345');await page.locator('#ttsCloudSave').click();
-    assert.equal(await page.locator('#ttsCloudKey').inputValue(),'');checks.push('existing Cloud TTS key field remains masked and clears after local save');
-    await page.evaluate(()=>{localStorage.removeItem('horizon_tts_gcloud_key');window.HorizonTTS.set('engine','standard');});
+    if(!(await page.locator('#ttsPreset').isVisible()))await page.locator('#ttsCard > .settings-row-header').click();
+    assert.equal(await page.locator('#ttsCloudConfig,#ttsHd,#ttsNat').count(),0);
+    assert.equal(await page.locator('#ttsPreset option').count(),11);
+    assert.equal(await page.locator('#ttsCard input[type="range"]').count(),10);
+    await page.locator('#ttsPreset').selectOption('robot');
+    assert.equal(await page.evaluate(()=>window.HorizonTTS.settings().robot),80);
+    await page.locator('#ttsFxReset').click();
+    assert.equal(await page.evaluate(()=>window.HorizonTTS.hasEffects()),false);
+    checks.push('Android-only voice studio has ten controls, ten presets, functioning selection/reset and no cloud/model UI');
     await page.evaluate(()=>{
       window.__bridgeCalls=[];
       window.Capacitor={isNativePlatform:()=>true,Plugins:{HorizonWhatsApp:{

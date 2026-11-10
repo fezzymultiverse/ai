@@ -2,10 +2,6 @@ package __APPID__;
 
 import android.media.AudioAttributes;
 import android.media.MediaPlayer;
-import android.media.PlaybackParams;
-import java.io.File;
-import java.io.FileOutputStream;
-import android.util.Base64;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -14,209 +10,189 @@ import android.speech.tts.UtteranceProgressListener;
 import android.speech.tts.Voice;
 import com.getcapacitor.*;
 import com.getcapacitor.annotation.CapacitorPlugin;
+import java.io.File;
 import java.util.*;
+import java.util.concurrent.*;
 
-/** Speech readiness, cancellation and start events are explicit; never report queued speech as audible. */
+/** Android's default TTS service only. Direct speech bypasses DSP; effects use private temporary PCM files. */
 @CapacitorPlugin(name = "HorizonSpeech")
 public class HorizonSpeechPlugin extends Plugin {
     private final Handler main = new Handler(Looper.getMainLooper());
+    private final ThreadPoolExecutor worker = new ThreadPoolExecutor(1,1,30,TimeUnit.SECONDS,
+        new ArrayBlockingQueue<>(1), r -> { Thread t = new Thread(r,"horizon-voice-dsp"); t.setDaemon(true); return t; });
     private TextToSpeech tts;
-    private MediaPlayer audio;
-    private File audioFile;
-    private PluginCall audioCall;
-    private boolean audioPrepared = false, audioPaused = false;
-    private final Runnable audioTimeout = () -> finishAudio("Voice audio playback timed out");
-    private void finishAudio(String error) {
-        main.removeCallbacks(audioTimeout);
-        PluginCall call = audioCall; audioCall = null; audioPrepared = false; audioPaused = false;
-        if (audio != null) { try { audio.reset(); audio.release(); } catch (Exception ignored) { } audio = null; }
-        if (audioFile != null) { audioFile.delete(); audioFile = null; }
-        if (call != null) { if (error == null) call.resolve(); else call.reject(error); }
-    }
-    /** Native WAV playback avoids WebView autoplay/AudioContext locks, including background replies. */
-    @PluginMethod public void playAudio(PluginCall call) {
-        main.post(() -> {
-            finishAudio("Speech cancelled");
-            try {
-                String wav = call.getString("wav", "");
-                if (wav.length() > 24000000) { call.reject("Voice audio is too large"); return; }
-                byte[] bytes = Base64.decode(wav, Base64.DEFAULT);
-                if (bytes.length < 44 || bytes[0] != 'R' || bytes[1] != 'I' || bytes[2] != 'F' || bytes[3] != 'F') { call.reject("Invalid WAV audio"); return; }
-                audioCall = call;
-                audioFile = File.createTempFile("horizon-voice-", ".wav", getContext().getCacheDir());
-                try (FileOutputStream out = new FileOutputStream(audioFile)) { out.write(bytes); }
-                final MediaPlayer player = new MediaPlayer(); audio = player;
-                player.setAudioAttributes(new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_MEDIA).setContentType(AudioAttributes.CONTENT_TYPE_SPEECH).build());
-                player.setDataSource(audioFile.getAbsolutePath());
-                player.setVolume(1f, 1f);
-                player.setOnPreparedListener(mp -> {
-                    if (audio != mp || audioCall != call) return;
-                    try {
-                        float rate = Math.max(.5f, Math.min(2f, call.getFloat("rate", 1f)));
-                        float pitch = Math.max(.5f, Math.min(2f, call.getFloat("pitch", 1f)));
-                        if (android.os.Build.VERSION.SDK_INT >= 23) mp.setPlaybackParams(new PlaybackParams().setSpeed(rate).setPitch(pitch));
-                        audioPrepared = true;
-                        if (audioPaused) return;
-                        mp.start();
-                        JSObject started = new JSObject(); started.put("id", call.getString("utteranceId", "audio"));
-                        notifyListeners("speechStart", started);
-                    } catch (Exception e) { finishAudio("Native voice audio failed to start"); }
-                });
-                player.setOnCompletionListener(mp -> { if (audio == mp) finishAudio(null); });
-                player.setOnErrorListener((mp, what, extra) -> { if (audio == mp) finishAudio("Native voice audio error " + what); return true; });
-                main.postDelayed(audioTimeout, 300000);
-                player.prepareAsync();
-            } catch (Exception e) { boolean pending = audioCall != null; finishAudio("Could not play native voice audio"); if (!pending) call.reject("Could not play native voice audio"); }
-        });
-    }
-    @PluginMethod public void pauseAudio(PluginCall call) { main.post(() -> {
-        try { audioPaused = true; if (audio != null && audioPrepared && audio.isPlaying()) audio.pause(); main.removeCallbacks(audioTimeout); call.resolve(); }
-        catch (Exception e) { call.reject("Could not pause voice audio"); }
-    }); }
-    @PluginMethod public void resumeAudio(PluginCall call) { main.post(() -> {
-        try { audioPaused = false; if (audio != null && audioPrepared) {
-            audio.start(); main.removeCallbacks(audioTimeout); main.postDelayed(audioTimeout, 300000);
-            if (audioCall != null) { JSObject started = new JSObject(); started.put("id", audioCall.getString("utteranceId", "audio")); notifyListeners("speechStart", started); }
-        } call.resolve(); }
-        catch (Exception e) { call.reject("Could not resume voice audio"); }
-    }); }
-
-    private int generation = 0;
-    private int ready = 0; // 0 initializing, 1 ready, -1 unavailable, -2 released while idle (restarts on the next request)
-    private int initSeq = 0;
-    private String enginePkg = "";      // "" = the phone's default speech engine
-    private String failedEngine = "";   // an engine that would not start (the plugin fell back to the default)
-    private final Map<String, PluginCall> pending = new HashMap<>();
-    private final List<Runnable> waiting = new ArrayList<>();
-    private static final long IDLE_RELEASE_MS = 45000;
-    private final Runnable releaseTask = () -> {
-        // A third-party engine app (Kokoro, Samsung...) stays alive while this object is bound to it. Let it go when idle.
-        if (!enginePkg.isEmpty() && pending.isEmpty() && tts != null && ready == 1) {
-            try { tts.shutdown(); } catch (Exception ignored) { }
-            tts = null; ready = -2;
-        }
+    private boolean ready, initializing, destroyed, playbackPaused;
+    private int initSeq;
+    private volatile int generation;
+    private Job active;
+    private final List<ReadyJob> waiting = new ArrayList<>();
+    private static final long IDLE_MS = 45000;
+    private final Runnable idle = () -> { if (active == null && waiting.isEmpty()) shutdownTts(); };
+    private final Runnable initTimeout = () -> {
+        if (!initializing) return;
+        ++initSeq; shutdownTts(); drainReady("Android TTS initialization timed out. Check Android text-to-speech settings.");
     };
-    @Override public void load() { main.post(() -> initTts("")); }
-    /** Creates the engine object. Must run on the main thread. A stale init callback (older seq) is ignored. */
-    private void initTts(String pkg) {
-        main.removeCallbacks(releaseTask);
-        final int seq = ++initSeq;
-        if (tts != null) { try { tts.stop(); tts.shutdown(); } catch (Exception ignored) { } tts = null; }
-        ready = 0;
+    private static final class ReadyJob {
+        final PluginCall call; final Runnable run; final int generation; final boolean speech;
+        ReadyJob(PluginCall c,Runnable r,int g,boolean s){call=c;run=r;generation=g;speech=s;}
+    }
+    private static final class Job {
+        final PluginCall call; final String id; final Map<String,Float> fx; final boolean render;
+        volatile boolean cancelled, processing;
+        File input, output; MediaPlayer player; Runnable timeout;
+        Job(PluginCall call,String id,Map<String,Float> fx){this.call=call;this.id=id;this.fx=fx;render=HorizonVoiceDsp.enabled(fx);}
+        void files(){if(input!=null)input.delete();if(output!=null)output.delete();}
+    }
+    private static float bounded(Float f,float lo,float hi,float fallback){return f==null || (Float.isNaN(f) || Float.isInfinite(f))?fallback:Math.max(lo,Math.min(hi,f));}
+    private void shutdownTts(){
+        main.removeCallbacks(idle); main.removeCallbacks(initTimeout);
+        if(tts!=null){try{tts.stop();tts.shutdown();}catch(Exception ignored){}tts=null;}
+        ready=false;initializing=false;
+    }
+    private void init(){
+        if(initializing || ready || destroyed)return;
+        initializing=true;final int seq=++initSeq;
+        main.postDelayed(initTimeout,12000);
         try {
-            TextToSpeech.OnInitListener l = status -> main.post(() -> onInit(status, pkg, seq));
-            tts = pkg.isEmpty() ? new TextToSpeech(getContext(), l) : new TextToSpeech(getContext(), l, pkg);
-        } catch (Exception e) { tts = null; onInit(TextToSpeech.ERROR, pkg, seq); }
+            tts=new TextToSpeech(getContext(),status -> main.post(() -> {
+                if(destroyed || seq!=initSeq)return;
+                main.removeCallbacks(initTimeout);initializing=false;
+                if(status!=TextToSpeech.SUCCESS || tts==null){shutdownTts();drainReady("Enable Android's text-to-speech service and download voice data.");return;}
+                ready=true;
+                tts.setAudioAttributes(new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_MEDIA).setContentType(AudioAttributes.CONTENT_TYPE_SPEECH).build());
+                tts.setOnUtteranceProgressListener(new UtteranceProgressListener(){
+                    @Override public void onStart(String id){main.post(() -> {Job j=active;if(j!=null && j.id.equals(id) && !j.render) started(j);});}
+                    @Override public void onDone(String id){main.post(() -> {Job j=active;if(j==null || !j.id.equals(id))return;if(j.render)process(j);else finish(j,null);});}
+                    @Override public void onError(String id){onError(id,-1);}
+                    @Override public void onError(String id,int code){main.post(() -> {Job j=active;if(j!=null && j.id.equals(id))finish(j,"Android speech error "+code+". Check installed voice data and media volume.");});}
+                    @Override public void onStop(String id,boolean interrupted){main.post(() -> {Job j=active;if(j!=null && j.id.equals(id))finish(j,"Speech cancelled");});}
+                });
+                drainReady(null);scheduleIdle();
+            }));
+        }catch(Exception e){shutdownTts();drainReady("Could not initialize Android speech");}
     }
-    private void onInit(int status, String pkg, int seq) {
-        if (seq != initSeq) return;
-        if (status != TextToSpeech.SUCCESS) {
-            if (!pkg.isEmpty()) { failedEngine = pkg; enginePkg = ""; initTts(""); return; }   // fall back to the default; queued jobs keep waiting
-            ready = -1;
-        } else {
-            ready = 1;
-            tts.setAudioAttributes(new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_MEDIA)
-                .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH).build());
-            tts.setOnUtteranceProgressListener(new UtteranceProgressListener() {
-                @Override public void onStart(String id) { main.post(() -> {
-                    JSObject o = new JSObject(); o.put("id", id); notifyListeners("speechStart", o);
-                }); }
-                @Override public void onDone(String id) { main.post(() -> finish(id, null)); }
-                @Override public void onError(String id) { main.post(() -> finish(id, "Android could not speak. Check your installed voice data and media volume.")); }
-                @Override public void onError(String id, int code) { main.post(() -> finish(id, "Android speech error " + code + ". Check Speech Services and downloaded voice data.")); }
-                @Override public void onStop(String id, boolean interrupted) { main.post(() -> finish(id, "Speech cancelled")); }
-            });
+    private void scheduleIdle(){main.removeCallbacks(idle);if(active==null && waiting.isEmpty())main.postDelayed(idle,IDLE_MS);}
+    private void drainReady(String error){
+        List<ReadyJob> jobs=new ArrayList<>(waiting);waiting.clear();
+        for(ReadyJob j:jobs){
+            if(error!=null)j.call.reject(error);
+            else if(j.speech && j.generation!=generation)j.call.reject("Speech cancelled");
+            else try{j.run.run();}catch(Exception e){j.call.reject("Android speech request failed: "+e.getMessage());}
         }
-        List<Runnable> jobs = new ArrayList<>(waiting); waiting.clear();
-        for (Runnable r : jobs) r.run();
     }
-    private void whenReady(PluginCall call, Runnable run) {
+    private void whenReady(PluginCall call,boolean speech,Runnable run){
+        final int request=generation;
         main.post(() -> {
-            main.removeCallbacks(releaseTask);
-            if (ready == -2 || ready == -1) initTts(enginePkg);
-            Runnable job = () -> {
-                if (ready != 1 || tts == null) call.reject("No Android speech engine is ready. Install or enable Speech Services and download a voice in Android Text-to-speech settings.");
-                else { try { run.run(); } catch (Exception e) { call.reject(e.toString()); } }
-            };
-            if (ready != 0) job.run();
-            else {
-                waiting.add(job);
-                main.postDelayed(() -> { if (waiting.remove(job)) call.reject("Android speech initialization timed out. Check Text-to-speech settings and voice data."); }, 12000);
-            }
+            main.removeCallbacks(idle);
+            if(destroyed){call.reject("Speech service is closed");return;}
+            if(speech && request!=generation){call.reject("Speech cancelled");return;}
+            if(ready){try{run.run();}catch(Exception e){call.reject("Android speech request failed: "+e.getMessage());}scheduleIdle();}
+            else if(waiting.size()>=16)call.reject("Too many pending speech requests");
+            else {waiting.add(new ReadyJob(call,run,request,speech));init();}
         });
     }
-    private List<Voice> voices() {
-        Set<Voice> all = tts.getVoices();
-        List<Voice> list = all == null ? new ArrayList<>() : new ArrayList<>(all);
-        list.sort(Comparator.comparing(Voice::getName)); return list;
+    private List<Voice> voices(){Set<Voice> all=tts.getVoices();List<Voice> v=all==null?new ArrayList<>():new ArrayList<>(all);v.sort(Comparator.comparing(Voice::getName));return v;}
+    @PluginMethod public void getSupportedVoices(PluginCall call){whenReady(call,false,() -> {
+        JSArray result=new JSArray();for(Voice v:voices()){JSObject x=new JSObject();x.put("name",v.getName());x.put("voiceURI",v.getName());x.put("lang",v.getLocale().toLanguageTag());x.put("network",v.isNetworkConnectionRequired());result.put(x);}
+        JSObject r=new JSObject();r.put("voices",result);call.resolve(r);
+    });}
+    @PluginMethod public void getEngines(PluginCall call){whenReady(call,false,() -> {
+        JSObject r=new JSObject();String name=tts.getDefaultEngine();r.put("default",name==null?"":name);
+        for(TextToSpeech.EngineInfo e:tts.getEngines())if(e.name.equals(name))r.put("label",e.label);
+        r.put("engines",new JSArray());r.put("selected","");call.resolve(r);
+    });}
+    @PluginMethod public void setEngine(PluginCall call){
+        if(!call.getString("engine","").isEmpty()){call.reject("Horizon uses Android's default TTS service only. Change it in Android settings.");return;}
+        whenReady(call,false,() -> {JSObject r=new JSObject();r.put("engine","");r.put("failed","");call.resolve(r);});
     }
-    private void finish(String id, String error) {
-        PluginCall c = pending.remove(id);
-        if (c != null) { if (error == null) c.resolve(); else c.reject(error); }
-        if (pending.isEmpty() && !enginePkg.isEmpty()) { main.removeCallbacks(releaseTask); main.postDelayed(releaseTask, IDLE_RELEASE_MS); }
+    private void started(Job j){if(active!=j || j.cancelled)return;JSObject event=new JSObject();event.put("id",j.call.getString("utteranceId",j.id));notifyListeners("speechStart",event);}
+    private void arm(Job j,long ms){if(j.timeout!=null)main.removeCallbacks(j.timeout);j.timeout=() -> {if(active==j){if(tts!=null)tts.stop();finish(j,"Android speech timed out");}};main.postDelayed(j.timeout,ms);}
+    private void finish(Job j,String error){
+        if(active!=j)return;active=null;j.cancelled=true;
+        if(j.timeout!=null)main.removeCallbacks(j.timeout);
+        if(j.player!=null){try{j.player.reset();j.player.release();}catch(Exception ignored){}j.player=null;}
+        if(!j.processing)j.files();
+        if(error==null)j.call.resolve();else j.call.reject(error);
+        scheduleIdle();
     }
-    private void cancel() {
-        finishAudio("Speech cancelled");
-        generation++;
-        if (tts != null) tts.stop();
-        for (String id : new ArrayList<>(pending.keySet())) finish(id, "Speech cancelled");
+    private void cancel(){
+        ++generation;playbackPaused=false;
+        if(active!=null)finish(active,"Speech cancelled");
+        if(tts!=null)tts.stop();
+        Iterator<ReadyJob> it=waiting.iterator();while(it.hasNext()){ReadyJob j=it.next();if(j.speech){it.remove();j.call.reject("Speech cancelled");}}
+        scheduleIdle();
     }
-    private void afterInit(PluginCall call, Runnable r) {
-        waiting.add(r);
-        main.postDelayed(() -> { if (waiting.remove(r)) call.reject("The speech engine took too long to start."); }, 12000);
+    @PluginMethod public void speak(PluginCall call){whenReady(call,true,() -> {
+        String text=call.getString("text","");
+        if(text.trim().isEmpty()){call.reject("Nothing to speak");return;}
+        if(text.length()>Math.min(2000,TextToSpeech.getMaxSpeechInputLength()-1)){call.reject("Speech segment is too long");return;}
+        String tag=call.getString("lang","en-US");Locale lang=Locale.forLanguageTag(tag);
+        if(tts.isLanguageAvailable(lang)<TextToSpeech.LANG_AVAILABLE){call.reject("Language not supported or Android voice data missing: "+tag);return;}
+        // Do not route through another model or provider. Android owns voice installation and selection.
+        cancel();
+        tts.setLanguage(lang);String name=call.getString("voiceName","");int oldIndex=call.getInt("voice",-1);
+        List<Voice> available=voices();
+        Voice chosen=null;for(Voice v:available)if(v.getName().equals(name)){chosen=v;break;}
+        if(chosen==null && name.isEmpty() && oldIndex>=0 && oldIndex<available.size())chosen=available.get(oldIndex);
+        if(chosen!=null && tts.setVoice(chosen)==TextToSpeech.ERROR){call.reject("Selected Android voice is unavailable");return;}
+        float rate=bounded(call.getFloat("rate",1f),.5f,2f,1f),pitch=bounded(call.getFloat("pitch",1f),.5f,2f,1f);
+        tts.setSpeechRate(rate);tts.setPitch(pitch);
+        JSObject effects=call.getObject("effects",new JSObject());Map<String,Float> fx=new HashMap<>();
+        for(String k:new String[]{"bass","presence","treble","compression","reverb","echo","robot","tune"}){
+            double n=effects.optDouble(k,0);fx.put(k,(!Double.isNaN(n) && !Double.isInfinite(n))?(float)Math.max(-12,Math.min(100,n)):0f);
+        }
+        String id="native-"+UUID.randomUUID(); // Never let caller-supplied/reused IDs settle another request.
+        Job j=new Job(call,id,fx);active=j;arm(j,j.render?45000:180000);
+        Bundle params=new Bundle();params.putFloat(TextToSpeech.Engine.KEY_PARAM_VOLUME,1f);
+        try{
+            int result;
+            if(j.render){
+                j.input=File.createTempFile("hz-android-tts-",".wav",getContext().getCacheDir());
+                j.output=File.createTempFile("hz-android-fx-",".wav",getContext().getCacheDir());
+                result=tts.synthesizeToFile(text,params,j.input,id);
+            }else result=tts.speak(text,TextToSpeech.QUEUE_FLUSH,params,id);
+            if(result==TextToSpeech.ERROR)finish(j,"Android rejected speech. Check installed voice data.");
+        }catch(Exception e){finish(j,"Could not start Android voice: "+e.getMessage());}
+    });}
+    private void process(Job j){
+        if(j.processing)return;j.processing=true;
+        try{worker.execute(() -> {
+            String error=null;
+            try{HorizonVoiceDsp.render(j.input,j.output,j.fx,() -> j.cancelled);}
+            catch(Exception e){error="Voice effects: "+e.getMessage();}
+            final String result=error;
+            main.post(() -> {
+                j.processing=false;
+                if(active!=j || j.cancelled){j.files();return;}
+                if(result!=null){finish(j,result);return;}
+                j.input.delete();play(j);
+            });
+        });}catch(RejectedExecutionException e){j.processing=false;finish(j,"Voice processor is busy; try again");}
     }
-    private void resolveEngine(PluginCall call) {
-        JSObject o = new JSObject();
-        if (ready != 1 || tts == null) { call.reject("Android speech engine is unavailable. Enable Speech Services and download voice data."); return; }
-        o.put("engine", enginePkg); o.put("failed", failedEngine);
-        call.resolve(o);
+    private void play(Job j){
+        try{
+            MediaPlayer mp=new MediaPlayer();j.player=mp;
+            mp.setAudioAttributes(new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_MEDIA).setContentType(AudioAttributes.CONTENT_TYPE_SPEECH).build());
+            mp.setDataSource(j.output.getAbsolutePath());
+            mp.setOnPreparedListener(player -> {if(active!=j || j.cancelled)return;try{arm(j,180000);if(playbackPaused){main.removeCallbacks(j.timeout);return;}player.start();started(j);}catch(Exception e){finish(j,"Could not play processed Android speech");}});
+            mp.setOnCompletionListener(player -> finish(j,null));
+            mp.setOnErrorListener((player,what,extra) -> {finish(j,"Android voice playback error "+what);return true;});
+            mp.prepareAsync();
+        }catch(Exception e){finish(j,"Could not play processed Android speech");}
     }
-    /** Every speech engine installed on the phone (Google, Samsung, a Kokoro engine app...). */
-    @PluginMethod public void getEngines(PluginCall call) { whenReady(call, () -> {
-        JSArray a = new JSArray();
-        for (TextToSpeech.EngineInfo e : tts.getEngines()) { JSObject o = new JSObject(); o.put("name", e.name); o.put("label", e.label == null ? e.name : e.label); a.put(o); }
-        JSObject r = new JSObject(); r.put("engines", a);
-        String def = tts.getDefaultEngine(); r.put("default", def == null ? "" : def); r.put("selected", enginePkg);
-        call.resolve(r);
-    }); }
-    /** Switch engine ("" = phone default). If the engine will not start, it falls back to the default and reports failed. */
-    @PluginMethod public void setEngine(PluginCall call) {
-        final String want = call.getString("engine", "").trim();
-        main.post(() -> {
-            Runnable go = new Runnable() { @Override public void run() {
-                if (want.equals(enginePkg) && ready == 1) { resolveEngine(call); return; }
-                if (!want.isEmpty() && ready == 1 && tts != null) {
-                    boolean found = false;
-                    for (TextToSpeech.EngineInfo e : tts.getEngines()) if (want.equals(e.name)) found = true;
-                    if (!found) { call.reject("That speech engine is not installed on this phone."); return; }
-                }
-                cancel(); enginePkg = want; failedEngine = "";
-                initTts(want);
-                afterInit(call, () -> resolveEngine(call));
-            } };
-            if (ready == 0) afterInit(call, go); else go.run();
-        });
-    }
-    @PluginMethod public void getSupportedVoices(PluginCall call) { whenReady(call, () -> {
-        JSArray a = new JSArray();
-        for (Voice v : voices()) { JSObject o = new JSObject(); o.put("name", v.getName()); o.put("voiceURI", v.getName()); o.put("lang", v.getLocale().toLanguageTag()); a.put(o); }
-        JSObject r = new JSObject(); r.put("voices", a); call.resolve(r);
-    }); }
-    @PluginMethod public void speak(PluginCall call) { final int requestedGeneration = generation; whenReady(call, () -> {
-        if (requestedGeneration != generation) { call.reject("Speech cancelled"); return; }
-        String text = call.getString("text", "");
-        if (text.trim().isEmpty()) { call.reject("Nothing to speak"); return; }
-        Locale lang = Locale.forLanguageTag(call.getString("lang", "en-US"));
-        int support = tts.isLanguageAvailable(lang);
-        if (support < TextToSpeech.LANG_AVAILABLE) { call.reject("Language not supported or voice data missing: " + lang.toLanguageTag()); return; }
-        cancel(); tts.setLanguage(lang);
-        List<Voice> list = voices(); int index = call.getInt("voice", -1);
-        if (index >= 0 && index < list.size()) tts.setVoice(list.get(index));
-        tts.setSpeechRate(call.getFloat("rate", 1f)); tts.setPitch(call.getFloat("pitch", 1f));
-        Bundle params = new Bundle(); params.putFloat(TextToSpeech.Engine.KEY_PARAM_VOLUME, 1f);
-        String id = call.getString("utteranceId", UUID.randomUUID().toString()); pending.put(id, call);
-        if (tts.speak(text, TextToSpeech.QUEUE_FLUSH, params, id) == TextToSpeech.ERROR) finish(id, "Android rejected speech. Check installed voice data.");
-    }); }
-    @PluginMethod public void stop(PluginCall call) { main.post(() -> { cancel(); call.resolve(); }); }
-    @Override protected void handleOnDestroy() { main.post(() -> { cancel(); if (tts != null) tts.shutdown(); }); }
+    @PluginMethod public void pauseAudio(PluginCall call){main.post(() -> {
+        playbackPaused=true;Job j=active;
+        if(j!=null && j.player!=null){try{if(j.player.isPlaying())j.player.pause();if(j.timeout!=null)main.removeCallbacks(j.timeout);}catch(IllegalStateException ignored){/* Preparing: onPrepared honours playbackPaused. */}}
+        call.resolve();
+    });}
+    @PluginMethod public void resumeAudio(PluginCall call){main.post(() -> {
+        playbackPaused=false;Job j=active;
+        if(j!=null && j.player!=null){try{j.player.start();arm(j,180000);started(j);}catch(IllegalStateException ignored){/* Preparing: onPrepared starts playback. */}}
+        call.resolve();
+    });}
+    @PluginMethod public void stop(PluginCall call){main.post(() -> {cancel();call.resolve();});}
+    @Override protected void handleOnResume(){main.post(() -> {if(active==null && !initializing){++initSeq;shutdownTts();}});}
+    @Override protected void handleOnDestroy(){main.post(() -> {
+        destroyed=true;cancel();++initSeq;shutdownTts();drainReady("Speech service closed");worker.shutdown();
+    });}
 }

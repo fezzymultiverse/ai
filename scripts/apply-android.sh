@@ -130,6 +130,12 @@ JAVA_DIR="android/app/src/main/java/${APPID//./\/}"
 
 # A Kotlin MainActivity from the template would clash with the Java one we install.
 rm -f "$JAVA_DIR/MainActivity.kt" "$JAVA_DIR/HorizonShellPlugin.kt"
+# Remove only the old neural speech payload. Other native libraries and assets are untouched.
+rm -f "$JAVA_DIR/HorizonVoicePlugin.kt"
+rm -rf android/app/src/main/assets/horizon_voice android/app/src/main/java/com/k2fsa/sherpa/onnx
+for abi in arm64-v8a armeabi-v7a x86 x86_64; do
+    rm -f "android/app/src/main/jniLibs/$abi/libsherpa-onnx-jni.so" "android/app/src/main/jniLibs/$abi/libonnxruntime.so"
+done
 
 # put_sources FILE...: copy each source into the app package with the real appId, and verify it landed.
 put_sources() {
@@ -143,7 +149,9 @@ put_sources() {
 }
 
 JAVA_SOURCES="HorizonPermsPlugin.java HorizonBgService.java HorizonMediaPlugin.java HorizonMediaService.java HorizonArt.java HorizonSpeechPlugin.java HorizonLensPlugin.java HorizonStatsPlugin.java HorizonBrowserPlugin.java MainActivity.java"
-KOTLIN_SOURCES="HorizonAlarms.kt HorizonAlarmReceiver.kt HorizonAlarmBootReceiver.kt HorizonAlarmService.kt HorizonAlarmPlugin.kt HorizonAIPlugin.kt HorizonAIService.kt HorizonReplyReceiver.kt HorizonSpeakService.kt HorizonLockPlugin.kt HorizonNotify.kt HorizonScopes.kt HorizonVoicePlugin.kt HorizonDaemonPlugin.kt"
+# Android-only TTS voice studio (no neural runtime or downloaded models).
+put_sources HorizonVoiceDsp.java
+KOTLIN_SOURCES="HorizonAlarms.kt HorizonAlarmReceiver.kt HorizonAlarmBootReceiver.kt HorizonAlarmService.kt HorizonAlarmPlugin.kt HorizonAIPlugin.kt HorizonAIService.kt HorizonReplyReceiver.kt HorizonSpeakService.kt HorizonLockPlugin.kt HorizonNotify.kt HorizonScopes.kt HorizonDaemonPlugin.kt"
 
 # shellcheck disable=SC2086
 put_sources $JAVA_SOURCES
@@ -203,7 +211,7 @@ say "Horizon Kotlin AI jobs and reply notifications applied."
 for f in $JAVA_SOURCES $KOTLIN_SOURCES; do
     [ -s "$JAVA_DIR/$f" ] || die "Native source missing after apply: $f"
 done
-for p in HorizonAIPlugin HorizonLensPlugin HorizonStatsPlugin HorizonBrowserPlugin HorizonVoicePlugin HorizonDaemonPlugin; do
+for p in HorizonAIPlugin HorizonLensPlugin HorizonStatsPlugin HorizonBrowserPlugin HorizonDaemonPlugin; do
     need "$JAVA_DIR/MainActivity.java" "registerPlugin($p.class)" "MainActivity does not register $p"
 done
 need "$MANIFEST" 'android:name=".HorizonReplyReceiver"' "Reply receiver missing from the manifest"
@@ -218,7 +226,7 @@ say "Native plugin sources verified."
 
 # ------------------------------------------------------------------------------------------
 # 6. Gradle libraries: biometric (V1.43.0), OkHttp (V1.62.0), coroutines (V1.63.0)
-#    V1.86.0: commons-compress is back, only to unpack downloaded voice packs (.tar.bz2).
+#    Android-only TTS no longer needs archive/ONNX dependencies.
 # ------------------------------------------------------------------------------------------
 python3 - <<'PY'
 import sys
@@ -226,6 +234,8 @@ from pathlib import Path
 
 app = Path('android/app/build.gradle')
 s = app.read_text()
+# The removed voice library was the only consumer of commons-compress.
+s = '\n'.join(line for line in s.split('\n') if 'org.apache.commons:commons-compress:' not in line)
 if 'dependencies {' not in s:
     sys.exit('android/app/build.gradle has no "dependencies {" block')
 for dep in (
@@ -233,8 +243,6 @@ for dep in (
     "implementation 'com.squareup.okhttp3:okhttp:4.12.0'",
     "implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1'",
     "implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1'",
-    # V1.86.0: voice library unpacks downloaded .tar.bz2 voice packs
-    "implementation 'org.apache.commons:commons-compress:1.26.2'",
 ):
     artifact = dep.split("'")[1].rsplit(':', 1)[0]
     if artifact not in s:
@@ -244,7 +252,6 @@ PY
 need "$APP_GRADLE" "androidx.biometric:biometric"        "biometric library missing from app/build.gradle"
 need "$APP_GRADLE" "com.squareup.okhttp3:okhttp"         "okhttp library missing from app/build.gradle"
 need "$APP_GRADLE" "kotlinx-coroutines-android"          "coroutines library missing from app/build.gradle"
-need "$APP_GRADLE" "org.apache.commons:commons-compress"   "commons-compress library missing from app/build.gradle"
 say "Gradle libraries applied (verified)."
 
 # ------------------------------------------------------------------------------------------
