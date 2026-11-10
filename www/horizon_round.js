@@ -104,7 +104,7 @@
                 safe(function () { cfg.onSlow(id, p ? p.name : id); });
             }
         });
-        paintStrip();
+        if (!window.hzTyping) paintStrip();   // V1.93.7: no strip repaint while keys are landing, the next tick catches up
     }
 
     // ---------- API ----------

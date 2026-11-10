@@ -7,11 +7,11 @@
     <title>HORIZON · AI Interface</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <link rel="icon" type="image/png" href="icon.png">
-    <script src="horizon_release.js?v=1.93.7"></script>
+    <script src="horizon_release.js?v=1.93.8"></script>
     <script>(function(){try{var t=localStorage.getItem('horizon_theme');if(t!=='grey')t='cyan';document.documentElement.setAttribute('data-theme',t==='grey'?'grey':'neon');document.documentElement.setAttribute('data-accent',t);var m=document.querySelector('meta[name=theme-color]');if(m)m.setAttribute('content',t==='grey'?'#eceef1':'#000000');}catch(e){}})();</script>
     <style>html.hz-boot{background:#000}html.hz-boot[data-theme="grey"]{background:#eceef1}html.hz-boot body{visibility:hidden}</style>
     <script>(function(){var d=document.documentElement;d.classList.add('hz-boot');setTimeout(function(){d.classList.remove('hz-boot');},4000);})();</script>
-    <link rel="stylesheet" href="horizon_app.css?v=1.93.7">
+    <link rel="stylesheet" href="horizon_app.css?v=1.93.8">
 </head>
 <body>
 
@@ -607,6 +607,18 @@
                     </div>
                     </details>
                     <div id="ttsStudio">
+                        <details class="hz-voice-group" id="ttsNaturalGroup" open><summary>Natural voices · English male and female</summary>
+                        <p class="hint" id="ttsNaturalHint">Checking installed English voices</p>
+                        <div class="card-actions">
+                            <button class="use-btn" id="ttsMaleUse" type="button">Use male</button>
+                            <button class="use-btn" id="ttsFemaleUse" type="button">Use female</button>
+                        </div>
+                        <label class="field-label" for="ttsMaleSel">Male voice</label>
+                        <select id="ttsMaleSel"><option value="">Auto · best English male voice</option></select>
+                        <label class="field-label" for="ttsFemaleSel">Female voice</label>
+                        <select id="ttsFemaleSel"><option value="">Auto · best English female voice</option></select>
+                        <p class="hint">Plain Android speech with no effects, so it starts fast and sounds as human as the voice data installed on your phone allows. A natural voice replaces the Android voice picker above until you pick a voice yourself or reset. In a group chat the AIs alternate between the male and the female voice.</p>
+                        </details>
                         <details class="hz-voice-group" id="ttsCharacterGroup" open><summary>Character voices</summary>
                         <label class="field-label" for="ttsPreset">Character preset</label>
                         <select id="ttsPreset"></select>
@@ -619,7 +631,7 @@
                             <details class="hz-voice-group" id="ttsCreativeGroup"><summary>Creative effects</summary><div id="ttsCreativeControls"></div></details>
                         </div>
                         <button class="use-btn" type="button" id="ttsFxReset">Reset to neutral</button>
-                        <p class="hint">20 presets, including 10 added character transformations. Android synthesizes to a private file; only the processed voice plays when effects are enabled. EQ stays editable after any preset or voice selection and applies on the next playback. Character mix blends transformed and original timbre. Six added processors: hard limiter, peak normalize, humanize, de-esser, noise gate and warm saturation. No exact voice cloning or system-wide voice replacement. Neutral bypasses rendering.</p>
+                        <p class="hint">22 presets, including 2 natural English voices and 10 added character transformations. Android synthesizes to a private file; only the processed voice plays when effects are enabled. EQ stays editable after any preset or voice selection and applies on the next playback. Character mix blends transformed and original timbre. Six added processors: hard limiter, peak normalize, humanize, de-esser, noise gate and warm saturation. No exact voice cloning or system-wide voice replacement. Neutral bypasses rendering.</p>
                     </div>
                 </section>
 
@@ -708,37 +720,37 @@
             </section></div></div>
     </section>
 
-    <script src="horizon_usage.js?v=1.93.7"></script>
-    <script src="horizon_about.js?v=1.93.7"></script>
-    <script src="horizon_toast.js?v=1.93.7"></script>
-    <script src="horizon_plus.js?v=1.93.7"></script>
-    <script src="ember_document_engine.js?v=1.93.7"></script>
-    <script src="horizon_pdf.js?v=1.93.7"></script>
-    <script src="ember_artbox.js?v=1.93.7"></script>
-    <script src="horizon_key_import.js?v=1.93.7"></script>
-    <script src="horizon_tts.js?v=1.93.7"></script>
-    <script src="horizon_github.js?v=1.93.7"></script>
-    <script src="horizon_native_audio.js?v=1.93.7"></script>
-    <script src="horizon_music.js?v=1.93.7"></script>
-    <script src="horizon_runlog.js?v=1.93.7"></script>
-    <script src="horizon_whatsapp_feature.js?v=1.93.7"></script>
-    <script src="horizon_bridges.js?v=1.93.7"></script>
-    <script src="horizon_hub.js?v=1.93.7"></script>
-    <script src="horizon_hold.js?v=1.93.7"></script>
-    <script src="horizon_group.js?v=1.93.7"></script>
-    <script src="horizon_round.js?v=1.93.7"></script>
-    <script src="horizon_chips.js?v=1.93.7"></script>
-    <script src="horizon_vault.js?v=1.93.7"></script>
-    <script src="horizon_attach.js?v=1.93.7"></script>
-    <script src="horizon_creator.js?v=1.93.7"></script>
-    <script src="horizon_voice.js?v=1.93.7"></script>
-    <script src="horizon_screen.js?v=1.93.7"></script>
-    <script src="horizon_lens.js?v=1.93.7"></script>
-    <script src="horizon_archive.js?v=1.93.7"></script>
-    <script src="horizon_slash.js?v=1.93.7"></script>
-    <script src="horizon_geo.js?v=1.93.7"></script>
-    <script src="horizon_dash.js?v=1.93.7"></script>
-    <script src="horizon_browser.js?v=1.93.7"></script>
+    <script src="horizon_usage.js?v=1.93.8"></script>
+    <script src="horizon_about.js?v=1.93.8"></script>
+    <script src="horizon_toast.js?v=1.93.8"></script>
+    <script src="horizon_plus.js?v=1.93.8"></script>
+    <script src="ember_document_engine.js?v=1.93.8"></script>
+    <script src="horizon_pdf.js?v=1.93.8"></script>
+    <script src="ember_artbox.js?v=1.93.8"></script>
+    <script src="horizon_key_import.js?v=1.93.8"></script>
+    <script src="horizon_tts.js?v=1.93.8"></script>
+    <script src="horizon_github.js?v=1.93.8"></script>
+    <script src="horizon_native_audio.js?v=1.93.8"></script>
+    <script src="horizon_music.js?v=1.93.8"></script>
+    <script src="horizon_runlog.js?v=1.93.8"></script>
+    <script src="horizon_whatsapp_feature.js?v=1.93.8"></script>
+    <script src="horizon_bridges.js?v=1.93.8"></script>
+    <script src="horizon_hub.js?v=1.93.8"></script>
+    <script src="horizon_hold.js?v=1.93.8"></script>
+    <script src="horizon_group.js?v=1.93.8"></script>
+    <script src="horizon_round.js?v=1.93.8"></script>
+    <script src="horizon_chips.js?v=1.93.8"></script>
+    <script src="horizon_vault.js?v=1.93.8"></script>
+    <script src="horizon_attach.js?v=1.93.8"></script>
+    <script src="horizon_creator.js?v=1.93.8"></script>
+    <script src="horizon_voice.js?v=1.93.8"></script>
+    <script src="horizon_screen.js?v=1.93.8"></script>
+    <script src="horizon_lens.js?v=1.93.8"></script>
+    <script src="horizon_archive.js?v=1.93.8"></script>
+    <script src="horizon_slash.js?v=1.93.8"></script>
+    <script src="horizon_geo.js?v=1.93.8"></script>
+    <script src="horizon_dash.js?v=1.93.8"></script>
+    <script src="horizon_browser.js?v=1.93.8"></script>
     <script>
     (() => {
         'use strict';
@@ -4394,14 +4406,24 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             }
             if (p.chatUrl && key) {
                 const preferred = list.includes(state.models[id]) ? state.models[id] : list.includes(p.defaultModel) ? p.defaultModel : list[0];
-                const check = await timed(fetch(p.urlFor ? p.urlFor('chat', key) : p.chatUrl, {
-                    method: 'POST', headers: Object.assign({'Content-Type':'application/json'}, p.headers(key)),
-                    body: JSON.stringify({model: preferred, messages:[{role:'user',content:'Reply OK.'}],max_tokens:p.protocol === 'anthropic' ? 16 : 1,stream:false})
-                }), 45000);
+                // V1.93.7: LLM7 rotates its models. If the saved one is down the token is still fine, so the check walks to the next model before it gives up.
+                const tryList = p.modelWalk ? [preferred].concat(list.filter(m => m !== preferred && !p.dead.has(m))).slice(0, 5) : [preferred];
+                let check = null, usedModel = preferred;
+                for (const mdl of tryList) {
+                    usedModel = mdl;
+                    check = await timed(fetch(p.urlFor ? p.urlFor('chat', key) : p.chatUrl, {
+                        method: 'POST', headers: Object.assign({'Content-Type':'application/json'}, p.headers(key)),
+                        body: JSON.stringify({model: mdl, messages:[{role:'user',content:'Reply OK.'}],max_tokens:p.protocol === 'anthropic' ? 16 : 1,stream:false})
+                    }), 45000);
+                    if (check.ok || !p.modelWalk || [400, 404, 410, 503].indexOf(check.status) === -1) break;
+                    p.dead.add(mdl);
+                }
+                if (check.ok && p.modelWalk && usedModel !== preferred) { state.models[id] = usedModel; lsSet(LS.model(id), usedModel); }
                 if (!check.ok) throw new Error(p.name + ' key could not be verified (HTTP ' + check.status + '). Nothing saved. Check the key, model access, quota or balance.');
                 const proof = await check.json();
                 if (proof.error || (p.protocol === 'anthropic' ? proof.type !== 'message' || !Array.isArray(proof.content) : !Array.isArray(proof.choices) || !proof.choices.length)) throw new Error(p.name + ' returned no authenticated completion. Nothing saved.');
             }
+            if (p.modelWalk) { const live = list.filter(m => !p.dead.has(m)); if (live.length) list = live; }
             return list;
         }
 
@@ -7615,7 +7637,8 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             status: $('#ttsStatus'), test: $('#ttsTest'), engine: $('#ttsEngine'), voice: $('#ttsVoice'), lang: $('#ttsLang'), diag: $('#ttsDiag'), more: $('#ttsMore'),
             rate: $('#ttsRate'), rateVal: $('#ttsRateVal'), pitch: $('#ttsPitch'), pitchVal: $('#ttsPitchVal'), pitchWrap: $('#ttsPitchWrap'),
             android: $('#ttsAndroid'),
-            nEngine: $('#ttsNEngine'), nEngineHint: $('#ttsNEngineHint')
+            nEngine: $('#ttsNEngine'), nEngineHint: $('#ttsNEngineHint'),
+            male: $('#ttsMaleSel'), female: $('#ttsFemaleSel'), maleUse: $('#ttsMaleUse'), femaleUse: $('#ttsFemaleUse'), natHint: $('#ttsNaturalHint')
         };
         const fmtX = v => (+v).toFixed(2).replace(/\.?0+$/, '') + '\u00d7';
 
@@ -7643,6 +7666,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 voiceList = await TTS.listVoices();
                 fillLangs();
                 fillVoices();
+                fillNatural();
                 paintDiag();
             } catch (e) { /* the default option stays */ }
         }
@@ -7712,6 +7736,33 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             });
             vEl.voice.value = list.some(v => v.id === keep) ? keep : '';
         }
+        // V1.93.8: Natural voices. Every English voice Android reports, best match first. Gender comes from the voice name,
+        // so voices of unknown gender are listed separately and the person decides by ear.
+        function fillNatural() {
+            if (!TTS || !voiceList || !vEl.male || !vEl.female) return;
+            const nv = TTS.naturalVoices(voiceList), s = TTS.settings();
+            [['male', vEl.male, s.maleVoice], ['female', vEl.female, s.femaleVoice]].forEach(pair => {
+                const g = pair[0], sel = pair[1], keep = pair[2];
+                sel.replaceChildren();
+                const auto = document.createElement('option');
+                auto.value = '';
+                auto.textContent = nv[g].length ? 'Auto · best English ' + g + ' voice' : 'Auto · no English ' + g + ' voice found';
+                sel.appendChild(auto);
+                [[(g === 'male' ? 'Male' : 'Female') + ' voices', nv[g]], ['Other English voices · gender unknown, pick by ear', nv.other]].forEach(grp => {
+                    if (!grp[1].length) return;
+                    const og = document.createElement('optgroup');
+                    og.label = grp[0];
+                    grp[1].forEach(v => { const o = document.createElement('option'); o.value = v.id; o.textContent = v.label; og.appendChild(o); });
+                    sel.appendChild(og);
+                });
+                sel.value = nv[g].concat(nv.other).some(v => v.id === keep) ? keep : '';
+            });
+            vEl.natHint.textContent = (nv.male.length || nv.female.length)
+                ? `English voices found: ${nv.male.length} male, ${nv.female.length} female${nv.other.length ? ', ' + nv.other.length + ' of unknown gender' : ''}. Online voices sound the most human and are skipped when the phone is offline.`
+                : (voiceList.voices.length
+                    ? 'No English voice with a known gender was found. Pick one below by ear, or use Get more Android voices to install English voice data.'
+                    : 'Natural voices work in the Android app. Install English voice data under Get more Android voices.');
+        }
         async function paintDiag() {
             if (!TTS || !vEl.diag) return;
             try {
@@ -7737,7 +7788,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 TTS.stop();
                 TTS.set('nengine', vEl.nEngine.value);
                 vEl.status.textContent = 'Switching the Android speech engine...';
-                try { voiceList = await TTS.listVoices(true); fillLangs(); fillVoices(); paintDiag(); } catch (e) { /* the default option stays */ }
+                try { voiceList = await TTS.listVoices(true); fillLangs(); fillVoices(); fillNatural(); paintDiag(); } catch (e) { /* the default option stays */ }
                 vEl.status.textContent = TTS.describe();
                 ttsToast('Engine changed. Tap Test to hear it.');
             });
@@ -7774,6 +7825,16 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             $('#ttsFxReset').addEventListener('click', () => { TTS.stop(); TTS.applyPreset('neutral'); syncStudio(); vEl.status.textContent = TTS.describe(); });
             [vEl.rate, vEl.pitch].forEach(input => input.addEventListener('input', syncStudio));
             syncStudio();
+            // V1.93.8: natural male / female English voices. Use = apply the preset and play a sample. A voice picked by ear is remembered per gender.
+            function useNatural(g) {
+                TTS.stop(); TTS.applyPreset('natural-' + g); syncStudio();
+                vEl.status.textContent = TTS.describe();
+                TTS.test();
+            }
+            vEl.maleUse.addEventListener('click', () => useNatural('male'));
+            vEl.femaleUse.addEventListener('click', () => useNatural('female'));
+            vEl.male.addEventListener('change', () => { TTS.set('maleVoice', vEl.male.value); useNatural('male'); });
+            vEl.female.addEventListener('change', () => { TTS.set('femaleVoice', vEl.female.value); useNatural('female'); });
             const localTestButtons = [];
             function localTest(anchor, label) {
                 if (!anchor || !anchor.parentNode) return;
@@ -7934,37 +7995,37 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         window.addEventListener('pagehide', () => { if (draftT) saveDraft(); });
     })();
     </script>
-    <script src="horizon_downloads.js?v=1.93.7"></script>
-    <script src="horizon_ytdirect.js?v=1.93.7"></script>
-    <script src="horizon_youtube.js?v=1.93.7"></script>
-    <script src="horizon_addons.js?v=1.93.7"></script>
-    <script src="horizon_terminal.js?v=1.93.7"></script>
-    <script src="horizon_termai.js?v=1.93.7"></script>
-    <script src="horizon_typing.js?v=1.93.7"></script>
-    <script src="horizon_perf.js?v=1.93.7"></script>
-    <script src="horizon_ind.js?v=1.93.7"></script>
-    <script src="horizon_toolgrid.js?v=1.93.7"></script>
-    <script src="horizon_bojack.js?v=1.93.7"></script>
-    <script src="horizon_header.js?v=1.93.7"></script>
-    <script src="horizon_htmlview.js?v=1.93.7"></script>
-    <script src="horizon_mdview.js?v=1.93.7"></script>
-    <script src="horizon_setai.js?v=1.93.7"></script>
-    <script src="horizon_operator.js?v=1.93.7"></script>
-    <script src="horizon_vis.js?v=1.93.7"></script>
-    <script src="horizon_lock.js?v=1.93.7"></script>
-    <script src="horizon_hdr2.js?v=1.93.7"></script>
-    <script src="horizon_fold.js?v=1.93.7"></script>
-    <script src="horizon_autoread.js?v=1.93.7"></script>
-    <script src="horizon_daemon.js?v=1.93.7"></script>
-    <script src="horizon_checkin.js?v=1.93.7"></script>
-    <script src="horizon_door.js?v=1.93.7"></script>
-    <script src="horizon_speakwave.js?v=1.93.7"></script>
-    <script src="horizon_laser.js?v=1.93.7"></script>
-    <script src="horizon_fab.js?v=1.93.7"></script>
-    <script src="horizon_msgmenu.js?v=1.93.7"></script>
-    <script src="horizon_termlive.js?v=1.93.7"></script>
-    <script src="horizon_v2.js?v=1.93.7"></script>
-    <script src="horizon_lift.js?v=1.93.7"></script>
+    <script src="horizon_downloads.js?v=1.93.8"></script>
+    <script src="horizon_ytdirect.js?v=1.93.8"></script>
+    <script src="horizon_youtube.js?v=1.93.8"></script>
+    <script src="horizon_addons.js?v=1.93.8"></script>
+    <script src="horizon_terminal.js?v=1.93.8"></script>
+    <script src="horizon_termai.js?v=1.93.8"></script>
+    <script src="horizon_typing.js?v=1.93.8"></script>
+    <script src="horizon_perf.js?v=1.93.8"></script>
+    <script src="horizon_ind.js?v=1.93.8"></script>
+    <script src="horizon_toolgrid.js?v=1.93.8"></script>
+    <script src="horizon_bojack.js?v=1.93.8"></script>
+    <script src="horizon_header.js?v=1.93.8"></script>
+    <script src="horizon_htmlview.js?v=1.93.8"></script>
+    <script src="horizon_mdview.js?v=1.93.8"></script>
+    <script src="horizon_setai.js?v=1.93.8"></script>
+    <script src="horizon_operator.js?v=1.93.8"></script>
+    <script src="horizon_vis.js?v=1.93.8"></script>
+    <script src="horizon_lock.js?v=1.93.8"></script>
+    <script src="horizon_hdr2.js?v=1.93.8"></script>
+    <script src="horizon_fold.js?v=1.93.8"></script>
+    <script src="horizon_autoread.js?v=1.93.8"></script>
+    <script src="horizon_daemon.js?v=1.93.8"></script>
+    <script src="horizon_checkin.js?v=1.93.8"></script>
+    <script src="horizon_door.js?v=1.93.8"></script>
+    <script src="horizon_speakwave.js?v=1.93.8"></script>
+    <script src="horizon_laser.js?v=1.93.8"></script>
+    <script src="horizon_fab.js?v=1.93.8"></script>
+    <script src="horizon_msgmenu.js?v=1.93.8"></script>
+    <script src="horizon_termlive.js?v=1.93.8"></script>
+    <script src="horizon_v2.js?v=1.93.8"></script>
+    <script src="horizon_lift.js?v=1.93.8"></script>
     <script>(function(){var d=document.documentElement;requestAnimationFrame(function(){requestAnimationFrame(function(){d.classList.remove('hz-boot');try{window.HzBootMs=Math.round(performance.now());}catch(e){}});});})();</script>
 </body>
 </html>

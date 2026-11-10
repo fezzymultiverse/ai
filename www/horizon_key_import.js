@@ -12,7 +12,9 @@
     function validate(provider, key) {
         key = String(key || '');
         if (provider === 'cloudflare') return /^[0-9a-fA-F]{32}:[A-Za-z0-9_.-]{20,}$/.test(key.trim()) ? '' : 'Cloudflare needs your Account ID and an API token joined with a colon: ACCOUNT_ID:API_TOKEN.';
-        if (key.length < (provider === 'llm7' ? 8 : 20) || key.length > 8192 || !/^[A-Za-z0-9_.-]+$/.test(key)) return 'Paste one complete API key, not a note, URL or placeholder.';
+        // V1.93.7: LLM7 tokens can carry + / = ~ characters, so that provider takes any single run of visible characters
+        const charset = provider === 'llm7' ? /^[A-Za-z0-9_.\-+\/=~:]+$/ : /^[A-Za-z0-9_.-]+$/;
+        if (key.length < (provider === 'llm7' ? 8 : 20) || key.length > 8192 || !charset.test(key)) return 'Paste one complete API key, not a note, URL or placeholder.';
         if (/^(?:your[_-]?|example|replace|paste|test[_-]|dummy|xxx)/i.test(key) || /(.)\1{19}/.test(key)) return 'This looks like a placeholder, not an API key.';
         const owner = identify(key);
         if (owner && owner !== provider) return 'That key belongs to ' + owner + ', not ' + provider + '.';

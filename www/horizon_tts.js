@@ -1,4 +1,5 @@
 /* Android-only speech controller. No cloud synthesis, browser fallback, model downloads or WebAudio. */
+/* V1.93.8: Natural male / Natural female English presets pick the best installed Android voice of that gender and speak it directly (no DSP). */
 (function(root) {
     'use strict';
     const controls = [
@@ -22,6 +23,9 @@
     ];
     const presets = [
         {id:'neutral',name:'Natural narrator',values:{}},
+        // V1.93.8: plain Android speech (no effects, so direct and fast) with the best installed English voice of that gender.
+        {id:'natural-male',name:'Natural male · English',gender:'male',values:{rate:.97}},
+        {id:'natural-female',name:'Natural female · English',gender:'female',values:{rate:.99}},
         {id:'hero',name:'Heroic captain',values:{rate:.95,pitch:.85,bass:4,presence:3,compression:35,reverb:8}},
         {id:'villain',name:'Shadow villain',values:{rate:.85,pitch:.65,bass:6,treble:-3,compression:40,reverb:23}},
         {id:'robot',name:'Space robot',values:{rate:1.05,pitch:.95,presence:5,robot:80,compression:40,tune:80}},
@@ -58,6 +62,9 @@
         const s={engine:'standard',nengine:'',voice:ls.get(key('voice'))||'',lang:ls.get(key('lang'))||'',preset:ls.get(key('preset'))||'neutral'};
         controls.forEach(c=>s[c.key]=clamp(ls.get(key(c.key)),c.min,c.max,c.default));
         s.character=Math.round(clamp(ls.get(key('character')),0,10,0));
+        // V1.93.8: natural English voices. gender is '' (off), 'male' or 'female'; maleVoice/femaleVoice are the voices picked by ear ('' = automatic).
+        const g=ls.get(key('gender'));s.gender=g==='male'||g==='female'?g:'';
+        s.maleVoice=ls.get(key('maleVoice'))||'';s.femaleVoice=ls.get(key('femaleVoice'))||'';
         if(s.preset!=='custom' && !presets.some(p=>p.id===s.preset))s.preset='custom';
         return s;
     }
@@ -65,11 +72,76 @@
         if(k==='engine'){ls.set(key(k),'standard');return true;}
         // Only Android's default service is used; old custom engine preferences are ignored.
         if(k==='nengine'){ls.remove(key(k));cache=null;return true;}
-        if(k==='voice'||k==='lang'){ls.set(key(k),String(v||'').slice(0,256));return true;}
+        if(k==='voice'||k==='lang'){
+            ls.set(key(k),String(v||'').slice(0,256));
+            // Picking an Android voice by hand takes over from a natural male/female preset.
+            if(k==='voice'&&ls.get(key('gender'))){ls.remove(key('gender'));ls.set(key('preset'),'custom');}
+            return true;
+        }
+        if(k==='maleVoice'||k==='femaleVoice'){ls.set(key(k),String(v||'').slice(0,256));return true;}
         const c=controls.find(c=>c.key===k);if(!c)return false;
         ls.set(key(k),clamp(v,c.min,c.max,c.default));ls.set(key('preset'),'custom');return true;
     }
-    function applyPreset(id){const p=presets.find(p=>p.id===id);if(!p)return false;ls.set(key('character'),p.values.character||0);controls.forEach(c=>ls.set(key(c.key),p.values[c.key]===undefined?c.default:p.values[c.key]));ls.set(key('preset'),id);return true;}
+    function applyPreset(id){
+        const p=presets.find(p=>p.id===id);if(!p)return false;
+        ls.set(key('character'),p.values.character||0);controls.forEach(c=>ls.set(key(c.key),p.values[c.key]===undefined?c.default:p.values[c.key]));
+        if(p.gender)ls.set(key('gender'),p.gender);else ls.remove(key('gender'));
+        ls.set(key('preset'),id);return true;
+    }
+
+    // ---- V1.93.8: natural English male and female voices ----
+    // Android reports no gender for a voice, so it is matched from the voice name: an explicit male/female word, or the
+    // short code Google's engine puts in the name (en-us-x-iom-local). Voices that match neither are never guessed;
+    // they are offered as "other English voices" so the person can choose by ear.
+    const VOICE_CODES={
+        'en-us':{female:['sfg','iob','iog','tpc','tpf'],male:['iol','iom','tpd']},
+        'en-gb':{female:['gba','gbc','fis'],male:['gbb','gbd','rjs']},
+        'en-au':{female:['aua','auc'],male:['aub','aud']},
+        'en-in':{female:['ena','enc'],male:['enb','end']}
+    };
+    const isEnglish=v=>/^en(-|$)/i.test(String(v&&v.lang||''));
+    function voiceGender(v){
+        const id=String(v&&(v.id||v.name)||'').toLowerCase();
+        if(/(^|[^a-z])female([^a-z]|$)/.test(id))return 'female';
+        if(/(^|[^a-z])male([^a-z]|$)/.test(id))return 'male';
+        const m=/^(en-[a-z]{2})-x-([a-z]{3})(?:-|$)/.exec(id),t=m&&VOICE_CODES[m[1]];
+        if(t){if(t.female.includes(m[2]))return 'female';if(t.male.includes(m[2]))return 'male';}
+        return '';
+    }
+    const online=()=>!(root.navigator&&root.navigator.onLine===false);
+    function accent(s){return /^en(-|$)/i.test(s.lang||'')?String(s.lang).toLowerCase():'en-us';}
+    function score(v,pref,net){
+        let n=0;const lang=String(v.lang||'').toLowerCase(),id=String(v.id||'').toLowerCase();
+        if(lang===pref)n+=8;else if(lang==='en-us')n+=4;
+        if(/-x-/.test(id))n+=2;                         // Google's high-quality voice codes
+        if(v.network)n+=net?3:-100;                     // online voices sound best, but are skipped when the phone is offline
+        return n;
+    }
+    function ranked(voices,gender,s,all){
+        const pref=accent(s),net=online();
+        return voices.filter(v=>isEnglish(v)&&voiceGender(v)===gender&&(all||score(v,pref,net)>=0))
+            .map(v=>({v,n:score(v,pref,net)})).sort((a,b)=>b.n-a.n||String(a.v.id).localeCompare(String(b.v.id))).map(x=>x.v);
+    }
+    // For the settings panel: English voices grouped by detected gender, best first. Nothing is hidden.
+    function naturalVoices(list,settingsIn){
+        const s=settingsIn||settings(),voices=list&&list.voices||[],pref=accent(s),net=online();
+        const other=voices.filter(v=>isEnglish(v)&&!voiceGender(v)).map(v=>({v,n:score(v,pref,net)})).sort((a,b)=>b.n-a.n||String(a.v.id).localeCompare(String(b.v.id))).map(x=>x.v);
+        return{male:ranked(voices,'male',s,true),female:ranked(voices,'female',s,true),other};
+    }
+    // slot 0 = the chosen gender; odd slots = the other gender; even slots after that step to the next voice of the same gender,
+    // so the AIs in a group chat alternate male, female, male, female.
+    function naturalPick(voices,s,slot){
+        const gender=s.gender,opposite=gender==='male'?'female':'male';
+        const order=g=>{
+            const id=g==='male'?s.maleVoice:s.femaleVoice,first=id&&voices.find(v=>v.id===id&&isEnglish(v));
+            const rest=ranked(voices,g,s,false);
+            return first?[first].concat(rest.filter(v=>v.id!==first.id)):rest;
+        };
+        const side=slot%2?opposite:gender,list=order(side);
+        if(list.length)return{voice:list[Math.floor(slot/2)%list.length],pitch:1,note:''};
+        // No voice of that gender is installed: use Android's default English voice, shifted in pitch so male and female still differ.
+        return{voice:null,pitch:side==='male'?.88:1.1,note:'No English '+side+' voice is installed, so the default English voice is used at a '+(side==='male'?'lower':'higher')+' pitch. Install more English voices in Android text-to-speech settings for a natural '+side+' voice.'};
+    }
     function hasEffects(s){s=s||settings();return controls.some(c=>c.key!=='rate' && c.key!=='pitch' && Math.abs(s[c.key]||0)>.001);}
     function timeout(p,ms,label){let t;return Promise.race([Promise.resolve(p),new Promise((_,no)=>t=setTimeout(()=>no(Error(label)),ms))]).finally(()=>clearTimeout(t));}
     function holdPaint(){if(!held||!plugFn)return;try{const p=plugFn('HorizonAI');if(p&&p.speechHold)Promise.resolve(p.speechHold({paused,queued:queuedN})).catch(()=>{});}catch(_){}}
@@ -102,7 +174,7 @@
         flight=(async()=>{
             const p=plugin();let a=[];
             if(p){const r=await timeout(p.getSupportedVoices(),12000,'Android voice list timed out');a=r.voices||[];}
-            const voices=a.map((v,i)=>{const lang=String(v.lang||'en-US').replace(/_/g,'-');return{index:i,id:v.voiceURI||v.name||String(i),name:v.name||v.voiceURI||'Android voice',lang,langKey:lang,langName:lang,label:(v.name||'Android voice')+(v.network?' · online':' · offline')};});
+            const voices=a.map((v,i)=>{const lang=String(v.lang||'en-US').replace(/_/g,'-');return{index:i,id:v.voiceURI||v.name||String(i),name:v.name||v.voiceURI||'Android voice',lang,langKey:lang,langName:lang,network:!!v.network,label:(v.name||'Android voice')+(v.network?' · online':' · offline')};});
             const groups=new Map();voices.forEach(v=>{if(!groups.has(v.langKey))groups.set(v.langKey,{key:v.langKey,name:v.langName,count:0});groups.get(v.langKey).count++;});
             cache={source:p?'native':'none',voices,langs:[...groups.values()].sort((a,b)=>a.key.localeCompare(b.key))};cacheAt=Date.now();return cache;
         })();try{return await flight;}finally{flight=null;}
@@ -181,7 +253,9 @@
             const list=await listVoices();if(tok.cancelled)return false;
             let v=list.voices.find(v=>v.id===s.voice);
             const slot=Math.max(0,(opts&&opts.slot)||0);
-            if(slot){const lang=String(v&&v.lang||s.lang||root.navigator&&root.navigator.language||'en-US').split('-')[0];const pool=list.voices.filter(v=>v.lang.split('-')[0]===lang);if(pool.length)v=pool[(Math.max(0,pool.findIndex(x=>v&&x.id===v.id))+slot)%pool.length];}
+            let pitchMul=1;const natural=!!s.gender;
+            if(natural){const n=naturalPick(list.voices,s,slot);v=n.voice;pitchMul=n.pitch;if(n.note&&!slot)emit({note:n.note});}
+            else if(slot){const lang=String(v&&v.lang||s.lang||root.navigator&&root.navigator.language||'en-US').split('-')[0];const pool=list.voices.filter(v=>v.lang.split('-')[0]===lang);if(pool.length)v=pool[(Math.max(0,pool.findIndex(x=>v&&x.id===v.id))+slot)%pool.length];}
             let utterance='';
             listener=await p.addListener('speechStart',ev=>{if(!tok.cancelled&&ev.id===utterance)emit({state:'playing',id,engine:'native',paused});});
             for(const text of chunks){
@@ -191,7 +265,7 @@
                     await waitResume();if(tok.cancelled)return false;
                     const pauseSeq=tok.pauseSeq||0;
                     utterance='hz-'+(++seq);
-                    const args={text,utteranceId:utterance,lang:v&&v.lang||s.lang||root.navigator&&root.navigator.language||'en-US',voiceName:v&&v.id||'',rate:s.rate,pitch:s.pitch,effects:{}};
+                    const args={text,utteranceId:utterance,lang:natural?(v&&v.lang||'en-US'):(v&&v.lang||s.lang||root.navigator&&root.navigator.language||'en-US'),voiceName:v&&v.id||'',rate:s.rate,pitch:pitchMul===1?s.pitch:Math.max(.5,Math.min(2,s.pitch*pitchMul)),effects:{}};
                     controls.filter(c=>c.key!=='rate'&&c.key!=='pitch').forEach(c=>args.effects[c.key]=s[c.key]);
                     args.effects.character=s.character;
                     try{await p.speak(args);done=true;}
@@ -222,7 +296,8 @@
         onState:fn=>{listeners.add(fn);return()=>listeners.delete(fn);},status:()=>Object.assign({},status),
         pause:()=>setPaused(true),resume:()=>setPaused(false),togglePause:()=>setPaused(!paused),isPaused:()=>paused,
         setQueued:n=>{queuedN=Math.max(0,Math.min(99,n|0));holdPaint();},
-        voiceFor:slot=>({engine:'standard',voice:settings().voice,preset:settings().preset,slot:Math.max(0,slot|0)}),
+        voiceFor:slot=>({engine:'standard',voice:settings().voice,preset:settings().preset,gender:settings().gender,slot:Math.max(0,slot|0)}),
+        naturalVoices,voiceGender,
         listVoices,listEngines,describe,diagnose:async()=>{const l=await listVoices();return{native,nativePlugin:!!plugin(),source:l.source,count:l.voices.length,langCount:l.langs.length,audio:hasEffects()?'local Android synthesis + DSP':'direct Android speech'};},
         speakable,chunkText
     };
