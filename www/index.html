@@ -7,11 +7,11 @@
     <title>HORIZON · AI Interface</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <link rel="icon" type="image/png" href="icon.png">
-    <script src="horizon_release.js?v=1.93.6"></script>
+    <script src="horizon_release.js?v=1.93.7"></script>
     <script>(function(){try{var t=localStorage.getItem('horizon_theme');if(t!=='grey')t='cyan';document.documentElement.setAttribute('data-theme',t==='grey'?'grey':'neon');document.documentElement.setAttribute('data-accent',t);var m=document.querySelector('meta[name=theme-color]');if(m)m.setAttribute('content',t==='grey'?'#eceef1':'#000000');}catch(e){}})();</script>
     <style>html.hz-boot{background:#000}html.hz-boot[data-theme="grey"]{background:#eceef1}html.hz-boot body{visibility:hidden}</style>
     <script>(function(){var d=document.documentElement;d.classList.add('hz-boot');setTimeout(function(){d.classList.remove('hz-boot');},4000);})();</script>
-    <link rel="stylesheet" href="horizon_app.css?v=1.93.6">
+    <link rel="stylesheet" href="horizon_app.css?v=1.93.7">
 </head>
 <body>
 
@@ -708,37 +708,37 @@
             </section></div></div>
     </section>
 
-    <script src="horizon_usage.js?v=1.93.6"></script>
-    <script src="horizon_about.js?v=1.93.6"></script>
-    <script src="horizon_toast.js?v=1.93.6"></script>
-    <script src="horizon_plus.js?v=1.93.6"></script>
-    <script src="ember_document_engine.js?v=1.93.6"></script>
-    <script src="horizon_pdf.js?v=1.93.6"></script>
-    <script src="ember_artbox.js?v=1.93.6"></script>
-    <script src="horizon_key_import.js?v=1.93.6"></script>
-    <script src="horizon_tts.js?v=1.93.6"></script>
-    <script src="horizon_github.js?v=1.93.6"></script>
-    <script src="horizon_native_audio.js?v=1.93.6"></script>
-    <script src="horizon_music.js?v=1.93.6"></script>
-    <script src="horizon_runlog.js?v=1.93.6"></script>
-    <script src="horizon_whatsapp_feature.js?v=1.93.6"></script>
-    <script src="horizon_bridges.js?v=1.93.6"></script>
-    <script src="horizon_hub.js?v=1.93.6"></script>
-    <script src="horizon_hold.js?v=1.93.6"></script>
-    <script src="horizon_group.js?v=1.93.6"></script>
-    <script src="horizon_round.js?v=1.93.6"></script>
-    <script src="horizon_chips.js?v=1.93.6"></script>
-    <script src="horizon_vault.js?v=1.93.6"></script>
-    <script src="horizon_attach.js?v=1.93.6"></script>
-    <script src="horizon_creator.js?v=1.93.6"></script>
-    <script src="horizon_voice.js?v=1.93.6"></script>
-    <script src="horizon_screen.js?v=1.93.6"></script>
-    <script src="horizon_lens.js?v=1.93.6"></script>
-    <script src="horizon_archive.js?v=1.93.6"></script>
-    <script src="horizon_slash.js?v=1.93.6"></script>
-    <script src="horizon_geo.js?v=1.93.6"></script>
-    <script src="horizon_dash.js?v=1.93.6"></script>
-    <script src="horizon_browser.js?v=1.93.6"></script>
+    <script src="horizon_usage.js?v=1.93.7"></script>
+    <script src="horizon_about.js?v=1.93.7"></script>
+    <script src="horizon_toast.js?v=1.93.7"></script>
+    <script src="horizon_plus.js?v=1.93.7"></script>
+    <script src="ember_document_engine.js?v=1.93.7"></script>
+    <script src="horizon_pdf.js?v=1.93.7"></script>
+    <script src="ember_artbox.js?v=1.93.7"></script>
+    <script src="horizon_key_import.js?v=1.93.7"></script>
+    <script src="horizon_tts.js?v=1.93.7"></script>
+    <script src="horizon_github.js?v=1.93.7"></script>
+    <script src="horizon_native_audio.js?v=1.93.7"></script>
+    <script src="horizon_music.js?v=1.93.7"></script>
+    <script src="horizon_runlog.js?v=1.93.7"></script>
+    <script src="horizon_whatsapp_feature.js?v=1.93.7"></script>
+    <script src="horizon_bridges.js?v=1.93.7"></script>
+    <script src="horizon_hub.js?v=1.93.7"></script>
+    <script src="horizon_hold.js?v=1.93.7"></script>
+    <script src="horizon_group.js?v=1.93.7"></script>
+    <script src="horizon_round.js?v=1.93.7"></script>
+    <script src="horizon_chips.js?v=1.93.7"></script>
+    <script src="horizon_vault.js?v=1.93.7"></script>
+    <script src="horizon_attach.js?v=1.93.7"></script>
+    <script src="horizon_creator.js?v=1.93.7"></script>
+    <script src="horizon_voice.js?v=1.93.7"></script>
+    <script src="horizon_screen.js?v=1.93.7"></script>
+    <script src="horizon_lens.js?v=1.93.7"></script>
+    <script src="horizon_archive.js?v=1.93.7"></script>
+    <script src="horizon_slash.js?v=1.93.7"></script>
+    <script src="horizon_geo.js?v=1.93.7"></script>
+    <script src="horizon_dash.js?v=1.93.7"></script>
+    <script src="horizon_browser.js?v=1.93.7"></script>
     <script>
     (() => {
         'use strict';
@@ -1319,6 +1319,8 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             protocol: cfg.protocol || 'openai',
             freeOnly: !!cfg.freeOnly,
             optionalKey: !!cfg.optionalKey,   // LLM7.io: works with no key; a token only raises the limit
+            modelWalk: !!cfg.modelWalk,       // V1.93.7: LLM7 rotates models; one that answers 'unavailable' is skipped and the next one is tried
+            dead: new Set(),
             urlFor: cfg.urlFor || null,       // Cloudflare Workers AI: the account ID lives in the URL, so the URL is built from the saved key
             modelsOptional: !!cfg.modelsOptional,   // V1.93.2: if the provider's model list call fails, fall back to the built-in list; the key is still proven by a real completion
             headers: k => cfg.protocol === 'anthropic' ? ({'x-api-key':k,'anthropic-version':'2023-06-01'}) : ({ Authorization: `Bearer ${cfg.optionalKey && (!k || k === 'free') ? 'unused' : k}` }),
@@ -1333,9 +1335,9 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             async chat(key, model, history) {
                 const T = curTurn; turnCheck(T);
                 const eligible = (state.modelLists[PROVIDER_IDS.find(id => PROVIDERS[id].name === cfg.name)] || []).filter(m => !cfg.freeOnly || /:free$/.test(m));
-                if (!eligible.includes(model)) {
+                if (!eligible.includes(model) || this.dead.has(model)) {
                     if (!eligible.length) throw new Error(cfg.name + ' has no eligible chat models. Refresh models in Settings.');
-                    model = eligible.includes(cfg.defaultModel) ? cfg.defaultModel : eligible[0];
+                    model = eligible.find(m => !this.dead.has(m) && m === cfg.defaultModel) || eligible.find(m => !this.dead.has(m)) || (eligible.includes(cfg.defaultModel) ? cfg.defaultModel : eligible[0]);
                 }   // never spend credit: only :free ids go out
                 const sys = getSystemPrompt();
                 const cap = docMode ? 8000 : 0;
@@ -1385,6 +1387,20 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                     }
                     if (res.status === 401 || res.status === 403) throw new Error(`${cfg.name} rejected the key. Check it at ${cfg.keyUrl}.`);
                     if (res.status === 402) throw new Error(cfg.noCredit || cfg.name + ' requires provider credits. Check your account balance.');
+                    if (this.modelWalk && [400, 404, 410, 503].indexOf(res.status) !== -1 && /unavailable|not found|does not exist|no such model|unknown model|not available|not supported|offline/i.test(why)) {
+                        // V1.93.7: this model is down right now. Remember it, move to the next live one and carry on.
+                        this.dead.add(model);
+                        const pidW = PROVIDER_IDS.find(id => PROVIDERS[id].name === cfg.name);
+                        const nextW = eligible.find(m => !this.dead.has(m));
+                        if (nextW && nextW !== model) {
+                            notice(`${model} unavailable, trying ${nextW}`);
+                            model = nextW;
+                            if (pidW) { state.models[pidW] = nextW; lsSet(LS.model(pidW), nextW); }
+                            attempt--;
+                            continue;
+                        }
+                        throw new Error(`${cfg.name}: no model is answering right now (${why}). Open the LLM7.io card and tap Test models.`);
+                    }
                     const httpErr = new Error(lastWhy); httpErr.status = res.status;   // V1.93.2: Rate Limit Rescue reads .status, so a bare 429/503 with an odd message still counts as a limit
                     throw httpErr;
                 }
@@ -1431,16 +1447,17 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         PROVIDERS.aionlabs = oaiGateway({name:'AionLabs',icon:'i-b-aionlabs',placeholder:'AionLabs API key',keyUrl:'https://aionlabs.ai',base:'https://api.aionlabs.ai/v1',defaultModel:'aion-labs/aion-2.0',fallbackModels:['aion-labs/aion-2.0','aion-labs/aion-2.5','aion-labs/aion-3.0','aion-labs/aion-3.5'],allow:/^(?:aion-labs\/)?aion-(?:2\.0|2\.5|3\.0|3\.5)$/i,modelsOptional:true});
         PROVIDERS.aionlabs.billingNote = 'Free provider · limits depend on your AionLabs account. Check your dashboard if replies stop.';
         // LLM7.io: OpenAI-style, works with no key at all. A free token from LLM7 only raises the rate limit, so the key is optional.
-        PROVIDERS.llm7 = oaiGateway({name:'LLM7.io',icon:'i-b-llm7',placeholder:'LLM7 token (optional)',keyUrl:'https://llm7.io',base:'https://api.llm7.io/v1',defaultModel:'gpt-4o-mini',fallbackModels:['gpt-4o-mini','deepseek-r1-0528','deepseek-v3-0324'],modelsOptional:true,optionalKey:true});
+        PROVIDERS.llm7 = oaiGateway({name:'LLM7.io',icon:'i-b-llm7',placeholder:'LLM7 token (optional)',keyUrl:'https://llm7.io',base:'https://api.llm7.io/v1',defaultModel:'gpt-4o-mini',fallbackModels:['gpt-4o-mini','mistral-small-3.1-24b','qwen2.5-coder-32b'],modelsOptional:true,optionalKey:true,modelWalk:true});
         PROVIDERS.llm7.billingNote = 'Free · works without a key. The limit is low without a token; a free LLM7 token raises it. Limits can change, check LLM7 if replies stop.';
         // Cloudflare Workers AI: OpenAI-style at /accounts/<ACCOUNT_ID>/ai/v1. One key box holds "ACCOUNT_ID:API_TOKEN".
         const cfParts = k => { const m = /^([0-9a-fA-F]{32}):([A-Za-z0-9_.-]{20,})$/.exec(String(k || '').trim()); return m ? { acct: m[1], token: m[2] } : null; };
         PROVIDERS.cloudflare = oaiGateway({name:'Cloudflare Workers AI',icon:'i-b-cloudflare',placeholder:'ACCOUNT_ID:API_TOKEN',keyUrl:'https://dash.cloudflare.com/profile/api-tokens',base:'https://api.cloudflare.com/client/v4/accounts',defaultModel:'@cf/meta/llama-3.1-8b-instruct',fallbackModels:['@cf/meta/llama-3.1-8b-instruct','@cf/meta/llama-3.3-70b-instruct-fp8-fast','@cf/openai/gpt-oss-120b'],modelsOptional:true,
             urlFor:(which,k)=>{ const c = cfParts(k); if (!c) throw new Error('Cloudflare needs your Account ID and an API token joined with a colon: ACCOUNT_ID:API_TOKEN.'); const root = 'https://api.cloudflare.com/client/v4/accounts/' + c.acct + '/ai'; return which === 'chat' ? root + '/v1/chat/completions' : root + '/models/search?task=Text%20Generation&per_page=100'; }});
+        PROVIDERS.cloudflare.split = cfParts;   // V1.93.7: the card has separate Account ID and API token boxes and joins them with this
         PROVIDERS.cloudflare.headers = k => ({ Authorization: 'Bearer ' + ((cfParts(k) || {}).token || '') });
         PROVIDERS.cloudflare.wrongKey = k => cfParts(k) ? '' : 'Cloudflare needs your Account ID and an API token joined with a colon: ACCOUNT_ID:API_TOKEN.';
         PROVIDERS.cloudflare.parseModels = d => Array.from(new Set(((d && (d.result || d.data)) || []).map(m => typeof m === 'string' ? m : (m && (m.name || m.id))).filter(id => typeof id === 'string' && id.indexOf('@cf/') === 0 && !/embed|whisper|tts|rerank|bge-|melotts|aura|nova-3|flux|stable-diffusion|lucid|phoenix|m2m100|distilbert|resnet|llava|detr/i.test(id)))).sort((a, b) => a.localeCompare(b));
-        PROVIDERS.cloudflare.billingNote = 'Free allowance of 10,000 neurons a day, resets at 00:00 UTC. Key format: ACCOUNT_ID:API_TOKEN, your Cloudflare account ID, a colon, then an API token with Workers AI access.';
+        PROVIDERS.cloudflare.billingNote = 'Free allowance of 10,000 neurons a day, resets at 00:00 UTC. Fill in both boxes: your Cloudflare Account ID and an API token with Workers AI access.';
         // V1.93.3: SambaNova and NVIDIA NIM removed.
         const PROVIDER_IDS = Object.keys(PROVIDERS);
         // Public model catalogs are NOT proof that a secret belongs to this provider.
@@ -4200,6 +4217,50 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             const input = role(id, 'key');
             input.placeholder = p.placeholder;
             input.setAttribute('aria-label', `${p.name} API key`);
+            if (id === 'cloudflare') {
+                // V1.93.7: Cloudflare gets its own Account ID box above the token box. Both are joined as ACCOUNT_ID:API_TOKEN when saved.
+                const kf = $('.key-field', card);
+                const al = document.createElement('label'); al.className = 'field-label'; al.textContent = 'Account ID';
+                const ai = document.createElement('input');
+                ai.type = 'text'; ai.className = 'cf-acct'; ai.setAttribute('data-role', 'cfacct'); ai.maxLength = 64;
+                ai.placeholder = 'Cloudflare Account ID (32 characters)'; ai.autocomplete = 'off'; ai.autocapitalize = 'off'; ai.spellcheck = false;
+                ai.setAttribute('aria-label', 'Cloudflare Account ID');
+                const tl = document.createElement('label'); tl.className = 'field-label'; tl.textContent = 'API token';
+                kf.parentNode.insertBefore(al, kf); kf.parentNode.insertBefore(ai, kf); kf.parentNode.insertBefore(tl, kf);
+                input.placeholder = 'API token with Workers AI access';
+                input.setAttribute('aria-label', 'Cloudflare API token');
+                ai.addEventListener('input', () => ai.classList.remove('invalid'));
+            }
+            if (id === 'llm7') {
+                // V1.93.7: LLM7 rotates its models, so this tests each one and keeps only the ones answering right now.
+                const tb = document.createElement('button');
+                tb.type = 'button'; tb.className = 'use-btn'; tb.textContent = 'Test models';
+                $('.card-actions', card).appendChild(tb);
+                tb.addEventListener('click', async () => {
+                    if (tb.disabled) return;
+                    tb.disabled = true;
+                    const list = (state.modelLists[id] || p.fallbackModels).slice();
+                    const live = []; let net = 0;
+                    try {
+                        for (let i = 0; i < list.length; i++) {
+                            setCardStatus(id, `Testing ${i + 1} of ${list.length} · ${list[i]}`, '');
+                            try {
+                                const r = await timed(fetch(p.chatUrl, { method: 'POST', headers: Object.assign({'Content-Type':'application/json'}, p.headers(state.keys[id] || '')), body: JSON.stringify({ model: list[i], messages: [{ role: 'user', content: 'Reply OK.' }], max_tokens: 4, stream: false }) }), 25000);
+                                if (r.ok) { live.push(list[i]); p.dead.delete(list[i]); } else if (r.status !== 429) p.dead.add(list[i]);
+                            } catch (e) { net++; }
+                            await new Promise(res => setTimeout(res, 2200));   // stay under the 30 requests a minute keyless limit
+                        }
+                        if (net === list.length) setCardStatus(id, 'Could not reach LLM7. Check your connection.', 'error');
+                        else if (!live.length) setCardStatus(id, 'No LLM7 model answered. It may be busy, try again in a minute.', 'error');
+                        else {
+                            state.modelLists[id] = live; lsSet(LS.models(id), JSON.stringify(live));
+                            if (live.indexOf(state.models[id]) === -1) { state.models[id] = live[0]; lsSet(LS.model(id), live[0]); }
+                            updateUI();
+                            setCardStatus(id, `Free · ${live.length} of ${list.length} models answering`, 'ok');
+                        }
+                    } finally { tb.disabled = false; }
+                });
+            }
             role(id, 'model').setAttribute('aria-label', `${p.name} model`);
             role(id, 'remove').setAttribute('aria-label', `Remove ${p.name} key`);
             const link = role(id, 'link');
@@ -4299,6 +4360,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 health.classList.remove('valid');
                 setCardStatus(id, 'No key active', '');
             }
+            if (id === 'cloudflare') { const ai = role(id, 'cfacct'); const sp = PROVIDERS.cloudflare.split(key); if (ai && sp && !ai.value) ai.value = sp.acct; }
             const on = state.active === id;
             use.classList.toggle('on', on);
             use.textContent = on ? 'Active' : 'Use';
@@ -4350,8 +4412,25 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             if (btn.disabled) return;
             if (p.keyless) { await refreshKeyless(id); return; }
             const raw = (input.value || '').trim().replace(/^["']+|["']+$/g, '');
-            const key = raw || state.keys[id];
+            let key = raw || state.keys[id];
             if (p.optionalKey && !key) { await refreshKeyless(id); return; }   // no token entered: just reload the free model list
+            if (id === 'cloudflare') {
+                // V1.93.7: Account ID box + API token box, or one pasted ACCOUNT_ID:API_TOKEN
+                const acctIn = role(id, 'cfacct');
+                const saved = p.split(state.keys[id]);
+                const pasted = p.split(raw);
+                let acct = pasted ? pasted.acct : (acctIn ? acctIn.value.trim().replace(/^["']+|["']+$/g, '') : '');
+                let tok = pasted ? pasted.token : raw;
+                acct = acct || (saved ? saved.acct : '');
+                tok = tok || (saved ? saved.token : '');
+                if (!/^[0-9a-fA-F]{32}$/.test(acct)) {
+                    if (acctIn) acctIn.classList.add('invalid');
+                    setCardStatus(id, acct ? 'The Account ID is 32 letters and numbers. Check it in your Cloudflare dashboard.' : 'Paste your Cloudflare Account ID first', 'error');
+                    return;
+                }
+                if (!tok) { input.classList.add('invalid'); setCardStatus(id, 'Now paste your Cloudflare API token', 'error'); return; }
+                key = acct + ':' + tok;
+            }
 
             if (!key) {
                 input.classList.add('invalid');
@@ -4419,6 +4498,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             lsDel(LS.key(id));
             role(id, 'key').value = '';
             role(id, 'key').classList.remove('invalid');
+            { const ai = role(id, 'cfacct'); if (ai) { ai.value = ''; ai.classList.remove('invalid'); } }
             updateUI();
         }
 
@@ -7854,36 +7934,37 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         window.addEventListener('pagehide', () => { if (draftT) saveDraft(); });
     })();
     </script>
-    <script src="horizon_downloads.js?v=1.93.6"></script>
-    <script src="horizon_ytdirect.js?v=1.93.6"></script>
-    <script src="horizon_youtube.js?v=1.93.6"></script>
-    <script src="horizon_addons.js?v=1.93.6"></script>
-    <script src="horizon_terminal.js?v=1.93.6"></script>
-    <script src="horizon_termai.js?v=1.93.6"></script>
-    <script src="horizon_typing.js?v=1.93.6"></script>
-    <script src="horizon_perf.js?v=1.93.6"></script>
-    <script src="horizon_ind.js?v=1.93.6"></script>
-    <script src="horizon_toolgrid.js?v=1.93.6"></script>
-    <script src="horizon_bojack.js?v=1.93.6"></script>
-    <script src="horizon_header.js?v=1.93.6"></script>
-    <script src="horizon_htmlview.js?v=1.93.6"></script>
-    <script src="horizon_mdview.js?v=1.93.6"></script>
-    <script src="horizon_setai.js?v=1.93.6"></script>
-    <script src="horizon_operator.js?v=1.93.6"></script>
-    <script src="horizon_lock.js?v=1.93.6"></script>
-    <script src="horizon_hdr2.js?v=1.93.6"></script>
-    <script src="horizon_fold.js?v=1.93.6"></script>
-    <script src="horizon_autoread.js?v=1.93.6"></script>
-    <script src="horizon_daemon.js?v=1.93.6"></script>
-    <script src="horizon_checkin.js?v=1.93.6"></script>
-    <script src="horizon_door.js?v=1.93.6"></script>
-    <script src="horizon_speakwave.js?v=1.93.6"></script>
-    <script src="horizon_laser.js?v=1.93.6"></script>
-    <script src="horizon_fab.js?v=1.93.6"></script>
-    <script src="horizon_msgmenu.js?v=1.93.6"></script>
-    <script src="horizon_termlive.js?v=1.93.6"></script>
-    <script src="horizon_v2.js?v=1.93.6"></script>
-    <script src="horizon_lift.js?v=1.93.6"></script>
+    <script src="horizon_downloads.js?v=1.93.7"></script>
+    <script src="horizon_ytdirect.js?v=1.93.7"></script>
+    <script src="horizon_youtube.js?v=1.93.7"></script>
+    <script src="horizon_addons.js?v=1.93.7"></script>
+    <script src="horizon_terminal.js?v=1.93.7"></script>
+    <script src="horizon_termai.js?v=1.93.7"></script>
+    <script src="horizon_typing.js?v=1.93.7"></script>
+    <script src="horizon_perf.js?v=1.93.7"></script>
+    <script src="horizon_ind.js?v=1.93.7"></script>
+    <script src="horizon_toolgrid.js?v=1.93.7"></script>
+    <script src="horizon_bojack.js?v=1.93.7"></script>
+    <script src="horizon_header.js?v=1.93.7"></script>
+    <script src="horizon_htmlview.js?v=1.93.7"></script>
+    <script src="horizon_mdview.js?v=1.93.7"></script>
+    <script src="horizon_setai.js?v=1.93.7"></script>
+    <script src="horizon_operator.js?v=1.93.7"></script>
+    <script src="horizon_vis.js?v=1.93.7"></script>
+    <script src="horizon_lock.js?v=1.93.7"></script>
+    <script src="horizon_hdr2.js?v=1.93.7"></script>
+    <script src="horizon_fold.js?v=1.93.7"></script>
+    <script src="horizon_autoread.js?v=1.93.7"></script>
+    <script src="horizon_daemon.js?v=1.93.7"></script>
+    <script src="horizon_checkin.js?v=1.93.7"></script>
+    <script src="horizon_door.js?v=1.93.7"></script>
+    <script src="horizon_speakwave.js?v=1.93.7"></script>
+    <script src="horizon_laser.js?v=1.93.7"></script>
+    <script src="horizon_fab.js?v=1.93.7"></script>
+    <script src="horizon_msgmenu.js?v=1.93.7"></script>
+    <script src="horizon_termlive.js?v=1.93.7"></script>
+    <script src="horizon_v2.js?v=1.93.7"></script>
+    <script src="horizon_lift.js?v=1.93.7"></script>
     <script>(function(){var d=document.documentElement;requestAnimationFrame(function(){requestAnimationFrame(function(){d.classList.remove('hz-boot');try{window.HzBootMs=Math.round(performance.now());}catch(e){}});});})();</script>
 </body>
 </html>

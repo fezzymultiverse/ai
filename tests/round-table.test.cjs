@@ -12,7 +12,7 @@ test('V1.93.5 alarm notification cannot be swiped away', () => {
 
 test('V1.93.6 round table is wired into the group round', () => {
     const h = read('www/index.html');
-    assert.match(h, /horizon_round\.js\?v=1\.93\.6/);
+    assert.match(h, /horizon_round\.js\?v=1\.93\.\d+/);
     assert.match(h, /HzRound\.start\(chat, targets\)/);
     assert.match(h, /HzRound\.end\(rtok\)/);
     assert.match(h, /function skipSlowTurn/);
