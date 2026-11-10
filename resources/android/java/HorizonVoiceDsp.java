@@ -9,7 +9,7 @@ public final class HorizonVoiceDsp {
     private HorizonVoiceDsp() { }
     public interface Cancel { boolean cancelled(); }
     public static final int MAX_BYTES = 8 * 1024 * 1024;
-    private static final String[] FX = {"bass", "presence", "treble", "compression", "reverb", "echo", "robot", "tune"};
+    private static final String[] FX = {"bass", "presence", "treble", "compression", "reverb", "echo", "robot", "tune", "characterMix", "limiter", "normalize", "humanize", "deesser", "noiseGate", "saturation"};
     public static float value(Map<String, Float> settings, String key, float low, float high) {
         Float n = settings.get(key);
         return n == null || (Float.isNaN(n) || Float.isInfinite(n)) ? 0 : Math.max(low, Math.min(high, n));
@@ -91,6 +91,12 @@ public final class HorizonVoiceDsp {
 
     /** Three RBJ biquads, envelope compressor, ring modulation, damped comb room and feedback delay. */
     static void process(float[] pcm, int rate, Map<String, Float> s, Cancel cancel) throws IOException {
+        // Transform a single synthesized stream BEFORE the user EQ; never mix a second TTS player.
+        int character = Math.round(value(s,"character",0,10));
+        float mix = value(s,"characterMix",0,100) / 100;
+        if (character > 0 && mix > 0) shapeCharacter(pcm,rate,character,mix,cancel);
+        float humanize = value(s,"humanize",0,100) / 100;
+        if (humanize > 0) humanize(pcm,rate,humanize,cancel);
         float tune = value(s,"tune",0,100) / 100;
         if (tune > 0) snapPitch(pcm,rate,tune,cancel);
         Biquad bass = Biquad.shelf(rate,180,value(s,"bass",-12,12),false);
@@ -104,15 +110,38 @@ public final class HorizonVoiceDsp {
         int[] pointers = new int[4]; double[] damp = new double[4];
         float[] delay = echo > 0 ? new float[(int)(rate*.19)] : null; int dp = 0;
         double step = 2*Math.PI*73/rate, phase = 0;
+        double deess = value(s,"deesser",0,100)/100.0, gate = value(s,"noiseGate",0,100)/100.0;
+        double saturation = value(s,"saturation",0,100)/100.0;
+        double deessLow = 0, sibEnv = 0, gateEnv = 0, gateGain = 1;
+        double split = 1-Math.exp(-2*Math.PI*Math.min(3600,rate*.36)/rate);
+        double sibRelease = Math.exp(-1.0/(.035*rate));
+        double gateAttack = Math.exp(-1.0/(.002*rate)), gateRelease = Math.exp(-1.0/(.07*rate));
         float peak = 0;
         for (int i = 0; i < pcm.length; i++) {
             if ((i & 4095) == 0) check(cancel);
             double x = high.run(mid.run(bass.run(pcm[i])));
+            if (deess > 0) {
+                deessLow += split*(x-deessLow);
+                double hiss=x-deessLow;
+                sibEnv=Math.max(Math.abs(hiss),sibEnv*sibRelease);
+                double sibThreshold=.055-.035*deess;
+                double reduction=sibEnv>sibThreshold ? Math.min(.9,deess*(1-sibThreshold/sibEnv)) : 0;
+                x-=hiss*reduction;
+            }
+            if (gate > 0) {
+                double a=Math.abs(x), k=a>gateEnv?gateAttack:gateRelease;
+                gateEnv=k*gateEnv+(1-k)*a;
+                double gateThreshold=.001+gate*.024;
+                double target=Math.min(1,Math.pow(gateEnv/gateThreshold,2));
+                gateGain+=(target-gateGain)*(target>gateGain?.08:.002);
+                x*=gateGain;
+            }
             if (comp > 0) {
                 double abs = Math.abs(x), k = abs > env ? attack : release; env = k*env+(1-k)*abs;
                 double gain = env > threshold ? Math.pow(env/threshold,1/ratio-1) : 1;
                 x *= gain * makeup;
             }
+            if (saturation > 0) x=(1-saturation)*x+saturation*Math.tanh(x*(1+5*saturation))/Math.tanh(1+5*saturation);
             if (robot > 0) { x *= (1-robot) + robot*Math.sin(phase); phase += step; if (phase > 2*Math.PI) phase -= 2*Math.PI; }
             if (room > 0) {
                 double wet = 0;
@@ -128,12 +157,79 @@ public final class HorizonVoiceDsp {
             if ((Double.isNaN(x) || Double.isInfinite(x))) x=0;
             pcm[i]=(float)x; peak=Math.max(peak,Math.abs(pcm[i]));
         }
-        double gain = peak > .98 ? .98/peak : 1;
+        double normalize=value(s,"normalize",0,100)/100.0;
+        double gain=1;
+        // Never amplify digital silence; cap lift at 8x to avoid magnifying a noise floor.
+        if (normalize>0 && peak>1e-5) gain=1+normalize*(Math.min(8,.9/peak)-1);
+        if (peak*gain>.98) gain=.98/peak;
+        double limiter=value(s,"limiter",0,100)/100.0, ceiling=.98-.73*limiter;
         int fade = Math.min(rate/200,pcm.length/2);
         for (int i=0;i<pcm.length;i++) {
             if ((i & 4095)==0) check(cancel);
             double edge = Math.min(1,Math.min(i/(double)Math.max(1,fade),(pcm.length-1-i)/(double)Math.max(1,fade)));
-            pcm[i]*=gain*edge;
+            double sample=pcm[i]*gain;
+            if (limiter>0) sample=Math.max(-ceiling,Math.min(ceiling,sample));
+            pcm[i]=(float)(sample*edge);
+        }
+    }
+
+    /** Ten original timbre designs, not trained models or exact character/actor impersonations.
+     * Only the transformed stream is played; blend controls timbre within that stream.
+     * All accesses and loops are bounded by the same PCM duration/cancellation limits.
+     */
+    private static void shapeCharacter(float[] pcm,int rate,int type,float mix,Cancel cancel) throws IOException {
+        float[] dry=pcm.clone();
+        Biquad body=Biquad.shelf(rate,260,type==1?4:type==2?5:type==10?8:0,false);
+        Biquad low=Biquad.shelf(rate,Math.min(3300,rate*.38),type==1?-3:type==2?-5:type==10?-8:0,true);
+        Biquad phoneBass=Biquad.shelf(rate,500,-24,false);
+        Biquad phoneHigh=Biquad.shelf(rate,Math.min(2700,rate*.36),-24,true);
+        Biquad phoneMid=Biquad.peak(rate,1600,6);
+        long noise=0x999L; double env=0, last=0;
+        for (int i=0;i<pcm.length;i++) {
+            if ((i&4095)==0) check(cancel);
+            double x=dry[i],t=i/(double)rate,y=x;
+            switch(type) {
+                case 1: // Low, gravelly baritone texture. Pitch is set once by Android TTS.
+                    y=low.run(body.run(x)); y=.72*Math.tanh(2.6*y)*(1+.16*Math.sin(2*Math.PI*37*t)); break;
+                case 2: // Rounded warm storyteller.
+                    y=low.run(body.run(x)); y=.8*Math.tanh(1.8*y); break;
+                case 3: // Masked, mechanical undertone.
+                    y=.8*x+.32*x*Math.sin(2*Math.PI*48*t); y=Math.tanh(2*y)*.7; break;
+                case 4: // Digital carrier + low-resolution timbre.
+                    y=x*(.5+.5*Math.sin(2*Math.PI*115*t)); y=Math.rint(y*48)/48; break;
+                case 5: // Band-limited, driven vintage handset.
+                    y=phoneHigh.run(phoneMid.run(phoneBass.run(x))); y=Math.tanh(3*y)*.7; break;
+                case 6: // Breath-driven whisper, retaining consonants for intelligibility.
+                    env=Math.max(Math.abs(x),env*Math.exp(-1.0/(.008*rate)));
+                    noise=(noise*1664525+1013904223)&0xffffffffL;
+                    y=.42*(x-last)+.38*x+(((noise>>>8)/8388607.5)-1)*env*.42; last=x; break;
+                case 7: // Two modulated short delays form a double-tracked texture.
+                    y=.65*x+.22*sample(dry,i-rate*(.018+.002*Math.sin(2*Math.PI*.7*t)))+.22*sample(dry,i-rate*(.026+.003*Math.sin(2*Math.PI*.93*t))); break;
+                case 8: // Fractional-delay vibrato + a light alien carrier.
+                    y=sample(dry,i-rate*(.003+.0025*Math.sin(2*Math.PI*5.8*t)))*(1+.22*Math.sin(2*Math.PI*31*t)); break;
+                case 9: // Held samples and five-bit quantization.
+                    int hold=Math.max(1,rate/6000); y=Math.rint(dry[i-i%hold]*24)/24; break;
+                case 10: // Low resonance and non-linear rumble.
+                    y=low.run(body.run(x)); y=.75*Math.tanh(3*y)*( .84+.16*Math.sin(2*Math.PI*24*t)); break;
+                default: break;
+            }
+            if (!Double.isFinite(y)) y=0;
+            pcm[i]=(float)(x*(1-mix)+y*mix);
+        }
+    }
+    private static double sample(float[] pcm,double position) {
+        if(position<0 || position>=pcm.length-1)return 0;
+        int at=(int)position; double part=position-at;
+        return pcm[at]*(1-part)+pcm[at+1]*part;
+    }
+    private static void humanize(float[] pcm,int rate,float amount,Cancel cancel) throws IOException {
+        float[] dry=pcm.clone();
+        for(int i=0;i<pcm.length;i++) {
+            if((i&4095)==0)check(cancel);
+            double t=i/(double)rate;
+            double delay=amount*rate*.0006*(1+Math.sin(2*Math.PI*1.7*t));
+            double dynamics=1+amount*(.035*Math.sin(2*Math.PI*2.3*t)+.02*Math.sin(2*Math.PI*.61*t));
+            pcm[i]=(float)(sample(dry,i-delay)*dynamics);
         }
     }
 

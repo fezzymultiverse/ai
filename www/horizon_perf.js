@@ -22,22 +22,26 @@
   window.hzKbBusy = false;
   function kbSettle() {
     kbTimer = 0;
+    busySince = 0;
+    nativeUntil = 0;
     settledH = vh();
     window.hzKbBusy = false;
     de.classList.remove('hz-kb-moving');
     try { window.dispatchEvent(new Event('hz-kb-settled')); } catch (e) { /* very old WebView */ }
   }
+  var busySince = 0;
   var nativeUntil = 0;   // while Android says the keyboard is sliding, resize events must not shorten the wait
   function kbCheck() {
     if (Date.now() < nativeUntil) return;
     var h = vh();
     if (!window.hzKbBusy) {
       if (Math.abs(h - settledH) < 80) return;   // only keyboard-sized changes count
+      busySince = Date.now();
       window.hzKbBusy = true; kbMoves++;
       de.classList.add('hz-kb-moving');
     }
     clearTimeout(kbTimer);
-    kbTimer = setTimeout(kbSettle, 220);
+    kbTimer = setTimeout(kbSettle, Math.min(220, Math.max(0, 1400 - (Date.now() - busySince))));
   }
   window.hzKbCheck = kbCheck;
 
@@ -48,9 +52,10 @@
   window.hzKbNative = function (moving, visible) {
     clearTimeout(kbTimer);
     if (moving) {
-      nativeUntil = Date.now() + 1200;
+      if (!busySince) busySince = Date.now();
+      nativeUntil = busySince + 1200;
       if (!window.hzKbBusy) { window.hzKbBusy = true; kbMoves++; de.classList.add('hz-kb-moving'); }
-      kbTimer = setTimeout(function () { nativeUntil = 0; kbSettle(); }, 1200);
+      kbTimer = setTimeout(function () { nativeUntil = 0; kbSettle(); }, Math.max(0, nativeUntil - Date.now()));
       return;
     }
     nativeUntil = 0;

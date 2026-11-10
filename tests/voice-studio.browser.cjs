@@ -10,7 +10,7 @@ const server=http.createServer((req,res)=>{const file=path.resolve(root,'.'+deco
   await page.addInitScript(()=>{localStorage.setItem('horizon_tts_engine','kokoro');localStorage.setItem('horizon_tts_gcloud_key','obsolete-key');});
   await page.goto('http://127.0.0.1:'+server.address().port,{waitUntil:'load'});
   await page.locator('#settingsBtn').evaluate(b=>b.click());await page.locator('#settingsHome [data-tab="personalisation"]').click();await page.locator('#ttsCard > .settings-row-header').click();
-  assert.equal(await page.locator('#ttsCard input[type="range"]').count(),10);assert.equal(await page.locator('#ttsPreset option').count(),11);assert.equal(await page.locator('#ttsCloudConfig,#ttsHd,#ttsNat,#ttsLib').count(),0);checks.push('exactly ten controls, ten presets plus Custom, no old TTS provider or download UI');
+  assert.equal(await page.locator('#ttsCard input[type="range"]').count(),17);assert.equal(await page.locator('#ttsPreset option').count(),21);assert.equal(await page.locator('#ttsCloudConfig,#ttsHd,#ttsNat,#ttsLib').count(),0);checks.push('seventeen controls, twenty presets plus Custom, no old TTS provider or download UI');
   assert.equal(await page.evaluate(()=>localStorage.getItem('horizon_tts_engine')),'standard');assert.equal(await page.evaluate(()=>localStorage.getItem('horizon_tts_gcloud_key')),null);checks.push('legacy engine and Cloud TTS key migrate safely');
   await page.evaluate(()=>{
    window.__voiceCalls=[];window.__voiceEvents=new Map();
@@ -24,11 +24,13 @@ const server=http.createServer((req,res)=>{const file=path.resolve(root,'.'+deco
    assert.equal(detail.last.rate,detail.s.rate);assert.equal(detail.last.pitch,detail.s.pitch);assert.equal(detail.last.effects.robot,detail.s.robot);assert.equal(detail.state,'playing');
    await page.evaluate(()=>{window.__finishVoice.resolve();window.__finishVoice=null;});await page.waitForFunction(()=>window.HorizonTTS.status().state==='idle');
   }
-  checks.push('all ten presets drive the native speech bridge and complete with real-start events (mock Android bridge)');
+  checks.push('all twenty presets drive the native speech bridge and complete with real-start events (mock Android bridge)');
   await page.locator('#ttsPreset').selectOption('ghost');await page.locator('#ttsTest').click();await page.waitForFunction(()=>!!window.__finishVoice);
   await page.evaluate(()=>window.HorizonTTS.pause());await page.waitForFunction(()=>window.__voicePaused===true);await page.evaluate(()=>window.HorizonTTS.resume());await page.waitForFunction(()=>window.__voicePaused===false);
   await page.locator('#ttsTest').click();await page.waitForFunction(()=>window.HorizonTTS.status().state==='idle');checks.push('effects pause, resume and stop use native bridge without provider fallback');
+  await page.locator('#ttsEqGroup > summary').click();
   await page.locator('#ttsFx_bass').evaluate(e=>{e.value='7';e.dispatchEvent(new Event('input',{bubbles:true}));});assert.equal(await page.locator('#ttsPreset').inputValue(),'custom');assert.equal(await page.evaluate(()=>window.HorizonTTS.settings().bass),7);checks.push('live EQ adjustment switches to Custom and persists');
+  await page.locator('#ttsCard details').evaluateAll(nodes=>nodes.forEach(d=>d.open=true));
   for(const width of [320,412,768]){await page.setViewportSize({width,height:915});const bad=await page.locator('#ttsCard input[type="range"],#ttsPreset').evaluateAll(nodes=>nodes.filter(e=>{const r=e.getBoundingClientRect();return r.width===0||r.left<0||r.right>innerWidth+1;}).map(e=>e.id));assert.deepEqual(bad,[]);}
   checks.push('voice controls fit 320, 412 and 768px widths');
   await page.setViewportSize({width:412,height:915});await page.locator('#ttsStudio').scrollIntoViewIfNeeded();await page.screenshot({path:path.join(reportDir,'android-voice-studio.png')});

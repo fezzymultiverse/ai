@@ -17,7 +17,7 @@ async function pending(h){for(let i=0;i<100&&!h.speech.pending;i++)await tick();
 test('first run uses only direct Android speech and reports actual native start',async()=>{const h=setup();assert.equal(h.T.settings().engine,'standard');assert.equal(await h.T.speak('a','Hello.'),true);assert.equal(h.spoken.length,1);assert.ok(h.states.some(s=>s.state==='playing'));assert.equal(h.T.status().state,'idle');assert.equal(h.events.size,0);});
 test('all legacy engine selections migrate to Android, never cloud or neural packs',async()=>{for(const engine of ['gemini','gcloud','kokoro','sherpa','openai']){const h=setup({saved:{horizon_tts_engine:engine,horizon_tts_gcloud_key:'old-key',horizon_tts_nengine:'old.custom'}});assert.equal(h.T.settings().engine,'standard');assert.equal(h.store.has('horizon_tts_gcloud_key'),false);assert.equal(h.T.settings().nengine,'');assert.equal(await h.T.speak('a','Hello.'),true);}});
 test('Android-only controller does not expose model packs, cloud voices or HD downloads',()=>{const {T}=setup();assert.equal(T.packs,undefined);assert.equal(T.cloud,undefined);assert.equal(T.hd,undefined);const s=fs.readFileSync(require.resolve('../www/horizon_tts.js'),'utf8');assert.ok(!s.includes('fetch('));assert.ok(!s.includes('speechSynthesis'));});
-test('exactly ten bounded sound controls and ten distinct character presets',()=>{const {T}=setup();assert.equal(T.controls.length,10);assert.equal(T.presets.length,10);const values=new Set();for(const p of T.presets){assert.equal(T.applyPreset(p.id),true);const s=T.settings();for(const c of T.controls)assert.ok(s[c.key]>=c.min&&s[c.key]<=c.max);values.add(JSON.stringify(T.controls.map(c=>s[c.key])));}assert.equal(values.size,10);});
+test('seventeen bounded controls and twenty distinct character presets',()=>{const {T}=setup();assert.equal(T.controls.length,17);assert.equal(T.presets.length,20);const values=new Set();for(const p of T.presets){assert.equal(T.applyPreset(p.id),true);const s=T.settings();for(const c of T.controls)assert.ok(s[c.key]>=c.min&&s[c.key]<=c.max);values.add(JSON.stringify([s.character,...T.controls.map(c=>s[c.key]) ]));}assert.equal(values.size,20);});
 test('neutral bypasses DSP; every sound effect selects the processing path',()=>{const {T}=setup();assert.equal(T.hasEffects(),false);for(const c of T.controls.filter(c=>!['rate','pitch'].includes(c.key))){T.applyPreset('neutral');T.set(c.key,5);assert.equal(T.hasEffects(),true,c.key);}T.applyPreset('neutral');T.set('rate',1.5);T.set('pitch',1.2);assert.equal(T.hasEffects(),false);});
 test('controls clamp invalid stored and live input without NaN or infinity',()=>{const {T}=setup({saved:{horizon_tts_rate:'NaN',horizon_tts_pitch:'Infinity',horizon_tts_bass:'-100'}});assert.equal(T.settings().rate,1);assert.equal(T.settings().pitch,1);assert.equal(T.settings().bass,-12);T.set('rate',999);T.set('reverb',-100);assert.equal(T.settings().rate,2);assert.equal(T.settings().reverb,0);assert.equal(T.settings().preset,'custom');assert.equal(T.set('unknown',1),false);});
 test('preset controls go to Android speech once, with no second speed or pitch transform',async()=>{const h=setup();h.T.applyPreset('villain');assert.equal(await h.T.speak('a','Hello.'),true);const a=h.spoken[0];assert.equal(a.rate,.85);assert.equal(a.pitch,.65);assert.equal(a.effects.bass,6);assert.equal(a.effects.reverb,23);});
@@ -37,3 +37,19 @@ test('missing voice list fails cleanly, with no browser fallback',async()=>{cons
 test('rapid replacement allows only the most recent request to reach Android speak',async()=>{const h=setup();const a=h.T.speak('old','Old.');const b=h.T.speak('new','New.');assert.equal(await a,false);assert.equal(await b,true);assert.equal(h.spoken.length,1);assert.equal(h.spoken[0].text,'New.');});
 test('immediate direct pause-resume does not lose the current chunk to a cancellation race',async()=>{const h=setup({pending:true});const run=h.T.speak('a','Hello.');await pending(h);h.T.pause();h.T.resume();await pending(h);assert.equal(h.spoken.length,2);h.speech.pending.resolve();h.speech.pending=null;assert.equal(await run,true);});
 test('listeners can unsubscribe and unsafe mutation of presets is prevented',()=>{const h=setup();let n=0;const unsub=h.T.onState(()=>n++);unsub();h.T.stop();assert.equal(n,0);assert.ok(Object.isFrozen(h.T.presets));assert.ok(Object.isFrozen(h.T.presets[0].values));});
+
+test('ten added character transforms survive manual EQ and installed voice changes',async()=>{
+ const h=setup();const added=h.T.presets.filter(p=>p.values.character);assert.equal(added.length,10);
+ for(const p of added){
+  h.T.applyPreset(p.id);const character=h.T.settings().character;
+  h.T.set('bass',7);h.T.set('presence',-2);h.T.set('treble',3);h.T.set('voice','en-us-other');
+  assert.equal(h.T.settings().character,character);assert.equal(h.T.settings().preset,'custom');
+  assert.equal(h.T.settings().characterMix,100);await h.T.speak('eq','Exact words.');
+  const a=h.spoken.at(-1);assert.equal(a.effects.character,character);assert.equal(a.effects.bass,7);assert.equal(a.effects.presence,-2);assert.equal(a.effects.treble,3);assert.equal(a.voiceName,'en-us-other');
+ }
+ h.T.applyPreset('neutral');assert.equal(h.T.settings().character,0);assert.equal(h.T.hasEffects(),false);
+});
+test('six new processors reach the native bridge with independent bounded controls',async()=>{
+ const h=setup();for(const key of ['limiter','normalize','humanize','deesser','noiseGate','saturation'])h.T.set(key,60);
+ await h.T.speak('processors','Hello.');for(const key of ['limiter','normalize','humanize','deesser','noiseGate','saturation'])assert.equal(h.spoken[0].effects[key],60);
+});

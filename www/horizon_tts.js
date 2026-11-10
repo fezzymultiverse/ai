@@ -11,7 +11,14 @@
         {key:'reverb',label:'Room reverb',min:0,max:100,step:1,default:0,unit:'%'},
         {key:'echo',label:'Echo',min:0,max:100,step:1,default:0,unit:'%'},
         {key:'robot',label:'Robot · ring modulation',min:0,max:100,step:1,default:0,unit:'%'},
-        {key:'tune',label:'Pitch-snap · experimental',min:0,max:100,step:1,default:0,unit:'%'}
+        {key:'tune',label:'Pitch-snap · experimental',min:0,max:100,step:1,default:0,unit:'%'},
+        {key:'characterMix',label:'Character transformation mix',min:0,max:100,step:1,default:0,unit:'%'},
+        {key:'limiter',label:'Hard limiter',min:0,max:100,step:1,default:0,unit:'%'},
+        {key:'normalize',label:'Peak normalize',min:0,max:100,step:1,default:0,unit:'%'},
+        {key:'humanize',label:'Humanize · subtle timing and dynamics',min:0,max:100,step:1,default:0,unit:'%'},
+        {key:'deesser',label:'De-esser · sibilance reduction',min:0,max:100,step:1,default:0,unit:'%'},
+        {key:'noiseGate',label:'Noise gate',min:0,max:100,step:1,default:0,unit:'%'},
+        {key:'saturation',label:'Warm saturation',min:0,max:100,step:1,default:0,unit:'%'}
     ];
     const presets = [
         {id:'neutral',name:'Natural narrator',values:{}},
@@ -23,7 +30,18 @@
         {id:'wizard',name:'Ancient wizard',values:{rate:.85,pitch:.85,presence:2,reverb:35,echo:15}},
         {id:'android',name:'Neon android',values:{rate:1.1,pitch:1.15,treble:3,robot:35,tune:100,echo:12}},
         {id:'announcer',name:'Radio announcer',values:{rate:1.05,pitch:.9,bass:4,presence:4,compression:70}},
-        {id:'ghost',name:'Echo phantom',values:{rate:.8,pitch:1.25,bass:-3,reverb:55,echo:45,robot:12}}
+        {id:'ghost',name:'Echo phantom',values:{rate:.8,pitch:1.25,bass:-3,reverb:55,echo:45,robot:12}},
+        {id:'bojack-inspired',name:'Bojack-inspired · gravelly baritone',values:{character:1,characterMix:100,rate:.9,pitch:.72,bass:3,presence:2,compression:25}},
+        {id:'velvet',name:'Velvet storyteller',values:{character:2,characterMix:100,rate:.94,pitch:.86}},
+        {id:'masked',name:'Masked enforcer',values:{character:3,characterMix:100,rate:.88,pitch:.67}},
+        {id:'cyborg',name:'Digital cyborg',values:{character:4,characterMix:100,rate:1.02,pitch:.94}},
+        {id:'telephone',name:'Vintage telephone',values:{character:5,characterMix:100,rate:1.03,pitch:1}},
+        {id:'whisper',name:'Airy whisper',values:{character:6,characterMix:100,rate:.95,pitch:1.08}},
+        {id:'double',name:'Double-tracked performer',values:{character:7,characterMix:100,rate:1,pitch:.97}},
+        {id:'alien',name:'Warbling alien',values:{character:8,characterMix:100,rate:.96,pitch:1.32}},
+        {id:'arcade',name:'8-bit arcade',values:{character:9,characterMix:100,rate:1.08,pitch:1.2}},
+        {id:'ogre',name:'Rumbling ogre',values:{character:10,characterMix:100,rate:.82,pitch:.58}}
+
     ];
     controls.forEach(Object.freeze); presets.forEach(p => {Object.freeze(p.values);Object.freeze(p);});
     Object.freeze(controls); Object.freeze(presets);
@@ -39,6 +57,7 @@
     function settings(){
         const s={engine:'standard',nengine:'',voice:ls.get(key('voice'))||'',lang:ls.get(key('lang'))||'',preset:ls.get(key('preset'))||'neutral'};
         controls.forEach(c=>s[c.key]=clamp(ls.get(key(c.key)),c.min,c.max,c.default));
+        s.character=Math.round(clamp(ls.get(key('character')),0,10,0));
         if(s.preset!=='custom' && !presets.some(p=>p.id===s.preset))s.preset='custom';
         return s;
     }
@@ -50,7 +69,7 @@
         const c=controls.find(c=>c.key===k);if(!c)return false;
         ls.set(key(k),clamp(v,c.min,c.max,c.default));ls.set(key('preset'),'custom');return true;
     }
-    function applyPreset(id){const p=presets.find(p=>p.id===id);if(!p)return false;controls.forEach(c=>ls.set(key(c.key),p.values[c.key]===undefined?c.default:p.values[c.key]));ls.set(key('preset'),id);return true;}
+    function applyPreset(id){const p=presets.find(p=>p.id===id);if(!p)return false;ls.set(key('character'),p.values.character||0);controls.forEach(c=>ls.set(key(c.key),p.values[c.key]===undefined?c.default:p.values[c.key]));ls.set(key('preset'),id);return true;}
     function hasEffects(s){s=s||settings();return controls.some(c=>c.key!=='rate' && c.key!=='pitch' && Math.abs(s[c.key]||0)>.001);}
     function timeout(p,ms,label){let t;return Promise.race([Promise.resolve(p),new Promise((_,no)=>t=setTimeout(()=>no(Error(label)),ms))]).finally(()=>clearTimeout(t));}
     function holdPaint(){if(!held||!plugFn)return;try{const p=plugFn('HorizonAI');if(p&&p.speechHold)Promise.resolve(p.speechHold({paused,queued:queuedN})).catch(()=>{});}catch(_){}}
@@ -174,6 +193,7 @@
                     utterance='hz-'+(++seq);
                     const args={text,utteranceId:utterance,lang:v&&v.lang||s.lang||root.navigator&&root.navigator.language||'en-US',voiceName:v&&v.id||'',rate:s.rate,pitch:s.pitch,effects:{}};
                     controls.filter(c=>c.key!=='rate'&&c.key!=='pitch').forEach(c=>args.effects[c.key]=s[c.key]);
+                    args.effects.character=s.character;
                     try{await p.speak(args);done=true;}
                     catch(e){if(tok.cancelled)return false;if(!hasEffects(s)&&(paused||(tok.pauseSeq||0)!==pauseSeq)){await waitResume();continue;}throw e;}
                 }

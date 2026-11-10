@@ -580,7 +580,7 @@
                     </div>
                     <p class="hint">Android text-to-speech only. Choose an installed Android voice, then shape it locally. Offline use requires downloaded Android voice data; voices marked online may use your Android engine's network service.</p>
                     <input id="ttsEngine" type="hidden" value="standard">
-                    <div id="ttsAndroid">
+                    <details class="hz-voice-group" id="ttsAndroidGroup"><summary>Android voice and language</summary><div id="ttsAndroid">
                         <label class="field-label" for="ttsNEngine">Android speech engine</label>
                         <select id="ttsNEngine"><option value="">Phone default</option></select>
                         <p class="hint" id="ttsNEngineHint"></p>
@@ -593,19 +593,29 @@
                             <button class="use-btn" id="ttsMore" type="button">Get more Android voices</button>
                         </div>
                     </div>
+                    </details>
+                    <details class="hz-voice-group" id="ttsTimingGroup"><summary>Speed and pitch</summary>
                     <label class="field-label" for="ttsRate">Speed<span class="tts-val" id="ttsRateVal">1&times;</span></label>
                     <input class="hz-range" type="range" id="ttsRate" min="0.5" max="2" step="0.05" value="1">
                     <div id="ttsPitchWrap">
                         <label class="field-label" for="ttsPitch">Pitch<span class="tts-val" id="ttsPitchVal">1&times;</span></label>
                         <input class="hz-range" type="range" id="ttsPitch" min="0.5" max="2" step="0.05" value="1">
                     </div>
+                    </details>
                     <div id="ttsStudio">
+                        <details class="hz-voice-group" id="ttsCharacterGroup" open><summary>Character voices</summary>
                         <label class="field-label" for="ttsPreset">Character preset</label>
                         <select id="ttsPreset"></select>
                         <p class="hint" id="ttsPresetHint">Stylised sound design using your selected Android voice, not a voice clone.</p>
-                        <div id="ttsFxControls"></div>
+                        <div id="ttsCharacterMix"></div>
+                        </details>
+                        <div id="ttsFxControls">
+                            <details class="hz-voice-group" id="ttsEqGroup"><summary>Equalizer · works with every voice</summary><div id="ttsEqControls"></div></details>
+                            <details class="hz-voice-group" id="ttsDynamicsGroup"><summary>Dynamics and cleanup</summary><div id="ttsDynamicsControls"></div></details>
+                            <details class="hz-voice-group" id="ttsCreativeGroup"><summary>Creative effects</summary><div id="ttsCreativeControls"></div></details>
+                        </div>
                         <button class="use-btn" type="button" id="ttsFxReset">Reset to neutral</button>
-                        <p class="hint">10 controls: speed, pitch, bass, presence, treble, compression, reverb, echo, robot tone, and experimental chromatic pitch-snap (autotune-style). Effects are rendered locally per short sentence. Neutral bypasses rendering for fastest playback. Pitch-snap is an effect, not studio-grade singing correction.</p>
+                        <p class="hint">20 presets, including 10 added character transformations. Android synthesizes to a private file; only the processed voice plays when effects are enabled. EQ stays editable after any preset or voice selection and applies on the next playback. Character mix blends transformed and original timbre. Six added processors: hard limiter, peak normalize, humanize, de-esser, noise gate and warm saturation. No exact voice cloning or system-wide voice replacement. Neutral bypasses rendering.</p>
                     </div>
                 </section>
 
@@ -6795,9 +6805,13 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         // the message box grows with the text; a programmatic value change resizes it too
         // V1.58.2: typing no longer forces a full re-layout on every key. The box collapses first only when the text shrinks or is replaced;
         // while it grows it just reads scrollHeight and writes a height when that changed.
-        let sizeLen = 0, sizeH = 0, composingInput = false;
+        let sizeLen = 0, sizeH = 0, composingInput = false, sizeRaf = 0, forceSize = false;
+        function queueInputSize(full) {
+            forceSize = forceSize || full === true;
+            if (!sizeRaf) sizeRaf = requestAnimationFrame(() => { sizeRaf = 0; const full = forceSize; forceSize = false; sizeInput(full); });
+        }
         function sizeInput(full) {
-            if (composingInput || window.hzKbBusy) return;
+            if (composingInput || window.hzKbBusy) { if (full === true) forceSize = true; return; }
             const len = chatInput.value.length;
             const shrink = full === true || len < sizeLen;
             sizeLen = len;
@@ -6808,10 +6822,9 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         }
         (function () {
             const d = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value');
-            Object.defineProperty(chatInput, 'value', { configurable: true, get() { return d.get.call(this); }, set(v) { d.set.call(this, v); sizeInput(true); } });
+            Object.defineProperty(chatInput, 'value', { configurable: true, get() { return d.get.call(this); }, set(v) { d.set.call(this, v); queueInputSize(true); } });
             // V1.38.0: several input events inside one frame (keyboard prediction, composition) resize once
-            let sizeRaf = 0;
-            const queueSize = () => { if (sizeRaf) return; sizeRaf = requestAnimationFrame(() => { sizeRaf = 0; sizeInput(); }); };
+            const queueSize = () => queueInputSize();
             chatInput.addEventListener('input', queueSize);
             chatInput.addEventListener('compositionstart', () => { composingInput = true; });
             chatInput.addEventListener('compositionend', () => { composingInput = false; queueSize(); });
@@ -7513,7 +7526,8 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 const input = document.createElement('input'); input.type = 'range'; input.className = 'hz-range'; input.id = label.htmlFor;
                 input.min = c.min; input.max = c.max; input.step = c.step;
                 input.addEventListener('input', () => { TTS.set(c.key, input.value); syncStudio(); });
-                $('#ttsFxControls').append(label, input); fxNodes.push({input, out, key:c.key, unit:c.unit});
+                const group = c.key === 'characterMix' ? '#ttsCharacterMix' : ['bass','presence','treble'].includes(c.key) ? '#ttsEqControls' : ['compression','limiter','normalize','humanize','deesser','noiseGate','saturation'].includes(c.key) ? '#ttsDynamicsControls' : '#ttsCreativeControls';
+                $(group).append(label, input); fxNodes.push({input, out, key:c.key, unit:c.unit});
             });
             preset.addEventListener('change', () => { if (preset.value !== 'custom') { TTS.stop(); TTS.applyPreset(preset.value); syncStudio(); vEl.status.textContent = TTS.describe(); } });
             $('#ttsFxReset').addEventListener('click', () => { TTS.stop(); TTS.applyPreset('neutral'); syncStudio(); vEl.status.textContent = TTS.describe(); });

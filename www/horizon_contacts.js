@@ -8,8 +8,21 @@
   function node(tag, text, cls) { var e = document.createElement(tag); if (text != null) e.textContent = text; if (cls) e.className = cls; return e; }
   function say(text) { if (window.HzToast) window.HzToast.show({ title: 'Contacts', sub: String(text), ms: 8000 }); }
   function button(text, fn) { var b = node('button', text, 'hzb-action'); b.type = 'button'; b.addEventListener('click', function () { Promise.resolve().then(fn).catch(function (e) { say(e.message || e); }); }); return b; }
+  function paintRecipient() {
+    var previous = document.getElementById('hzChatRecipient');
+    if (previous) previous.remove();
+    if (!selected || !sharedWithAI) return;
+    var composer = document.querySelector('.composer');
+    if (!composer) return;
+    var preview = node('article', null, 'hz-chat-recipient'); preview.id = 'hzChatRecipient';
+    preview.setAttribute('data-hz-private', ''); preview.setAttribute('aria-label', 'Selected WhatsApp recipient');
+    var identity = node('div'); identity.append(node('small', 'WhatsApp recipient'), node('strong', selected.name), node('span', selected.phone));
+    preview.append(identity, button('Remove', clear));
+    composer.insertBefore(preview, composer.firstChild);
+  }
   function select(contact) {
     sharedWithAI = false;
+    paintRecipient();
     selected = { id: String(contact.id), name: String(contact.name), phone: String(contact.phone) };
     card.replaceChildren(node('h3', selected.name), node('p', selected.phone, 'hint'));
     var business = node('select'); business.id = 'hzContactBusiness'; business.setAttribute('aria-label', 'WhatsApp account');
@@ -30,13 +43,14 @@
     card.append(label, message, send, button('Use contact in AI chat', function () {
       // No secret/address-book dump. Clearable selection is scoped to one chat session.
       sharedWithAI = true;
+      paintRecipient();
       dialog.close();
       var box = document.getElementById('chatInput'); if (box) box.focus({ preventScroll: true });
       say('AI recipient selected: ' + selected.name + '. Ask Horizon to send your message.');
     }), button('Clear recipient', clear));
     card.hidden = false;
   }
-  function clear() { sharedWithAI = false; selected = null; if (card) { card.replaceChildren(); card.hidden = true; } }
+  function clear() { sharedWithAI = false; selected = null; paintRecipient(); if (card) { card.replaceChildren(); card.hidden = true; } }
   async function load(append) {
     var p = plugin(); if (!p) throw new Error('Contacts require the Horizon Android app');
     var ticket = ++generation, query = search.value.trim(), offset = append ? nextOffset : 0;
@@ -77,7 +91,7 @@
   document.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('.hz-contacts-open')) { e.preventDefault(); open().catch(function (err) { say(err.message || err); }); } });
   // Navigation must not leak a selected recipient to a different conversation or group.
   document.addEventListener('click', function (e) {
-    if (e.target.closest && e.target.closest('#newChatBtn, #groupBtn, #sessionList, .session-item, [data-session]')) clear();
+    if (e.target.closest && e.target.closest('#newChatBtn, #groupBtn, #chatList, #sessionList, .session-item, [data-session]')) clear();
   });
   window.addEventListener('horizon-lock', clear);
   window.HorizonContacts = { open: open, clear: clear, block: block, selected: function () { return selected && sharedWithAI && Object.assign({}, selected); } };

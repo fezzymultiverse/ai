@@ -43,6 +43,29 @@ public final class HorizonVoiceDspTest {
         Map<String,Float> all=new HashMap<>();for(String k:new String[]{"bass","presence","treble"})all.put(k,12f);for(String k:new String[]{"compression","reverb","echo","robot","tune"})all.put(k,100f);
         float[] extreme=sine(rate,200,.95,1);HorizonVoiceDsp.process(extreme,rate,all,OK);boolean finite=true;for(float x:extreme)finite&=Float.isFinite(x);check(finite&&peak(extreme)<=.980001,"all effects at maximum remain finite and peak-limited");
         check(extreme[0]==0&&extreme[extreme.length-1]==0,"short edge fades avoid abrupt clicks");
+        for(int type=1;type<=10;type++){
+            Map<String,Float> character=fx("character",(float)type);character.put("characterMix",100f);
+            float[] a=sine(rate,230,.18,1);float[] b=a.clone();HorizonVoiceDsp.process(a,rate,character,OK);
+            boolean finiteChar=true;double difference=0;for(int i=0;i<a.length;i++){finiteChar&=Float.isFinite(a[i]);difference+=Math.abs(a[i]-b[i]);}
+            check(finiteChar&&rms(a)>.005&&difference>.01,"character "+type+" audibly transforms finite PCM");
+            character.put("bass",9f);float[] eq=sine(rate,100,.08,1);HorizonVoiceDsp.process(eq,rate,character,OK);
+            character.put("bass",0f);float[] noEq=sine(rate,100,.08,1);HorizonVoiceDsp.process(noEq,rate,character,OK);
+            check(rms(eq)>rms(noEq)*1.5,"character "+type+" remains controllable by downstream EQ");
+            float[] quiet=new float[rate/5];HorizonVoiceDsp.process(quiet,rate,character,OK);check(peak(quiet)==0,"character "+type+" preserves silence");
+            character.put("characterMix",0f);float[] zero=sine(rate,440,.2,1);HorizonVoiceDsp.process(zero,rate,character,OK);check(Math.abs(rms(zero)/rms(flat)-1)<.02,"character "+type+" zero mix is neutral");
+        }
+        float[] limited=sine(rate,440,.9,1);HorizonVoiceDsp.process(limited,rate,fx("limiter",100),OK);check(peak(limited)<=.250001,"hard limiter obeys 0.25 ceiling at 100 percent");
+        float[] normalized=sine(rate,440,.2,1);HorizonVoiceDsp.process(normalized,rate,fx("normalize",100),OK);check(Math.abs(peak(normalized)-.9)<.002,"normalize targets 0.9 peak");
+        float[] zeroNormalize=new float[rate];HorizonVoiceDsp.process(zeroNormalize,rate,fx("normalize",100),OK);check(peak(zeroNormalize)==0,"normalize never invents audio from silence");
+        Map<String,Float> normLimit=fx("normalize",100);normLimit.put("limiter",100f);float[] nl=sine(rate,440,.2,1);HorizonVoiceDsp.process(nl,rate,normLimit,OK);check(peak(nl)<=.250001,"limiter ceiling survives normalization");
+        float[] human=sine(rate,440,.2,1);HorizonVoiceDsp.process(human,rate,fx("humanize",100),OK);double hdiff=0;for(int i=0;i<human.length;i++)hdiff+=Math.abs(human[i]-flat[i]);check(hdiff>10&&rms(human)>.1,"humanize changes microtiming without losing speech energy");
+        float[] hiss=sine(rate,8000,.3,1);raw=rms(hiss);HorizonVoiceDsp.process(hiss,rate,fx("deesser",100),OK);check(rms(hiss)<raw*.8,"de-esser reduces strong high-frequency sibilance");
+        float[] lowDeess=sine(rate,150,.2,1);raw=rms(lowDeess);HorizonVoiceDsp.process(lowDeess,rate,fx("deesser",100),OK);check(rms(lowDeess)>raw*.9,"de-esser preserves low-frequency speech body");
+        float[] gated=sine(rate,440,.002,1);raw=rms(gated);HorizonVoiceDsp.process(gated,rate,fx("noiseGate",100),OK);check(rms(gated)<raw*.2,"noise gate attenuates sub-threshold noise");
+        float[] saturation=sine(rate,440,.2,1);HorizonVoiceDsp.process(saturation,rate,fx("saturation",100),OK);check(rms(saturation)>rms(flat)*1.4&&peak(saturation)<.98,"saturation adds bounded harmonic drive");
+        for(String k:new String[]{"characterMix","limiter","normalize","humanize","deesser","noiseGate","saturation"})all.put(k,100f);
+        all.put("character",8f);
+        for(int hz:new int[]{8000,16000,22050,24000,44100,48000}){float[] a=sine(hz,200,.2,.3);HorizonVoiceDsp.process(a,hz,all,OK);boolean good=true;for(float x:a)good&=Float.isFinite(x)&&Math.abs(x)<=.250001;check(good,"new effects combined stable at "+hz+" Hz");}
         Path dir=Files.createTempDirectory("horizon-dsp-test-");File input=dir.resolve("in.wav").toFile(),output=dir.resolve("out.wav").toFile();
         try{
             Files.write(input.toPath(),wav(sine(rate,440,.2,1),rate,1));HorizonVoiceDsp.render(input,output,fx("reverb",30),OK);check(output.length()>input.length(),"WAV render includes reverb tail");

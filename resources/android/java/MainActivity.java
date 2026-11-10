@@ -175,6 +175,14 @@ public class MainActivity extends BridgeActivity {
     }
 
     private boolean kbWatching = false;
+    private boolean kbAnimating = false;
+    private final Runnable kbWatchdog = () -> {
+        if (!kbAnimating) return;
+        kbAnimating = false;
+        WindowInsetsCompat now = ViewCompat.getRootWindowInsets(getWindow().getDecorView());
+        sendKeyboard(false, now != null && now.isVisible(WindowInsetsCompat.Type.ime()));
+        reportCover();
+    };
     private void watchKeyboard() {
         try {
             final View decor = getWindow().getDecorView();
@@ -214,7 +222,6 @@ public class MainActivity extends BridgeActivity {
     // The page (horizon_lift.js) uses this to keep the message box on top of the keyboard on phones that do not resize the page.
     private android.view.ViewTreeObserver.OnGlobalLayoutListener coverListener = null;
     private int lastCoverPx = -1;
-    private boolean kbAnimating = false;
     private final Runnable coverRunner = new Runnable() {
         @Override
         public void run() { reportCover(); }
@@ -253,6 +260,9 @@ public class MainActivity extends BridgeActivity {
     }
 
     private void sendKeyboard(boolean moving, boolean visible) {
+        final View decor = getWindow().getDecorView();
+        if (moving && !kbAnimating) decor.postDelayed(kbWatchdog, 1200);
+        if (!moving) decor.removeCallbacks(kbWatchdog);
         kbAnimating = moving;
         try {
             final WebView wv = getBridge() != null ? getBridge().getWebView() : null;
@@ -267,6 +277,8 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onDestroy() {
         try {
+            getWindow().getDecorView().removeCallbacks(kbWatchdog);
+            getWindow().getDecorView().removeCallbacks(coverRunner);
             if (kbWatching) {
                 ViewCompat.setWindowInsetsAnimationCallback(getWindow().getDecorView(), null);   // the callback holds this Activity
                 if (coverListener != null) getWindow().getDecorView().getViewTreeObserver().removeOnGlobalLayoutListener(coverListener);

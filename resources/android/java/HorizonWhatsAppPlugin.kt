@@ -115,7 +115,11 @@ class HorizonWhatsAppPlugin : Plugin() {
         }
     }
     // Strict identity matching: duplicate display names/numbers must be selected by phone-row id.
+    private fun silentMode() = HorizonWhatsAppStore.prefs(context).getBoolean("silent", false)
     @PluginMethod fun sendToContact(call: PluginCall) {
+        if (silentMode() && getPermissionState("contacts") != PermissionState.GRANTED) {
+            call.reject("Silent send needs Contacts permission. Grant it in Terminal Controls; nothing was sent"); return
+        }
         if (!requireContacts(call)) return
         val id = call.getString("contactId") ?: ""
         val name = (call.getString("name") ?: "").trim()
@@ -158,6 +162,7 @@ class HorizonWhatsAppPlugin : Plugin() {
                 }
                 val conversations = candidates.map { it.optString("key") }.distinct()
                 if (conversations.isEmpty()) {
+                    if (silentMode()) throw IllegalStateException("Cannot send silently: no live direct-chat Reply notification for $resolvedName. Nothing was sent; no popup, notification or WhatsApp window was opened")
                     val enabledPackages = listOf("com.whatsapp", "com.whatsapp.w4b").filter { HorizonWhatsAppStore.enabled(context, it) }
                     val pkg = requestedPackage ?: enabledPackages.singleOrNull()
                         ?: throw IllegalStateException("Select Personal or Business: no unambiguous notification route")
@@ -179,9 +184,10 @@ class HorizonWhatsAppPlugin : Plugin() {
     }
     override fun handleOnDestroy() { contactWorker.shutdown(); super.handleOnDestroy() }
     // V1.92.0 silent path: no dialog, no activity, WhatsApp never opens. Off unless the user enables it.
-    private fun submitSilently(call: PluginCall, found: JSONObject, text: String) {
+    @Synchronized private fun submitSilently(call: PluginCall, found: JSONObject, text: String) {
         try {
             val p = HorizonWhatsAppStore.prefs(context)
+            if ((call.getString("contactId") != null || call.getString("name") != null) && getPermissionState("contacts") != PermissionState.GRANTED) throw IllegalStateException("Contacts permission was revoked")
             if (HorizonLockPlugin.locked) throw IllegalStateException("Unlock Horizon to send")
             if (!p.getBoolean("replies", false) || !HorizonWhatsAppStore.enabled(context, found.optString("package"))) throw IllegalStateException("WhatsApp permission was switched off")
             val now = System.currentTimeMillis()
@@ -201,11 +207,12 @@ class HorizonWhatsAppPlugin : Plugin() {
             call.resolve(JSObject().put("submitted", true).put("delivered", false))
         } catch (_: PendingIntent.CanceledException) {
             HorizonWhatsAppStore.replies.remove(found.optString("key"))
-            fallbackForRow(call, found, text)
+            call.reject("Reply notification expired. Nothing was sent; silent mode never opens a fallback")
         } catch (e: Exception) { call.reject("WhatsApp reply failed: ${e.message}. Nothing was sent") }
     }
     // Tells the user when a silent send is impossible: one tap opens the prepared draft.
     private fun notifyManual(name: String, number: String, text: String, pkg: String) {
+        if (silentMode()) return
         try {
             val digits = number.filter { it.isDigit() }
             if (digits.length < 7 || !NotificationManagerCompat.from(context).areNotificationsEnabled()) return
@@ -265,10 +272,12 @@ class HorizonWhatsAppPlugin : Plugin() {
         return Intent(Intent.ACTION_VIEW, UriBuilder(digits, text)).setPackage(pkg).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     }
     private fun requestFallback(call: PluginCall, pkg: String, phone: String, name: String, text: String) {
+        if (silentMode()) { call.reject("Cannot send silently: no live Reply action. Nothing was sent; visible fallback is disabled while silent mode is on"); return }
         if (!HorizonWhatsAppStore.prefs(context).getBoolean("accessibility", false) || !HorizonWhatsAppAccessibility.connected()) {
             call.reject("No live reply action. Enable Horizon's Accessibility fallback and Android Accessibility access; nothing was sent"); return
         }
         activity.runOnUiThread {
+            if (silentMode()) { call.reject("Silent mode is on; visible fallback refused. Nothing was sent"); return@runOnUiThread }
             android.app.AlertDialog.Builder(activity).setTitle("Send visibly in ${if (pkg.endsWith("w4b")) "WhatsApp Business" else "WhatsApp"}?")
                 .setMessage("To: $name ($phone)\n\n$text\n\nWhatsApp will open. Horizon will verify the chat and tap Send once. This is not a silent send.")
                 .setNegativeButton("Cancel") { _, _ -> call.reject("Reply cancelled") }
@@ -286,6 +295,7 @@ class HorizonWhatsAppPlugin : Plugin() {
         }
     }
     private fun fallbackForRow(call: PluginCall, row: JSONObject, text: String) {
+        if (silentMode()) { call.reject("No live Reply action. Nothing was sent; silent mode never opens a fallback"); return }
         if (row.optBoolean("group", true)) { call.reject("Accessibility fallback supports verified direct contacts only"); return }
         val phone = row.optString("phone")
         if (phone.isNotBlank() && getPermissionState("contacts") != PermissionState.GRANTED) { requestFallback(call, row.optString("package"), phone, phone, text); return }
@@ -340,6 +350,7 @@ class HorizonWhatsAppPlugin : Plugin() {
             .put("offset", offset).put("nextOffset", next).put("hasMore", next < matched))
     }
     @PluginMethod fun compose(call: PluginCall) {
+        if (silentMode()) { call.reject("Silent mode blocks visible drafts. Nothing was sent; turn Silent send off to open WhatsApp"); return }
         if (HorizonLockPlugin.locked) { call.reject("Unlock Horizon first"); return }
         val business = call.getBoolean("business", false) == true
         val pkg = if (business) "com.whatsapp.w4b" else "com.whatsapp"
@@ -348,6 +359,7 @@ class HorizonWhatsAppPlugin : Plugin() {
         val text = call.getString("text")?.trim() ?: ""
         if (!Regex("[0-9]{7,15}").matches(number) || text.isBlank() || text.length > 4000) { call.reject("Use an international phone number and 1–4000 message characters"); return }
         activity.runOnUiThread {
+            if (silentMode()) { call.reject("Silent mode is on; visible draft refused. Nothing was sent"); return@runOnUiThread }
             android.app.AlertDialog.Builder(activity).setTitle("Prepare WhatsApp message to +$number")
                 .setMessage(text + "\n\nWhatsApp will open. Review the recipient and tap Send there; this does not send silently.")
                 .setNegativeButton("Cancel") { _, _ -> call.reject("Message cancelled") }
@@ -375,9 +387,11 @@ class HorizonWhatsAppPlugin : Plugin() {
         else confirmReply(call, id, text, found)
     }
     private fun confirmReply(call: PluginCall, id: String, text: String, found: JSONObject) {
+        if (silentMode()) { submitSilently(call, found, text); return }
         if (HorizonLockPlugin.locked || !HorizonWhatsAppStore.prefs(context).getBoolean("replies", false) || !HorizonWhatsAppStore.enabled(context, found.optString("package"))) { call.reject("Unlock Horizon and enable confirmed replies in Terminal Controls"); return }
         if (!HorizonWhatsAppStore.replies.containsKey(found.optString("key"))) { call.reject("No active reply notification; WhatsApp was not opened"); return }
         activity.runOnUiThread {
+            if (silentMode()) { submitSilently(call, found, text); return@runOnUiThread }
             android.app.AlertDialog.Builder(activity).setTitle("Reply to ${found.optString("conversation")}")
                 .setMessage(text).setNegativeButton("Cancel") { _, _ -> call.reject("Reply cancelled") }
                 .setOnCancelListener { call.reject("Reply cancelled") }

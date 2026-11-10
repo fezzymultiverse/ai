@@ -114,13 +114,13 @@ const server = http.createServer((req, res) => {
     await page.locator('#settingsHome [data-tab="personalisation"]').click();
     if(!(await page.locator('#ttsPreset').isVisible()))await page.locator('#ttsCard > .settings-row-header').click();
     assert.equal(await page.locator('#ttsCloudConfig,#ttsHd,#ttsNat').count(),0);
-    assert.equal(await page.locator('#ttsPreset option').count(),11);
-    assert.equal(await page.locator('#ttsCard input[type="range"]').count(),10);
+    assert.equal(await page.locator('#ttsPreset option').count(),21);
+    assert.equal(await page.locator('#ttsCard input[type="range"]').count(),17);
     await page.locator('#ttsPreset').selectOption('robot');
     assert.equal(await page.evaluate(()=>window.HorizonTTS.settings().robot),80);
     await page.locator('#ttsFxReset').click();
     assert.equal(await page.evaluate(()=>window.HorizonTTS.hasEffects()),false);
-    checks.push('Android-only voice studio has ten controls, ten presets, functioning selection/reset and no cloud/model UI');
+    checks.push('Android-only voice studio has seventeen controls, twenty presets, functioning selection/reset and no cloud/model UI');
     await page.evaluate(()=>{
       window.__bridgeCalls=[];
       window.Capacitor={isNativePlatform:()=>true,Plugins:{HorizonWhatsApp:{

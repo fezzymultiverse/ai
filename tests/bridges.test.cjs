@@ -35,7 +35,7 @@ test('torrent commands stop seeding and quote the entire magnet',async()=>{const
 test('native permissions and components are wired into the generated build',()=>{const main=fs.readFileSync(path.join(root,'resources/android/java/MainActivity.java'),'utf8');const patch=fs.readFileSync(path.join(root,'scripts/apply-bridges.py'),'utf8');for(const name of ['HorizonWhatsAppPlugin','HorizonTermuxPlugin','HorizonExtractorPlugin']){assert.ok(main.includes('registerPlugin('+name+'.class)'));assert.ok(patch.includes(name+'.kt'));}assert.ok(patch.includes('BIND_NOTIFICATION_LISTENER_SERVICE'));assert.ok(patch.includes('com.termux.permission.RUN_COMMAND'));assert.ok(patch.includes('coreLibraryDesugaringEnabled true'));});
 test('WhatsApp keeps native confirmation and Termux uses token-bound HTML approval',()=>{const wa=fs.readFileSync(path.join(root,'resources/android/java/HorizonWhatsAppPlugin.kt'),'utf8');const tm=fs.readFileSync(path.join(root,'resources/android/java/HorizonTermuxPlugin.kt'),'utf8');assert.match(wa,/setPositiveButton\("Send"/);assert.match(tm,/approveInPage\(call, cmd/);assert.match(tm,/fun resolveApproval/);assert.ok(!tm.includes('AlertDialog.Builder'));assert.match(tm,/FLAG_MUTABLE/);assert.match(tm,/HorizonTermuxResultReceiver::class.java/);});
 test('music library automatically scans, is single-flight and waits for initialization',()=>{const s=fs.readFileSync(path.join(root,'www/horizon_music.js'),'utf8');assert.ok(s.includes('await ready;'));assert.ok(s.includes('if (!lib.length) await scan();'));assert.ok(s.includes('return scanFlight;'));assert.ok(s.includes('function confirmPlayback(t, start)'));assert.ok(!s.includes('Tell Fezzy to open the Music tab and tap Scan storage'));});
-test('keyboard fixes avoid late blur and defer measuring during composition',()=>{const perf=fs.readFileSync(path.join(root,'www/horizon_perf.js'),'utf8');const html=fs.readFileSync(path.join(root,'www/index.html'),'utf8');assert.ok(!perf.includes('a.blur()'));assert.ok(html.includes('if (composingInput || window.hzKbBusy) return;'));});
+test('keyboard fixes avoid late blur and defer measuring during composition',()=>{const perf=fs.readFileSync(path.join(root,'www/horizon_perf.js'),'utf8');const html=fs.readFileSync(path.join(root,'www/index.html'),'utf8');assert.ok(!perf.includes('a.blur()'));assert.match(html,/if \(composingInput \|\| window.hzKbBusy\) \{[^}]*return; \}/);});
 
 test('AI Termux gate refuses command before native execution',async()=>{const h=harness({tm:{enabled:true,permission:true,aiEnabled:false}});const result=await h.api.run('termux.run','pwd');assert.match(result.text,/AI commands are off/);assert.equal(h.calls.length,0);assert.ok(!h.api.block().includes('TERMUX BRIDGE'));});
 test('AI Termux requests carry native-enforced origin flag',async()=>{const h=harness({tm:{enabled:true,permission:true}});await h.api.run('termux.run','pwd');assert.equal(h.calls[0][1].fromAI,true);});
@@ -54,3 +54,21 @@ test('AI downloader fallback cannot bypass the AI Termux switch',async()=>{const
 test('private contact and WhatsApp inbox dialogs are excluded from automatic UI Lens text',()=>{for(const name of ['horizon_contacts.js','horizon_bridges.js'])assert.ok(fs.readFileSync(path.join(root,'www',name),'utf8').includes("setAttribute('data-hz-private', '')"));});
 
 test('contact phone matching refuses Android loose suffix comparisons',()=>{const s=fs.readFileSync(path.join(root,'resources/android/java/HorizonWhatsAppPlugin.kt'),'utf8');assert.ok(!s.includes('PhoneNumberUtils.compare('));assert.ok(s.includes('left.length >= 8 && left == right'));});
+
+test('silent mode blocks AI compose instead of reintroducing a native popup',async()=>{
+ const h=harness({wa:{personal:true,silent:true}});const r=await h.api.run('whatsapp.compose','+12025550100 | hello');
+ assert.match(r.text,/ERROR: Silent mode blocks visible drafts/);assert.equal(h.calls.length,0);assert.match(h.api.block(),/SILENT SEND MODE IS ON/);
+});
+test('native silent paths fail closed before fallback dialogs or alerts',()=>{
+ const s=fs.readFileSync(path.join(root,'resources/android/java/HorizonWhatsAppPlugin.kt'),'utf8');
+ for(const name of ['requestFallback','fallbackForRow','notifyManual']){
+  const start=s.indexOf('private fun '+name+'('),body=s.slice(start,s.indexOf('\n    }',start));
+  assert.ok(body.indexOf('if (silentMode())')>=0,name);
+  const dialog=body.indexOf('AlertDialog.Builder');if(dialog>=0)assert.ok(body.indexOf('if (silentMode())')<dialog,name+' guard first');
+ }
+ const start=s.indexOf('@Synchronized private fun submitSilently'),end=s.indexOf('// Tells the user',start),silent=s.slice(start,end);
+ assert.ok(!silent.includes('fallbackForRow('));assert.ok(!silent.includes('AlertDialog'));assert.ok(!silent.includes('startActivity('));assert.ok(!silent.includes('notifyManual('));
+ assert.ok(silent.includes('Reply notification expired. Nothing was sent'));assert.ok(silent.includes('action.actionIntent.isActivity'));
+ const compose=s.slice(s.indexOf('@PluginMethod fun compose('),s.indexOf('private fun UriBuilder'));
+ assert.ok(compose.indexOf('if (silentMode())')<compose.indexOf('AlertDialog.Builder'));
+});

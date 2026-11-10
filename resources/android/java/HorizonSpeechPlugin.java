@@ -138,7 +138,7 @@ public class HorizonSpeechPlugin extends Plugin {
         float rate=bounded(call.getFloat("rate",1f),.5f,2f,1f),pitch=bounded(call.getFloat("pitch",1f),.5f,2f,1f);
         tts.setSpeechRate(rate);tts.setPitch(pitch);
         JSObject effects=call.getObject("effects",new JSObject());Map<String,Float> fx=new HashMap<>();
-        for(String k:new String[]{"bass","presence","treble","compression","reverb","echo","robot","tune"}){
+        for(String k:new String[]{"bass", "presence", "treble", "compression", "reverb", "echo", "robot", "tune", "characterMix", "limiter", "normalize", "humanize", "deesser", "noiseGate", "saturation", "character"}){
             double n=effects.optDouble(k,0);fx.put(k,(!Double.isNaN(n) && !Double.isInfinite(n))?(float)Math.max(-12,Math.min(100,n)):0f);
         }
         String id="native-"+UUID.randomUUID(); // Never let caller-supplied/reused IDs settle another request.

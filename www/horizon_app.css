@@ -3934,3 +3934,15 @@ html.hz-lite *, html.hz-lite *::before, html.hz-lite *::after { box-shadow: none
 .hzb-approval::backdrop { background: #000b; }
 .hzb-approval pre { white-space: pre-wrap; overflow-wrap: anywhere; padding: 14px; background: #050a12; border: 1px solid #a84dff; border-radius: 12px; color: #b9faff; max-height: 45dvh; overflow: auto; }
 .hzb-approval button { padding: 12px 20px; margin: 8px 8px 0 0; border-radius: 12px; border: 1px solid #00e5ff; background: #142b35; color: #fff; }
+
+/* Requested voice groups and selected recipient preview. */
+#ttsCard .hz-voice-group { margin:8px 0; padding:10px 12px; border:1px solid var(--border-highlight,#345); border-radius:12px; min-width:0; }
+#ttsCard .hz-voice-group > summary { cursor:pointer; font-weight:600; padding:6px 0; min-height:30px; }
+#ttsCard .hz-voice-group[open] > summary { margin-bottom:10px; }
+#ttsCard .hz-voice-group input[type="range"],#ttsCard .hz-voice-group select { max-width:100%; width:100%; box-sizing:border-box; }
+#ttsCard .hz-voice-group summary:focus-visible { outline:2px solid var(--neon,#49e9a6); outline-offset:3px; }
+.hz-chat-recipient { display:flex; gap:12px; justify-content:space-between; align-items:center; border:1px solid var(--neon-deep,#276); border-radius:12px; padding:8px 12px; margin:0 0 8px; background:var(--surface,#101923); }
+.hz-chat-recipient > div { display:flex; flex-direction:column; min-width:0; }
+.hz-chat-recipient strong,.hz-chat-recipient span { overflow-wrap:anywhere; }
+.hz-chat-recipient small { opacity:.7; font-size:11px; }
+.hz-chat-recipient button { flex:none; }
