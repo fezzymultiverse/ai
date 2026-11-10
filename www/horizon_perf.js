@@ -212,6 +212,7 @@
     L.push('Horizon lag report ' + VERSION);
     L.push(env());
     L.push('Switches on: ' + switchesOn());
+    L.push('Startup: screen shown after ' + (window.HzBootMs ? window.HzBootMs + ' ms' : 'n/a'));
     L.push('Refresh measured: ' + (hz || 'n/a') + ' Hz (peak ' + (hzPeak || 'n/a') + ')');
     L.push('Keyboard moves: ' + kbMoves);
     if (loafOk) {

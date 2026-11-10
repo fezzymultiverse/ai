@@ -1,5 +1,5 @@
 /* HORIZON V1.85.0 · V14 typing indicator styles. Picks how the waiting animation looks in the thinking bubble:
-   dots (default), Laser, orbiting diamond, terminal cursor. Stored on this phone only (horizon_ind). The look itself is CSS (horizon_ind.css),
+   dots (default), Laser, orbiting diamond, terminal cursor. Stored on this phone only (horizon_ind). The look itself is CSS in horizon_app.css,
    keyed on html[data-ind]. */
 (function () {
   'use strict';

@@ -1,10 +1,13 @@
 /* Horizon V1.26.0: ABOUT & UPDATES page: version, release check, backup export/import, changelog, privacy awareness + reminder switch. */
 (function () {
     'use strict';
-    var VERSION = 'V1.92.0';
+    var VERSION = 'V1.92.3';
     var LSK = 'horizon_privacy_notice';
     var REPO_API = 'https://api.github.com/repos/fezzymultiverse/ai';
     var LOG = [
+        ['V1.92.3', ['TOOLS GRID: each tool tile now has a one-line description under its name (the long text still shows on hold).','CLEANUP: the unused LeakCanary stub and the /canary menu are removed, the leftover Snooze checks are gone (the Screen tool no longer shows a permanent "Snooze off" chip), three unused native calls are removed, and 19 CSS declarations that a later rule always overrode are deleted. Nothing you could see or use changed besides those.','BUILD: one script, scripts/bump-version.sh, now stamps the version everywhere and can check that every stamp agrees.']],
+        ['V1.92.2', ['DOWNLOADS: a live progress card above the message bar shows title, percent, bar and size for every download the AI or you start. It stays a few seconds after the file is saved or fails; tap it to open Downloads, X hides it.']],
+        ['V1.92.1', ['LONG CHATS: a long chat now draws only its newest 40 messages when it opens, which was most of the startup wait. Nothing is deleted. Tap Show earlier messages to draw the rest; search and pinned-message jumps open them by themselves.']],
         ['V1.92.0', ['WHATSAPP: silent background send (off by default), reply actions survive dismissal, tap-to-send notification when silent send is impossible, optional AI auto-read of new previews.','COLORS: light greens replaced by one neon-purple token on dark pills; readable on every theme.','CLEANUP: overridden duplicate CSS declarations removed, chat saving debounced, Lite mode on low-RAM phones, AI now tells you how to switch the terminal on.']],
         ['V1.91.0', ['YOUTUBE: the AI can now download VIDEO as well as audio ([[yt.download: ID | Title | video]], mp4 up to 720p), and when Termux is on it is taught exact yt-dlp commands for audio, video, playlists, quality and the 403 / sign-in fix. If NewPipe and the YouTube app API both fail, search and downloads fall through to yt-dlp in Termux.',
             'OLD PARTS REMOVED: the dead public Piped / Invidious server layer (it burned 12 seconds per batch of timeouts before any fallback ran), its stored keys, 110 unused style rules, 4 unused icons and the stale YouTube source sentence in the YouTube app.',

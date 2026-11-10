@@ -19,6 +19,5 @@
   }
   root.classList.add('hzd-on');
 
-  /* V1.67.0: the edge drawer is gone. Menu, Settings, Browser and Group chat are buttons in the header (horizon_v2.js). */
-  window.HorizonDoor = { open: function () {}, close: function () {}, isOpen: function () { return false; } };
+  /* The edge drawer is gone. Menu, Settings, Browser and Group chat are header buttons (horizon_v2.js). */
 })();

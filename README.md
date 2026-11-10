@@ -1,6 +1,4 @@
-> **Current source release: V1.92.0.** WhatsApp silent send + auto-read toggles, neon-purple recolor, CSS dedupe, debounced chat save, Lite mode, terminal-off guidance. Read [UPGRADE-REPORT-V1_92_0.txt](UPGRADE-REPORT-V1_92_0.txt).
-
-> **Current source release: V1.90.0.** Live terminal: AI-run commands stream into the terminal as they happen (bash -n pre-check, trace, file copies highlighted); AI run mode OFF/ASK/AUTO; new Control Deck replaces the old options list; YouTube music source card removed. Read [UPGRADE-REPORT-V1_90_0.txt](UPGRADE-REPORT-V1_90_0.txt). Previous release: V1.89.0. AnyAPI, Routeway and GonkaRouter can send messages again: the native AI bridge now allows their hosts. Earlier V1.88.0 notes follow. Five app tiles in one row; Device + WhatsApp only in Settings → Permissions; one large Termux terminal with Controls / Options. One canonical stylesheet and one shared API-key paste box at the bottom of Web Scraping. Read [UPGRADE-REPORT.txt](UPGRADE-REPORT.txt) for changes, setup and verification limits, and [PERFORMANCE-PLAN.txt](PERFORMANCE-PLAN.txt) for the measured results and real-phone test plan. This ZIP contains source, not an APK. Older version descriptions below are historical.
+> **Current source release: V1.92.3.** WhatsApp silent send + auto-read toggles (V1.92.0), long chats open on their newest 40 messages (V1.92.1), live download progress card (V1.92.2), one-line tool descriptions (V1.92.3), plus dead code removed: LeakCanary stub, Snooze leftovers, unused native methods, overridden CSS. Read [UPGRADE-REPORT-V1_92_3.txt](UPGRADE-REPORT-V1_92_3.txt) for changes and limits and [PERFORMANCE-PLAN.txt](PERFORMANCE-PLAN.txt) for the real-phone test plan. This ZIP contains source, not an APK. Older version descriptions below are historical.
 
 <p align="center">
   <img src="resources/icon.png" alt="Horizon" width="128">
@@ -26,7 +24,6 @@ AnyAPI, Routeway and GonkaRouter all failed with **Unsupported AI endpoint**. Ca
 - **Tested here:** `node --test tests/*.test.cjs` passes.
 - **Not tested:** Kotlin compile and on-device sending. Rebuild with the existing workflow, then send one message on each provider.
 - **Planned check:** GonkaRouter uses `/v1/messages` with an `x-api-key` header. Its `/v1/chat/completions` path was confirmed working from Termux; `/v1/messages` was not.
-- Validation logs under `validation/` are from V1.88.0 and were not regenerated.
 
 ## V1.87.0 integration patch — WhatsApp, Termux, downloads and keyboard
 

@@ -60,7 +60,7 @@
         return [{ glyph: '\u23F1\uFE0F', title: 'Open the lag detector', sub: 'Refresh rate, slow keys, what blocks typing. Copy the report to send it back.',
             run: function () { return !!(window.HorizonPerf && window.HorizonPerf.open() !== false); } }];
     }
-    // V1.63.0: pop-up + sound check and LeakCanary, both talk to the native HorizonAI plugin.
+    // V1.63.0: pop-up + sound check, talks to the native HorizonAI plugin.
     function ai() { var C = window.Capacitor; return C && C.Plugins && C.Plugins.HorizonAI ? C.Plugins.HorizonAI : null; }
     function tell(t, k) { try { if (host && host.notice) host.notice(t, k); } catch (e) { /* ignore */ } }
     function call(method, args, okMsg) {
@@ -83,19 +83,8 @@
               run: function () { return call('notifyOpenFullScreen', {}); } }
         ];
     }
-    function canaryItems() {
-        return [
-            { glyph: '🐦', title: 'Open the leak list', sub: 'LeakCanary shows every object Horizon forgot to release, with the chain that holds it.',
-              run: function () { return call('canaryOpen', {}); } },
-            { glyph: '⏻', title: 'Turn the canary on', sub: 'Watch for leaks (the phone pauses a second or two each time it dumps memory).',
-              run: function () { return call('canarySet', { on: true }, 'LeakCanary is on.'); } },
-            { glyph: '⏻', title: 'Turn the canary off', sub: 'Stop watching and stop memory dumps.',
-              run: function () { return call('canarySet', { on: false }, 'LeakCanary is off.'); } }
-        ];
-    }
     var COMMANDS = [
         { names: ['notif', 'notify', 'popup', 'sound'], glyph: '🔔', label: '/notif', desc: 'Test the pop-up and sound for replies', items: notifItems, onSend: true },
-        { names: ['canary', 'leak', 'leaks'], glyph: '🐦', label: '/canary', desc: 'LeakCanary: find memory leaks', items: canaryItems, onSend: true },
         { names: ['model', 'm', 'ai'], glyph: '\uD83E\uDD16', label: '/model', desc: 'Switch provider or model', items: modelItems },
         { names: ['recon', 'sweep'], glyph: '\uD83D\uDEF0\uFE0F', label: '/recon', desc: 'Web recon sweep on a target', items: reconItems, onSend: true },
         { names: ['music', 'song', 'find'], glyph: '\uD83C\uDFB5', label: '/music', desc: 'Search your music player', items: musicItems, onSend: true },

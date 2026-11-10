@@ -143,7 +143,7 @@ put_sources() {
 }
 
 JAVA_SOURCES="HorizonPermsPlugin.java HorizonBgService.java HorizonMediaPlugin.java HorizonMediaService.java HorizonArt.java HorizonSpeechPlugin.java HorizonLensPlugin.java HorizonStatsPlugin.java HorizonBrowserPlugin.java MainActivity.java"
-KOTLIN_SOURCES="HorizonAlarms.kt HorizonAlarmReceiver.kt HorizonAlarmBootReceiver.kt HorizonAlarmService.kt HorizonAlarmPlugin.kt HorizonAIPlugin.kt HorizonAIService.kt HorizonReplyReceiver.kt HorizonSpeakService.kt HorizonLockPlugin.kt HorizonNotify.kt HorizonScopes.kt HorizonCanary.kt HorizonVoicePlugin.kt HorizonDaemonPlugin.kt"
+KOTLIN_SOURCES="HorizonAlarms.kt HorizonAlarmReceiver.kt HorizonAlarmBootReceiver.kt HorizonAlarmService.kt HorizonAlarmPlugin.kt HorizonAIPlugin.kt HorizonAIService.kt HorizonReplyReceiver.kt HorizonSpeakService.kt HorizonLockPlugin.kt HorizonNotify.kt HorizonScopes.kt HorizonVoicePlugin.kt HorizonDaemonPlugin.kt"
 
 # shellcheck disable=SC2086
 put_sources $JAVA_SOURCES
@@ -235,7 +235,6 @@ for dep in (
     "implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1'",
     # V1.86.0: voice library unpacks downloaded .tar.bz2 voice packs
     "implementation 'org.apache.commons:commons-compress:1.26.2'",
-    # V1.63.2: LeakCanary removed (the app closed on launch after it shipped).
 ):
     artifact = dep.split("'")[1].rsplit(':', 1)[0]
     if artifact not in s:
@@ -254,7 +253,6 @@ say "Gradle libraries applied (verified)."
 need "$JAVA_DIR/MainActivity.java" "registerPlugin(HorizonLockPlugin.class)" "MainActivity does not register HorizonLockPlugin"
 need "$JAVA_DIR/HorizonPermsPlugin.java" "setBackdrop"   "HorizonPermsPlugin has no setBackdrop"
 need "$JAVA_DIR/MainActivity.java" "paintBackdrop"       "MainActivity does not paint the backdrop"
-need "$JAVA_DIR/MainActivity.java" "HorizonCanary.init"  "MainActivity does not call HorizonCanary.init"
 need "$JAVA_DIR/MainActivity.java" "watchKeyboard"       "MainActivity has no keyboard watcher"
 need "$JAVA_DIR/HorizonAIPlugin.kt" "HorizonNotify.alert" "Replies do not use the pop-up notification channel"
 need "$MANIFEST" "android.permission.USE_FULL_SCREEN_INTENT" "Full-screen intent permission missing from the manifest"

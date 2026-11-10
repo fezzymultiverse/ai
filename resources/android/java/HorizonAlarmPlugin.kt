@@ -23,7 +23,7 @@ import java.util.Calendar
  *   status()                      what is allowed: exact alarms, notifications, full-screen, battery, song
  *   schedule({id, at, title, body, mode, song?, clock?})   mode "alarm" rings with a song, "remind" is a loud banner
  *   cancel({id})  stop()  snooze()
- *   pickSong() / clearSong()      choose the wake-up song from the phone
+ *   pickSong()                    choose the wake-up song from the phone
  *   openExactSettings() / openBattery() / openFullScreenSettings()
  */
 @CapacitorPlugin(name = "HorizonAlarm")
@@ -79,13 +79,6 @@ class HorizonAlarmPlugin : Plugin() {
     fun consumeBrief(call: PluginCall) { call.resolve(JSObject().put("pending", HorizonAlarms.takeBriefPending(context))) }
 
     @PluginMethod
-    fun nextRing(call: PluginCall) {
-        val id = call.getInt("id") ?: return call.reject("id missing")
-        val o = HorizonAlarms.find(context, id)
-        call.resolve(JSObject().put("at", o?.optLong("at") ?: 0L).put("repeat", o?.optString("repeat") ?: ""))
-    }
-
-    @PluginMethod
     fun cancel(call: PluginCall) {
         val id = call.getInt("id") ?: return call.reject("id missing")
         HorizonAlarms.cancel(context, id)
@@ -126,9 +119,6 @@ class HorizonAlarmPlugin : Plugin() {
         HorizonAlarms.setSong(context, uri.toString(), name)
         call.resolve(JSObject().put("ok", true).put("name", name))
     }
-
-    @PluginMethod
-    fun clearSong(call: PluginCall) { HorizonAlarms.setSong(context, null, null); call.resolve() }
 
     private fun open(call: PluginCall, i: Intent) {
         try { i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); context.startActivity(i); call.resolve() }

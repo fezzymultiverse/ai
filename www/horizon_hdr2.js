@@ -1,7 +1,6 @@
 /* HORIZON V1.56.0 · header v2.
-   1) Provider pill under the header (status dot, provider logo, name, model). Tap = the AI sheet.
-   2) "Set API key" tab on the AI sheet. It opens Settings > API providers on the right card.
-   3) SNOOZE screen: moon, robot with a 💤 on its head, provider logos, tagline. Tap anywhere to wake.
+   1) Provider pill (status dot, provider logo, name). Tap = the AI sheet. horizon_door.js moves it into the header.
+   2) "Set API key" tab on the AI sheet. It opens the key box inside the AI sheet.
    The provider data comes from window.HzPick / window.HzProviders, set by pkPaintBtn() in index.html. */
 (function () {
   'use strict';

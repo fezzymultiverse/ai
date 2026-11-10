@@ -18,7 +18,6 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         installCrashRecorder();                 // V1.63.2: if Horizon crashes, the next launch shows why (no adb needed)
-        HorizonCanary.init(getApplication());
         registerPlugin(HorizonPermsPlugin.class);
         registerPlugin(HorizonAIPlugin.class);
         registerPlugin(HorizonMediaPlugin.class);

@@ -105,6 +105,26 @@
     if (t && t.classList.contains('tm-row')) afterTap(t);
   }, true);
 
+  /* ---------------------------------------------------------------- short description under each tile name (V1.92.3) */
+  var SHORT = {
+    'tm-think': 'Thinks harder before it answers. Slower.',
+    'tm-screen': 'The AI can see the app screen.',
+    'tm-lens': 'UI map and screenshots. Needs Screen.',
+    'tm-eye': 'The AI reads the page you have open.',
+    'tm-web': 'Search the web and read pages.',
+    'tm-yt': 'Ask about songs and download them.',
+    'tm-gh': 'The AI reads the repos you pulled.',
+    'tm-music': 'The AI sees and controls the player.',
+    'tm-pdf': 'Writes A4 PDF documents.',
+    'tm-img': 'Draws what you type. Free.',
+    'tm-vault': 'Saves notes to your Vault. Never keys.',
+    'tm-mem': 'Remembers facts about you. Never keys.'
+  };
+  Object.keys(SHORT).forEach(function (id) {
+    var row = document.getElementById(id), tx = row && row.querySelector('.tm-text');
+    if (tx && !tx.querySelector('.hzg-sd')) tx.appendChild(el('span', 'hzg-sd', SHORT[id]));
+  });
+
   /* ---------------------------------------------------------------- grid / list chip */
   function setMode(grid) {
     menu.classList.toggle('hzg', grid);

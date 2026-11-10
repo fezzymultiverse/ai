@@ -7,9 +7,11 @@
     <title>HORIZON · AI Interface</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <link rel="icon" type="image/png" href="icon.png">
-    <script src="horizon_release.js?v=1.92.0"></script>
+    <script src="horizon_release.js?v=1.92.3"></script>
     <script>(function(){try{var t=localStorage.getItem('horizon_theme');if(t!=='grey')t='cyan';document.documentElement.setAttribute('data-theme',t==='grey'?'grey':'neon');document.documentElement.setAttribute('data-accent',t);var m=document.querySelector('meta[name=theme-color]');if(m)m.setAttribute('content',t==='grey'?'#eceef1':'#000000');}catch(e){}})();</script>
-    <link rel="stylesheet" href="horizon_app.css?v=1.92.0">
+    <style>html.hz-boot{background:#000}html.hz-boot[data-theme="grey"]{background:#eceef1}html.hz-boot body{visibility:hidden}</style>
+    <script>(function(){var d=document.documentElement;d.classList.add('hz-boot');setTimeout(function(){d.classList.remove('hz-boot');},4000);})();</script>
+    <link rel="stylesheet" href="horizon_app.css?v=1.92.3">
 </head>
 <body>
 
@@ -709,35 +711,35 @@
             </section></div></div>
     </section>
 
-    <script src="horizon_usage.js?v=1.92.0"></script>
-    <script src="horizon_about.js?v=1.92.0"></script>
-    <script src="horizon_toast.js?v=1.92.0"></script>
-    <script src="horizon_plus.js?v=1.92.0"></script>
-    <script src="ember_document_engine.js?v=1.92.0"></script>
-    <script src="horizon_pdf.js?v=1.92.0"></script>
-    <script src="ember_artbox.js?v=1.92.0"></script>
-    <script src="horizon_key_import.js?v=1.92.0"></script>
-    <script src="horizon_tts.js?v=1.92.0"></script>
-    <script src="horizon_github.js?v=1.92.0"></script>
-    <script src="horizon_native_audio.js?v=1.92.0"></script>
-    <script src="horizon_music.js?v=1.92.0"></script>
-    <script src="horizon_runlog.js?v=1.92.0"></script>
-    <script src="horizon_bridges.js?v=1.92.0"></script>
-    <script src="horizon_hub.js?v=1.92.0"></script>
-    <script src="horizon_contacts.js?v=1.92.0"></script>
-    <script src="horizon_group.js?v=1.92.0"></script>
-    <script src="horizon_chips.js?v=1.92.0"></script>
-    <script src="horizon_vault.js?v=1.92.0"></script>
-    <script src="horizon_attach.js?v=1.92.0"></script>
-    <script src="horizon_creator.js?v=1.92.0"></script>
-    <script src="horizon_voice.js?v=1.92.0"></script>
-    <script src="horizon_screen.js?v=1.92.0"></script>
-    <script src="horizon_lens.js?v=1.92.0"></script>
-    <script src="horizon_archive.js?v=1.92.0"></script>
-    <script src="horizon_slash.js?v=1.92.0"></script>
-    <script src="horizon_geo.js?v=1.92.0"></script>
-    <script src="horizon_dash.js?v=1.92.0"></script>
-    <script src="horizon_browser.js?v=1.92.0"></script>
+    <script src="horizon_usage.js?v=1.92.3"></script>
+    <script src="horizon_about.js?v=1.92.3"></script>
+    <script src="horizon_toast.js?v=1.92.3"></script>
+    <script src="horizon_plus.js?v=1.92.3"></script>
+    <script src="ember_document_engine.js?v=1.92.3"></script>
+    <script src="horizon_pdf.js?v=1.92.3"></script>
+    <script src="ember_artbox.js?v=1.92.3"></script>
+    <script src="horizon_key_import.js?v=1.92.3"></script>
+    <script src="horizon_tts.js?v=1.92.3"></script>
+    <script src="horizon_github.js?v=1.92.3"></script>
+    <script src="horizon_native_audio.js?v=1.92.3"></script>
+    <script src="horizon_music.js?v=1.92.3"></script>
+    <script src="horizon_runlog.js?v=1.92.3"></script>
+    <script src="horizon_bridges.js?v=1.92.3"></script>
+    <script src="horizon_hub.js?v=1.92.3"></script>
+    <script src="horizon_contacts.js?v=1.92.3"></script>
+    <script src="horizon_group.js?v=1.92.3"></script>
+    <script src="horizon_chips.js?v=1.92.3"></script>
+    <script src="horizon_vault.js?v=1.92.3"></script>
+    <script src="horizon_attach.js?v=1.92.3"></script>
+    <script src="horizon_creator.js?v=1.92.3"></script>
+    <script src="horizon_voice.js?v=1.92.3"></script>
+    <script src="horizon_screen.js?v=1.92.3"></script>
+    <script src="horizon_lens.js?v=1.92.3"></script>
+    <script src="horizon_archive.js?v=1.92.3"></script>
+    <script src="horizon_slash.js?v=1.92.3"></script>
+    <script src="horizon_geo.js?v=1.92.3"></script>
+    <script src="horizon_dash.js?v=1.92.3"></script>
+    <script src="horizon_browser.js?v=1.92.3"></script>
     <script>
     (() => {
         'use strict';
@@ -3136,14 +3138,36 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             return out;
         }
 
+        // V1.92.1: a long chat draws only its newest messages when it opens (that was most of the startup wait). The data is never trimmed;
+        // "Show earlier messages" draws the rest, and search / pinned-message jumps open them by themselves.
+        const TAIL_MSGS = 40, fullChats = new Set();
+        function showEarlier(chat) {
+            fullChats.add(chat.id);
+            const first = chatMessages.querySelector(':scope > .message');
+            const keep = first && first._msg, off = first ? first.getBoundingClientRect().top : 0;
+            renderMessages(chat);
+            const w = keep && Array.from(chatMessages.querySelectorAll(':scope > .message')).find(x => x._msg === keep);
+            if (w) chatScroll.scrollTop += w.getBoundingClientRect().top - off;
+        }
+        window.HzShowAllMsgs = () => { const c = currentChat(); if (c && !fullChats.has(c.id)) { showEarlier(c); return true; } return false; };
         function renderMessages(chat) {
             skipTyping();
             ttsStop();
             chatMessages.replaceChildren();
-            chat.messages.forEach(m => {
+            const list = chat.messages;
+            const from = (fullChats.has(chat.id) || list.length <= TAIL_MSGS + 10) ? 0 : list.length - TAIL_MSGS;
+            if (from > 0) {
+                const more = document.createElement('button');
+                more.type = 'button'; more.className = 'hz-earlier';
+                more.textContent = 'Show ' + from + ' earlier messages';
+                more.addEventListener('click', () => showEarlier(chat));
+                chatMessages.appendChild(more);
+            }
+            for (let i = from; i < list.length; i++) {
+                const m = list[i];
                 if (m.role === 'user') addUserMessage(m.text, m.ts, m.att, m);
                 else addAiMessage(m.text, m.ts, false, m.ms, m.prov ? { prov: m.prov, model: m.model, sources: m.sources, srcTitles: m.srcTitles, thought: m.thought, usage: m.usage, img: m.img } : null, false, m);
-            });
+            }
             decorateActions();
             scrollBottom();
         }
@@ -3245,7 +3269,9 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         function jumpToMessage(chat, idx) {
             if (state.currentId !== chat.id) return;
             const target = chat.messages[idx];
-            const wrap = Array.from(chatMessages.querySelectorAll(':scope > .message')).find(w => w._msg === target);
+            const findWrap = () => Array.from(chatMessages.querySelectorAll(':scope > .message')).find(w => w._msg === target);
+            let wrap = findWrap();
+            if (!wrap && window.HzShowAllMsgs && window.HzShowAllMsgs()) wrap = findWrap();
             if (!wrap) return;
             wrap.scrollIntoView({ block: 'center' });
             wrap.classList.add('hit');
@@ -3539,7 +3565,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             const label = `Choose AI provider and model. Now: ${p.name}, ${state.models[state.active]}`;
             $('#pickBtn').setAttribute('aria-label', label);
             $('#pickBtn').title = label;
-            // V1.56.0: the header provider pill and the snooze screen read these.
+            // V1.56.0: the header provider pill reads these.
             window.HzPick = { id: state.active, name: p.name, model: state.models[state.active], ready: pkReady(state.active), icon: p.icon };
             window.HzProviders = PROVIDER_IDS.map(pid => ({ id: pid, name: PROVIDERS[pid].name, icon: PROVIDERS[pid].icon, ready: pkReady(pid) }));
             document.dispatchEvent(new CustomEvent('hz:pick'));
@@ -6686,7 +6712,6 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             paint('eye', ey, !window.HorizonBrowser ? 'Not available' : (ey ? 'On. The AI can read the open page' : 'Off. Pages stay private'));
             if (window.HzPlus) {
                 const online = navigator.onLine !== false, filesOk = lsGet(LS.filesOn) !== '0';
-                const sn = $('#snoozeBtn') && $('#snoozeBtn').getAttribute('aria-pressed') === 'true';
                 const go = p => () => { setToolMenu(false); if (!rightPanel.classList.contains('open')) openPanel('right'); rightPage(p); };
                 HzPlus.paint({
                     web: [[hasKey, 'Scraper key', go('web')], [liveWeb().length > 0, 'A key is on', go('web')], [online, 'Online']],
@@ -6695,10 +6720,9 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                     music: [[!!window.HorizonMusic, 'Player ready']],
                     img: [[online, 'Online']],
                     vault: [[!!hv && !hv.isLocked(), 'Vault unlocked', go('vault')], [!!hv && hv.aiOn(), 'AI notes switch', go('vault')]],
-                    screen: [[sn !== true, 'Snooze off']],
                     lens: [[!!(window.HorizonScreen && HorizonScreen.on()), 'Screen on', () => toggleScreen()], [lm !== 'off', 'Lens not off']],
                     eye: [[!!window.HorizonBrowser, 'Browser ready']]
-                }, sn ? 'Snooze is ON: network and access are off' : '');
+                });
             }
             const count = (web ? 1 : 0) + (yt ? 1 : 0) + (gh ? 1 : 0) + (mu ? 1 : 0) + (pdf ? 1 : 0) + (va ? 1 : 0);
             plusBtn.classList.toggle('lvl-all', count === 6);
@@ -7687,34 +7711,35 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         window.addEventListener('pagehide', () => { if (draftT) saveDraft(); });
     })();
     </script>
-    <script src="horizon_downloads.js?v=1.92.0"></script>
-    <script src="horizon_ytdirect.js?v=1.92.0"></script>
-    <script src="horizon_youtube.js?v=1.92.0"></script>
-    <script src="horizon_addons.js?v=1.92.0"></script>
-    <script src="horizon_terminal.js?v=1.92.0"></script>
-    <script src="horizon_termai.js?v=1.92.0"></script>
-    <script src="horizon_typing.js?v=1.92.0"></script>
-    <script src="horizon_perf.js?v=1.92.0"></script>
-    <script src="horizon_ind.js?v=1.92.0"></script>
-    <script src="horizon_toolgrid.js?v=1.92.0"></script>
-    <script src="horizon_bojack.js?v=1.92.0"></script>
-    <script src="horizon_header.js?v=1.92.0"></script>
-    <script src="horizon_htmlview.js?v=1.92.0"></script>
-    <script src="horizon_mdview.js?v=1.92.0"></script>
-    <script src="horizon_setai.js?v=1.92.0"></script>
-    <script src="horizon_operator.js?v=1.92.0"></script>
-    <script src="horizon_lock.js?v=1.92.0"></script>
-    <script src="horizon_hdr2.js?v=1.92.0"></script>
-    <script src="horizon_fold.js?v=1.92.0"></script>
-    <script src="horizon_autoread.js?v=1.92.0"></script>
-    <script src="horizon_daemon.js?v=1.92.0"></script>
-    <script src="horizon_door.js?v=1.92.0"></script>
-    <script src="horizon_speakwave.js?v=1.92.0"></script>
-    <script src="horizon_laser.js?v=1.92.0"></script>
-    <script src="horizon_fab.js?v=1.92.0"></script>
-    <script src="horizon_msgmenu.js?v=1.92.0"></script>
-    <script src="horizon_termlive.js?v=1.92.0"></script>
-    <script src="horizon_v2.js?v=1.92.0"></script>
-    <script src="horizon_lift.js?v=1.92.0"></script>
+    <script src="horizon_downloads.js?v=1.92.3"></script>
+    <script src="horizon_ytdirect.js?v=1.92.3"></script>
+    <script src="horizon_youtube.js?v=1.92.3"></script>
+    <script src="horizon_addons.js?v=1.92.3"></script>
+    <script src="horizon_terminal.js?v=1.92.3"></script>
+    <script src="horizon_termai.js?v=1.92.3"></script>
+    <script src="horizon_typing.js?v=1.92.3"></script>
+    <script src="horizon_perf.js?v=1.92.3"></script>
+    <script src="horizon_ind.js?v=1.92.3"></script>
+    <script src="horizon_toolgrid.js?v=1.92.3"></script>
+    <script src="horizon_bojack.js?v=1.92.3"></script>
+    <script src="horizon_header.js?v=1.92.3"></script>
+    <script src="horizon_htmlview.js?v=1.92.3"></script>
+    <script src="horizon_mdview.js?v=1.92.3"></script>
+    <script src="horizon_setai.js?v=1.92.3"></script>
+    <script src="horizon_operator.js?v=1.92.3"></script>
+    <script src="horizon_lock.js?v=1.92.3"></script>
+    <script src="horizon_hdr2.js?v=1.92.3"></script>
+    <script src="horizon_fold.js?v=1.92.3"></script>
+    <script src="horizon_autoread.js?v=1.92.3"></script>
+    <script src="horizon_daemon.js?v=1.92.3"></script>
+    <script src="horizon_door.js?v=1.92.3"></script>
+    <script src="horizon_speakwave.js?v=1.92.3"></script>
+    <script src="horizon_laser.js?v=1.92.3"></script>
+    <script src="horizon_fab.js?v=1.92.3"></script>
+    <script src="horizon_msgmenu.js?v=1.92.3"></script>
+    <script src="horizon_termlive.js?v=1.92.3"></script>
+    <script src="horizon_v2.js?v=1.92.3"></script>
+    <script src="horizon_lift.js?v=1.92.3"></script>
+    <script>(function(){var d=document.documentElement;requestAnimationFrame(function(){requestAnimationFrame(function(){d.classList.remove('hz-boot');try{window.HzBootMs=Math.round(performance.now());}catch(e){}});});})();</script>
 </body>
 </html>

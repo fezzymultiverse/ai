@@ -76,6 +76,60 @@
         if (list.length > MAX) list.length = MAX;
         return rec;
     }
+    // ---------- live progress card (V1.92.2) ----------
+    // Every download the AI (or you) starts outside the chat's own YouTube tray gets a progress card above the message bar:
+    // title, percent, bar, size. It stays for a few seconds after the file is saved (or fails), tap it to open Downloads, X hides it.
+    const trayAnchor = document.getElementById('dlTray');
+    const card = trayAnchor && trayAnchor.parentNode ? el('div', 'dlx-live') : null;
+    if (card) { card.hidden = true; card.setAttribute('aria-live', 'polite'); trayAnchor.parentNode.insertBefore(card, trayAnchor); }
+    const cardOff = new Set(); let cardT = 0;
+    function cardRecs() {
+        const now = Date.now();
+        return list.filter(r => r.src !== 'chat' && !cardOff.has(r.id) &&
+            (isActive(r.status) || ((r.status === 'done' || r.status === 'failed') && now - (r.ts || 0) < 9000)));
+    }
+    function cardRow(r) {
+        const row = el('div', 'dlx-live-row'); row.dataset.id = r.id;
+        const top = el('div', 'dlx-live-top'), t = el('span', 'dlx-live-t'), p = el('b', 'dlx-live-p');
+        const x = el('button', 'dlx-live-x', '\u00d7'); x.type = 'button'; x.setAttribute('aria-label', 'Hide this card');
+        x.addEventListener('click', e => { e.stopPropagation(); cardOff.add(r.id); paintCard(); });
+        top.append(t, p, x);
+        const bar = el('div', 'dlx-live-bar'); bar.appendChild(el('i'));
+        const s = el('div', 'dlx-live-s');
+        row.append(top, bar, s);
+        row.addEventListener('click', () => { const tile = document.querySelector('.hz-app[data-addon="downloads"]'); if (tile) tile.click(); });
+        return row;
+    }
+    function cardFill(row, r) {
+        const done = r.status === 'done', bad = r.status === 'failed';
+        row.className = 'dlx-live-row ' + (done ? 'done' : bad ? 'failed' : 'active');
+        row.querySelector('.dlx-live-t').textContent = r.title || 'Download';
+        row.querySelector('.dlx-live-p').textContent = pillText(r);
+        const bar = row.querySelector('.dlx-live-bar');
+        bar.firstChild.style.width = (done ? 100 : (r.pct || 0)) + '%';
+        bar.classList.toggle('wait', isActive(r.status) && !r.pct);
+        row.querySelector('.dlx-live-s').textContent = bad ? (r.err || 'Failed') : done ? 'Saved to ' + (r.path || 'your phone') : (r.status === 'queued' ? 'Waiting for a free slot' : subText(r));
+    }
+    function paintCard() {
+        if (!card) return;
+        clearTimeout(cardT); cardT = 0;
+        const rs = cardRecs();
+        if (!rs.length) { if (!card.hidden) { card.hidden = true; card.replaceChildren(); } return; }
+        card.hidden = false;
+        const shown = rs.slice(0, 3), keep = new Set(shown.map(r => r.id));
+        Array.from(card.children).forEach(n => { if (!n.dataset.id || !keep.has(n.dataset.id)) n.remove(); });
+        shown.forEach(r => {
+            let row = Array.from(card.children).find(n => n.dataset.id === r.id);
+            if (!row) { row = cardRow(r); card.appendChild(row); }
+            cardFill(row, r);
+        });
+        if (rs.length > shown.length) {
+            const more = el('div', 'dlx-live-more', '+' + (rs.length - shown.length) + ' more in Downloads');
+            card.appendChild(more);
+        }
+        if (rs.some(r => !isActive(r.status))) cardT = setTimeout(paintCard, 1000);
+    }
+
     function badge() {
         const tile = document.querySelector('[data-addon="downloads"]'); if (!tile) return;
         const failed = list.filter(r => r.status === 'failed').length;
@@ -92,11 +146,13 @@
         if (any && !pollTimer) pollTimer = setInterval(tick, 600);
         if (!any && pollTimer) { clearInterval(pollTimer); pollTimer = 0; }
         if (visible()) { if (tab === 'mine') render(); else paintTabs(); }
+        paintCard();
     }
     function tick() {
         if (window.hzKbBusy || window.hzTyping || document.hidden) return;
         const changed = syncRefs();
         if (changed) { touch(); return; }
+        paintCard();
         if (visible() && tab === 'mine') paintLive();
     }
     function paintLive() {

@@ -107,8 +107,6 @@
     if (sw.length) L.push('Settings switches: ' + sw.join(', '));
     const ap = [...document.querySelectorAll('#hzDock .hz-app')].map(b => clean(b.textContent || b.getAttribute('aria-label'), 24)).filter(Boolean);
     if (ap.length) L.push('APPS dock (right panel, bottom): ' + ap.join(', ') + '. Also ABOUT & UPDATES and USAGE & ENGINE rows above it.');
-    const sn = document.getElementById('snoozeBtn');
-    if (sn) L.push('Snooze (network and permissions off): ' + (sn.getAttribute('aria-pressed') === 'true' ? 'ON, Horizon is offline' : 'off'));
     const say = (label, sel, n) => { const e = $(sel); const t = e && !e.hidden ? clean(e.textContent, n || 90) : ''; if (t) L.push(label + ': ' + t); };
     const cl = document.querySelectorAll('#chatList > *').length;
     L.push('Menu data: ' + cl + ' chat rows' + ($('#memStatus') ? ', memories ' + clean($('#memStatus').textContent, 24) : '') + ($('#artTitle') ? ', ' + clean($('#artTitle').textContent, 24) : ''));

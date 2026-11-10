@@ -260,6 +260,7 @@
       try { scroll.scrollTo({ top: Math.max(0, y), behavior: 'smooth' }); } catch (e) { scroll.scrollTop = Math.max(0, y); }
       flash(all[i]); return;
     }
+    if (window.HzShowAllMsgs && window.HzShowAllMsgs()) jumpPin();   /* the pinned message sits in the part of a long chat that is not drawn yet */
   }
   pbBody.addEventListener('click', jumpPin);
   pbX.addEventListener('click', function () { var a = API(); if (a) setPin(a.chat(), null); });

@@ -365,23 +365,6 @@ public class HorizonBrowserPlugin extends Plugin {
     }
 
     @PluginMethod
-    public void closeAll(final PluginCall call) {
-        getActivity().runOnUiThread(() -> {
-            hideCustom();
-            for (WebView w : views.values()) {
-                ViewGroup p = (ViewGroup) w.getParent();
-                if (p != null) p.removeView(w);
-                w.stopLoading();
-                w.destroy();
-            }
-            views.clear();
-            current = null;
-            visible = false;
-            call.resolve();
-        });
-    }
-
-    @PluginMethod
     public void back(final PluginCall call) { nav(call, 0); }
 
     @PluginMethod

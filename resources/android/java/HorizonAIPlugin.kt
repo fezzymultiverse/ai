@@ -486,7 +486,7 @@ class HorizonAIPlugin : Plugin() {
         } catch (e: Exception) { call.reject("Could not open the link: ${e.message ?: e.javaClass.simpleName}") }
     }
 
-    // ---------- V1.63.0: notification diagnostics + LeakCanary controls ----------
+    // ---------- V1.63.0: notification diagnostics ----------
 
     /** What the phone will do with a reply: permission, banner (importance), sound, full-screen. */
     @PluginMethod
@@ -513,21 +513,5 @@ class HorizonAIPlugin : Plugin() {
     @PluginMethod
     fun notifyOpenFullScreen(call: PluginCall) {
         try { HorizonNotify.openFullScreenSettings(context); call.resolve() } catch (e: Exception) { call.reject("Could not open settings: ${e.message}") }
-    }
-
-    @PluginMethod
-    fun canaryStatus(call: PluginCall) {
-        call.resolve(JSObject().put("on", HorizonCanary.isOn(context)))
-    }
-
-    @PluginMethod
-    fun canarySet(call: PluginCall) {
-        HorizonCanary.set(context, call.getBoolean("on", true) == true)
-        call.resolve(JSObject().put("on", HorizonCanary.isOn(context)))
-    }
-
-    @PluginMethod
-    fun canaryOpen(call: PluginCall) {
-        try { HorizonCanary.openLeaks(context); call.resolve() } catch (e: Exception) { call.reject("Could not open the leak list: ${e.message}") }
     }
 }

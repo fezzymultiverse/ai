@@ -1,4 +1,4 @@
-/* HORIZON 1.92.0 — canonical application stylesheet.
+/* HORIZON 1.92.3 — canonical application stylesheet.
    One bundled layout source. Section order preserves the existing cascade.
    Edit this file; obsolete individual patch stylesheets have been removed. */
 
@@ -542,7 +542,7 @@
             outline: none;
         }
         #personaInput:focus, #prefsInput:focus, #memInput:focus { border-color: var(--accent-cyan); }
-        #prefsInput { min-height: 120px; }
+        
         #memInput { min-height: 70px; }
 
         .icon-btn {
@@ -2149,9 +2149,6 @@ html:not([data-theme]) .hzd-net{background:rgba(255,255,255,.55)}
 /* ===== browser ===== */
 
 #hzb {
-    --b-bg: #000000; --b-panel: #03090c; --b-surface: #07141a; --b-hover: #0c2630;
-    --b-text: #e8fdff; --b-muted: #6fa9b3; --b-line: rgba(var(--accent-rgb),.18); --b-line2: rgba(var(--accent-rgb),.45);
-    --b-cyan: var(--accent-cyan); --b-glow: rgba(var(--accent-rgb),.55); --b-soft: rgba(var(--accent-rgb),.12);
     --b-green: var(--neon); --b-green-glow: rgba(var(--neon-rgb),.75); --b-red: #ff3b30;
     --b-font: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
     --b-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
@@ -2371,13 +2368,6 @@ html:not([data-theme]) .hzd-net{background:rgba(255,255,255,.55)}
 #rightPanel .hz-usage-row { margin-bottom: 10px; padding: 7px 10px; }
 #rightPanel .hz-app .ic { width: 17px; height: 17px; }
 #rightPanel .hz-app .hzt-logo { width: 19px; height: 19px; }
-
-html .message.user .bubble,
-html[data-theme] .message.user .bubble {
-  background: #26282c; color: #f2f3f5; border: 1px solid #3a3d43; box-shadow: none;
-}
-html .message.user .bubble a, html .message.user .bubble strong,
-html .message.user .bubble h3, html .message.user .bubble h4 { color: #ffffff; }
 
 .tool-menu .tm-row .tm-ic { background: #0d0f12 !important; border: 1px solid rgba(255,255,255,.14) !important; color: #fff !important; overflow: hidden; }
 .tool-menu .tm-row .tm-ic svg { width: 18px; height: 18px; display: block; }
@@ -2743,13 +2733,13 @@ html .message.user .bubble code { color: #f2f3f5; background: #373a40; }
 .tool-menu .hzcr-tool-d { display: block; font-size: 13px; line-height: 1.38; color: var(--text-muted); margin-top: 1px; }
 .tool-menu .hzcr-tool-go { flex: none; margin-top: 3px; font-size: 20px; line-height: 1; color: var(--text-muted); }
 
-#ttsAiRow, #ttsPollRow { display: flex; flex-direction: column; gap: 10px; margin: 16px 0 6px; }
-#ttsAiRow .field-label, #ttsPollRow .field-label { display: block; margin: 0; }
-#ttsAiRow input, #ttsPollRow input { box-sizing: border-box; width: 100%; min-height: 48px; padding: 11px 14px; border: 1px solid var(--border-color, rgba(0, 229, 255, .18)); border-radius: 12px; background: var(--surface, #07141a); color: var(--text-main, #fff); font-size: 15px; outline: 0; }
-#ttsAiRow input:focus, #ttsPollRow input:focus { border-color: var(--accent-cyan); box-shadow: 0 0 0 1px var(--accent-cyan); }
-#ttsAiRow input::placeholder, #ttsPollRow input::placeholder { color: var(--text-muted, #9fb0b8); opacity: 1; }
-#ttsAiRow .card-actions, #ttsPollRow .card-actions { gap: 12px; margin-top: 2px; }
-#ttsAiRow .use-btn, #ttsPollRow .use-btn { min-height: 44px; padding: 0 18px; border-radius: 12px; }
+
+
+
+
+
+
+
 #ttsNat { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
 #ttsNat .field-label { margin: 0; }
 #ttsNat .hint { margin: 4px 0 8px; line-height: 1.55; }
@@ -3494,7 +3484,7 @@ html.hzd-on .app-header .chip-logo { width: 36px; height: 36px; border-radius: 1
 
 #toolMenu.hzg .hzcr-bar, #toolMenu.hzg > .tm-grp:has(+ .hzcr-bar) { display: none; }
 #toolMenu.hzg > .tm-grp { color: #00e5ff; font-size: 11px; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase; }
-#toolMenu.hzg .tm-row { height: 46px; border-radius: 24px; padding: 0 12px 0 8px; border-color: rgba(0,229,255,.3); }
+#toolMenu.hzg .tm-row { border-color: rgba(0,229,255,.3); }
 #toolMenu.hzg .tm-row.is-on, #toolMenu.hzg .tm-row[aria-checked="true"] { border-color: #00e5ff; }
 #toolMenu.hzg .tm-row .tm-ic { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 50%; border: 1px solid #00e5ff; background: rgba(0,229,255,.1); color: #00e5ff; }
 #toolMenu.hzg .tm-row .tm-ic .ic, #toolMenu.hzg .tm-row .tm-ic svg { color: #00e5ff; stroke: #00e5ff; }
@@ -3752,7 +3742,7 @@ html[data-theme="grey"] .qa-btn.qa-primary { color: #fff; box-shadow: none; }
 .hz-key-import h3 { color: var(--text-main); font-size: 16px; }
 .hz-key-import textarea { box-sizing: border-box; width: 100%; min-height: 125px; resize: vertical; padding: 12px; background: var(--surface); color: var(--text-main); border: 1px solid var(--border-highlight); border-radius: 12px; font: inherit; line-height: 1.5; -webkit-text-security: disc; }
 .hz-key-import textarea:focus { outline: 2px solid var(--accent-cyan); outline-offset: 2px; -webkit-text-security: none; }
-#hzKeyResults { font-size: 13px; line-height: 1.5; color: var(--text-main); overflow-wrap: anywhere; }
+
 
 .welcome .wl-mark { position: relative; isolation: isolate; }
 .welcome .wl-mark::after { content: ''; position: absolute; pointer-events: none; left: -36px; right: -36px; bottom: -5px; height: 1px; background: linear-gradient(90deg, transparent, var(--accent-cyan), transparent); opacity: .45; }
@@ -3892,3 +3882,33 @@ html.hz-kb-open .chat-input-area { backdrop-filter: none; }
 
 /* ===== V1.92.0 lite mode ===== */
 html.hz-lite *, html.hz-lite *::before, html.hz-lite *::after { box-shadow: none !important; text-shadow: none !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+
+/* V1.92.1: "Show earlier messages" button at the top of a long chat */
+.hz-earlier { display: block; margin: 10px auto 16px; padding: 9px 16px; border-radius: 18px; border: 1px solid var(--accent-cyan, #00e5ff); background: transparent; color: var(--accent-cyan, #00e5ff); font: inherit; font-size: 13px; cursor: pointer; }
+.hz-earlier:active { transform: scale(.97); }
+
+/* V1.92.2: live download progress card above the message bar */
+.dlx-live { margin-bottom: 8px; display: flex; flex-direction: column; gap: 6px; }
+.dlx-live[hidden] { display: none; }
+.dlx-live-row { background: var(--surface); border: 1px solid var(--border-color); border-radius: 16px; padding: 10px 14px; cursor: pointer; }
+.dlx-live-top { display: flex; align-items: center; gap: 10px; }
+.dlx-live-t { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13.5px; font-weight: 600; }
+.dlx-live-p { font-size: 12.5px; color: var(--accent-cyan, #00e5ff); }
+.dlx-live-x { background: none; border: 0; color: inherit; opacity: .6; font-size: 20px; line-height: 1; padding: 0 2px; cursor: pointer; }
+.dlx-live-bar { height: 6px; border-radius: 6px; background: var(--card-bg); border: 1px solid var(--border-color); overflow: hidden; margin-top: 8px; }
+.dlx-live-bar i { display: block; height: 100%; width: 0; background: #ff0033; transition: width .25s; }
+.dlx-live-row.done .dlx-live-bar i { background: var(--neon); }
+.dlx-live-row.failed .dlx-live-bar i { background: var(--error); }
+.dlx-live-bar.wait i { width: 35%; animation: dlxLiveSlide 1.1s linear infinite; }
+@keyframes dlxLiveSlide { 0% { margin-left: -35%; } 100% { margin-left: 100%; } }
+.dlx-live-s { margin-top: 5px; font-size: 12px; opacity: .7; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dlx-live-row.failed .dlx-live-s { color: var(--error); opacity: 1; }
+.dlx-live-more { text-align: center; font-size: 12px; opacity: .7; }
+@media (prefers-reduced-motion: reduce) { .dlx-live-bar.wait i { animation: none; } }
+
+/* V1.92.3: one-line description under each tool name in the Tools grid (the long text still shows on hold) */
+.hzg-sd { display: none; }
+#toolMenu.hzg { max-height: min(72vh, 600px); }
+#toolMenu.hzg .tm-row { height: auto; min-height: 60px; padding: 7px 12px 7px 8px; border-radius: 20px; }
+#toolMenu.hzg .tm-row .tm-text { padding-right: 2px; }
+#toolMenu.hzg .tm-row .hzg-sd { display: -webkit-box; margin-top: 2px; font-size: 11px; line-height: 1.25; opacity: .78; white-space: normal; overflow: hidden; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }

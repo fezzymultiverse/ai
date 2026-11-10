@@ -23,6 +23,6 @@ const server=http.createServer((req,res)=>{
   const median=(xs)=>[...xs].sort((a,b)=>a-b)[Math.floor(xs.length/2)];
   const summary=Object.fromEntries(Object.entries(runs).map(([name,rows])=>[name,Object.fromEntries(Object.keys(rows[0]).map(k=>[k,median(rows.map(r=>r[k]))]))]));
   const result={scope:'Local Chromium, 412x915, 4x CPU throttle, five fresh contexts per build, alternating order, external services blocked. NOT Android/device speed or live API latency.',summary,runs};
-  fs.writeFileSync(path.resolve(__dirname,'../validation/performance-comparison.json'),JSON.stringify(result,null,2));console.log(JSON.stringify(result,null,2));
+  fs.mkdirSync(path.resolve(__dirname,'../validation'),{recursive:true});fs.writeFileSync(path.resolve(__dirname,'../validation/performance-comparison.json'),JSON.stringify(result,null,2));console.log(JSON.stringify(result,null,2));
  }finally{await browser.close();server.close();}
 })().catch(e=>{console.error(e);server.close();process.exitCode=1;});
