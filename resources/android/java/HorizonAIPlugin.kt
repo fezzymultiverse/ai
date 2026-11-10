@@ -58,7 +58,7 @@ class HorizonAIPlugin : Plugin() {
         /** Runs a window event inside the WebView. False when the app process or its WebView is not alive. */
         @JvmStatic fun dispatchToJs(event: String, detailJson: String): Boolean {
             val web = try { instance?.bridge?.webView } catch (_: Exception) { null } ?: return false
-            web.post { web.evaluateJavascript("window.dispatchEvent(new CustomEvent('$event',{detail:$detailJson}))", null) }
+            web.post { web.evaluateJavascript("window.dispatchEvent(new CustomEvent(" + org.json.JSONObject.quote(event) + ",{detail:" + detailJson + "}))", null) }
             return true
         }
 
@@ -124,8 +124,9 @@ class HorizonAIPlugin : Plugin() {
     fun request(call: PluginCall) {
         val url = call.getString("url") ?: return call.reject("Missing request URL")
         // Only the existing AI provider endpoints may receive stored credentials.
-        val host = try { URL(url).host } catch (_: Exception) { "" }
-        if (!url.startsWith("https://") || host !in setOf("generativelanguage.googleapis.com", "api.groq.com", "api.cohere.com", "api.mistral.ai", "openrouter.ai", "text.pollinations.ai", "api.anyapi.ai", "api.routeway.ai", "api.gonkarouter.io")) {
+        val parsedUrl = try { URL(url) } catch (_: Exception) { null }
+        val host = parsedUrl?.host ?: ""
+        if (parsedUrl == null || parsedUrl.protocol != "https" || parsedUrl.userInfo != null || parsedUrl.port !in setOf(-1, 443) || host !in setOf("generativelanguage.googleapis.com", "api.groq.com", "api.cohere.com", "api.mistral.ai", "openrouter.ai", "text.pollinations.ai", "api.anyapi.ai", "api.routeway.ai", "api.gonkarouter.io")) {
             call.reject("Unsupported AI endpoint")
             return
         }

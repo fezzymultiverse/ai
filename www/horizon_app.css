@@ -3926,3 +3926,11 @@ html.hz-lite *, html.hz-lite *::before, html.hz-lite *::after { box-shadow: none
 .tts-hd-badge { font-size: 11px; letter-spacing: .04em; text-transform: uppercase; color: var(--accent, #00e5ff); border: 1px solid currentColor; border-radius: 999px; padding: 2px 8px; white-space: nowrap; }
 .tts-hd .hint { margin: 8px 0 10px; }
 .tts-hd .card-actions { margin-top: 10px; }
+
+/* Targeted inbox readability + Termux approval only. */
+.hzb-inbox .hzb-message textarea { color: #fff; -webkit-text-fill-color: #fff; background: #075E54; caret-color: #fff; color-scheme: dark; }
+.hzb-inbox .hzb-message textarea::placeholder { color: #d1eee8; opacity: 1; -webkit-text-fill-color: #d1eee8; }
+.hzb-approval { width: min(92vw, 620px); max-height: 86dvh; overflow: auto; box-sizing: border-box; border: 1px solid #00e5ff; border-radius: 20px; padding: 22px; background: #101321; color: #fff; box-shadow: 0 0 24px #983dff66; }
+.hzb-approval::backdrop { background: #000b; }
+.hzb-approval pre { white-space: pre-wrap; overflow-wrap: anywhere; padding: 14px; background: #050a12; border: 1px solid #a84dff; border-radius: 12px; color: #b9faff; max-height: 45dvh; overflow: auto; }
+.hzb-approval button { padding: 12px 20px; margin: 8px 8px 0 0; border-radius: 12px; border: 1px solid #00e5ff; background: #142b35; color: #fff; }

@@ -12,16 +12,19 @@
     sharedWithAI = false;
     selected = { id: String(contact.id), name: String(contact.name), phone: String(contact.phone) };
     card.replaceChildren(node('h3', selected.name), node('p', selected.phone, 'hint'));
-    var business = node('input'); business.type = 'checkbox'; business.id = 'hzContactBusiness';
-    var label = node('label', 'Use WhatsApp Business '); label.appendChild(business);
+    var business = node('select'); business.id = 'hzContactBusiness'; business.setAttribute('aria-label', 'WhatsApp account');
+    [['auto', 'Automatic (captured account)'], ['personal', 'Personal WhatsApp'], ['business', 'WhatsApp Business']].forEach(function (item) { var option = node('option', item[1]); option.value = item[0]; business.appendChild(option); });
+    var label = node('label', 'WhatsApp account '); label.appendChild(business);
     message = node('textarea'); message.maxLength = 4000; message.placeholder = 'Message for ' + selected.name; message.setAttribute('aria-label', 'Message for selected contact');
     var send = button('Review & send in background', async function () {
       if (!message.value.trim()) throw new Error('Write a message first');
       send.disabled = true;
       try {
-        var r = await plugin().sendToContact({ contactId: selected.id, text: message.value, business: business.checked });
+        var request = { contactId: selected.id, text: message.value };
+        if (business.value !== 'auto') request.business = business.value === 'business';
+        var r = await plugin().sendToContact(request);
         if (!r.submitted) throw new Error('WhatsApp did not accept the reply');
-        message.value = ''; say('Reply submitted in background. Delivery is not confirmed.');
+        message.value = ''; say(r.fallback ? 'Reply submitted through the approved visible WhatsApp fallback. Delivery is not confirmed.' : 'Reply submitted in background. Delivery is not confirmed.');
       } finally { send.disabled = false; }
     });
     card.append(label, message, send, button('Use contact in AI chat', function () {

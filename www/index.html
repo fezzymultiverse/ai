@@ -2839,6 +2839,12 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             for (const m of state.memories.slice(0, 60)) { if (used + m.text.length > 3500) break; used += m.text.length; n++; }
             return { n, used };
         }
+        function thoughtViewVisible(id) {
+            const el = document.getElementById(id);
+            if (!el || el.closest('[hidden]') || !el.getClientRects().length) return false;
+            const css = getComputedStyle(el);
+            return css.display !== 'none' && css.visibility !== 'hidden';
+        }
         function thoughtAnalyse(text, chat, p, model) {
             const it = readIntent(text);
             thoughtAdd('i-eye', 'Read your message', true, `${it.words} word${it.words === 1 ? '' : 's'} · ${it.kind}${it.flags.length ? ' · ' + it.flags.join(', ') : ''}`);
@@ -2860,14 +2866,17 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             const live = enabledWeb();
             if (live.length) {
                 const names = live.map(id => WEB[id].name).join(', ');
-                thoughtAdd('i-globe', 'Web tools are live', true, `${names}. ${it.fresh ? 'This looks like a fresh-facts question, so a search is likely.' : 'Will only search if the answer needs it.'}`);
+                thoughtAdd('i-globe', 'Web tools enabled for this chat', true, `${names}. ${it.fresh ? 'This looks like a fresh-facts question, so a search is likely.' : 'Will only search if the answer needs it.'}`);
             } else if (liveWeb().length) {
                 thoughtAdd('i-globe', 'Web is off for this chat', false, it.fresh ? 'This needs fresh facts, so the answer will be from training only and flagged' : 'Answering without browsing');
             } else if (it.fresh || it.urls) {
                 thoughtAdd('i-globe', 'No scraper keys', false, 'Cannot browse. Will say so instead of guessing at live data');
             }
-            if (chatYtOn()) thoughtAdd('i-yt', 'YouTube is on', true, 'Can search and queue downloads if you ask for music');
-            if (window.HorizonMusic && HorizonMusic.seesAi()) thoughtAdd('i-music', 'Music player visible', true, 'I can see what is playing and control the player');
+            if (chatYtOn()) thoughtAdd('i-yt', thoughtViewVisible('hzYouTubeView') ? 'YouTube panel visible' : 'YouTube tools enabled (panel closed)', true, 'Search and download tools are available; this does not imply the panel is open');
+            if (window.HorizonMusic && HorizonMusic.seesAi()) {
+                const visible = thoughtViewVisible('mpNow') || thoughtViewVisible('hzMusicView');
+                thoughtAdd('i-music', visible ? 'Music player visible' : 'Music controls enabled (player closed)', true, 'Player state is shared with the AI; visibility is checked separately');
+            }
             if (chatGhOn()) thoughtAdd('i-gh', 'GitHub is on', true, window.HorizonGitHub && HorizonGitHub.hasRepos() ? 'Pulled repos are open to me: I can list, read and grep them' : 'Nothing pulled yet, so there is no repo to read');
             if (docMode) {
                 const lp = longPlan(text);
@@ -3076,6 +3085,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         }
 
         function saveChats() {
+            if (window.HorizonCheckin) HorizonCheckin.scheduleSync();
             state.chats.sort((a, b) => b.updated - a.updated);
             let room = Math.max(0, MAX_CHATS - state.chats.filter(c => c.pin).length);   // V1.31.0: pinned chats never count toward the limit
             state.chats = state.chats.filter(c => c.pin || room-- > 0);
@@ -5804,6 +5814,15 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         const openAppSettings = () => callNative('HorizonPerms', 'openAppSettings');
 
         // V1.46.0: one-shot ask for the floating AI box in the terminal. Not saved in any chat. It only returns text; nothing is ever run.
+        window.HorizonCheckinSnapshot = function () {
+            const id = state.active, p = PROVIDERS[id];
+            if (window.HzLock && HzLock.locked()) throw new Error('Unlock Horizon first');
+            if (window.HzAbout && HzAbout.allow && !HzAbout.allow(id, p.name)) throw new Error(p.name + ' is switched off');
+            const c = currentChat();
+            return { provider: id, model: state.models[id], key: p.keyless ? '' : keyOf(id),
+                history: (c && c.messages || []).filter(m => m.role === 'user' || m.role === 'assistant').slice(-12)
+                    .map(m => ({ role: m.role, text: String(m.text || '').slice(0, 600) })) };
+        };
         window.HorizonAskAI = async function (msgs) {
             // V1.63.4: wait up to 25s for the chat to finish instead of refusing.
             for (let w = 0; state.busy && w < 100; w++) await new Promise(r => setTimeout(r, 250));
@@ -6263,6 +6282,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         const DL_MAX = 25;
         const DL_PARALLEL = 2;
         const dlByUrl = {};
+        const dlActive = new Set();
         let dlListener = false; let dlMediaListener = false;
         let trayRaf = 0;
 
@@ -6304,12 +6324,14 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 const x = document.createElement('button');
                 x.type = 'button';
                 x.className = 'dl-x';
-                x.setAttribute('aria-label', 'Remove from list');
+                x.setAttribute('aria-label', d.status === 'running' ? 'Dismiss from list (download continues)' : 'Remove from list');
                 x.appendChild(icon('i-x'));
-                x.addEventListener('click', () => {
-                    if (d.status === 'running' || d.status === 'queued') return;
-                    state.downloads = state.downloads.filter(z => z.id !== d.id);
-                    dlSave(); renderTray();
+                x.addEventListener('click', e => {
+                    e.preventDefault(); e.stopPropagation();
+                    d.dismissed = true;
+                    state.downloads = state.downloads.filter(z => String(z.id) !== String(d.id));
+                    dlSave(); renderTray(); pumpQueue();
+                    if (d.status === 'running') notice('Removed from tray. The active download continues in the background.');
                 });
                 top.appendChild(t); top.appendChild(pct); top.appendChild(x);
                 const bar = document.createElement('div');
@@ -6445,6 +6467,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
 
         const mirrorDl = d => { try { if (window.HorizonDownloads) window.HorizonDownloads.mirror(d); } catch (e) { /* history is optional */ } };
         async function runDownload(d) {
+            dlActive.add(d);
             d.status = 'running';
             mirrorDl(d);
             scheduleTray();
@@ -6458,7 +6481,8 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 d.status = 'error';
                 d.err = friendlyError(e);
             }
-            mirrorDl(d);
+            dlActive.delete(d);
+            mirrorDl(d); // Update the separate download history; this does not restore a dismissed tray row.
             dlSave();
             renderTray();
             pumpQueue();
@@ -6478,7 +6502,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         };
 
         function pumpQueue() {
-            let running = state.downloads.filter(d => d.status === 'running').length;
+            let running = dlActive.size;
             state.downloads.slice().reverse().forEach(d => {
                 if (d.status === 'queued' && running < DL_PARALLEL) { running++; runDownload(d); }
             });
@@ -7807,6 +7831,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
     <script src="horizon_fold.js?v=1.93.0"></script>
     <script src="horizon_autoread.js?v=1.93.0"></script>
     <script src="horizon_daemon.js?v=1.93.0"></script>
+    <script src="horizon_checkin.js?v=1.93.0"></script>
     <script src="horizon_door.js?v=1.93.0"></script>
     <script src="horizon_speakwave.js?v=1.93.0"></script>
     <script src="horizon_laser.js?v=1.93.0"></script>

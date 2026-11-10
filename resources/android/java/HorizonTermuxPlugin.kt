@@ -72,6 +72,38 @@ class HorizonTermuxPlugin : Plugin() {
             outb.flip(); return outb.toString()
         }
     }
+    private data class Approval(val call: PluginCall, val expires: Long, val run: () -> Unit, val timeout: Runnable)
+    private val approvals = ConcurrentHashMap<String, Approval>()
+    private val approvalHandler = android.os.Handler(android.os.Looper.getMainLooper())
+    private fun approveInPage(call: PluginCall, cmd: String, title: String, warning: String = "", run: () -> Unit) {
+        activity.runOnUiThread {
+            if (approvals.isNotEmpty()) { call.reject("Review the pending Termux command first"); return@runOnUiThread }
+            val token = UUID.randomUUID().toString()
+            val timeout = Runnable { approvals.remove(token)?.call?.reject("Termux approval expired") }
+            approvals[token] = Approval(call, android.os.SystemClock.elapsedRealtime() + 120000L, run, timeout)
+            approvalHandler.postDelayed(timeout, 120000L)
+            val payload = JSONObject().put("token", token).put("title", title).put("command", cmd).put("warning", warning)
+            val script = "window.dispatchEvent(new CustomEvent('horizon-termux-approval',{detail:" + payload.toString() + "}))"
+            bridge.webView.evaluateJavascript(script, null)
+        }
+    }
+    @PluginMethod fun resolveApproval(call: PluginCall) {
+        activity.runOnUiThread {
+            val token = call.getString("token") ?: ""
+            val pending = approvals.remove(token)
+            if (pending == null) { call.reject("Unknown or expired approval"); return@runOnUiThread }
+            approvalHandler.removeCallbacks(pending.timeout)
+            if (call.getBoolean("approved", false) != true || HorizonLockPlugin.locked || android.os.SystemClock.elapsedRealtime() > pending.expires) {
+                pending.call.reject("Termux command cancelled or approval expired"); call.resolve(); return@runOnUiThread
+            }
+            // startLive/submit recheck permissions, lock and enabled state at execution time.
+            pending.run(); call.resolve()
+        }
+    }
+    override fun handleOnDestroy() {
+        approvals.values.forEach { approvalHandler.removeCallbacks(it.timeout); it.call.reject("Termux approval cancelled: page closed") }
+        approvals.clear(); super.handleOnDestroy()
+    }
     @PluginMethod fun status(call: PluginCall) {
         val installed = try { context.packageManager.getPackageInfo("com.termux", 0); true } catch (_: Exception) { false }
         call.resolve(JSObject().put("installed", installed).put("enabled", prefs(context).getBoolean("enabled", false))
@@ -104,13 +136,7 @@ class HorizonTermuxPlugin : Plugin() {
         if (ContextCompat.checkSelfPermission(context, PERMISSION) != PackageManager.PERMISSION_GRANTED) { call.reject("Grant the Termux Run commands permission first"); return }
         val cmd = call.getString("cmd")?.trim() ?: ""
         if (cmd.isEmpty() || cmd.length > 8000 || cmd.contains('\u0000')) { call.reject("Command must contain 1–8000 characters"); return }
-        activity.runOnUiThread {
-            android.app.AlertDialog.Builder(activity).setTitle("Run in your Termux")
-                .setMessage("This runs with Termux's access to your files and network. Only approve commands you trust.\n\n$cmd")
-                .setNegativeButton("Cancel") { _, _ -> call.reject("Termux command cancelled") }
-                .setOnCancelListener { call.reject("Termux command cancelled") }
-                .setPositiveButton("Run") { _, _ -> submit(call, cmd) }.show()
-        }
+        approveInPage(call, cmd, "Run in your Termux", "Runs with Termux's file and network access. Android's Run commands permission is still required.") { submit(call, cmd) }
     }
 
     // V1.90.0: live run. Termux connects back to a one-shot 127.0.0.1 socket (token protected) and streams merged output as it happens.
@@ -128,13 +154,9 @@ class HorizonTermuxPlugin : Plugin() {
         val reason = guardReason(cmd)
         val auto = reason == null && ((fromAI && p.getBoolean("aiAuto", false)) || (!fromAI && p.getBoolean("manualAuto", false)))
         if (auto) { startLive(call, cmd, fromAI, trace, cwd); return }
-        activity.runOnUiThread {
-            val warn = if (reason != null) "GUARD: $reason. Auto-run is paused for this command.\n\n" else ""
-            android.app.AlertDialog.Builder(activity).setTitle(if (fromAI) "AI wants to run in your Termux" else "Run in your Termux")
-                .setMessage("Output streams live into the Horizon terminal. Runs with Termux's access, not root.\n\n$warn$cmd")
-                .setNegativeButton("Cancel") { _, _ -> call.reject("Termux command cancelled") }
-                .setOnCancelListener { call.reject("Termux command cancelled") }
-                .setPositiveButton("Run") { _, _ -> startLive(call, cmd, fromAI, trace, cwd) }.show()
+        approveInPage(call, cmd, if (fromAI) "AI wants to run in your Termux" else "Run in your Termux",
+            if (reason != null) "GUARD: $reason. Auto-run is paused for this command." else "Output streams live into Horizon. Runs as Termux, not root.") {
+            startLive(call, cmd, fromAI, trace, cwd)
         }
     }
     private fun startLive(call: PluginCall, cmd: String, fromAI: Boolean, trace: Boolean, cwd: String) {

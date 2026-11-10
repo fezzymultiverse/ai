@@ -6,7 +6,7 @@ from pathlib import Path
 root = Path(__file__).resolve().parent.parent
 app_id = json.loads((root / 'capacitor.config.json').read_text())['appId']
 java = root / 'android/app/src/main/java' / app_id.replace('.', '/')
-for name in ('HorizonWhatsAppPlugin.kt', 'HorizonTermuxPlugin.kt', 'HorizonExtractorPlugin.kt'):
+for name in ('HorizonWhatsAppPlugin.kt', 'HorizonTermuxPlugin.kt', 'HorizonExtractorPlugin.kt', 'HorizonCheckinPlugin.kt', 'HorizonWhatsAppAccessibility.kt'):
     text = (root / 'resources/android/java' / name).read_text().replace('__APPID__', app_id)
     assert '__APPID__' not in text
     (java / name).write_text(text)
@@ -35,6 +35,13 @@ if 'android:fullBackupContent=' not in s:
     s = s.replace('<application', '<application android:fullBackupContent="@xml/horizon_bridge_backup"', 1)
 if 'android:dataExtractionRules=' not in s:
     s = s.replace('<application', '<application android:dataExtractionRules="@xml/horizon_bridge_extraction"', 1)
+if 'android:name=".HorizonWhatsAppAccessibility"' not in s:
+    s = s.replace('</application>', '''    <service android:name=".HorizonWhatsAppAccessibility" android:label="Horizon confirmed WhatsApp reply"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE" android:exported="true">
+            <intent-filter><action android:name="android.accessibilityservice.AccessibilityService" /></intent-filter>
+            <meta-data android:name="android.accessibilityservice" android:resource="@xml/horizon_whatsapp_accessibility" />
+        </service>
+    </application>''')
 m.write_text(s)
 g = root / 'android/build.gradle'
 s = g.read_text()
@@ -44,7 +51,7 @@ if "https://jitpack.io" not in s:
 g.write_text(s)
 g = root / 'android/app/build.gradle'
 s = g.read_text()
-for dep in ("implementation 'com.github.TeamNewPipe:NewPipeExtractor:v0.27.0'", "coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs_nio:2.1.5'"):
+for dep in ("implementation 'androidx.work:work-runtime-ktx:2.9.1'", "implementation 'com.github.TeamNewPipe:NewPipeExtractor:v0.27.0'", "coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs_nio:2.1.5'"):
     if dep not in s:
         s = s.replace('dependencies {', 'dependencies {\n    ' + dep, 1)
 if 'coreLibraryDesugaringEnabled true' not in s:
@@ -54,8 +61,11 @@ g = root / 'android/app/proguard-rules.pro'
 s = g.read_text()
 if '# Horizon NewPipe' not in s:
     s += '\n# Horizon NewPipe\n-keep class org.mozilla.javascript.** { *; }\n-keep class org.mozilla.classfile.ClassFileWriter\n-dontwarn org.mozilla.javascript.tools.**\n'
+worker_rule = '-keep class ' + app_id + '.HorizonCheckinWorker { public <init>(android.content.Context, androidx.work.WorkerParameters); }'
+if worker_rule not in s:
+    s += '\n' + worker_rule + '\n'
 g.write_text(s)
-for plugin in ('HorizonWhatsAppPlugin', 'HorizonTermuxPlugin', 'HorizonExtractorPlugin'):
+for plugin in ('HorizonWhatsAppPlugin', 'HorizonTermuxPlugin', 'HorizonExtractorPlugin', 'HorizonCheckinPlugin'):
     assert 'registerPlugin(' + plugin + '.class)' in (java / 'MainActivity.java').read_text(), plugin
 assert 'HorizonTermuxResultReceiver' in m.read_text()
 print('[apply-bridges] WhatsApp, Termux and NewPipe sources + manifest + dependencies verified.')

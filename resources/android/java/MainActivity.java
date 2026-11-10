@@ -28,6 +28,7 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(HorizonStatsPlugin.class);
         registerPlugin(HorizonBrowserPlugin.class);
         registerPlugin(HorizonWhatsAppPlugin.class);
+        registerPlugin(HorizonCheckinPlugin.class);
         registerPlugin(HorizonTermuxPlugin.class);
         registerPlugin(HorizonExtractorPlugin.class);
         registerPlugin(HorizonLockPlugin.class);
