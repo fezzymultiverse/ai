@@ -97,7 +97,7 @@
         const bar = el('div', 'dlx-live-bar'); bar.appendChild(el('i'));
         const s = el('div', 'dlx-live-s');
         row.append(top, bar, s);
-        row.addEventListener('click', () => { const tile = document.querySelector('.hz-app[data-addon="downloads"]'); if (tile) tile.click(); });
+        row.addEventListener('click', () => { if (window.HorizonAddons) window.HorizonAddons.open('downloads'); });
         return row;
     }
     function cardFill(row, r) {
@@ -131,7 +131,7 @@
     }
 
     function badge() {
-        const tile = document.querySelector('[data-addon="downloads"]'); if (!tile) return;
+        const tile = document.querySelector('[data-addon="downloads"]') || document.getElementById('hzDlRow'); if (!tile) return;
         const failed = list.filter(r => r.status === 'failed').length;
         let b = tile.querySelector('.hz-dl-badge');
         if (!failed) { if (b) b.remove(); return; }

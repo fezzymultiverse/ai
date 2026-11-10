@@ -79,6 +79,7 @@
         if (w <= 0) { pad(true); return; }
         pad(false);
         var run = function () {
+            if (document.hidden) return;
             var left = waitLeft();
             if (left <= 0) { clearInterval(tick); tick = null; pad(true); say(''); return; }
             say('Too many tries. Wait ' + Math.ceil(left / 1000) + 's', true);

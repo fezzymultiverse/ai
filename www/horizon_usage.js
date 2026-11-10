@@ -61,7 +61,7 @@
     function begin(id, model) {
         live = { id: id, model: model, t0: Date.now(), estIn: 0 };
         clearInterval(tick);
-        tick = setInterval(function () { paintBadge(); }, 250);
+        tick = setInterval(function () { if (document.hidden) return; paintBadge(); }, 250);
         paintBadge();
     }
     function end(id, model, r) {

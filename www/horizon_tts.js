@@ -1,4 +1,8 @@
-/* HORIZON · text to speech · V1.75.0
+/* HORIZON · text to speech · V1.93.0
+ *
+ * V1.93.0: HD VOICE. Kokoro (open source, Apache-2.0) is one tap away from Settings > Voice (HorizonTTS.hd), listed best voices first.
+ *   Speed is now made INSIDE the model for the on-phone voices (clean timing, no pitch shift); pitch stays a separate playback control.
+ *   The first sentence of an on-phone voice is cut shorter so the sound starts sooner on a slow phone.
  *
  * V1.86.0: VOICE LIBRARY. Under Voice > Built-in voice you can download human-sounding voices (Kokoro, Piper) once; they then run offline through the same sherpa-onnx
  *   runtime as the bundled Kitten voice. The plugin downloads and unpacks them into app storage (HorizonVoice.download / packs / removePack).
@@ -52,17 +56,22 @@
     // Sizes are approximate. If a download link ever dies it is a one-line fix here, or the plugin shows the HTTP error.
     const REL = 'https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/';
     const kok = (n, sid, label) => ['kk_' + n, sid, label];
+    const HD_PACK = 'kokoro';            // V1.93.0: the one-tap HD voice is the Kokoro pack
+    const HD_BEST = 'kk_af_heart';
     const PACKS = [
         { id: 'kokoro', name: 'Kokoro', size: 'about 130 MB', url: REL + 'kokoro-int8-multi-lang-v1_0.tar.bz2',
-          note: 'The most human voices here: 28 English voices, US and UK. The biggest pack and the slowest to speak on a weak phone.',
+          note: 'HD voice. The most human voices here: 28 English voices, US and UK, best ones first (\u2605). Open source (Apache-2.0). The biggest pack and the slowest to speak on a weak phone.',
           voices: [
-            kok('af_heart', 3, 'Heart \u00b7 US female'), kok('af_bella', 2, 'Bella \u00b7 US female'), kok('af_nicole', 6, 'Nicole \u00b7 US female'), kok('af_sarah', 9, 'Sarah \u00b7 US female'),
-            kok('af_sky', 10, 'Sky \u00b7 US female'), kok('af_nova', 7, 'Nova \u00b7 US female'), kok('af_kore', 5, 'Kore \u00b7 US female'), kok('af_alloy', 0, 'Alloy \u00b7 US female'),
-            kok('af_aoede', 1, 'Aoede \u00b7 US female'), kok('af_jessica', 4, 'Jessica \u00b7 US female'), kok('af_river', 8, 'River \u00b7 US female'),
-            kok('am_michael', 16, 'Michael \u00b7 US male'), kok('am_adam', 11, 'Adam \u00b7 US male'), kok('am_eric', 13, 'Eric \u00b7 US male'), kok('am_liam', 15, 'Liam \u00b7 US male'),
-            kok('am_fenrir', 14, 'Fenrir \u00b7 US male'), kok('am_puck', 18, 'Puck \u00b7 US male'), kok('am_onyx', 17, 'Onyx \u00b7 US male'), kok('am_echo', 12, 'Echo \u00b7 US male'), kok('am_santa', 19, 'Santa \u00b7 US male'),
-            kok('bf_emma', 21, 'Emma \u00b7 UK female'), kok('bf_isabella', 22, 'Isabella \u00b7 UK female'), kok('bf_alice', 20, 'Alice \u00b7 UK female'), kok('bf_lily', 23, 'Lily \u00b7 UK female'),
-            kok('bm_george', 26, 'George \u00b7 UK male'), kok('bm_fable', 25, 'Fable \u00b7 UK male'), kok('bm_daniel', 24, 'Daniel \u00b7 UK male'), kok('bm_lewis', 27, 'Lewis \u00b7 UK male')
+            kok('af_heart', 3, 'Heart \u00b7 US female \u2605 best'), kok('af_bella', 2, 'Bella \u00b7 US female \u2605'), kok('af_nicole', 6, 'Nicole \u00b7 US female \u2605 calm'),
+            kok('am_fenrir', 14, 'Fenrir \u00b7 US male \u2605'), kok('am_michael', 16, 'Michael \u00b7 US male \u2605'), kok('am_puck', 18, 'Puck \u00b7 US male \u2605'),
+            kok('bf_emma', 21, 'Emma \u00b7 UK female \u2605'), kok('bm_fable', 25, 'Fable \u00b7 UK male'), kok('bm_george', 26, 'George \u00b7 UK male'),
+            kok('af_kore', 5, 'Kore \u00b7 US female'), kok('af_sarah', 9, 'Sarah \u00b7 US female'), kok('af_aoede', 1, 'Aoede \u00b7 US female'),
+            kok('af_alloy', 0, 'Alloy \u00b7 US female'), kok('af_nova', 7, 'Nova \u00b7 US female'), kok('af_sky', 10, 'Sky \u00b7 US female'),
+            kok('af_jessica', 4, 'Jessica \u00b7 US female'), kok('af_river', 8, 'River \u00b7 US female'),
+            kok('bf_isabella', 22, 'Isabella \u00b7 UK female'), kok('bf_alice', 20, 'Alice \u00b7 UK female'), kok('bf_lily', 23, 'Lily \u00b7 UK female'),
+            kok('bm_daniel', 24, 'Daniel \u00b7 UK male'), kok('bm_lewis', 27, 'Lewis \u00b7 UK male'),
+            kok('am_adam', 11, 'Adam \u00b7 US male'), kok('am_eric', 13, 'Eric \u00b7 US male'), kok('am_liam', 15, 'Liam \u00b7 US male'),
+            kok('am_onyx', 17, 'Onyx \u00b7 US male'), kok('am_echo', 12, 'Echo \u00b7 US male'), kok('am_santa', 19, 'Santa \u00b7 US male')
           ] },
         { id: 'piper-lessac-high', name: 'Lessac (high)', size: 'about 110 MB', url: REL + 'vits-piper-en_US-lessac-high.tar.bz2',
           note: 'US English, female, calm and clear. Piper high quality, one voice.', voices: [['pp_lessac_high', 0, 'Lessac \u00b7 US female']] },
@@ -161,11 +170,12 @@
     function rebuildVoices() {
         const have = packsInstalled();
         KOKORO.voices.length = 0;
-        KOK_BASE.forEach(v => KOKORO.voices.push(v));
+        // V1.93.0: downloaded voices come first (HD Kokoro before Piper, as the catalog is ordered), the 8 small built-in voices last
         PACKS.forEach(pk => {
             if (have.indexOf(pk.id) < 0) return;
             pk.voices.forEach(v => KOKORO.voices.push({ id: v[0], sid: v[1], name: v[2] + (pk.id === 'kokoro' ? ' (Kokoro)' : ' (Piper)'), pack: pk.id }));
         });
+        KOK_BASE.forEach(v => KOKORO.voices.push(v));
         kokIds = KOKORO.voices.map(v => v.id);
     }
     rebuildVoices();
@@ -292,9 +302,11 @@
     }
 
     // Cloud voices are generated whole before they play, so a short first piece starts the sound much sooner.
-    function fastFirst(chunks) {
-        if (!chunks.length || chunks[0].length <= 170) return chunks;
-        const head = chunkText(chunks[0], 150);
+    // V1.93.0: the on-phone voices make audio slower than they play it on a weak phone, so their first piece is cut shorter (about one sentence).
+    function fastFirst(chunks, head1) {
+        const lim = head1 || 150;
+        if (!chunks.length || chunks[0].length <= lim + 20) return chunks;
+        const head = chunkText(chunks[0], lim);
         if (head.length < 2) return chunks;
         return [head[0], head.slice(1).join(' ')].concat(chunks.slice(1));
     }
@@ -678,12 +690,12 @@
         kokReady.catch(() => { if (kokPack === pack) { kokReady = null; kokPack = ''; } });   // a failed start can be tried again
         return kokReady;
     }
-    async function kokoroSynth(text, voice) {
+    async function kokoroSynth(text, voice, speed) {
         const v = KOKORO.voices.find(x => x.id === voice) || KOKORO.voices[0];
         await kokLoad(v.pack);
         const p = voicePlugin();
         let r;
-        try { r = await withTimeout(p.synth({ text, sid: v.sid, pack: v.pack || 'builtin', speed: 1.0 }), KOKORO.genMs, 'the built-in voice took too long to speak'); }
+        try { r = await withTimeout(p.synth({ text, sid: v.sid, pack: v.pack || 'builtin', speed: clamp(speed, 0.5, 2, 1) }), KOKORO.genMs, 'the built-in voice took too long to speak'); }
         catch (e) { if (isMissing(e)) throw new Error('the built-in voice is not part of this build. Install the latest Horizon APK'); throw e; }
         if (!r || !r.wav) throw new Error('the built-in voice made no sound');
         const bytes = b64ToBytes(r.wav);
@@ -730,9 +742,19 @@
         if (r && r.ok === false) throw new Error(r.error || 'could not remove the voice');
         await packsRefresh();
     }
+    // V1.93.0: HD voice helpers for the one-tap card in Settings > Voice.
+    const hdInstalled = () => packsInstalled().indexOf(HD_PACK) >= 0;
+    const hdActive = () => { const s = settings(); const v = KOKORO.voices.find(x => x.id === s.kvoice); return s.engine === 'kokoro' && !!v && v.pack === HD_PACK; };
+    function hdUse() {
+        if (!hdInstalled()) return false;
+        const v = KOKORO.voices.find(x => x.id === ls.get(KEYS.kvoice));
+        set('kvoice', v && v.pack === HD_PACK ? v.id : HD_BEST);
+        set('engine', 'kokoro');
+        return true;
+    }
     function packCancel() { const p = voicePlugin(); if (p && typeof p.cancelDownload === 'function') { try { p.cancelDownload(); } catch (e) { /* ignore */ } } }
 
-    async function runCloud(synth, chunks, tok, s, started) {
+    async function runCloud(synth, chunks, tok, s, started, playRate) {
         let next = queued(tok, () => synth(chunks[0]));
         let first = true;
         for (let i = 0; i < chunks.length; i++) {
@@ -740,7 +762,7 @@
             if (tok.cancelled) return;
             next = i + 1 < chunks.length ? queued(tok, () => synth(chunks[i + 1])) : null;
             if (next) next.catch(() => { /* surfaced when awaited */ });
-            await playBlob(blob, s.rate, () => { if (first) { first = false; started(); } }, s.pitch);
+            await playBlob(blob, playRate == null ? s.rate : playRate, () => { if (first) { first = false; started(); } }, s.pitch);
             if (tok.cancelled) return;
         }
     }
@@ -769,7 +791,8 @@
         return new Blob([b64ToBytes(data.audioContent)], { type: 'audio/wav' });
     }
     const runGoogleCloud = (chunks, tok, s, started) => runCloud(googleCloudSynth, chunks, tok, s, started);
-    const runKokoro = (chunks, tok, s, started) => runCloud(t => kokoroSynth(t, s.kvoice), chunks, tok, s, started);
+    // V1.93.0: the model itself makes the speed (clean timing, no pitch shift), so playback runs at 1x. Pitch stays a playback control.
+    const runKokoro = (chunks, tok, s, started) => runCloud(t => kokoroSynth(t, s.kvoice, s.rate), chunks, tok, s, started, 1);
 
     // Android can refuse to start audio that was not triggered by a tap, and cloud voices take seconds to arrive,
     // so the tap is long gone by the time the sound is ready. A Web Audio context that was created and resumed
@@ -952,7 +975,7 @@
             let began = false;
             try {
                 emit({ engine: eng });
-                await RUN[eng](CLOUD.indexOf(eng) >= 0 ? fastFirst(chunkText(text, MAX_CHARS[eng])) : chunkText(text, MAX_CHARS[eng]), tok, s, () => {
+                await RUN[eng](CLOUD.indexOf(eng) >= 0 ? fastFirst(chunkText(text, MAX_CHARS[eng]), eng === 'kokoro' ? 90 : 150) : chunkText(text, MAX_CHARS[eng]), tok, s, () => {
                     began = true;
                     if (!tok.cancelled) emit({ state: 'playing', id, engine: eng });
                 });
@@ -1063,6 +1086,8 @@
             audio
         };
     }
+    // V1.93.0: the Voice row in Settings is collapsed, so its status line says where the HD voice is until it is installed
+    const hdHint = () => (kokoroUsable() && !hdInstalled()) ? ' \u00b7 open to get the free HD voice' : '';
     function describe() {
         const s = settings();
         if (s.engine === 'gcloud') return 'Google Cloud Standard · optional free tier, billing account required';
@@ -1073,11 +1098,12 @@
         if (s.engine === 'kokoro') {
             if (!kokoroUsable()) return 'The built-in voice is missing from this build. Using the Android voice for now.';
             const v = KOKORO.voices.find(x => x.id === s.kvoice);
+            if (v && v.pack === HD_PACK) return 'HD voice (' + v.name.replace(/ \(Kokoro\)$/, '').replace(/ \u2605.*$/, '') + ' \u00b7 Kokoro, offline)';
             if (v && v.pack && v.pack !== 'builtin') return 'Natural voice (' + v.name + ' \u00b7 downloaded, offline)';
-            return 'Natural voice (Built-in \u00b7 ' + (v ? v.name.split(' \u00b7 ')[0] : s.kvoice) + ' \u00b7 built in, offline)';
+            return 'Natural voice (Built-in \u00b7 ' + (v ? v.name.split(' \u00b7 ')[0] : s.kvoice) + ' \u00b7 built in, offline)' + hdHint();
         }
-        if (nativeUsable()) return 'Standard voice (Android)';
-        if (webUsable()) return 'Standard voice (browser)';
+        if (nativeUsable()) return 'Standard voice (Android)' + hdHint();
+        if (webUsable()) return 'Standard voice (browser)' + hdHint();
         return 'No voice engine found';
     }
 
@@ -1108,6 +1134,7 @@
             gemini: { voices: GEMINI.voices, keyCount: () => cloudKeys('gemini').length },
             kokoro: { voices: KOKORO.voices, usable: kokoroUsable },
         },
-        packs: { catalog: PACKS, installed: packsInstalled, refresh: packsRefresh, download: packDownload, remove: packRemove, cancel: packCancel }
+        packs: { catalog: PACKS, installed: packsInstalled, refresh: packsRefresh, download: packDownload, remove: packRemove, cancel: packCancel },
+        hd: { pack: HD_PACK, info: () => PACKS.find(x => x.id === HD_PACK), installed: hdInstalled, active: hdActive, use: hdUse, get: onProgress => packDownload(HD_PACK, onProgress) }
     };
 })(window);

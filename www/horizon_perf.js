@@ -301,7 +301,7 @@
     isOpen = true; panel.hidden = false;
     frames = [];
     if (!rafId) rafId = requestAnimationFrame(frame);
-    clearInterval(uiTimer); uiTimer = setInterval(paint, 700);
+    clearInterval(uiTimer); uiTimer = setInterval(function () { if (document.hidden) return; paint(); }, 700);
     paint();
     return true;
   }

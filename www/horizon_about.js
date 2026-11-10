@@ -1,10 +1,12 @@
 /* Horizon V1.26.0: ABOUT & UPDATES page: version, release check, backup export/import, changelog, privacy awareness + reminder switch. */
 (function () {
     'use strict';
-    var VERSION = 'V1.92.3';
+    var VERSION = 'V1.93.0';
     var LSK = 'horizon_privacy_notice';
     var REPO_API = 'https://api.github.com/repos/fezzymultiverse/ai';
     var LOG = [
+        ['V1.93.0', ['HD VOICE: Settings > Voice has a new HD voice card. One tap downloads Kokoro (open source, Apache-2.0, 28 English voices, US and UK) once, selects the best voice (Heart) and it then speaks offline with no key and no limit. The voice list now shows the best voices first (stars).','CLEANER SPEED: on-phone voices make Speed inside the model, so fast and slow reading keeps its natural sound (before, the finished audio was sped up). Pitch is still its own control.','FASTER START: the first sentence of an on-phone voice is cut shorter so sound begins sooner on a slow phone.']],
+        ['V1.92.4', ['DOWNLOADS FIX: Settings > DOWNLOADS and the live progress card did nothing when tapped, because both clicked a Downloads tile that is no longer in the APPS dock. They now open Downloads directly. The red failed-count badge now sits on the Settings DOWNLOADS row.']],
         ['V1.92.3', ['TOOLS GRID: each tool tile now has a one-line description under its name (the long text still shows on hold).','CLEANUP: the unused LeakCanary stub and the /canary menu are removed, the leftover Snooze checks are gone (the Screen tool no longer shows a permanent "Snooze off" chip), three unused native calls are removed, and 19 CSS declarations that a later rule always overrode are deleted. Nothing you could see or use changed besides those.','BUILD: one script, scripts/bump-version.sh, now stamps the version everywhere and can check that every stamp agrees.']],
         ['V1.92.2', ['DOWNLOADS: a live progress card above the message bar shows title, percent, bar and size for every download the AI or you start. It stays a few seconds after the file is saved or fails; tap it to open Downloads, X hides it.']],
         ['V1.92.1', ['LONG CHATS: a long chat now draws only its newest 40 messages when it opens, which was most of the startup wait. Nothing is deleted. Tap Show earlier messages to draw the rest; search and pinned-message jumps open them by themselves.']],

@@ -62,8 +62,11 @@
   btn.addEventListener('contextmenu', function (e) { e.preventDefault(); });
 
   scroll.addEventListener('scroll', schedule, { passive: true });
-  window.addEventListener('resize', schedule);
-  if (window.visualViewport) window.visualViewport.addEventListener('resize', schedule);
+  // V1.93.1: no scroll/layout reads while the keyboard slides; one repaint when it settles
+  function onResize() { if (!window.hzKbBusy) schedule(); }
+  window.addEventListener('resize', onResize, { passive: true });
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', onResize, { passive: true });
+  window.addEventListener('hz-kb-settled', schedule);
 
   /* count AI replies that land while you are scrolled up. A chat being loaded (many nodes at once) does not count. */
   try {

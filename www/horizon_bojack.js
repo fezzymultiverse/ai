@@ -45,7 +45,7 @@
   var idleSkip = 0;   // V1.47.0: with nothing playing the wave only looks again every 4th beat (about 4 DOM searches per 70 ms before)
   setInterval(function () {
     if (document.hidden) return;
-    if (window.hzTyping || window.hzKbBusy) return;   // V1.58.2: the wave rests completely while you type or the keyboard slides
+    if (window.hzTyping || window.hzKbBusy || window.hzEditorFocused) return;   // V1.58.2: the wave rests completely while you type or the keyboard slides. V1.93.1: and while a field has focus
     if (wasOn === false && (++idleSkip % 4)) return;
     waveTick();
   }, 70);
@@ -146,7 +146,11 @@
     rainCtx = cv.getContext('2d');
     var glyphs = '01<>/\\{}$#@&%*+=\u25C6\u26A1'.split(''), size = 13, last = 0;
     function resize() { cv.width = term.clientWidth; cv.height = term.clientHeight; drops = new Array(Math.ceil(cv.width / size)).fill(0).map(function () { return Math.random() * -40; }); }
-    resize(); window.addEventListener('resize', resize);
+    resize();
+    // V1.93.1: the canvas bitmap is reallocated on a resize, so wait until resizing stops and the keyboard has settled
+    var rzT = 0;
+    function rzSoon() { clearTimeout(rzT); rzT = setTimeout(function () { if (window.hzKbBusy) { rzSoon(); return; } resize(); }, 250); }
+    window.addEventListener('resize', rzSoon, { passive: true });
     var reduce = false; try { reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { /* default */ }
     (function frame(ts) {
       rainRaf = requestAnimationFrame(frame);

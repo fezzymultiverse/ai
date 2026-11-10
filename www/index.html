@@ -7,11 +7,11 @@
     <title>HORIZON · AI Interface</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <link rel="icon" type="image/png" href="icon.png">
-    <script src="horizon_release.js?v=1.92.3"></script>
+    <script src="horizon_release.js?v=1.93.0"></script>
     <script>(function(){try{var t=localStorage.getItem('horizon_theme');if(t!=='grey')t='cyan';document.documentElement.setAttribute('data-theme',t==='grey'?'grey':'neon');document.documentElement.setAttribute('data-accent',t);var m=document.querySelector('meta[name=theme-color]');if(m)m.setAttribute('content',t==='grey'?'#eceef1':'#000000');}catch(e){}})();</script>
     <style>html.hz-boot{background:#000}html.hz-boot[data-theme="grey"]{background:#eceef1}html.hz-boot body{visibility:hidden}</style>
     <script>(function(){var d=document.documentElement;d.classList.add('hz-boot');setTimeout(function(){d.classList.remove('hz-boot');},4000);})();</script>
-    <link rel="stylesheet" href="horizon_app.css?v=1.92.3">
+    <link rel="stylesheet" href="horizon_app.css?v=1.93.0">
 </head>
 <body>
 
@@ -579,10 +579,16 @@
                         <button class="use-btn" id="ttsTest" type="button">Test</button>
                     </div>
                     <p class="hint">Tap the speaker beside the time on any Horizon reply to hear it. The voice works with every chat provider. If a natural voice fails or runs out, Horizon switches to the Android voice and tells you why.</p>
+                    <div class="tts-hd" id="ttsHd" hidden>
+                        <div class="tts-hd-top"><b>HD voice &middot; Kokoro</b><span class="tts-hd-badge">open source &middot; free</span></div>
+                        <p class="hint" id="ttsHdText"></p>
+                        <div class="tts-lib-bar" id="ttsHdBar" hidden><i></i></div>
+                        <div class="card-actions"><button class="use-btn" id="ttsHdBtn" type="button">Get HD voice</button></div>
+                    </div>
                     <label class="field-label" for="ttsEngine">Voice</label>
                     <select id="ttsEngine">
                         <option value="gemini">Natural: Gemini (30 voices)</option>
-                        <option value="kokoro">Natural: On-phone voices (8 built in + downloadable library, offline)</option>
+                        <option value="kokoro">Natural: On-phone voices (HD Kokoro, offline)</option>
                         <option value="gcloud">Google Cloud Standard · optional free tier</option>
                         <option value="standard">Standard: Android voice (free, offline)</option>
                     </select>
@@ -711,35 +717,35 @@
             </section></div></div>
     </section>
 
-    <script src="horizon_usage.js?v=1.92.3"></script>
-    <script src="horizon_about.js?v=1.92.3"></script>
-    <script src="horizon_toast.js?v=1.92.3"></script>
-    <script src="horizon_plus.js?v=1.92.3"></script>
-    <script src="ember_document_engine.js?v=1.92.3"></script>
-    <script src="horizon_pdf.js?v=1.92.3"></script>
-    <script src="ember_artbox.js?v=1.92.3"></script>
-    <script src="horizon_key_import.js?v=1.92.3"></script>
-    <script src="horizon_tts.js?v=1.92.3"></script>
-    <script src="horizon_github.js?v=1.92.3"></script>
-    <script src="horizon_native_audio.js?v=1.92.3"></script>
-    <script src="horizon_music.js?v=1.92.3"></script>
-    <script src="horizon_runlog.js?v=1.92.3"></script>
-    <script src="horizon_bridges.js?v=1.92.3"></script>
-    <script src="horizon_hub.js?v=1.92.3"></script>
-    <script src="horizon_contacts.js?v=1.92.3"></script>
-    <script src="horizon_group.js?v=1.92.3"></script>
-    <script src="horizon_chips.js?v=1.92.3"></script>
-    <script src="horizon_vault.js?v=1.92.3"></script>
-    <script src="horizon_attach.js?v=1.92.3"></script>
-    <script src="horizon_creator.js?v=1.92.3"></script>
-    <script src="horizon_voice.js?v=1.92.3"></script>
-    <script src="horizon_screen.js?v=1.92.3"></script>
-    <script src="horizon_lens.js?v=1.92.3"></script>
-    <script src="horizon_archive.js?v=1.92.3"></script>
-    <script src="horizon_slash.js?v=1.92.3"></script>
-    <script src="horizon_geo.js?v=1.92.3"></script>
-    <script src="horizon_dash.js?v=1.92.3"></script>
-    <script src="horizon_browser.js?v=1.92.3"></script>
+    <script src="horizon_usage.js?v=1.93.0"></script>
+    <script src="horizon_about.js?v=1.93.0"></script>
+    <script src="horizon_toast.js?v=1.93.0"></script>
+    <script src="horizon_plus.js?v=1.93.0"></script>
+    <script src="ember_document_engine.js?v=1.93.0"></script>
+    <script src="horizon_pdf.js?v=1.93.0"></script>
+    <script src="ember_artbox.js?v=1.93.0"></script>
+    <script src="horizon_key_import.js?v=1.93.0"></script>
+    <script src="horizon_tts.js?v=1.93.0"></script>
+    <script src="horizon_github.js?v=1.93.0"></script>
+    <script src="horizon_native_audio.js?v=1.93.0"></script>
+    <script src="horizon_music.js?v=1.93.0"></script>
+    <script src="horizon_runlog.js?v=1.93.0"></script>
+    <script src="horizon_bridges.js?v=1.93.0"></script>
+    <script src="horizon_hub.js?v=1.93.0"></script>
+    <script src="horizon_contacts.js?v=1.93.0"></script>
+    <script src="horizon_group.js?v=1.93.0"></script>
+    <script src="horizon_chips.js?v=1.93.0"></script>
+    <script src="horizon_vault.js?v=1.93.0"></script>
+    <script src="horizon_attach.js?v=1.93.0"></script>
+    <script src="horizon_creator.js?v=1.93.0"></script>
+    <script src="horizon_voice.js?v=1.93.0"></script>
+    <script src="horizon_screen.js?v=1.93.0"></script>
+    <script src="horizon_lens.js?v=1.93.0"></script>
+    <script src="horizon_archive.js?v=1.93.0"></script>
+    <script src="horizon_slash.js?v=1.93.0"></script>
+    <script src="horizon_geo.js?v=1.93.0"></script>
+    <script src="horizon_dash.js?v=1.93.0"></script>
+    <script src="horizon_browser.js?v=1.93.0"></script>
     <script>
     (() => {
         'use strict';
@@ -2420,7 +2426,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 const tcfg = TSP[tsp] || TSP.fast;
                 const step = Math.max(1, Math.ceil(total / tcfg[0]));
                 let count = 0;
-                let timer = null;
+                let raf = 0, t0 = 0;   // V1.93.1: frame-driven, replaces the setTimeout timer
                 let done = false;
 
                 function reveal(seg) {
@@ -2452,7 +2458,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 function finish() {
                     if (done) return;
                     done = true;
-                    clearTimeout(timer);
+                    if (raf) { cancelAnimationFrame(raf); raf = 0; }
                     segs.forEach(s => { if (!s.pseudo) s.node.nodeValue = s.full; reveal(s); });
                     blocks.forEach(b => { b.style.display = ''; });
                     if (caret.parentNode) caret.parentNode.removeChild(caret);
@@ -2460,14 +2466,23 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                     resolve();
                 }
 
-                function tick() {
+                // V1.93.1: runs on requestAnimationFrame. Same speed as before (step characters per tcfg[1] ms, so 60/90/120 Hz all type alike),
+                // but at most ONE text write per frame, and the scroll-position read happens first, while layout is still clean from the last frame.
+                function tick(ts) {
+                    raf = 0;
+                    if (done) return;
                     if (document.hidden) { finish(); return; }   // V1.67.9: Android throttles timers once you leave, so the rest of the reply lands at once
+                    const now = ts || performance.now();
+                    if (!t0) t0 = now;
                     const nearBottom = chatScroll.scrollHeight - chatScroll.scrollTop - chatScroll.clientHeight < 90;
-                    count += step;
-                    paint(count);
-                    if (nearBottom) scrollBottom();
+                    const target = Math.min(total, (Math.floor((now - t0) / tcfg[1]) + 1) * step);
+                    if (target > count) {
+                        count = target;
+                        paint(count);
+                        if (nearBottom) scrollBottom();
+                    }
                     if (count >= total) finish();
-                    else timer = setTimeout(tick, tcfg[1]);
+                    else raf = requestAnimationFrame(tick);
                 }
 
                 if (total === 0 || tsp === 'instant') { finish(); return; }
@@ -2906,6 +2921,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             if (thought) clearInterval(thought.timer);
             thought = { steps: [], t0: Date.now(), open: false, timer: 0 };
             thought.timer = setInterval(() => {
+                if (document.hidden) return;
                 const el = $('#thSec');
                 if (el && thought) el.textContent = Math.round((Date.now() - thought.t0) / 1000) + 's';
                 paintLive();
@@ -7136,7 +7152,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             webIntro: 'Master switch for live web search and page reading.',
             permIntro: 'What Horizon is allowed to do on this phone.',
             themeCard: 'Dark cyan or Light grey.',
-            ttsCard: 'Hear Horizon\'s replies read aloud. Built-in voices, male and female (no key, no limit, offline), Gemini voices, or the free Android voice.',
+            ttsCard: 'Hear Horizon\'s replies read aloud. HD Kokoro voices (free, open source, offline), built-in voices, Gemini voices, or the free Android voice.',
             'card-gemini': 'Google Gemini. Add a key, pick a model and switch it on.',
             'card-groq': 'Groq. Fast Llama and GPT-OSS models. Add a key and pick a model.',
             'card-cohere': 'Cohere Command models. Add a key (a free trial key works) and pick a model.',
@@ -7402,6 +7418,64 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             });
         }
 
+        // V1.93.0: HD voice card. One tap downloads Kokoro (the same pack as the Voice library row), selects it and is ready for Test.
+        function paintHd() {
+            const box = $('#ttsHd');
+            if (!box || !TTS || !TTS.hd) return;
+            const usable = !!(NATIVE && TTS.cloud.kokoro.usable());
+            box.hidden = !usable;
+            if (!usable) return;
+            const id = TTS.hd.pack, info = TTS.hd.info(), btn = $('#ttsHdBtn'), txt = $('#ttsHdText'), bar = $('#ttsHdBar');
+            const fill = bar.firstElementChild, busy = libBusy[id];
+            if (busy) {
+                txt.textContent = busy.note || 'Starting...';
+                bar.hidden = !(busy.pct >= 0); fill.style.width = Math.max(0, busy.pct) + '%';
+                btn.textContent = 'Cancel';
+                return;
+            }
+            bar.hidden = true;
+            if (!TTS.hd.installed()) {
+                txt.textContent = 'The most human voices Horizon can use: 28 English voices, US and UK. Free, no key, no limit, and offline once downloaded. One download of ' + info.size + ', best on Wi-Fi.';
+                btn.textContent = 'Get HD voice';
+            } else if (TTS.hd.active()) {
+                txt.textContent = 'HD voice is on. Pick a voice in the list below (★ marks the best) and tap Test. Speed is made inside the voice, so it stays clean.';
+                btn.textContent = 'Test HD voice';
+            } else {
+                txt.textContent = 'HD voice is downloaded but another voice is selected.';
+                btn.textContent = 'Use HD voice';
+            }
+        }
+        (function wireHd() {
+            const btn = $('#ttsHdBtn');
+            if (!btn) return;
+            btn.addEventListener('click', async () => {
+                if (!TTS || !TTS.hd) return;
+                const id = TTS.hd.pack;
+                if (libBusy[id]) { TTS.packs.cancel(); return; }
+                if (TTS.hd.installed()) {
+                    if (TTS.hd.active()) { vEl.test.click(); return; }
+                    TTS.hd.use();
+                    await paintVoice();
+                    ttsToast('HD voice selected. Tap Test.');
+                    return;
+                }
+                libBusy[id] = { note: 'Starting...', pct: -1 };
+                paintEngine();
+                try {
+                    await TTS.hd.get(ev => {
+                        libBusy[id] = { note: ev.note || '', pct: typeof ev.pct === 'number' ? ev.pct : -1 };
+                        paintEngine();
+                    });
+                    ttsToast('HD voice is ready. Tap Test to hear it.');
+                } catch (e) {
+                    ttsToast('HD voice: ' + (e && e.message ? e.message : e), true);
+                } finally {
+                    delete libBusy[id];
+                    paintVoice();
+                }
+            });
+        })();
+
         // V1.25.0: the voice card shows the Android pickers for the Standard voice and one voice list for a natural engine
         function paintEngine() {
             if (!TTS) return;
@@ -7412,6 +7486,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             vEl.android.hidden = s.engine !== 'standard';
             vEl.pitchWrap.hidden = false;
             vEl.nat.hidden = !cloud;
+            paintHd();
             if (!cloud) return;
             paintLib();
             const eng = TTS.cloud[s.engine];
@@ -7430,7 +7505,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             }
             if (s.engine === 'kokoro') {
                 vEl.nHint.textContent = eng.usable()
-                    ? 'No key, no account, no limit. 8 small voices are built into Horizon. For more human voices (Kokoro has 28, plus Piper voices) download one from the Voice library below. Everything runs on your phone, so nothing you read aloud leaves it. Speed and pitch both work.'
+                    ? 'No key, no account, no limit. 8 small voices are built into Horizon. For the best sound get the HD voice (Kokoro, 28 voices) in the card at the top, or pick a Piper voice from the Voice library below. Everything runs on your phone, so nothing you read aloud leaves it. Speed and pitch both work.'
                     : 'The built-in voice is not part of this build. Install the latest Horizon APK from the build page.';
             } else {
                 const n = eng.keyCount();
@@ -7711,35 +7786,35 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         window.addEventListener('pagehide', () => { if (draftT) saveDraft(); });
     })();
     </script>
-    <script src="horizon_downloads.js?v=1.92.3"></script>
-    <script src="horizon_ytdirect.js?v=1.92.3"></script>
-    <script src="horizon_youtube.js?v=1.92.3"></script>
-    <script src="horizon_addons.js?v=1.92.3"></script>
-    <script src="horizon_terminal.js?v=1.92.3"></script>
-    <script src="horizon_termai.js?v=1.92.3"></script>
-    <script src="horizon_typing.js?v=1.92.3"></script>
-    <script src="horizon_perf.js?v=1.92.3"></script>
-    <script src="horizon_ind.js?v=1.92.3"></script>
-    <script src="horizon_toolgrid.js?v=1.92.3"></script>
-    <script src="horizon_bojack.js?v=1.92.3"></script>
-    <script src="horizon_header.js?v=1.92.3"></script>
-    <script src="horizon_htmlview.js?v=1.92.3"></script>
-    <script src="horizon_mdview.js?v=1.92.3"></script>
-    <script src="horizon_setai.js?v=1.92.3"></script>
-    <script src="horizon_operator.js?v=1.92.3"></script>
-    <script src="horizon_lock.js?v=1.92.3"></script>
-    <script src="horizon_hdr2.js?v=1.92.3"></script>
-    <script src="horizon_fold.js?v=1.92.3"></script>
-    <script src="horizon_autoread.js?v=1.92.3"></script>
-    <script src="horizon_daemon.js?v=1.92.3"></script>
-    <script src="horizon_door.js?v=1.92.3"></script>
-    <script src="horizon_speakwave.js?v=1.92.3"></script>
-    <script src="horizon_laser.js?v=1.92.3"></script>
-    <script src="horizon_fab.js?v=1.92.3"></script>
-    <script src="horizon_msgmenu.js?v=1.92.3"></script>
-    <script src="horizon_termlive.js?v=1.92.3"></script>
-    <script src="horizon_v2.js?v=1.92.3"></script>
-    <script src="horizon_lift.js?v=1.92.3"></script>
+    <script src="horizon_downloads.js?v=1.93.0"></script>
+    <script src="horizon_ytdirect.js?v=1.93.0"></script>
+    <script src="horizon_youtube.js?v=1.93.0"></script>
+    <script src="horizon_addons.js?v=1.93.0"></script>
+    <script src="horizon_terminal.js?v=1.93.0"></script>
+    <script src="horizon_termai.js?v=1.93.0"></script>
+    <script src="horizon_typing.js?v=1.93.0"></script>
+    <script src="horizon_perf.js?v=1.93.0"></script>
+    <script src="horizon_ind.js?v=1.93.0"></script>
+    <script src="horizon_toolgrid.js?v=1.93.0"></script>
+    <script src="horizon_bojack.js?v=1.93.0"></script>
+    <script src="horizon_header.js?v=1.93.0"></script>
+    <script src="horizon_htmlview.js?v=1.93.0"></script>
+    <script src="horizon_mdview.js?v=1.93.0"></script>
+    <script src="horizon_setai.js?v=1.93.0"></script>
+    <script src="horizon_operator.js?v=1.93.0"></script>
+    <script src="horizon_lock.js?v=1.93.0"></script>
+    <script src="horizon_hdr2.js?v=1.93.0"></script>
+    <script src="horizon_fold.js?v=1.93.0"></script>
+    <script src="horizon_autoread.js?v=1.93.0"></script>
+    <script src="horizon_daemon.js?v=1.93.0"></script>
+    <script src="horizon_door.js?v=1.93.0"></script>
+    <script src="horizon_speakwave.js?v=1.93.0"></script>
+    <script src="horizon_laser.js?v=1.93.0"></script>
+    <script src="horizon_fab.js?v=1.93.0"></script>
+    <script src="horizon_msgmenu.js?v=1.93.0"></script>
+    <script src="horizon_termlive.js?v=1.93.0"></script>
+    <script src="horizon_v2.js?v=1.93.0"></script>
+    <script src="horizon_lift.js?v=1.93.0"></script>
     <script>(function(){var d=document.documentElement;requestAnimationFrame(function(){requestAnimationFrame(function(){d.classList.remove('hz-boot');try{window.HzBootMs=Math.round(performance.now());}catch(e){}});});})();</script>
 </body>
 </html>

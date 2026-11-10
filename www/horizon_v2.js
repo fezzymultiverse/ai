@@ -7,7 +7,7 @@
   try { localStorage.removeItem('horizon_snooze'); } catch (e) { /* storage blocked */ }   // Snooze is gone; make sure nothing stays paused
 
   /* Downloads row (Settings) and Github Push row (Menu panel) open the real windows */
-  var dl = $('hzDlRow'); if (dl) dl.addEventListener('click', function () { tap('.hz-app[data-addon="downloads"]'); });
+  var dl = $('hzDlRow'); if (dl) dl.addEventListener('click', function () { if (window.HorizonAddons) window.HorizonAddons.open('downloads'); });
   var lg = $('hzLeftGh'); if (lg) lg.addEventListener('click', function () { tap('.hz-app[data-addon="github"]'); });
 
   var header = document.querySelector('.app-header'), top = document.querySelector('.hzd-top'), pill = $('hzPill'), badge = $('hzBadge');
