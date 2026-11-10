@@ -41,7 +41,7 @@ class HorizonWhatsAppDraftWorker(c:Context, params:WorkerParameters):Worker(c,pa
                         .put("contents",JSONArray().put(JSONObject().put("role","user").put("parts",JSONArray().put(JSONObject().put("text",content)))))
                         .put("generationConfig",JSONObject().put("maxOutputTokens",2048))}
                 "gonka"->{url=HorizonCheckins.endpoints.getValue(provider);body=JSONObject().put("model",model).put("max_tokens",2048).put("system",rules).put("messages",JSONArray().put(JSONObject().put("role","user").put("content",content)))}
-                else->{url=HorizonCheckins.endpoints[provider]?:throw IllegalArgumentException("Unsupported background provider")
+                else->{url=HorizonCheckins.endpointFor(provider,cfg.getString("key"))?:throw IllegalArgumentException("Unsupported background provider")
                     if(provider in setOf("anyapi","routeway"))require(model.endsWith(":free"))
                     body=JSONObject().put("model",model).put("max_tokens",2048).put("stream",false).put("messages",JSONArray().put(JSONObject().put("role","system").put("content",rules)).put(JSONObject().put("role","user").put("content",content)))}
             }
@@ -49,7 +49,7 @@ class HorizonWhatsAppDraftWorker(c:Context, params:WorkerParameters):Worker(c,pa
             conn.connectTimeout=15000;conn.readTimeout=60000;conn.instanceFollowRedirects=false;conn.requestMethod="POST";conn.doOutput=true;conn.setRequestProperty("Content-Type","application/json")
             if(provider=="gemini")conn.setRequestProperty("x-goog-api-key",cfg.getString("key"))
             else if(provider=="gonka"){conn.setRequestProperty("x-api-key",cfg.getString("key"));conn.setRequestProperty("anthropic-version","2023-06-01")}
-            else if(provider!="pollinations")conn.setRequestProperty("Authorization","Bearer "+cfg.getString("key"))
+            else if(provider!="pollinations")conn.setRequestProperty("Authorization","Bearer "+HorizonCheckins.bearer(provider,cfg.getString("key")))
             if(!allowed(cfg))return Result.success()
             conn.outputStream.use{it.write(body.toString().toByteArray(Charsets.UTF_8))}
             val code=conn.responseCode

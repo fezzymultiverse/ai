@@ -121,22 +121,44 @@
        The old notification path stays as the fallback for the browser / when the plugin is missing. */
     function alarmPlugin() { try { var c = window.Capacitor; return (c && c.Plugins && c.Plugins.HorizonAlarm) || null; } catch (e) { return null; } }
     function clockToo() { return lsg('horizon_alarm_clock') === '1'; }
-    function scheduleNative(n) {
-        if (!n.r || n.f) return;
+    function scheduleNative(n, cb) {
+        var done = typeof cb === 'function' ? cb : function () { /* nobody is listening */ };   // the AI alarm toast listens; the calendar form does not
+        if (!n.r || n.f) { done({ ok: false, why: 'passed' }); return; }
         var ts = dueTs(n);
-        if (ts <= Date.now() + 5000) return;
+        if (ts <= Date.now() + 5000) { done({ ok: false, why: 'passed' }); return; }
         var ap = alarmPlugin();
         if (ap) {
             ap.schedule({ id: n.n, at: ts, title: n.a ? 'Horizon alarm' : 'Horizon reminder', body: clip(n.x, 140), mode: n.a ? 'alarm' : 'remind', clock: !!(n.a && clockToo()) })
                 .then(function (r) {
-                    if (r && r.ok === false) return;
+                    if (r && r.ok === false) { done({ ok: false, why: 'refused' }); return; }
                     if (n.a && r && r.exact === false && H && H.notice) H.notice('Alarm set. Allow exact alarms in Settings for the best timing.');
                     if (n.a && clockToo() && r && r.clock === false && H && H.notice) H.notice('Alarm set in Horizon. The Clock app only takes alarms within the next 24 hours.');
+                    done({ ok: true, exact: !(r && r.exact === false) });
                 })
-                .catch(function () { if (H && H.notify) H.notify(n.n, 'Horizon reminder', clip(n.x, 140), ts); });
+                .catch(function () { if (H && H.notify) H.notify(n.n, 'Horizon reminder', clip(n.x, 140), ts); done({ ok: !!(H && H.notify), fallback: true }); });
             return;
         }
         if (H && H.notify) H.notify(n.n, 'Horizon reminder', clip(n.x, 140), ts);
+        done({ ok: !!(H && H.notify), fallback: true });
+    }
+    /* An alarm the AI sets gets a toast, shown once the native side has answered, so it never claims an alarm that was not set.
+       Tap it to open the calendar on that day. */
+    function openCalOn(n) {
+        try { openCal(); var d = parseKey(n.d); S.month = new Date(d.getFullYear(), d.getMonth(), 1); S.sel = n.d; paintCal(); } catch (e) { /* calendar not ready */ }
+    }
+    function alarmToast(n, res) {
+        try {
+            var T = window.HzToast; if (!T) return;
+            var d = new Date(dueTs(n)), what = clip(n.x, 60);
+            var when = fmtDate(d) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+            if (!res || res.ok === false) {
+                T.show({ icon: 'i-bell', kind: 'bad', title: res && res.why === 'passed' ? 'Alarm time already passed' : 'Alarm could not be set', sub: when + ' \u00b7 ' + what, onTap: function () { openCalOn(n); } });
+                return;
+            }
+            T.show({ icon: 'i-bell', kind: 'ok', title: res.fallback ? 'Alarm set (notification only)' : 'Alarm set',
+                sub: when + ' \u00b7 ' + what + (res.exact === false ? ' \u00b7 allow exact alarms for best timing' : res.fallback ? ' \u00b7 the Android alarm service is not available' : ''),
+                onTap: function () { openCalOn(n); } });
+        } catch (e) { /* a toast must never break saving the note */ }
     }
     function cancelNative(n) {
         if (!n || !n.n) return;
@@ -188,7 +210,8 @@
             if (dup) return '';
             var n = { id: 'n' + Date.now().toString(36) + Math.floor(Math.random() * 1296).toString(36), d: key, t: time, x: x.slice(0, 280), r: r ? 1 : 0, a: /alarm/i.test(r || '') ? 1 : 0, f: 0, n: nid() };
             if (n.r && dueTs(n) <= Date.now()) n.f = 1;
-            all.push(n); saveNotes(all); scheduleNative(n);
+            all.push(n); saveNotes(all);
+            if (n.a) scheduleNative(n, function (res) { alarmToast(n, res); }); else scheduleNative(n);
             saved.push(key + (time ? ' ' + time : '') + ' ' + clip(x, 50) + (n.r && !n.f ? (n.a ? ' (wake alarm on)' : ' (reminder on)') : ''));
             return '';
         }).replace(/\n{3,}/g, '\n\n').trim();

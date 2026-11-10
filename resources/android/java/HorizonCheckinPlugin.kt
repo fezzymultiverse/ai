@@ -59,9 +59,10 @@ internal object HorizonCheckins {
         return JSONObject(String(cipher.doFinal(bytes.copyOfRange(12, bytes.size)), Charsets.UTF_8))
     }
     val endpoints = mapOf(
-        "together" to "https://api.together.xyz/v1/chat/completions",
-        "sambanova" to "https://api.sambanova.ai/v1/chat/completions",
-        "nvidia" to "https://integrate.api.nvidia.com/v1/chat/completions",
+        "llm7" to "https://api.llm7.io/v1/chat/completions",
+        "cloudflare" to "https://api.cloudflare.com/client/v4/accounts/{account}/ai/v1/chat/completions",
+        "zai" to "https://api.z.ai/api/paas/v4/chat/completions",
+        "aionlabs" to "https://api.aionlabs.ai/v1/chat/completions",
         "groq" to "https://api.groq.com/openai/v1/chat/completions",
         "cohere" to "https://api.cohere.com/v2/chat",
         "mistral" to "https://api.mistral.ai/v1/chat/completions",
@@ -71,6 +72,20 @@ internal object HorizonCheckins {
         "routeway" to "https://api.routeway.ai/v1/chat/completions",
         "gonka" to "https://api.gonkarouter.io/v1/messages"
     )
+    // Cloudflare Workers AI keeps the account ID in the URL, so its saved key is "ACCOUNT_ID:API_TOKEN".
+    private val cloudflareKey = Regex("^([0-9a-fA-F]{32}):([A-Za-z0-9_.-]{20,})$")
+    fun endpointFor(provider: String, key: String): String? {
+        val base = endpoints[provider] ?: return null
+        if (provider != "cloudflare") return base
+        val m = cloudflareKey.matchEntire(key.trim()) ?: return null
+        return base.replace("{account}", m.groupValues[1])
+    }
+    // The secret that goes after "Bearer ". LLM7.io works without a key, so a blank or placeholder key becomes "unused".
+    fun bearer(provider: String, key: String): String = when (provider) {
+        "cloudflare" -> cloudflareKey.matchEntire(key.trim())?.groupValues?.get(2) ?: ""
+        "llm7" -> if (key.isBlank() || key == "free") "unused" else key
+        else -> key
+    }
 }
 
 @CapacitorPlugin(name = "HorizonCheckin")
@@ -115,6 +130,7 @@ class HorizonCheckinPlugin : Plugin() {
             val apiKey = call.getString("key") ?: ""
             require(provider == "pollinations" || apiKey.isNotBlank()) { "Set a key for the selected AI provider" }
             require(apiKey.length <= 4096) { "API key is too long" }
+            if (provider == "cloudflare") require(HorizonCheckins.endpointFor(provider, apiKey) != null) { "Cloudflare key must look like ACCOUNT_ID:API_TOKEN" }
             val hours = (call.getInt("hours", 4) ?: 4).coerceIn(1, 24)
             val minutes = (call.getInt("minutes", hours * 60) ?: hours * 60).coerceIn(15, 1440)
             val history = call.getArray("history") ?: JSONArray()
@@ -172,7 +188,7 @@ class HorizonCheckinWorker(c: Context, params: WorkerParameters) : Worker(c, par
                 body = JSONObject().put("model", model).put("max_tokens", 512).put("system", rules)
                     .put("messages", JSONArray().put(JSONObject().put("role", "user").put("content", contextText)))
             } else {
-                url = HorizonCheckins.endpoints[provider] ?: return Result.failure()
+                url = HorizonCheckins.endpointFor(provider, config.getString("key")) ?: return Result.failure()
                 if (provider in setOf("anyapi", "routeway") && !model.endsWith(":free")) return Result.failure()
                 body = JSONObject().put("model", model).put("stream", false).put("max_tokens", 512)
                     .put("messages", JSONArray().put(JSONObject().put("role", "system").put("content", rules))
@@ -186,7 +202,7 @@ class HorizonCheckinWorker(c: Context, params: WorkerParameters) : Worker(c, par
             else if (provider == "gonka") {
                 connection.setRequestProperty("x-api-key", config.getString("key"))
                 connection.setRequestProperty("anthropic-version", "2023-06-01")
-            } else if (provider != "pollinations") connection.setRequestProperty("Authorization", "Bearer " + config.getString("key"))
+            } else if (provider != "pollinations") connection.setRequestProperty("Authorization", "Bearer " + HorizonCheckins.bearer(provider, config.getString("key")))
             // Recheck immediately before network I/O: a stopped worker must not initiate a new request.
             if (isStopped || HorizonLockPlugin.locked || !p.getBoolean("enabled", false) || p.getString("generation", "") != generation) return Result.success()
             connection.outputStream.use { it.write(body.toString().toByteArray(Charsets.UTF_8)) }

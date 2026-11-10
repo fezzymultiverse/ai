@@ -8,7 +8,7 @@
     'use strict';
     var KEY = 'horizon_usage_v1';
     var MAXLAT = 40, MAXT = 40, KEEP_DAYS = 30;
-    var COLORS = { gemini: '#4f8cff', groq: '#f97316', cohere: '#a855f7', mistral: '#ff8205', openrouter: '#8b5cf6', anyapi: '#22d3ee', gonka: '#fbbf24', routeway: '#a78bfa', pollinations: 'var(--neon)' };
+    var COLORS = { gemini: '#4f8cff', groq: '#f97316', cohere: '#a855f7', mistral: '#ff8205', openrouter: '#8b5cf6', anyapi: '#22d3ee', gonka: '#fbbf24', routeway: '#a78bfa', llm7: '#38bdf8', cloudflare: '#f6821f', pollinations: 'var(--neon)' };
     var EXTRA = ['#06b6d4', '#eab308', '#ec4899', '#14b8a6'];
     var cfg = null, live = null, tick = 0, saveT = 0, root = null;
     var net = { busy: false, data: null, err: '', at: 0 };
@@ -386,7 +386,7 @@
             row.appendChild(dot);
             var tx = el('div', 'hzu-key-t');
             tx.appendChild(el('b', null, p.name));
-            var sm = p.keyless ? 'No key needed' : (cfg.hasKey(id) ? 'Key saved' : 'No key saved');
+            var sm = p.keyless ? 'No key needed' : p.optionalKey ? 'Key optional' : (cfg.hasKey(id) ? 'Key saved' : 'No key saved');
             if (ev) sm += ' \u00b7 ' + (ev.ok ? 'worked' : 'failed') + ' ' + new Date(ev.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + (ev.ok ? ' \u00b7 ' + fmtMs(ev.ms) : '');
             tx.appendChild(el('small', null, sm));
             if (ev && !ev.ok && ev.err) tx.appendChild(el('small', 'bad', ev.err));

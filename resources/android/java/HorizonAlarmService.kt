@@ -35,6 +35,7 @@ class HorizonAlarmService : Service() {
         const val CH = "horizon_wake_alarm"
         const val ACT_STOP = "horizon.alarm.STOP"
         const val ACT_SNOOZE = "horizon.alarm.SNOOZE"
+        const val ACT_REPOST = "horizon.alarm.REPOST"   // V1.93.5: the notification was swiped away while ringing: put it back
         const val NOTIF = 6801
         const val SNOOZE_MIN = 10
         @JvmField @Volatile var ringing = false
@@ -59,11 +60,30 @@ class HorizonAlarmService : Service() {
     }
     private val giveUp = Runnable { stopAll(); stopSelf() }
 
+    // V1.93.5: Android 14 lets a swipe dismiss a foreground-service notification while the alarm keeps ringing.
+    // While it rings, check every 3 s that the notification is still up and put it back if it is not.
+    private val keepShown = object : Runnable {
+        override fun run() {
+            if (!ringing) return
+            try {
+                val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                var shown = false
+                if (Build.VERSION.SDK_INT >= 23) { for (a in nm.activeNotifications) if (a.id == NOTIF) { shown = true; break } } else shown = true   // API 23+ can list them; older phones rely on the delete intent
+                if (!shown) nm.notify(NOTIF, buildNotification())
+            } catch (ignored: Exception) { }
+            ui.postDelayed(this, 3000)
+        }
+    }
+
     override fun onBind(i: Intent?): IBinder? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
             ACT_STOP -> { stopAll(); stopSelf(); return START_NOT_STICKY }
+            ACT_REPOST -> {
+                if (ringing) try { (getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).notify(NOTIF, buildNotification()) } catch (ignored: Exception) { }
+                return START_NOT_STICKY
+            }
             ACT_SNOOZE -> {
                 val at = System.currentTimeMillis() + SNOOZE_MIN * 60_000L
                 HorizonAlarms.arm(this, 6900001, at, curTitle, "Snoozed: $curBody", "alarm", curSong, "", curBrief)   // its own id, so a repeating alarm keeps its schedule
@@ -80,6 +100,7 @@ class HorizonAlarmService : Service() {
         else startForeground(NOTIF, n)
         ringing = true
         hold(); play(); buzz()
+        ui.removeCallbacks(keepShown); ui.postDelayed(keepShown, 3000)
         ui.removeCallbacks(giveUp); ui.postDelayed(giveUp, 10 * 60_000L)
         return START_NOT_STICKY
     }
@@ -126,9 +147,10 @@ class HorizonAlarmService : Service() {
             .setOngoing(true)
             .setContentIntent(full)
             .setFullScreenIntent(full, true)
+            .setDeleteIntent(act(ACT_REPOST, 6806))   // V1.93.5: a swipe brings it straight back
             .addAction(0, "Snooze $SNOOZE_MIN min", act(ACT_SNOOZE, 6803))
             .addAction(0, if (curBrief) "Stop + brief" else "Stop", stopAction())
-            .build()
+            .build().also { it.flags = it.flags or Notification.FLAG_NO_CLEAR or Notification.FLAG_ONGOING_EVENT }   // V1.93.5: not clearable while it rings
     }
 
     private fun hold() {
@@ -177,7 +199,7 @@ class HorizonAlarmService : Service() {
 
     private fun stopAll() {
         ringing = false
-        ui.removeCallbacks(ramp); ui.removeCallbacks(giveUp)
+        ui.removeCallbacks(ramp); ui.removeCallbacks(giveUp); ui.removeCallbacks(keepShown)
         try { player?.stop() } catch (ignored: Exception) { }
         try { player?.release() } catch (ignored: Exception) { }
         player = null

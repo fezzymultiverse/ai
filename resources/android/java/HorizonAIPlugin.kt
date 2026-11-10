@@ -126,7 +126,7 @@ class HorizonAIPlugin : Plugin() {
         // Only the existing AI provider endpoints may receive stored credentials.
         val parsedUrl = try { URL(url) } catch (_: Exception) { null }
         val host = parsedUrl?.host ?: ""
-        if (parsedUrl == null || parsedUrl.protocol != "https" || parsedUrl.userInfo != null || parsedUrl.port !in setOf(-1, 443) || host !in setOf("generativelanguage.googleapis.com", "api.groq.com", "api.cohere.com", "api.mistral.ai", "openrouter.ai", "text.pollinations.ai", "api.anyapi.ai", "api.routeway.ai", "api.gonkarouter.io", "api.together.xyz", "api.sambanova.ai", "integrate.api.nvidia.com")) {
+        if (parsedUrl == null || parsedUrl.protocol != "https" || parsedUrl.userInfo != null || parsedUrl.port !in setOf(-1, 443) || host !in setOf("generativelanguage.googleapis.com", "api.groq.com", "api.cohere.com", "api.mistral.ai", "openrouter.ai", "text.pollinations.ai", "api.anyapi.ai", "api.routeway.ai", "api.gonkarouter.io", "api.z.ai", "api.aionlabs.ai", "api.llm7.io", "api.cloudflare.com")) {
             call.reject("Unsupported AI endpoint")
             return
         }

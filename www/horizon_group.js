@@ -9,6 +9,15 @@
     var draftReady = false, fresh = false;   // V1.69.0: fresh = the sheet was opened from Create new group
     var leaving = false;   // V1.63.3: the bar shows the Continue-with chips after Leave is tapped
 
+    // V1.93.5: roles. Shown as a badge and fed to that AI as one line of instruction.
+    var ROLES = {
+        researcher: { label: 'Researcher', line: 'Your role in this group is Researcher: find facts, sources and evidence, and say how sure you are.' },
+        critic: { label: 'Critic', line: 'Your role in this group is Critic: challenge the other AIs, point out weak spots and what is missing, and say what you would fix.' },
+        coder: { label: 'Coder', line: 'Your role in this group is Coder: when code is needed, give complete working code with a short explanation, and leave the rest to the others.' },
+        referee: { label: 'Referee', line: 'Your role in this group is Referee: compare the other AIs, say who is right and where they disagree, and finish with one final answer.' }
+    };
+    function roleLine(r) { return ROLES[r] ? ROLES[r].line : ''; }
+
     function el(t, c, x) { var n = document.createElement(t); if (c) n.className = c; if (x != null) n.textContent = x; return n; }
     function safe(fn, d) { try { return fn(); } catch (e) { return d; } }
     function ico(id) {
@@ -206,7 +215,7 @@
             var k = 0;
             g.members.forEach(function (m) {
                 var p = by[m.id]; if (!p) return;
-                b.appendChild(mchip(k++, p, m.model || '', function () { tagInput('@' + p.name.toLowerCase() + ' '); }));
+                b.appendChild(mchip(k++, p, m.model || '', function () { tagInput('@' + p.id + ' '); }));
             });
             if (g.members.length > 1) b.appendChild(mchip(k++, { icon: 'i-users', name: 'Everyone' }, '@all: the whole group answers', function () { tagInput('@all '); }));
         }));
@@ -233,9 +242,15 @@
             g.members.forEach(function (m, k) {
                 var p = by[m.id]; if (!p) return;
                 b.appendChild(mchip(k, p, m.model || '', function () {
-                    if (host.busy && host.busy()) { host.notice('Wait for the AIs to finish first.'); return; }
+                    // V1.93.4: tag by id (always one safe word), and a Judge tapped mid-round queues itself instead of bouncing off a notice
+                    var ask = function () { host.send('@' + p.id + ' Judge: read the latest replies from the other AIs above. In three short parts: 1) where they agree, 2) where they clash, 3) the best answer, in your own words. Do not repeat their replies.'); };
                     closeMenu();
-                    host.send('@' + p.name.toLowerCase() + ' Judge: read the latest replies from the other AIs above. In three short parts: 1) where they agree, 2) where they clash, 3) the best answer, in your own words. Do not repeat their replies.');
+                    if (host.busy && host.busy()) {
+                        if (host.later) host.later('Judge (' + p.name + ')', ask);
+                        else host.notice('Wait for the AIs to finish first.');
+                        return;
+                    }
+                    ask();
                 }));
             });
         }));
@@ -346,6 +361,11 @@
                 ms.forEach(function (m) { var o = el('option', null, m); o.value = m; if (m === d.model) o.selected = true; s.appendChild(o); });
                 s.addEventListener('change', function () { d.model = s.value; });
                 row.appendChild(s);
+                var rs = el('select', 'hgp-sel hgp-role'); rs.setAttribute('aria-label', p.name + ' role');
+                var r0 = el('option', null, 'No role'); r0.value = ''; rs.appendChild(r0);
+                Object.keys(ROLES).forEach(function (k) { var o = el('option', null, ROLES[k].label); o.value = k; if (k === d.role) o.selected = true; rs.appendChild(o); });
+                rs.addEventListener('change', function () { d.role = rs.value || ''; });
+                row.appendChild(rs);
             } else {
                 var kb = el('button', 'hgp-key', 'Add key'); kb.type = 'button'; kb.addEventListener('click', function () { closeMenu(); host.openKeys(p.id); }); row.appendChild(kb);
             }
@@ -411,6 +431,7 @@
         var list = provs().filter(function (p) { return p.ready && draft[p.id] && draft[p.id].on; }).map(function (p) {
             var o = memberOf(cg, p.id), r = { id: p.id, model: draft[p.id].model || p.model };
             if (o && o.mute) r.mute = true;
+            if (draft[p.id].role && ROLES[draft[p.id].role]) r.role = draft[p.id].role;
             return r;
         });
         var pos = function (id) { for (var i = 0; i < old.length; i++) if (old[i].id === id) return i; return 999; };
@@ -453,7 +474,7 @@
         var chat = curChat(), g = blank ? null : (chat && chat.group);
         draft = {};
         provs().forEach(function (p) { draft[p.id] = { on: false, model: p.model }; });
-        if (g) g.members.forEach(function (m) { if (draft[m.id]) { draft[m.id].on = true; draft[m.id].model = m.model || draft[m.id].model; } });
+        if (g) g.members.forEach(function (m) { if (draft[m.id]) { draft[m.id].on = true; draft[m.id].model = m.model || draft[m.id].model; if (m.role && ROLES[m.role]) draft[m.id].role = m.role; } });
         draftReady = true;
     }
     function openSheet(blank) {
@@ -497,5 +518,5 @@
         return i > 0 ? i : 0;
     }
 
-    window.HorizonGroup = { init: init, route: route, open: function () { openSheet(false); }, menu: toggleMenu, voiceSlot: voiceSlot };
+    window.HorizonGroup = { roles: ROLES, roleLine: roleLine, init: init, route: route, open: function () { openSheet(false); }, menu: toggleMenu, voiceSlot: voiceSlot };
 })();

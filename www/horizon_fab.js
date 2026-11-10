@@ -22,9 +22,10 @@
     var top = c ? c.getBoundingClientRect().top : window.innerHeight - 120;
     btn.style.bottom = Math.max(70, Math.round(window.innerHeight - top + 12)) + 'px';
   }
+  function paused() { return !!(window.HorizonHold && HorizonHold.pending()); }   /* V1.93.4: an auto-scroll was held back while you read */
   function paint() {
     ticking = false;
-    var far = away() > SHOW_AFTER;
+    var far = away() > SHOW_AFTER || paused();
     if (!far && unread) unread = 0;
     if (btn.hidden === far) btn.hidden = !far;
     badge.hidden = !(far && unread > 0);
@@ -35,6 +36,7 @@
 
   function toBottom() {
     unread = 0;
+    if (window.HorizonHold) HorizonHold.stick();   /* V1.93.4: the arrow means "follow the chat again" */
     try { scroll.scrollTo({ top: scroll.scrollHeight, behavior: 'smooth' }); } catch (e) { scroll.scrollTop = scroll.scrollHeight; }
     schedule();
   }
@@ -76,7 +78,7 @@
         m.addedNodes.forEach(function (n) { if (n.nodeType === 1 && n.classList.contains('message') && n.classList.contains('ai') && n.id !== 'loadingBubble') added++; });
       });
       if (added > 2) unread = 0;
-      else if (added && away() > SHOW_AFTER) unread += added;
+      else if (added && (away() > SHOW_AFTER || paused())) unread += added;
       schedule();
     }).observe(msgs, { childList: true });
   } catch (e) { /* no observer */ }

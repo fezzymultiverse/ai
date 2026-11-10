@@ -56,6 +56,15 @@ class HorizonAIService : Service() {
     private var held = false
     private var turnLock: PowerManager.WakeLock? = null
     private val watchdog = Runnable { releaseHold() }
+    // V1.93.5: the page is only kept running if the hold already existed when the app went to the background. If you sent the message and left
+    // before the service started, the page froze and the group round stalled until you came back. Wake it now, and keep it awake while held.
+    private val keepPage = object : Runnable {
+        override fun run() {
+            if (!holding) return
+            if (!HorizonAIPlugin.foreground) MainActivity.keepPageRunning()
+            main.postDelayed(this, 5_000L)
+        }
+    }
     // V1.67.9: the service lingers 8 s after a turn ends. The next AI in a group, a retry, or the read-aloud service that starts when the reply lands
     // all begin inside that window, so the app never drops out of the foreground between replies while you are away from it.
     private val graceStop = Runnable { releaseHold() }
@@ -67,6 +76,7 @@ class HorizonAIService : Service() {
         held = false
         holding = false
         main.removeCallbacks(watchdog)
+        main.removeCallbacks(keepPage)
         turnLock?.let { if (it.isHeld) it.release() }
         turnLock = null
         if (active == 0) stopSelf()
@@ -91,6 +101,9 @@ class HorizonAIService : Service() {
                 val pm = getSystemService(POWER_SERVICE) as PowerManager
                 turnLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "$packageName:ai-turn").apply { acquire(900000L) }
             }
+            main.removeCallbacks(keepPage)
+            if (!HorizonAIPlugin.foreground) MainActivity.keepPageRunning()
+            main.postDelayed(keepPage, 5_000L)
             main.removeCallbacks(watchdog)
             main.postDelayed(watchdog, 900000L) // Bound a stalled WebView / abandoned turn to 15 minutes.
             return START_NOT_STICKY
@@ -127,6 +140,7 @@ class HorizonAIService : Service() {
         instance = null
         holding = false
         main.removeCallbacks(watchdog)
+        main.removeCallbacks(keepPage)
         main.removeCallbacks(graceStop)
         turnLock?.let { if (it.isHeld) it.release() }
         turnLock = null

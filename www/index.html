@@ -7,11 +7,11 @@
     <title>HORIZON · AI Interface</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <link rel="icon" type="image/png" href="icon.png">
-    <script src="horizon_release.js?v=1.93.1"></script>
+    <script src="horizon_release.js?v=1.93.6"></script>
     <script>(function(){try{var t=localStorage.getItem('horizon_theme');if(t!=='grey')t='cyan';document.documentElement.setAttribute('data-theme',t==='grey'?'grey':'neon');document.documentElement.setAttribute('data-accent',t);var m=document.querySelector('meta[name=theme-color]');if(m)m.setAttribute('content',t==='grey'?'#eceef1':'#000000');}catch(e){}})();</script>
     <style>html.hz-boot{background:#000}html.hz-boot[data-theme="grey"]{background:#eceef1}html.hz-boot body{visibility:hidden}</style>
     <script>(function(){var d=document.documentElement;d.classList.add('hz-boot');setTimeout(function(){d.classList.remove('hz-boot');},4000);})();</script>
-    <link rel="stylesheet" href="horizon_app.css?v=1.93.1">
+    <link rel="stylesheet" href="horizon_app.css?v=1.93.6">
 </head>
 <body>
 
@@ -41,6 +41,10 @@
             <symbol id="i-b-openrouter" viewBox="0 0 24 24"><rect width="24" height="24" rx="6" fill="#0f1020" stroke="none"/><g fill="none" stroke="#8b8cf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 13h4.2c2 0 3.2-1 4.6-3.2s2.6-3.2 4.7-3.2h2.5"/><path d="M3.5 13h4.2c2 0 3.2 1 4.6 3.2s2.6 3.2 4.7 3.2h2.5"/><path d="M17.8 4.4 20.6 7l-2.8 2.6" stroke-width="1.8"/><path d="M17.8 14.4l2.8 2.6-2.8 2.6" stroke-width="1.8"/></g></symbol>
             <symbol id="i-b-anyapi" viewBox="0 0 24 24"><rect width="24" height="24" rx="6" fill="#0b1a1f" stroke="none"/><g fill="none" stroke="#22d3ee" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 12 6l5 11"/><path d="M9 13.5h6"/></g></symbol>
             <symbol id="i-b-gonka" viewBox="0 0 24 24"><rect width="24" height="24" rx="6" fill="#1a1208" stroke="none"/><g fill="none" stroke="#fbbf24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 8.5A5.5 5.5 0 1 0 16.5 15.5V12H12"/></g></symbol>
+            <symbol id="i-b-llm7" viewBox="0 0 24 24"><rect width="24" height="24" rx="6" fill="#07131c" stroke="none"/><g fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7.5h10l-6 9.5"/><path d="M9.5 12.2h5"/></g></symbol>
+            <symbol id="i-b-cloudflare" viewBox="0 0 24 24"><rect width="24" height="24" rx="6" fill="#170d05" stroke="none"/><g fill="none" stroke="#f6821f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17h10.2a3.2 3.2 0 0 0 .5-6.36A5 5 0 0 0 8.1 9.9 3.6 3.6 0 0 0 7 17z"/></g></symbol>
+            <symbol id="i-b-zai" viewBox="0 0 24 24"><rect width="24" height="24" rx="6" fill="#0a1020" stroke="none"/><g fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5h11L6.5 17.5h11"/></g></symbol>
+            <symbol id="i-b-aionlabs" viewBox="0 0 24 24"><rect width="24" height="24" rx="6" fill="#0b1a14" stroke="none"/><g fill="none" stroke="#34d399" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4.5 19 19.5M12 4.5 5 19.5M8 14.5h8"/></g></symbol>
             <symbol id="i-b-routeway" viewBox="0 0 24 24"><rect width="24" height="24" rx="6" fill="#0f0b1f" stroke="none"/><g fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6.5" cy="17" r="1.8"/><circle cx="17.5" cy="7" r="1.8"/><path d="M8.3 17H13a3 3 0 0 0 0-6h-2a3 3 0 0 1 0-6h4.2"/></g></symbol>
             <symbol id="i-users" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
             <symbol id="i-ear" viewBox="0 0 24 24"><path d="M6 8.5a6 6 0 0 1 12 0c0 2.6-1.4 3.7-2.6 4.8-1 .9-1.4 1.6-1.4 3a3.2 3.2 0 0 1-6.2 1"/><path d="M9.5 8.8a2.5 2.5 0 0 1 5 0c0 1.3-.8 1.8-1.5 2.4"/></symbol>
@@ -387,7 +391,7 @@
             </div>
             <div class="settings-home" id="settingsHome" data-home role="tablist" aria-label="Settings sections">
                 <button class="set-row" role="tab" data-tab="providers" aria-selected="false" type="button">
-                    <span class="set-text"><h3>API PROVIDERS PLUS KEYS</h3><p>Gemini, Groq, Cohere, Mistral, OpenRouter, AnyAPI, Routeway, GonkaRouter, NVIDIA NIM, SambaNova and Together AI. Free access depends on the provider; Together is prepaid. Pick the model and choose which engine answers.</p></span>
+                    <span class="set-text"><h3>API PROVIDERS PLUS KEYS</h3><p>Gemini, Groq, Cohere, Mistral, OpenRouter, AnyAPI, Routeway, GonkaRouter, Z.ai, AionLabs, LLM7.io and Cloudflare Workers AI. Free access depends on the provider. Pick the model and choose which engine answers.</p></span>
                     <svg class="ic set-chev" aria-hidden="true"><use href="#i-chev-r"/></svg>
                 </button>
                 <button class="set-row" role="tab" data-tab="web" aria-selected="false" type="button">
@@ -704,35 +708,37 @@
             </section></div></div>
     </section>
 
-    <script src="horizon_usage.js?v=1.93.0"></script>
-    <script src="horizon_about.js?v=1.93.1"></script>
-    <script src="horizon_toast.js?v=1.93.0"></script>
-    <script src="horizon_plus.js?v=1.93.0"></script>
-    <script src="ember_document_engine.js?v=1.93.0"></script>
-    <script src="horizon_pdf.js?v=1.93.0"></script>
-    <script src="ember_artbox.js?v=1.93.0"></script>
-    <script src="horizon_key_import.js?v=1.93.1"></script>
-    <script src="horizon_tts.js?v=1.93.0"></script>
-    <script src="horizon_github.js?v=1.93.0"></script>
-    <script src="horizon_native_audio.js?v=1.93.0"></script>
-    <script src="horizon_music.js?v=1.93.0"></script>
-    <script src="horizon_runlog.js?v=1.93.0"></script>
-    <script src="horizon_whatsapp_feature.js?v=1.93.1"></script>
-    <script src="horizon_bridges.js?v=1.93.1"></script>
-    <script src="horizon_hub.js?v=1.93.0"></script>
-    <script src="horizon_group.js?v=1.93.1"></script>
-    <script src="horizon_chips.js?v=1.93.1"></script>
-    <script src="horizon_vault.js?v=1.93.0"></script>
-    <script src="horizon_attach.js?v=1.93.0"></script>
-    <script src="horizon_creator.js?v=1.93.0"></script>
-    <script src="horizon_voice.js?v=1.93.0"></script>
-    <script src="horizon_screen.js?v=1.93.0"></script>
-    <script src="horizon_lens.js?v=1.93.0"></script>
-    <script src="horizon_archive.js?v=1.93.0"></script>
-    <script src="horizon_slash.js?v=1.93.0"></script>
-    <script src="horizon_geo.js?v=1.93.0"></script>
-    <script src="horizon_dash.js?v=1.93.0"></script>
-    <script src="horizon_browser.js?v=1.93.0"></script>
+    <script src="horizon_usage.js?v=1.93.6"></script>
+    <script src="horizon_about.js?v=1.93.6"></script>
+    <script src="horizon_toast.js?v=1.93.6"></script>
+    <script src="horizon_plus.js?v=1.93.6"></script>
+    <script src="ember_document_engine.js?v=1.93.6"></script>
+    <script src="horizon_pdf.js?v=1.93.6"></script>
+    <script src="ember_artbox.js?v=1.93.6"></script>
+    <script src="horizon_key_import.js?v=1.93.6"></script>
+    <script src="horizon_tts.js?v=1.93.6"></script>
+    <script src="horizon_github.js?v=1.93.6"></script>
+    <script src="horizon_native_audio.js?v=1.93.6"></script>
+    <script src="horizon_music.js?v=1.93.6"></script>
+    <script src="horizon_runlog.js?v=1.93.6"></script>
+    <script src="horizon_whatsapp_feature.js?v=1.93.6"></script>
+    <script src="horizon_bridges.js?v=1.93.6"></script>
+    <script src="horizon_hub.js?v=1.93.6"></script>
+    <script src="horizon_hold.js?v=1.93.6"></script>
+    <script src="horizon_group.js?v=1.93.6"></script>
+    <script src="horizon_round.js?v=1.93.6"></script>
+    <script src="horizon_chips.js?v=1.93.6"></script>
+    <script src="horizon_vault.js?v=1.93.6"></script>
+    <script src="horizon_attach.js?v=1.93.6"></script>
+    <script src="horizon_creator.js?v=1.93.6"></script>
+    <script src="horizon_voice.js?v=1.93.6"></script>
+    <script src="horizon_screen.js?v=1.93.6"></script>
+    <script src="horizon_lens.js?v=1.93.6"></script>
+    <script src="horizon_archive.js?v=1.93.6"></script>
+    <script src="horizon_slash.js?v=1.93.6"></script>
+    <script src="horizon_geo.js?v=1.93.6"></script>
+    <script src="horizon_dash.js?v=1.93.6"></script>
+    <script src="horizon_browser.js?v=1.93.6"></script>
     <script>
     (() => {
         'use strict';
@@ -843,10 +849,18 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             if (!curTurn.cancelled) { curTurn.cancelled = true; groupAbort = true; if (curTurn.rej) curTurn.rej(stoppedErr()); }
         }
         let groupAbort = false;   // V1.60.0: Stop also ends the rest of a group round
+        // V1.93.5: SKIP. Ends only the AI that is taking too long (the strip offers it after 30 s); the round carries on with the next AI.
+        function skipSlowTurn() {
+            if (!state.busy || !curTurn || curTurn.cancelled || state.typer) return;
+            const e = new Error('Skipped: no reply after 30 seconds.'); e.skipped = true;
+            curTurn.cancelled = true; curTurn.skipped = true;
+            if (curTurn.rej) curTurn.rej(e);
+        }
         // V1.67.5: FIX group chat "Horizon is busy". A stuck or slow turn (a dead provider) must never block Group; stop it and carry on.
         let roundSeq = 0;   // V1.67.8: every group round gets a number; starting or leaving a group bumps it so an old round can never keep running
         function freeUp() {
             roundSeq++;
+            if (typeof cancelQueuedAct === 'function') cancelQueuedAct();   // V1.93.4: a queued Debate or Judge belongs to the old group
             if (!state.busy) return;
             try { skipTyping(); if (state.busy) stopTurn(); } catch (e) { /* ignore */ }
             state.busy = false; setBusy(false);
@@ -1304,10 +1318,14 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             chatUrl: cfg.base + (cfg.protocol === 'anthropic' ? '/messages' : '/chat/completions'),
             protocol: cfg.protocol || 'openai',
             freeOnly: !!cfg.freeOnly,
-            headers: k => cfg.protocol === 'anthropic' ? ({'x-api-key':k,'anthropic-version':'2023-06-01'}) : ({ Authorization: `Bearer ${k}` }),
+            optionalKey: !!cfg.optionalKey,   // LLM7.io: works with no key; a token only raises the limit
+            urlFor: cfg.urlFor || null,       // Cloudflare Workers AI: the account ID lives in the URL, so the URL is built from the saved key
+            modelsOptional: !!cfg.modelsOptional,   // V1.93.2: if the provider's model list call fails, fall back to the built-in list; the key is still proven by a real completion
+            headers: k => cfg.protocol === 'anthropic' ? ({'x-api-key':k,'anthropic-version':'2023-06-01'}) : ({ Authorization: `Bearer ${cfg.optionalKey && (!k || k === 'free') ? 'unused' : k}` }),
             parseModels: d => {
                 const ids = Array.from(new Set((d && d.data || []).filter(m => m && m.id && m.available !== false && (!m.endpoints || !m.endpoints.length || m.endpoints.some(e => cfg.protocol === 'anthropic' ? /(?:^|\/)messages$/.test(e) : /(?:^|\/)chat\/completions$/.test(e)))).map(m => m.id)))
                     .filter(id => !/embed|moderation|whisper|tts|rerank/i.test(id))
+                    .filter(id => !cfg.allow || cfg.allow.test(id))   // V1.93.2: only the free-tier models this provider is meant to offer
                     .filter(id => !cfg.freeOnly || /:free$/.test(id));
                 return ids.sort((a, b) => a.localeCompare(b));
             },
@@ -1334,7 +1352,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                     if (cfg.protocol === 'anthropic') {
                         body.system = sys; body.messages = body.messages.slice(1); body.max_tokens = cap || 4096;
                     }
-                    const res = await timed(aiFetch(this.chatUrl, {
+                    const res = await timed(aiFetch(this.urlFor ? this.urlFor('chat', key) : this.chatUrl, {
                         method: 'POST',
                         headers: Object.assign({'Content-Type':'application/json',Accept:'application/json'}, this.headers(key)),
                         body: JSON.stringify(body)
@@ -1367,7 +1385,8 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                     }
                     if (res.status === 401 || res.status === 403) throw new Error(`${cfg.name} rejected the key. Check it at ${cfg.keyUrl}.`);
                     if (res.status === 402) throw new Error(cfg.noCredit || cfg.name + ' requires provider credits. Check your account balance.');
-                    throw new Error(lastWhy);
+                    const httpErr = new Error(lastWhy); httpErr.status = res.status;   // V1.93.2: Rate Limit Rescue reads .status, so a bare 429/503 with an odd message still counts as a limit
+                    throw httpErr;
                 }
                 throw new Error(lastWhy);
             }
@@ -1406,13 +1425,23 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             fallbackModels: ['deepseek-v4.1-flash:free', 'minimax-m3.1-flash:free', 'muse-glimmer-30b:free', 'gemma-4-26b-a4b-it-chimerax:free', 'gemma-4-26b-a4b-it-darksoul:free', 'gemma-4-26b-a4b-it-luminous:free', 'gemma-4-26b-a4b-it-moonlight:free', 'gemma-4-26b-a4b-it-musica:free', 'gemma-4-26b-a4b-it-meromero:free'],
             noCredit: 'Routeway says this needs credit. Horizon only sends :free models, so check your Routeway dashboard.'
         });
-        PROVIDERS.together = oaiGateway({name:'Together AI',icon:'i-layers',placeholder:'Together API key',keyUrl:'https://api.together.ai/settings/api-keys',base:'https://api.together.xyz/v1',defaultModel:'meta-llama/Llama-3.3-70B-Instruct-Turbo',fallbackModels:['meta-llama/Llama-3.3-70B-Instruct-Turbo']});
-        PROVIDERS.together.manualOnly = true; // Never silently fail over to a prepaid provider.
-        PROVIDERS.together.billingNote = 'Prepaid API · no ongoing free tier. Requires purchased credits.';
-        PROVIDERS.sambanova = oaiGateway({name:'SambaNova',icon:'i-zap',placeholder:'SambaNova API key',keyUrl:'https://cloud.sambanova.ai/apis',base:'https://api.sambanova.ai/v1',defaultModel:'Meta-Llama-3.3-70B-Instruct',fallbackModels:['Meta-Llama-3.3-70B-Instruct','DeepSeek-V3.1','gpt-oss-120b']});
-        PROVIDERS.sambanova.billingNote = 'Free tier without a payment method · limited daily requests. Check account limits; frequent check-ins can exhaust them.';
-        PROVIDERS.nvidia = oaiGateway({name:'NVIDIA NIM',icon:'i-cpu',placeholder:'NVIDIA API key',keyUrl:'https://build.nvidia.com/settings/api-keys',base:'https://integrate.api.nvidia.com/v1',defaultModel:'meta/llama-3.3-70b-instruct',fallbackModels:['meta/llama-3.3-70b-instruct']});
-        PROVIDERS.nvidia.billingNote = 'Free hosted development access, subject to account verification, model availability and provider limits. Not a production SLA.';
+        // V1.93.2: Together AI removed (no free tier). Z.ai and AionLabs added as free providers; both take part in Rate Limit Rescue. Cerebras was removed later.
+        PROVIDERS.zai = oaiGateway({name:'Z.ai',icon:'i-b-zai',placeholder:'Z.ai API key',keyUrl:'https://z.ai/manage-apikey/apikey-list',base:'https://api.z.ai/api/paas/v4',defaultModel:'glm-4.5-flash',fallbackModels:['glm-4.5-flash','glm-4.7-flash','glm-4.6v-flash'],allow:/^glm-4\.(?:5-flash|7-flash|6v-flash)$/i,modelsOptional:true});
+        PROVIDERS.zai.billingNote = 'GLM Flash tier · free models, one request at a time on the free plan. Busy periods can return a limit message.';
+        PROVIDERS.aionlabs = oaiGateway({name:'AionLabs',icon:'i-b-aionlabs',placeholder:'AionLabs API key',keyUrl:'https://aionlabs.ai',base:'https://api.aionlabs.ai/v1',defaultModel:'aion-labs/aion-2.0',fallbackModels:['aion-labs/aion-2.0','aion-labs/aion-2.5','aion-labs/aion-3.0','aion-labs/aion-3.5'],allow:/^(?:aion-labs\/)?aion-(?:2\.0|2\.5|3\.0|3\.5)$/i,modelsOptional:true});
+        PROVIDERS.aionlabs.billingNote = 'Free provider · limits depend on your AionLabs account. Check your dashboard if replies stop.';
+        // LLM7.io: OpenAI-style, works with no key at all. A free token from LLM7 only raises the rate limit, so the key is optional.
+        PROVIDERS.llm7 = oaiGateway({name:'LLM7.io',icon:'i-b-llm7',placeholder:'LLM7 token (optional)',keyUrl:'https://llm7.io',base:'https://api.llm7.io/v1',defaultModel:'gpt-4o-mini',fallbackModels:['gpt-4o-mini','deepseek-r1-0528','deepseek-v3-0324'],modelsOptional:true,optionalKey:true});
+        PROVIDERS.llm7.billingNote = 'Free · works without a key. The limit is low without a token; a free LLM7 token raises it. Limits can change, check LLM7 if replies stop.';
+        // Cloudflare Workers AI: OpenAI-style at /accounts/<ACCOUNT_ID>/ai/v1. One key box holds "ACCOUNT_ID:API_TOKEN".
+        const cfParts = k => { const m = /^([0-9a-fA-F]{32}):([A-Za-z0-9_.-]{20,})$/.exec(String(k || '').trim()); return m ? { acct: m[1], token: m[2] } : null; };
+        PROVIDERS.cloudflare = oaiGateway({name:'Cloudflare Workers AI',icon:'i-b-cloudflare',placeholder:'ACCOUNT_ID:API_TOKEN',keyUrl:'https://dash.cloudflare.com/profile/api-tokens',base:'https://api.cloudflare.com/client/v4/accounts',defaultModel:'@cf/meta/llama-3.1-8b-instruct',fallbackModels:['@cf/meta/llama-3.1-8b-instruct','@cf/meta/llama-3.3-70b-instruct-fp8-fast','@cf/openai/gpt-oss-120b'],modelsOptional:true,
+            urlFor:(which,k)=>{ const c = cfParts(k); if (!c) throw new Error('Cloudflare needs your Account ID and an API token joined with a colon: ACCOUNT_ID:API_TOKEN.'); const root = 'https://api.cloudflare.com/client/v4/accounts/' + c.acct + '/ai'; return which === 'chat' ? root + '/v1/chat/completions' : root + '/models/search?task=Text%20Generation&per_page=100'; }});
+        PROVIDERS.cloudflare.headers = k => ({ Authorization: 'Bearer ' + ((cfParts(k) || {}).token || '') });
+        PROVIDERS.cloudflare.wrongKey = k => cfParts(k) ? '' : 'Cloudflare needs your Account ID and an API token joined with a colon: ACCOUNT_ID:API_TOKEN.';
+        PROVIDERS.cloudflare.parseModels = d => Array.from(new Set(((d && (d.result || d.data)) || []).map(m => typeof m === 'string' ? m : (m && (m.name || m.id))).filter(id => typeof id === 'string' && id.indexOf('@cf/') === 0 && !/embed|whisper|tts|rerank|bge-|melotts|aura|nova-3|flux|stable-diffusion|lucid|phoenix|m2m100|distilbert|resnet|llava|detr/i.test(id)))).sort((a, b) => a.localeCompare(b));
+        PROVIDERS.cloudflare.billingNote = 'Free allowance of 10,000 neurons a day, resets at 00:00 UTC. Key format: ACCOUNT_ID:API_TOKEN, your Cloudflare account ID, a colon, then an API token with Workers AI access.';
+        // V1.93.3: SambaNova and NVIDIA NIM removed.
         const PROVIDER_IDS = Object.keys(PROVIDERS);
         // Public model catalogs are NOT proof that a secret belongs to this provider.
         PROVIDER_IDS.forEach(id => {
@@ -1428,6 +1457,11 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         const ORIG = {};
         const AUTO_KEY = 'horizon_autoswitch';
         const autoOn = () => lsGet(AUTO_KEY) !== '0';
+        // V1.93.2: Rate Limit Rescue order. The fast free tiers are tried first (Z.ai, then AionLabs), then every other provider in registry order.
+        // Keyless Pollinations sits ahead of the gateways in the registry and is always "ready", so without this the new providers would almost never be reached.
+        // A provider with no saved key is skipped, so this changes nothing until a key for one of them is added.
+        const RESCUE_FIRST = ['zai', 'aionlabs'];
+        const RESCUE_ORDER = RESCUE_FIRST.filter(id => PROVIDERS[id]).concat(PROVIDER_IDS.filter(id => !RESCUE_FIRST.includes(id)));
         PROVIDER_IDS.forEach(pid => {
             const orig0 = PROVIDERS[pid].chat;
             ORIG[pid] = orig0;
@@ -1444,7 +1478,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                     // 2) the next provider that has a key (never loops: calls the raw functions)
                     if (autoOn()) {
                         const needsEyes = (history || []).some(m => m.imgs && m.imgs.length);
-                        for (const other of PROVIDER_IDS) {
+                        for (const other of RESCUE_ORDER) {
                             if (other === pid || PROVIDERS[other].manualOnly || !PROVIDERS[other].defaultModel || PROVIDERS[other].noChat) continue;
                             if (!hasKey(other)) continue;
                             if (window.HzUsage && HzUsage.limitedNow(other)) continue;   // V1.40.0: autopilot skips a provider that is limited right now
@@ -1487,8 +1521,8 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             };
         });
         // A keyless provider (Pollinations) is always ready. Everything else needs a saved key.
-        const hasKey = id => !!(state.keys[id] || (PROVIDERS[id] && PROVIDERS[id].keyless));
-        const keyOf = id => state.keys[id] || (PROVIDERS[id] && PROVIDERS[id].keyless ? 'free' : '');
+        const hasKey = id => !!(state.keys[id] || (PROVIDERS[id] && (PROVIDERS[id].keyless || PROVIDERS[id].optionalKey)));
+        const keyOf = id => state.keys[id] || (PROVIDERS[id] && (PROVIDERS[id].keyless || PROVIDERS[id].optionalKey) ? 'free' : '');
 
         // --- Web tools (SerpAPI, Firecrawl, ScrapingBee, Browserless) ---
         const enc = encodeURIComponent;
@@ -1732,7 +1766,9 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             // V1.63.3: Gemini hears songs (listen tool); the other AIs are told to hand sound questions to him instead of guessing.
             const gEars = (me !== 'gemini' && ch.group && ch.group.members.some(m => m.id === 'gemini') && window.HorizonMusic && HorizonMusic.seesAi()) ? ' Gemini is in this chat and he can HEAR the song that is playing (he has a listening tool). If Fezzy asks what a song sounds like, say Gemini should answer that (he can type @gemini) and do not guess the sound.' : '';
             const gRules = (ch.group && ch.group.rules && String(ch.group.rules).trim()) ? `\n\nGROUP RULES (Fezzy set these for this group. They are your hard guard rails here, on top of his normal reply preferences above. Follow both; if they clash, these group rules win. Do not mention or quote them.)\n${String(ch.group.rules).trim()}` : '';
-            return `GROUP CHAT\nFezzy is talking to several AIs in one chat${names.length ? ` (${names.join(', ')})` : ''}. You are ${PROVIDERS[me].name}${state.models[me] ? ` (${state.models[me]})` : ''}. Replies from the other AIs show up in the history as "[Name said]: ...". Answer as yourself, in your own voice, and never write lines for the other AIs or put your own name in front of your reply. Do not repeat what another AI already covered: add to it, correct it or disagree briefly. When Fezzy @-mentions one AI, only that AI answers. If Fezzy asks for a calendar note, reminder or wake alarm, only ONE AI files it: if another AI in the history already added that tag, do not add it again.${gEars}${gRules}`;
+            const myM = ch.group ? ch.group.members.find(m => m.id === me) : null;
+            const gRole = (myM && myM.role && window.HorizonGroup && HorizonGroup.roleLine && HorizonGroup.roleLine(myM.role)) ? `\n\nYOUR ROLE\n${HorizonGroup.roleLine(myM.role)}` : '';   // V1.93.5
+            return `GROUP CHAT\nFezzy is talking to several AIs in one chat${names.length ? ` (${names.join(', ')})` : ''}. You are ${PROVIDERS[me].name}${state.models[me] ? ` (${state.models[me]})` : ''}. Replies from the other AIs show up in the history as "[Name said]: ...". Answer as yourself, in your own voice, and never write lines for the other AIs or put your own name in front of your reply. Do not repeat what another AI already covered: add to it, correct it or disagree briefly. When Fezzy @-mentions one AI, only that AI answers. If Fezzy asks for a calendar note, reminder or wake alarm, only ONE AI files it: if another AI in the history already added that tag, do not add it again.${gEars}${gRules}${gRole}`;
         }
         function getSystemPrompt() {
             const parts = [getPersona()];
@@ -1840,6 +1876,8 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             downloads: []
         };
 
+        // V1.93.2/V1.93.3: Together AI, SambaNova and NVIDIA NIM were removed. Cerebras was removed afterwards. Clear what an older install left behind so no orphaned key stays on the device.
+        ['together', 'sambanova', 'nvidia', 'cerebras'].forEach(rid => [`horizon_key_${rid}`, `horizon_model_${rid}`, `horizon_models_${rid}`, `horizon_xkeys_${rid}`].forEach(lsDel));
         PROVIDER_IDS.forEach(id => {
             state.keys[id] = lsGet(LS.key(id)) || '';
             state.models[id] = lsGet(LS.model(id)) || '';
@@ -1852,6 +1890,12 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         else state.active = PROVIDER_IDS.find(id => state.keys[id]) || 'pollinations';
         state.chats = lsJSON(LS.chats, []);
         if (!Array.isArray(state.chats)) state.chats = [];
+        // V1.93.3: a saved group chat must not keep a provider that no longer exists. Drop those members; fewer than two left means it is a normal chat again.
+        state.chats.forEach(c => {
+            if (!c || !c.group || !Array.isArray(c.group.members)) return;
+            c.group.members = c.group.members.filter(m => m && PROVIDERS[m.id]);
+            if (c.group.members.length < 2) delete c.group;
+        });
 
         WEB_IDS.forEach(id => {
             state.webKeys[id] = lsGet(LS.webKey(id)) || '';
@@ -1894,7 +1938,14 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         // V1.42.0: date and time on every message
         const fmtStamp = ts => new Date(ts).toLocaleDateString([], { day: 'numeric', month: 'short' }) + ', ' + fmtTime(ts);
         const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
-        const scrollBottom = () => { chatScroll.scrollTop = chatScroll.scrollHeight; };
+        // V1.93.4: HOLD TO READ. An automatic scroll (a reply landing, the loading bubble, live thoughts) never moves the chat while a finger is on it,
+        // text is selected, or you scrolled up to read. scrollBottom(true) is the deliberate jump: sending, opening a chat, the arrow.
+        const scrollBottom = force => {
+            const H = window.HorizonHold;
+            if (force !== true && H && H.blocked()) { H.suppressed(); return; }
+            chatScroll.scrollTop = chatScroll.scrollHeight;
+            if (force === true && H) H.stick();
+        };
 
         // ===== V1.6.0: syntax highlighter, code blocks, link cards, provider avatar =====
         const KW_SRC = {
@@ -2512,6 +2563,8 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             nm.className = 'meta-name';
             nm.textContent = known.name;
             meta.appendChild(nm);
+            const gc = currentChat(), gm = gc && gc.group && gc.group.members ? gc.group.members.find(m => m.id === prov) : null;   // V1.93.5: role badge
+            if (gm && gm.role && window.HorizonGroup && HorizonGroup.roles && HorizonGroup.roles[gm.role]) { const rb = document.createElement('span'); rb.className = 'meta-role'; rb.textContent = HorizonGroup.roles[gm.role].label; meta.appendChild(rb); }
             if (model) {
                 const md = document.createElement('span');
                 md.className = 'meta-model';
@@ -2522,6 +2575,8 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         function buildMessage(role, ts, ms, info) {
             const wrap = document.createElement('div');
             wrap.className = `message ${role}`;
+            if (role === 'ai' && info && info.prov) wrap.dataset.prov = info.prov;   // V1.93.5: colour rail in group chats
+            if (role === 'ai' && window.hzFreshReply) { window.hzFreshReply = false; wrap.classList.add('hz-new'); setTimeout(() => wrap.classList.remove('hz-new'), 2800); }   // V1.93.5: arrival glow
             const meta = document.createElement('div');
             meta.className = 'message-meta';
             if (role === 'ai') appendWho(meta, info && info.prov, info && info.model, false);
@@ -2701,7 +2756,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             bar.setAttribute('role', 'alert');
             const tx = document.createElement('div');
             tx.className = 'rb-tx';
-            tx.append(Object.assign(document.createElement('b'), { textContent: 'Message failed' }),
+            tx.append(Object.assign(document.createElement('b'), { textContent: e && e.skipped ? 'Skipped. Tap Retry to try again' : 'Message failed' }),
                 Object.assign(document.createElement('small'), { textContent: `${p.name}: ${shortTxt(friendlyError(e), 160)}` }));
             const go = qaBtn('i-refresh', 'Retry', 'qa-primary', () => retryLast());
             const x = qaBtn('i-x', 'Dismiss', 'qa-ghost icon-only qa-mini', () => { bar.remove(); decorateActions(); });
@@ -3195,7 +3250,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 else addAiMessage(m.text, m.ts, false, m.ms, m.prov ? { prov: m.prov, model: m.model, sources: m.sources, srcTitles: m.srcTitles, thought: m.thought, usage: m.usage, img: m.img } : null, false, m);
             }
             decorateActions();
-            scrollBottom();
+            scrollBottom(true);   // V1.93.4: opening a chat always lands on the newest message
         }
 
         function openChat(id) {
@@ -3582,7 +3637,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         const OR_FREE = 'horizon_or_free_only';
         const isFreeModel = m => /:free$/.test(m) || m === 'openrouter/free';
         let pkStep = 'prov', pkProv = '';
-        function pkReady(id) { return !!(PROVIDERS[id].keyless || state.keys[id]); }
+        function pkReady(id) { return !!(PROVIDERS[id].keyless || PROVIDERS[id].optionalKey || state.keys[id]); }
         function pkPaintBtn() {
             const dot = $('#pkDot');
             if (!dot) return;
@@ -3634,6 +3689,18 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 if (has(/gemma/)) return 'Small open Google model. Quick and simple, lighter on detail.';
                 return 'Google Gemini model. Sees pictures and handles long chats.';
             }
+            if (prov === 'cloudflare') {
+                if (has(/gpt-oss-120b/)) return 'Large open reasoning model on Cloudflare. Strong at code and multi-step problems. Uses more of the daily free allowance.';
+                if (has(/70b/)) return 'Big Llama on Cloudflare. Accurate, solid at code. Uses more of the daily free allowance.';
+                if (has(/8b|3b|1b/)) return 'Small Llama on Cloudflare. Quick everyday chat, light on the daily free allowance.';
+                return 'Open model on Cloudflare Workers AI. Counts against the 10,000 neurons a day free allowance.';
+            }
+            if (prov === 'zai') {
+                if (has(/\dv-flash/)) return 'GLM Flash vision model. Free. Horizon sends text only through Z.ai, so picture reading stays with Gemini.';
+                if (has(/4\.7/)) return 'Newer GLM Flash. Stronger reasoning and code, still fast. Free.';
+                return 'GLM Flash. Fast general chat and code. Free.';
+            }
+            if (prov === 'aionlabs') return 'Aion model from AionLabs. General chat and long-form writing. Free provider.';
             if (PROVIDERS[prov] && PROVIDERS[prov].billingNote) return PROVIDERS[prov].billingNote;
             if (prov === 'groq') {
                 if (has(/whisper|guard|safeguard|tts|prompt-guard/)) return 'Support model for speech or safety checks, not for chatting.';
@@ -3746,7 +3813,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             head.appendChild(icon('i-key'));
             const ht = document.createElement('b');
             const saved = state.keys[id];
-            ht.textContent = p.keyless ? 'Free. No key needed' : (saved ? `${p.name} key saved · ••••${String(saved).slice(-4)}` : `Set ${p.name} API key`);
+            ht.textContent = p.keyless ? 'Free. No key needed' : (saved ? `${p.name} key saved · ••••${String(saved).slice(-4)}` : (p.optionalKey ? `${p.name} works without a key. Add a token for higher limits` : `Set ${p.name} API key`));
             head.appendChild(ht);
             if (!p.keyless && saved) {
                 const ch = document.createElement('button'); ch.type = 'button'; ch.className = 'pk-key-chg';
@@ -4223,6 +4290,10 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 health.style.width = '100%';
                 health.classList.add('valid');
                 setCardStatus(id, `Key saved · ••••${key.slice(-4)}`, 'ok');
+            } else if (PROVIDERS[id].optionalKey) {
+                health.style.width = '100%';
+                health.classList.add('valid');
+                setCardStatus(id, 'Free · key optional', 'ok');
             } else {
                 health.style.width = '0%';
                 health.classList.remove('valid');
@@ -4236,7 +4307,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
 
         async function fetchModels(id, key) {
             const p = PROVIDERS[id];
-            if (!p.keyless) {
+            if (!p.keyless && !(p.optionalKey && !key)) {
                 const wrong = p.wrongKey(key);
                 if (wrong) throw new Error(wrong);
             }
@@ -4247,15 +4318,21 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 const auth = await kr.json();
                 if (!auth || !auth.data || auth.error) throw new Error('OpenRouter returned no authenticated key record. Nothing saved.');
             }
-            const res = await timed(fetch(p.modelsUrl, { headers: p.headers(key) }), 30000);
-            if (!res.ok) throw new Error(p.name + ' model endpoint (HTTP ' + res.status + '): ' + await errorText(res));
-            const data = await res.json();
-            if (data && data.error) throw new Error(p.name + ' returned a model error. Nothing saved.');
-            const list = p.parseModels(data);
-            if (!list.length) throw new Error(p.name + (p.freeOnly ? ' returned no eligible :free models. No paid model was selected.' : ' returned no chat models. Check provider access.'));
+            let list;
+            try {
+                const res = await timed(fetch(p.urlFor ? p.urlFor('models', key) : p.modelsUrl, { headers: p.headers(key) }), 30000);
+                if (!res.ok) throw new Error(p.name + ' model endpoint (HTTP ' + res.status + '): ' + await errorText(res));
+                const data = await res.json();
+                if (data && data.error) throw new Error(p.name + ' returned a model error. Nothing saved.');
+                list = p.parseModels(data);
+                if (!list.length) throw new Error(p.name + (p.freeOnly ? ' returned no eligible :free models. No paid model was selected.' : ' returned no chat models. Check provider access.'));
+            } catch (e) {
+                if (!p.modelsOptional) throw e;
+                list = p.fallbackModels.slice();   // V1.93.2: the completion check below still has to pass before anything is saved
+            }
             if (p.chatUrl && key) {
                 const preferred = list.includes(state.models[id]) ? state.models[id] : list.includes(p.defaultModel) ? p.defaultModel : list[0];
-                const check = await timed(fetch(p.chatUrl, {
+                const check = await timed(fetch(p.urlFor ? p.urlFor('chat', key) : p.chatUrl, {
                     method: 'POST', headers: Object.assign({'Content-Type':'application/json'}, p.headers(key)),
                     body: JSON.stringify({model: preferred, messages:[{role:'user',content:'Reply OK.'}],max_tokens:p.protocol === 'anthropic' ? 16 : 1,stream:false})
                 }), 45000);
@@ -4274,6 +4351,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             if (p.keyless) { await refreshKeyless(id); return; }
             const raw = (input.value || '').trim().replace(/^["']+|["']+$/g, '');
             const key = raw || state.keys[id];
+            if (p.optionalKey && !key) { await refreshKeyless(id); return; }   // no token entered: just reload the free model list
 
             if (!key) {
                 input.classList.add('invalid');
@@ -4332,7 +4410,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 setCardStatus(id, friendlyError(e), 'error');
             } finally {
                 btn.disabled = false;
-                label.textContent = 'Refresh model list';
+                label.textContent = p.optionalKey ? 'Save & validate' : 'Refresh model list';
             }
         }
 
@@ -5030,7 +5108,13 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 const aiMsg = pushMessage(chat, 'ai', reply, ms, info);
                 if (state.currentId === chat.id) await addAiMessage(reply, aiMsg.ts, false, ms, Object.assign({}, info, { imgSrc: shown }), thoughtWasOpen);
             } catch (e) {
-                if (e && e.stopped) {
+                if (e && e.skipped) {
+                    thoughtAdd('i-x', `${p.name} skipped`, true, 'No reply after 30 seconds. Tap Retry to try it again.', true);
+                    lastTurnErr = e;
+                    hideLoading();
+                    restoreOld();
+                    if (state.currentId === chat.id) notice(`${p.name} skipped. Moving on.`);
+                } else if (e && e.stopped) {
                     thoughtAdd('i-x', 'Stopped by you', true, 'The image request was cancelled.', true);
                     hideLoading();
                     if (state.currentId === chat.id) notice('Stopped');
@@ -5086,6 +5170,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             if (wl) wl.remove();
             clearTray();
             addUserMessage(text, userMsg.ts, atts, userMsg);
+            scrollBottom(true);   // V1.93.4: sending is the one time the chat jumps down and follows again
             if (route && route.mention && !chat.group && !chat.multi) { chat.multi = true; saveChats(); }
             return runTargets(chat, okT, text, docMode);
         }
@@ -5097,13 +5182,20 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         // so between two AIs the service stopped, Android throttled the page once you left the app, and the next AI, the typing and the voice all crawled.
         let roundHold = 0;
         async function runTargets(chat, targets, text, dm, restore) {
+            activeRounds++;
+            try { return await runTargetsHeld(chat, targets, text, dm, restore); }
+            finally { activeRounds = Math.max(0, activeRounds - 1); }
+        }
+        async function runTargetsHeld(chat, targets, text, dm, restore) {
             let held = false;
             if (NATIVE && targets.length > 1 && lsGet(LS.bg) !== '0') {
                 try { held = !!(await callNative('HorizonAI', 'beginTurn')); } catch (e) { held = false; }
             }
             if (held) roundHold++;
+            const rtok = window.HzRound ? HzRound.start(chat, targets) : 0;   // V1.93.5: live strip + header rings
             try { return await runTargetsRound(chat, targets, text, dm, restore); }
             finally {
+                if (window.HzRound) HzRound.end(rtok);
                 if (held) {
                     roundHold = Math.max(0, roundHold - 1);
                     if (NATIVE && roundHold === 0) await Promise.race([callNative('HorizonAI', 'endTurn'), new Promise(r => setTimeout(r, 3000))]);
@@ -5120,8 +5212,10 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 const t = targets[i], tp = PROVIDERS[t.id], prev = state.models[t.id];
                 if (t.model) state.models[t.id] = t.model;
                 let ok = true;
+                if (window.HzRound) HzRound.set(t.id, 'think');
                 try { docMode = dm || ''; ok = await runAiTurn(chat, t.id, tp, keyOf(t.id), text, i === 0 ? restore : undefined); }
                 finally { state.models[t.id] = prev; }
+                if (window.HzRound) HzRound.set(t.id, ok !== false ? 'done' : (lastTurnErr && lastTurnErr.skipped ? 'skip' : (groupAbort ? 'stop' : 'fail')));
                 if (ok === false && !groupAbort && mySeq === roundSeq) failed.push({ t, err: lastTurnErr });
             }
             if (mySeq !== roundSeq) return;   // a newer round or a new group took over: this old round must not touch the screen
@@ -5132,8 +5226,26 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         }
         // V1.61.0: DEBATE. One tap: the group's AIs each critique the others' replies. Reuses the [Name said] history, so it is just one more round.
         const DEBATE_TEXT = '\u2694\uFE0F Debate: read each other\u2019s replies above. Say what the others got right, what they got wrong or missed, and where you disagree. Short and specific. Do not agree just to be polite, and if someone changed your mind, say so.';
-        function debateRound() {
-            if (state.busy) { notice('Horizon is busy. Try again in a moment.', 'error'); return false; }
+        // V1.93.4: Debate and Judge tapped while the AIs are still answering used to bounce off a one-line "busy" notice that scrolled out of sight.
+        // They now wait in a queue and start by themselves the moment the round is over. Tap the toast to stop the round and run it now.
+        let activeRounds = 0, queuedAct = null, queuedTimer = 0;
+        function cancelQueuedAct() { clearInterval(queuedTimer); queuedTimer = 0; queuedAct = null; }
+        function whenIdle(label, run) {
+            cancelQueuedAct();
+            const act = queuedAct = { label, run, chatId: state.currentId, t0: Date.now() };
+            queuedTimer = setInterval(() => {
+                if (queuedAct !== act) { clearInterval(queuedTimer); return; }
+                if (Date.now() - act.t0 > 600000 || state.currentId !== act.chatId) { cancelQueuedAct(); return; }
+                if (state.busy || activeRounds > 0) return;
+                cancelQueuedAct();
+                run();
+            }, 400);
+            notice(`${label} queued. It starts as soon as the AIs finish answering.`);
+            if (window.HzToast) HzToast.show({ icon: 'i-zap', title: `${label} queued`, sub: 'Starts when the AIs finish · tap to stop the round and start now', kind: '', ms: 6000, onTap: () => { if (queuedAct === act) stopTurn(); } });
+            return true;
+        }
+        function debateRound(fromQueue) {
+            if (state.busy) { return fromQueue === true ? false : whenIdle('Debate', () => debateRound(true)); }
             const chat = currentChat();
             if (!chat || !chat.group || !chat.group.members || chat.group.members.length < 2) { notice('Debate needs a group chat with 2 or more AIs.', 'error'); return false; }
             let lu = -1;
@@ -5152,6 +5264,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             docMode = '';
             const userMsg = pushMessage(chat, 'user', DEBATE_TEXT);
             addUserMessage(DEBATE_TEXT, userMsg.ts, [], userMsg);
+            scrollBottom(true);
             runTargets(chat, okT, DEBATE_TEXT, '');
             return true;
         }
@@ -5214,10 +5327,12 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 if (steps.length > 1) info.thought = steps;
                 const aiMsg = pushMessage(chat, 'ai', reply, ms, info);
                 turnOk = true;
+                if (window.HzRound) HzRound.set(id, 'done');
                 if (NATIVE && lsGet(LS.notifOn) !== '0') {
                     await callNative('HorizonAI', 'notifyReply', { chatId: chat.id, text: reply });
                 }
                 if (state.currentId === chat.id) {
+                    window.hzFreshReply = document.visibilityState === 'visible';   // V1.93.5: glow only when you can see it arrive
                     await addAiMessage(reply, aiMsg.ts, document.visibilityState === 'visible', ms, info, thoughtWasOpen, aiMsg);
                     saved.forEach(s => notice(`Saved to memory: ${clip(s, 90)}`));
                     vaulted.forEach(t => notice(`Saved to HORIZON VAULT: ${clip(t, 70)}`));
@@ -7103,11 +7218,14 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             ungroup: chat => { delete chat.group; delete chat.multi; chat.updated = Date.now(); saveChats(); updateComposer(); },
             debate: () => debateRound(),
             send: text => sendMessage({ text }),   // V1.72.0: Judge and the quick reply chips send through the normal path
-            busy: () => !!state.busy,
+            busy: () => !!state.busy || activeRounds > 0,
+            later: (label, fn) => whenIdle(label, fn),   // V1.93.4: Judge tapped mid-round waits for the round, then runs
             // V1.69.0: group rules (Options > Preferences). Saved on the group; every AI in it gets them as hard guard rails.
             rules: (chat, text) => { if (!chat || !chat.group) return; chat.group.rules = String(text || '').slice(0, 1500); chat.updated = Date.now(); saveChats(); },
             openKeys: id => hzOpenKeys(id)
         });
+        if (window.HzRound) HzRound.init({ input: chatInput, current: () => currentChat(), providers: () => PROVIDER_IDS.map(id => ({ id, name: PROVIDERS[id].name, icon: PROVIDERS[id].icon })), skip: () => skipSlowTurn(),
+            onSlow: (id, name) => { if (thought && liveCtx && liveCtx.prov === id) setLoading(`${name} is still loading...`, 'Over 30 seconds. Tap Skip in the strip to carry on without it.'); } });   // V1.93.5
         // --- V1.10.0: music player ---
         if (window.HorizonMusic) {
             HorizonMusic.init({
@@ -7736,36 +7854,36 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         window.addEventListener('pagehide', () => { if (draftT) saveDraft(); });
     })();
     </script>
-    <script src="horizon_downloads.js?v=1.93.0"></script>
-    <script src="horizon_ytdirect.js?v=1.93.0"></script>
-    <script src="horizon_youtube.js?v=1.93.0"></script>
-    <script src="horizon_addons.js?v=1.93.0"></script>
-    <script src="horizon_terminal.js?v=1.93.0"></script>
-    <script src="horizon_termai.js?v=1.93.0"></script>
-    <script src="horizon_typing.js?v=1.93.0"></script>
-    <script src="horizon_perf.js?v=1.93.0"></script>
-    <script src="horizon_ind.js?v=1.93.0"></script>
-    <script src="horizon_toolgrid.js?v=1.93.0"></script>
-    <script src="horizon_bojack.js?v=1.93.0"></script>
-    <script src="horizon_header.js?v=1.93.0"></script>
-    <script src="horizon_htmlview.js?v=1.93.0"></script>
-    <script src="horizon_mdview.js?v=1.93.0"></script>
-    <script src="horizon_setai.js?v=1.93.0"></script>
-    <script src="horizon_operator.js?v=1.93.0"></script>
-    <script src="horizon_lock.js?v=1.93.1"></script>
-    <script src="horizon_hdr2.js?v=1.93.0"></script>
-    <script src="horizon_fold.js?v=1.93.0"></script>
-    <script src="horizon_autoread.js?v=1.93.0"></script>
-    <script src="horizon_daemon.js?v=1.93.0"></script>
-    <script src="horizon_checkin.js?v=1.93.1"></script>
-    <script src="horizon_door.js?v=1.93.0"></script>
-    <script src="horizon_speakwave.js?v=1.93.0"></script>
-    <script src="horizon_laser.js?v=1.93.0"></script>
-    <script src="horizon_fab.js?v=1.93.0"></script>
-    <script src="horizon_msgmenu.js?v=1.93.0"></script>
-    <script src="horizon_termlive.js?v=1.93.0"></script>
-    <script src="horizon_v2.js?v=1.93.0"></script>
-    <script src="horizon_lift.js?v=1.93.0"></script>
+    <script src="horizon_downloads.js?v=1.93.6"></script>
+    <script src="horizon_ytdirect.js?v=1.93.6"></script>
+    <script src="horizon_youtube.js?v=1.93.6"></script>
+    <script src="horizon_addons.js?v=1.93.6"></script>
+    <script src="horizon_terminal.js?v=1.93.6"></script>
+    <script src="horizon_termai.js?v=1.93.6"></script>
+    <script src="horizon_typing.js?v=1.93.6"></script>
+    <script src="horizon_perf.js?v=1.93.6"></script>
+    <script src="horizon_ind.js?v=1.93.6"></script>
+    <script src="horizon_toolgrid.js?v=1.93.6"></script>
+    <script src="horizon_bojack.js?v=1.93.6"></script>
+    <script src="horizon_header.js?v=1.93.6"></script>
+    <script src="horizon_htmlview.js?v=1.93.6"></script>
+    <script src="horizon_mdview.js?v=1.93.6"></script>
+    <script src="horizon_setai.js?v=1.93.6"></script>
+    <script src="horizon_operator.js?v=1.93.6"></script>
+    <script src="horizon_lock.js?v=1.93.6"></script>
+    <script src="horizon_hdr2.js?v=1.93.6"></script>
+    <script src="horizon_fold.js?v=1.93.6"></script>
+    <script src="horizon_autoread.js?v=1.93.6"></script>
+    <script src="horizon_daemon.js?v=1.93.6"></script>
+    <script src="horizon_checkin.js?v=1.93.6"></script>
+    <script src="horizon_door.js?v=1.93.6"></script>
+    <script src="horizon_speakwave.js?v=1.93.6"></script>
+    <script src="horizon_laser.js?v=1.93.6"></script>
+    <script src="horizon_fab.js?v=1.93.6"></script>
+    <script src="horizon_msgmenu.js?v=1.93.6"></script>
+    <script src="horizon_termlive.js?v=1.93.6"></script>
+    <script src="horizon_v2.js?v=1.93.6"></script>
+    <script src="horizon_lift.js?v=1.93.6"></script>
     <script>(function(){var d=document.documentElement;requestAnimationFrame(function(){requestAnimationFrame(function(){d.classList.remove('hz-boot');try{window.HzBootMs=Math.round(performance.now());}catch(e){}});});})();</script>
 </body>
 </html>

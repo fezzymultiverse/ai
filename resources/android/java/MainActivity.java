@@ -15,8 +15,23 @@ import androidx.core.view.WindowInsetsCompat;
 import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
+    // V1.93.5: lets the AI service wake the page while the app is in the background (a held group round must keep running)
+    private static java.lang.ref.WeakReference<MainActivity> liveRef = new java.lang.ref.WeakReference<>(null);
+    public static void keepPageRunning() {
+        try {
+            final MainActivity a = liveRef.get();
+            if (a == null) return;
+            a.runOnUiThread(() -> {
+                try {
+                    WebView wv = a.getBridge() != null ? a.getBridge().getWebView() : null;
+                    if (wv != null) { wv.onResume(); wv.resumeTimers(); }
+                } catch (Exception ignored) { /* the next 5 s check tries again */ }
+            });
+        } catch (Exception ignored) { /* nothing to do */ }
+    }
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        liveRef = new java.lang.ref.WeakReference<>(this);
         installCrashRecorder();                 // V1.63.2: if Horizon crashes, the next launch shows why (no adb needed)
         registerPlugin(HorizonPermsPlugin.class);
         registerPlugin(HorizonAIPlugin.class);
