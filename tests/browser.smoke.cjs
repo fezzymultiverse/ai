@@ -38,17 +38,17 @@ const server = http.createServer((req, res) => {
     for(const width of [320,412,768]){
       await page.setViewportSize({width,height:915});
       const rects=await page.locator('#hzDock .hz-dock-grid > .hz-app').evaluateAll(rows=>rows.map(e=>{const r=e.getBoundingClientRect();return{x:r.x,y:r.y,w:r.width,h:r.height};}));
-      assert.equal(rects.length,5); assert.ok(rects.every(r=>Math.abs(r.y-rects[0].y)<1));assert.ok(rects.every(r=>r.w>30));
+      assert.equal(rects.length,4); assert.ok(rects.every(r=>Math.abs(r.y-rects[0].y)<1));assert.ok(rects.every(r=>r.w>30));
     }
-    await page.setViewportSize({width:412,height:915});checks.push('five right-panel app tiles share a single row at 320, 412 and 768px');
-    await page.screenshot({path:path.join(reportDir,'settings-five-tiles.png')});
+    await page.setViewportSize({width:412,height:915});checks.push('four remaining right-panel app tiles share a single row at 320, 412 and 768px');
+    await page.screenshot({path:path.join(reportDir,'settings-app-tiles.png')});
     await page.locator('#settingsHome [data-tab="permissions"]').click();
-    assert.ok(await page.locator('#hzWaCard').isVisible());
+    assert.ok(await page.locator('#hzWaFeatureCard').isVisible());
     assert.equal(await page.locator('#hzTerminalPermissions #nativeCheckCard').count(),1);
     assert.equal(await page.locator('#hzTerminalPermissions #hzTermuxCard').count(),0);
     assert.equal(await page.locator('#hzShellCard').count(),0);
-    assert.equal(await page.locator('#hzWaCard [data-hzb-wa="personal"]').count(),1);
-    assert.equal(await page.locator('#hzWaCard [data-hzb-wa="business"]').count(),1);
+    assert.equal(await page.locator('#hzWaFeatureCard [data-hz-wa-permission="personal"]').count(),1);
+    assert.equal(await page.locator('#hzWaFeatureCard [data-hz-wa-permission="business"]').count(),1);
     checks.push('Permissions owns Device/native check and independent WhatsApp sources, no shell or Termux controls');
     await page.screenshot({path:path.join(reportDir,'permissions.png')});
     await page.locator('#settingsBackBtn').click();
@@ -83,7 +83,7 @@ const server = http.createServer((req, res) => {
     assert.ok(await page.locator('#hzTermuxAiToggle').isVisible());
     assert.equal(await page.locator('#hzTermuxCard textarea').count(),0);
     assert.equal(await page.locator('#hzTerm .hzt-input').count(),1);
-    assert.equal(await page.locator('#hzTerm #hzWaCard').count(),0);
+    assert.equal(await page.locator('#hzTerm #hzWaFeatureCard').count(),0);
     checks.push('big Terminal owns one prompt and Termux-only Controls/Options, no duplicate small shell');
     await page.screenshot({path:path.join(reportDir,'terminal-options.png')});
     await page.locator('.hzt-controls').click();
@@ -109,8 +109,7 @@ const server = http.createServer((req, res) => {
     await page.screenshot({path:path.join(reportDir,'unified-terminal.png')});
     await page.evaluate(()=>window.HorizonTerminal.exit());await page.waitForTimeout(250);
     await page.locator('#settingsBtn').evaluate(b=>b.click());await page.waitForTimeout(200);
-    await page.locator('#hzDock .hz-contacts-open').click();assert.ok(await page.locator('#hzContacts').isVisible());
-    await page.getByRole('button',{name:'Close',exact:true}).last().click();checks.push('existing Contacts dialog still opens and closes');
+    assert.equal(await page.locator('.hz-contacts-open').count(),0);checks.push('removed WhatsApp Contacts messenger has no orphaned app launcher');
     await page.locator('#settingsHome [data-tab="personalisation"]').click();
     if(!(await page.locator('#ttsPreset').isVisible()))await page.locator('#ttsCard > .settings-row-header').click();
     assert.equal(await page.locator('#ttsCloudConfig,#ttsHd,#ttsNat').count(),0);
@@ -121,20 +120,13 @@ const server = http.createServer((req, res) => {
     await page.locator('#ttsFxReset').click();
     assert.equal(await page.evaluate(()=>window.HorizonTTS.hasEffects()),false);
     checks.push('Android-only voice studio has seventeen controls, twenty presets, functioning selection/reset and no cloud/model UI');
-    await page.evaluate(()=>{
-      window.__bridgeCalls=[];
-      window.Capacitor={isNativePlatform:()=>true,Plugins:{HorizonWhatsApp:{
-        status:async()=>({personal:true,replies:true,contacts:true,access:true,alerts:true}),
-        contacts:async()=>({contacts:[{id:'7',name:'Ada Test',phone:'+12025550123'}],hasMore:false,nextOffset:1}),
-        sendToContact:async a=>{window.__bridgeCalls.push(a);return{submitted:true};}
-      }}};
-    });
-    await page.evaluate(()=>window.HorizonContacts.open());await page.getByRole('button',{name:'Ada Test +12025550123'}).click();
-    await page.getByRole('button',{name:'Use contact in AI chat'}).click();
-    const sent=await page.evaluate(()=>window.HorizonBridges.run('whatsapp.send','selected | test body | with pipe | business'));
-    assert.match(sent.text,/in background/);assert.deepEqual(await page.evaluate(()=>window.__bridgeCalls[0]),{contactId:'7',text:'test body | with pipe',business:true});
-    checks.push('WhatsApp selected contact route preserves background send, business source and exact body');
-    await page.locator('#newChatBtn').evaluate(b=>b.click());assert.equal(await page.evaluate(()=>window.HorizonContacts.selected()),null);checks.push('new chat still clears selected recipient');
+    const refused=await page.evaluate(()=>window.HorizonBridges.run('whatsapp.send','selected | test body | business'));
+    assert.match(refused.text,/viewer and draft editor only/i);
+    assert.equal(await page.evaluate(()=>typeof window.HorizonContacts),'undefined');
+    checks.push('retired WhatsApp send route is explicitly refused; no contacts messenger is loaded');
+    await page.locator('#newChatBtn').evaluate(b=>b.click());
+    assert.equal(await page.evaluate(()=>window.HorizonWhatsAppFeature.block()),'');
+    checks.push('new chat has no inherited pinned WhatsApp context');
     await page.evaluate(()=>document.querySelector('[data-addon="music"]').click());await page.waitForTimeout(250);
     assert.ok(await page.locator('#hzMusicView').isVisible());checks.push('original Music extension still opens');
     await page.evaluate(()=>{window.HorizonAddons.close();document.getElementById('groupBtn').click();});await page.waitForTimeout(200);

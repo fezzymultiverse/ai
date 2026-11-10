@@ -1,50 +1,10 @@
-/* HORIZON V1.72.0 · quick reply chips. Four buttons above the message box: Shorter, Simpler, Show code, Continue.
-   They show after an AI has answered (and not while one is working) and send a ready-made follow-up in one tap.
-   In a group chat the follow-up goes only to the AI that spoke last, so five AIs do not all answer a "Shorter". */
+/* Composer edge actions. No polling; updates are coalesced and focus stays in the editor. */
 (function () {
-    'use strict';
-    var CHIPS = [
-        { k: 'short', t: 'Shorter', q: 'Make that shorter. Keep only the key points.' },
-        { k: 'simple', t: 'Simpler', q: 'Explain that more simply, like I am new to it.' },
-        { k: 'code', t: 'Show code', q: 'Show the code for that, complete and ready to paste.' },
-        { k: 'more', t: 'Continue', q: 'Continue.' }
-    ];
-    var host = null, bar = null;
-
-    function el(tag, cls, txt) { var e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
-
-    function paint() {
-        if (!bar || !host) return;
-        var last = null; try { last = host.last(); } catch (e) { last = null; }
-        var show = !!last && !last.img && !host.busy();
-        bar.hidden = !show;
-    }
-
-    function send(c) {
-        if (host.busy()) return;
-        var last = host.last(); if (!last) return;
-        var who = last.group && last.name ? '@' + last.name.toLowerCase() + ' ' : '';
-        host.send(who + c.q);
-        bar.hidden = true;
-    }
-
-    function init(h) {
-        if (bar || !h || !h.anchor || !h.anchor.parentNode) return;
-        host = h;
-        bar = el('div', 'hz-chips'); bar.hidden = true; bar.setAttribute('role', 'group'); bar.setAttribute('aria-label', 'Quick replies');
-        CHIPS.forEach(function (c) {
-            var b = el('button', 'hz-chip', c.t); b.type = 'button'; b.dataset.k = c.k;
-            b.addEventListener('click', function (e) { e.preventDefault(); send(c); });
-            bar.appendChild(b);
-        });
-        h.anchor.parentNode.insertBefore(bar, h.anchor);
-        var cm = document.getElementById('chatMessages');
-        if (cm && window.MutationObserver) new MutationObserver(paint).observe(cm, { childList: true });
-        var busyWatch = setInterval(function () { if (!document.hidden) paint(); }, 1500);   // the working state changes without touching the message list
-        document.addEventListener('visibilitychange', paint);
-        window.addEventListener('beforeunload', function () { clearInterval(busyWatch); });
-        paint();
-    }
-
-    window.HorizonChips = { init: init, refresh: paint };
+ 'use strict';
+ var items=[['Shorter','Make that shorter. Keep the key points.'],['Longer','Expand that with useful detail, without filler.'],['Essay','Turn that into a structured essay.'],['Research','Research that using available sources. Cite sources actually retrieved and state when browsing is unavailable.'],['Show code','Show complete working code for that.'],['Summarise','Summarise that clearly.']];
+ var host,bar,handle,menu,queued=false;
+ function paint(){queued=false;if(!bar||!host)return;var last=host.last();var usable=!!last&&!last.img&&!host.busy();handle.disabled=!usable;handle.setAttribute('aria-label',usable?'Reply tools: shorter, longer, essay, research, show code, summarise':'Reply tools available after an AI reply');if(!usable){menu.hidden=true;handle.setAttribute('aria-expanded','false');}}
+ function refresh(){if(!queued){queued=true;requestAnimationFrame(paint);}}
+ function init(h){if(bar||!h||!h.anchor||!h.anchor.parentNode)return;host=h;bar=document.createElement('div');bar.className='hz-edge-tools';bar.id='hzEdgeTools';handle=document.createElement('button');handle.type='button';handle.className='hz-edge-handle';handle.setAttribute('aria-expanded','false');handle.setAttribute('aria-controls','hzEdgeMenu');handle.innerHTML='<span aria-hidden="true"></span>';menu=document.createElement('div');menu.id='hzEdgeMenu';menu.className='hz-edge-menu';menu.hidden=true;menu.setAttribute('role','group');menu.setAttribute('aria-label','Reply tools');items.forEach(function(c){var b=document.createElement('button');b.type='button';b.className='hz-chip';b.textContent=c[0];b.addEventListener('click',function(){if(host.busy())return;var last=host.last();if(!last)return;menu.hidden=true;handle.setAttribute('aria-expanded','false');host.send((last.group&&last.name?'@'+last.name.toLowerCase()+' ':'')+c[1]);});menu.appendChild(b);});bar.append(handle,menu);h.anchor.parentNode.insertBefore(bar,h.anchor);bar.addEventListener('pointerdown',function(e){if(e.target.closest('button'))e.preventDefault();});handle.addEventListener('click',function(){menu.hidden=!menu.hidden;handle.setAttribute('aria-expanded',String(!menu.hidden));});document.addEventListener('pointerdown',function(e){if(!bar.contains(e.target)){menu.hidden=true;handle.setAttribute('aria-expanded','false');}});bar.addEventListener('keydown',function(e){if(e.key==='Escape'){menu.hidden=true;handle.setAttribute('aria-expanded','false');handle.focus();}});var cm=document.getElementById('chatMessages');if(cm)new MutationObserver(refresh).observe(cm,{childList:true});document.addEventListener('visibilitychange',refresh);paint();}
+ window.HorizonChips={init:init,refresh:refresh};
 })();

@@ -1,0 +1,49 @@
+HORIZON 1.93.1 — CLOSED PREVIEW / DRAFT FEATURE
+
+START HERE
+Use the updated SOURCE ZIP with your existing GitHub repository and existing APK build workflow/signing secrets. Keep the same application ID and release signing key to preserve upgrade compatibility. Back up Horizon chats and settings before any installation or update.
+The optional APK is a DEBUG TEST BUILD, not your production-signed release. Android may refuse to install it over your current app because the signing keys differ. Do NOT uninstall your current app just to bypass that error: uninstalling can erase chats, keys and settings. Build through your own GitHub workflow instead. No production keystore or credentials are included.
+
+WHAT CHANGED
+1. WhatsApp is a closed notification-preview viewer/editor, not a messenger. The old inbox, Contacts messaging launcher, silent sender, RemoteInput send implementation and Accessibility sender are removed. Stale tool calls and native send endpoints fail closed.
+2. Enable the feature in Settings > Permissions > Notification reply drafts. Grant Android notification access, select Personal WhatsApp and/or Business, allow toast pop-ups, and optionally allow AI access and draft invitations. All feature-specific consents start OFF after upgrading; old send grants are discarded, not reused.
+3. Receive a new WhatsApp notification. Horizon shows an in-app toast with the hand on its right. Tap to pin, view the preview, tell the AI what to draft, and Generate. Close the editor to give instructions in the main chat using the pinned preview. AI access must be enabled. The editable draft can be copied; nothing is sent. Only a separate, confirmed Open WhatsApp action leaves Horizon, without prefilling or sending.
+4. Draft instructions and manual edits survive closing/reopening the editor during the session. Incoming new drafts do not overwrite newer manual edits; Use latest AI draft explicitly loads the new suggestion. Pins and current editor edits are session-only and clear on lock/new chat; copy important drafts before leaving or closing Horizon. Native pending requests/results are encrypted.
+5. Native Kotlin notification listener, source gates, 100-preview/24-hour retention, bounded IO queue, timeout-limited notification wake lock and WorkManager draft generation. Provider requests contain only the selected preview and explicit draft instruction, not the inbox. Source/AI revocation cancels queued drafts and purges stored previews/results. Already-transmitted provider data cannot be recalled.
+6. Android notifications are used outside Horizon. Toasts are inside Horizon, not system-wide overlays; no display-over-other-apps or Accessibility permission is requested. The draft invitation is a local prompt, not a paid AI request. Full WhatsApp history, messages without notifications, hidden previews and delivery/read receipts are unavailable.
+7. Cyan horizontal composer handle replaces the old quick-reply pills. Top row: Shorter, Longer, Essay. Bottom: Research, Show code, Summarise. Tools follow the last AI in groups rather than making the whole group repeat the action. Research uses existing tools only and does not claim access it lacks.
+8. Test controls are beside voice, language, timing and effect options. An expandable individual-preset preview list gives every one of the twenty sound presets its own Test button. Preset previews are built only when expanded; no audio models or sound packs were added.
+9. Group chat retains sequential turn-taking so AIs can hear one another. Reply animation budgets are now about 700/1000/1800 ms for fast/normal/slow group replies and finish immediately while typing, keyboard movement or backgrounding. Identical mention suggestions are not rebuilt repeatedly. Quick-reply polling is removed; sidebar writes are coalesced and chat serialization waits while typing.
+10. Settings > Personalisation > Run in background > Automatic AI check-ins: explicit opt-in, 15 or 20 minutes available. Natural-language requests such as 'reply automatically every 20 minutes' offer a Review toast; tap it to review consent. All providers inherit rules forbidding false promises that a sentence schedules a job. Check-ins use the selected provider/model and limited recent chat excerpts; encrypted results return to the originating chat on resume. WhatsApp previews are NOT included in check-in snapshots.
+
+BACKGROUND LIMITS — PLEASE READ
+Android controls execution. WorkManager periodic intervals cannot be reliably set to 10 minutes; minimum is 15. The 15/20-minute settings are approximate, not deadlines. Doze, low battery, no network, manufacturer battery controls, restricted notifications or force-stop can delay/prevent work. Reopen after force-stop. Enabling Horizon's existing Run in background control and reviewing the existing Battery optimisation settings may help; no battery mode or system setting is silently changed. No code can honestly guarantee that Android never stops the app. The preview/draft feature requires Android 6+ for Keystore encryption, while the rest of the app retains its original minimum SDK.
+Background draft work is native rather than a WebView timer; WorkManager manages its wake lock. Preview capture acquires its own short timeout-bound wake lock and releases it in finally. Check-ins stop on revoked consent, lock or stale snapshot; encrypted check-in snapshots expire after seven days without refresh.
+
+PROVIDERS
+Added NVIDIA NIM, SambaNova, Together AI to foreground chat and native background paths, with model lists, key import aliases and native hostname allowlists.
+NVIDIA offers hosted development access; account verification, model availability and rate limits apply, and it is not a production SLA or an unlimited free promise.
+SambaNova documents a no-payment-method Free tier, currently only 20 requests/day per listed production model and 200,000 tokens/day. It is a useful additional option but frequent 15-minute check-ins can exhaust that limit. Existing Groq/Gemini options remain available.
+Together currently documents no free trial and prepaid access (first minimum credit purchase $15 in the retrieved policy). It is labelled prepaid and is never silently selected as an automatic fallback. Selecting it for a request or check-in may consume paid credit.
+Perplexity was NOT added as a free API: its ongoing API is pay-as-you-go; some accounts may receive an expiring one-time signup credit, which is not a permanent free tier.
+No real API keys were available, so added-provider HTTP structure was verified with transport mocks, not live billed requests. Model availability and quotas remain provider controlled.
+Sources: https://docs.together.ai/docs/billing-credits
+https://www.perplexity.ai/help-center/en/articles/10354847-api-payment-and-billing
+https://docs.sambanova.ai/docs/en/models/rate-limits
+https://build.nvidia.com/explore/discover
+https://developer.android.com/develop/background-work/background-tasks/persistent/getting-started/define-work
+
+VERIFICATION
+152 Node regression tests passed; 88 Java DSP checks passed.
+Navigation, voice studio, closed feature and keyboard browser suites passed. Browser native bridges were mocked. The complete Android Kotlin/Java debug build succeeded. APK identity/signature were inspected. No real phone, live WhatsApp notification stream, live provider key, actual Doze recovery, reboot behavior or production-signed upgrade was tested here. Real device testing is the remaining acceptance step.
+Old inbox/send tests were migrated to the explicitly requested refusal-only viewer/editor contract; unrelated regressions remain. The current GitHub workflow includes the new feature browser test.
+The original reports/patches in the source are historical, not claims about this version. Use VALIDATION-1.93.1/summary.json and its current logs/screenshots.
+
+SIZE AND PERFORMANCE
+Bundled www bytes: original 7,254,942; updated 7,260,143; change +5,201 bytes. No node_modules, Android build caches, SDK, generated platform or extra audio models are included in the source ZIP. Most bundled web bytes are the existing PDF libraries; those and unrelated features were preserved. Test/report files in a source archive are not automatically APK runtime assets; debug APK size is not comparable to a minified release APK.
+Final local cold-start medians: original DOMContentLoaded 1165 ms, updated 1092 ms. Local Chromium, 412x915, 4x CPU throttle, five contexts each, external services blocked. This does NOT measure your phone or network/provider latency. An earlier run while Android compilation was active was noisier and showed the updated build a little slower; do not treat either run as proof of a device speedup. No claim is made that all freezes are fixed.
+
+SCOPE
+No new UI framework, new messenger, audio pack or production secret was added. Music, YouTube, Lens, Termux, existing speech/DSP, chats, Vault, themes and group conversation remain. The removed Contacts surface was the WhatsApp messenger, not a general address-book replacement.
+
+999 — keep building. Your phone is not a measure of your ability.

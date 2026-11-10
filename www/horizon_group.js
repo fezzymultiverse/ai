@@ -78,6 +78,7 @@
         var s = pal.querySelector('.sel'); if (s && s.scrollIntoView) s.scrollIntoView({ block: 'nearest' });
     }
     function hide() { isOpen = false; pal.hidden = true; }
+    var lastPopup = '';
     function refresh() {
         if (!host || !pal) return;
         tok = dismissed ? null : token();
@@ -85,7 +86,9 @@
         rows = buildRows(tok.q);
         if (!rows.length) { hide(); return; }
         if (sel >= rows.length) sel = 0;
-        isOpen = true; pal.hidden = false; paint();
+        isOpen = true; pal.hidden = false;
+        var stamp = JSON.stringify([rows, sel]);
+        if (stamp !== lastPopup) { lastPopup = stamp; paint(); }
     }
     function choose(r) {
         if (!tok) return;

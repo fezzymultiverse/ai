@@ -8,16 +8,14 @@ const server=http.createServer((req,res)=>{const pathname=decodeURIComponent(req
   const page=await browser.newPage({viewport:{width:412,height:915}});page.on('pageerror',e=>errors.push(e.message));
   await page.route('**/*',r=>r.request().url().startsWith('http://127.0.0.1:')?r.continue():r.abort());
   await page.goto('http://127.0.0.1:'+server.address().port,{waitUntil:'load'});await page.waitForTimeout(150);
-  await page.evaluate(()=>{window.__xss=false;window.__sent=[];window.Capacitor={isNativePlatform:()=>true,Plugins:{HorizonWhatsApp:{contacts:async()=>({contacts:[{id:'123',name:'Test recipient <img src=x onerror=window.__xss=true>',phone:'+1 202 555 0100'}],hasMore:false}),sendToContact:async req=>{window.__sent.push(req);return{submitted:true};}}}};});
-  async function attach(){await page.evaluate(()=>HorizonContacts.open());await page.locator('#hzContacts .hz-contact-row').click();await page.locator('#hzContacts').getByRole('button',{name:'Use contact in AI chat',exact:true}).click();}
-  await attach();assert.equal(await page.locator('#hzChatRecipient').count(),1);assert.equal(await page.locator('#hzChatRecipient').isVisible(),true);
-  assert.match(await page.locator('#hzChatRecipient').innerText(),/Test recipient/);assert.match(await page.locator('#hzChatRecipient').innerText(),/202 555 0100/);assert.equal(await page.locator('#hzChatRecipient img').count(),0);assert.equal(await page.evaluate(()=>__xss),false);
-  assert.equal(await page.evaluate(()=>HorizonContacts.selected().id),'123');assert.match(await page.evaluate(()=>HorizonContacts.block()),/123/);
-  for(const width of [320,412,768]){await page.setViewportSize({width,height:915});const rect=await page.locator('#hzChatRecipient').boundingBox();assert.ok(rect.x>=0&&rect.x+rect.width<=width+1);}
-  await page.setViewportSize({width:412,height:915});await page.screenshot({path:path.join(reports,'recipient-card.png')});checks.push('selected contact appears as a safe, responsive name/number card in the composer');
-  await page.locator('#hzChatRecipient').getByRole('button',{name:'Remove',exact:true}).click();assert.equal(await page.locator('#hzChatRecipient').count(),0);assert.equal(await page.evaluate(()=>HorizonContacts.selected()),null);assert.equal(await page.evaluate(()=>HorizonContacts.block()),'');checks.push('Remove clears both recipient card and AI recipient context');
-  await attach();await page.locator('#newChatBtn').evaluate(b=>b.click());assert.equal(await page.locator('#hzChatRecipient').count(),0);checks.push('new conversation clears recipient selection');
-  await attach();await page.evaluate(()=>window.dispatchEvent(new Event('horizon-lock')));assert.equal(await page.locator('#hzChatRecipient').count(),0);checks.push('locking the app clears the private recipient preview');
+  await page.evaluate(async()=>{window.__xss=false;window.Capacitor={isNativePlatform:()=>true,Plugins:{HorizonWhatsApp:{status:async()=>({personal:true,toasts:true,aiSee:true}),consumeOpen:async()=>({}),drafts:async()=>({results:[],pending:false})}}};await HorizonWhatsAppFeature.refresh();});
+  await page.evaluate(()=>window.dispatchEvent(new CustomEvent('horizon-whatsapp',{detail:{id:'xss-preview',sender:'Friend <img src=x onerror=window.__xss=true>',text:'A private message',time:Date.now()}})));
+  await page.locator('#hzToasts button').filter({hasText:'☝ Pin'}).click();
+  assert.equal(await page.locator('.hz-wa-editor img').count(),0);assert.equal(await page.evaluate(()=>window.__xss),false);
+  await page.getByRole('button',{name:'Close',exact:true}).click();
+  for(const width of [320,412,768]){await page.setViewportSize({width,height:915});const rect=await page.locator('#hzWaPinned').boundingBox();assert.ok(rect.x>=0&&rect.x+rect.width<=width+1);}
+  checks.push('pinned notification sender is escaped and responsive; no Contacts messenger is loaded');
+  await page.locator('#hzWaPinned button').last().click();assert.equal(await page.evaluate(()=>HorizonWhatsAppFeature.block()),'');checks.push('Unpin clears the private preview from AI context');
   await page.reload({waitUntil:'load'});await page.waitForTimeout(300);
   const input=page.locator('#chatInput');await input.focus();await page.keyboard.type('Typing remains responsive. ');assert.equal(await input.inputValue(),'Typing remains responsive. ');
   await page.evaluate(()=>{const box=document.getElementById('chatInput');box.dispatchEvent(new CompositionEvent('compositionstart'));box.value+='IME composition';box.dispatchEvent(new InputEvent('input',{bubbles:true,isComposing:true}));window.hzKbNative(false,false);});
@@ -30,6 +28,6 @@ const server=http.createServer((req,res)=>{const pathname=decodeURIComponent(req
   for(let i=0;i<18;i++){await page.evaluate(()=>{window.__fakeVh-=3;window.hzKbCheck();});await page.clock.runFor(100);}
   await page.clock.runFor(250);assert.equal(await page.evaluate(()=>window.hzKbBusy),false);await page.evaluate(()=>delete window.visualViewport.height);checks.push('continuous resize events recover instead of keeping the keyboard guard stuck');
   await page.clock.resume();await input.focus();await page.keyboard.type(' 999');assert.match(await input.inputValue(),/IME composition 999$/);checks.push('typing still accepts input after watchdog recovery');
-  assert.deepEqual(errors,[]);const report={checks,errors,androidDeviceTested:false,contactsBridgeMocked:true,keyboardSignalsSimulated:true};fs.writeFileSync(path.join(reports,'recipient-keyboard-browser.json'),JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));
+  assert.deepEqual(errors,[]);const report={checks,errors,androidDeviceTested:false,previewBridgeMocked:true,keyboardSignalsSimulated:true};fs.writeFileSync(path.join(reports,'recipient-keyboard-browser.json'),JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));
  }finally{await browser.close();server.close();}
 })().catch(e=>{console.error(e);server.close();process.exitCode=1;});

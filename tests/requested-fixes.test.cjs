@@ -50,34 +50,17 @@ test('check-in snapshot is bounded text-only, not the system prompt or tool cont
  const snapshot=window.HorizonCheckinSnapshot();assert.equal(snapshot.history.length,12);assert.equal(snapshot.history[0].text.length,600);assert.deepEqual(Object.keys(snapshot.history[0]),['role','text']);
  window.HzLock={locked:()=>true};context.HzLock=window.HzLock;assert.throws(()=>window.HorizonCheckinSnapshot(),/Unlock/);
 });
-test('check-in worker is persistent opt-in, encrypted, bounded, non-redirecting and notification-only',()=>{
+test('check-in worker is opt-in, encrypted and persists messages without opening apps',()=>{
  const s=read('resources/android/java/HorizonCheckinPlugin.kt');
  for(const token of ['WorkManager','getBoolean("enabled", false)','AndroidKeyStore','AES/GCM/NoPadding','cancelUniqueWork','NetworkType.CONNECTED','setRequiresBatteryNotLow(true)','instanceFollowRedirects = false','readTextBounded(131072)','ExistingPeriodicWorkPolicy.KEEP','7 * 86400000L','VISIBILITY_PRIVATE'])assert.ok(s.includes(token),token);
- assert.ok(!s.includes('startActivity('));assert.ok(!s.includes('dispatchToJs('));
+ assert.ok(!s.includes('startActivity('));assert.match(s,/dispatchToJs\("horizon-checkin", "\{\}"\)/);assert.match(s,/putString\("pending", HorizonCheckins.seal/);
 });
 test('native approvals are one-shot, command-bound and expire; HTML uses text nodes',()=>{
  const s=read('resources/android/java/HorizonTermuxPlugin.kt'),js=read('www/horizon_bridges.js');
  for(const token of ['UUID.randomUUID()','approvals.remove(token)','120000L','pending.run()','approvalHandler.removeCallbacks','HorizonLockPlugin.locked'])assert.ok(s.includes(token),token);
  assert.ok(!s.includes('AlertDialog.Builder'));assert.ok(js.includes("node('pre', '', d.command || '')"));assert.ok(js.includes('closeApproval(false)'));assert.ok(js.includes('document.hidden'));
 });
-test('WhatsApp routing never assumes Personal when the account is unspecified',()=>{
- const js=read('www/horizon_bridges.js'),s=read('resources/android/java/HorizonWhatsAppPlugin.kt');
- assert.ok(js.includes('sendBusiness;'));assert.ok(js.includes("typeof sendBusiness === 'boolean'"));
- for(const token of ['call.getBoolean("business")','requestedPackage != null','enabledPackages.singleOrNull()','creatorPackage != found.optString("package")','PendingIntent.CanceledException','getWhatsAppIntent'])assert.ok(s.includes(token),token);
-});
-test('accessibility fallback is scoped, confirmed, time-bounded and will not overwrite drafts',()=>{
- const s=read('resources/android/java/HorizonWhatsAppAccessibility.kt'),xml=read('resources/android/res/xml/horizon_whatsapp_accessibility.xml');
- for(const token of ['root.packageName?.toString() != job.pkg','exactHeader(root, job)','job.phase = 2','20000L','existing WhatsApp draft','main.removeCallbacksAndMessages(null)','WeakReference','finally { release(root) }'])assert.ok(s.includes(token),token);
- assert.ok(xml.includes('android:packageNames="com.whatsapp,com.whatsapp.w4b"'));assert.ok(!s.includes('enterPictureInPictureMode'));
-});
-test('new native services are system-permission protected and worker credentials excluded from backup',()=>{
- const s=read('scripts/apply-bridges.py');
- assert.ok(s.includes('BIND_ACCESSIBILITY_SERVICE'));assert.ok(s.includes('BIND_NOTIFICATION_LISTENER_SERVICE'));assert.ok(s.includes('HorizonCheckinWorker'));
- for(const p of ['horizon_bridge_backup.xml','horizon_bridge_extraction.xml'])assert.ok(read('resources/android/res/xml/'+p).includes('horizon_checkin.xml'));
-});
-test('WhatsApp fast alert happens before persistence queue and skips service notifications',()=>{
- const s=read('resources/android/java/HorizonWhatsAppPlugin.kt');
- const start=s.indexOf('override fun onNotificationPosted'),end=s.indexOf('private fun fastPreview',start),method=s.slice(start,end);
- assert.ok(method.indexOf('fastPreview(sbn)')<method.indexOf('enqueue'));
- assert.ok(s.includes('if (message == null && !hasReply) return false'));assert.ok(s.includes('index == items.lastIndex'));
-});
+test('source selection is native package-scoped, not guessed send routing',()=>{const s=read('resources/android/java/HorizonWhatsAppPlugin.kt');assert.ok(s.includes('\"com.whatsapp\"'));assert.ok(s.includes('\"com.whatsapp.w4b\"'));assert.ok(!s.includes('getBoolean(\"business\", false) ?: false'));});
+test('Accessibility messaging fallback is removed from closed feature',()=>{assert.ok(!fs.existsSync(path.join(root,'resources/android/java/HorizonWhatsAppAccessibility.kt')));assert.ok(!read('scripts/apply-bridges.py').includes('BIND_ACCESSIBILITY_SERVICE'));});
+test('notification listener and background credentials retain system permission and backup guards',()=>{const wire=read('scripts/apply-bridges.py');assert.match(wire,/BIND_NOTIFICATION_LISTENER_SERVICE/);for(const file of ['horizon_bridge_backup.xml','horizon_bridge_extraction.xml'])assert.match(read('resources/android/res/xml/'+file),/horizon_checkin.xml/);assert.match(read('resources/android/java/HorizonWhatsAppDraftWorker.kt'),/HorizonCheckins.seal/);});
+test('preview work is bounded, off main thread and skips service notifications',()=>{const s=read('resources/android/java/HorizonWhatsAppPlugin.kt');assert.match(s,/ArrayBlockingQueue<Runnable>\(32\)/);assert.match(s,/io.execute/);assert.match(s,/if\(msg==null&&!hasReply\)return@execute/);assert.match(s,/acquire\(10000\)/);assert.match(s,/finally\{if\(wake\?\.isHeld==true\)wake.release/);});

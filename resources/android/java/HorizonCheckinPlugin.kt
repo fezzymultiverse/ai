@@ -59,6 +59,9 @@ internal object HorizonCheckins {
         return JSONObject(String(cipher.doFinal(bytes.copyOfRange(12, bytes.size)), Charsets.UTF_8))
     }
     val endpoints = mapOf(
+        "together" to "https://api.together.xyz/v1/chat/completions",
+        "sambanova" to "https://api.sambanova.ai/v1/chat/completions",
+        "nvidia" to "https://integrate.api.nvidia.com/v1/chat/completions",
         "groq" to "https://api.groq.com/openai/v1/chat/completions",
         "cohere" to "https://api.cohere.com/v2/chat",
         "mistral" to "https://api.mistral.ai/v1/chat/completions",
@@ -74,8 +77,25 @@ internal object HorizonCheckins {
 class HorizonCheckinPlugin : Plugin() {
     @PluginMethod fun status(call: PluginCall) {
         val p = HorizonCheckins.prefs(context)
-        call.resolve(JSObject().put("enabled", p.getBoolean("enabled", false)).put("hours", p.getInt("hours", 4))
+        call.resolve(JSObject().put("enabled", p.getBoolean("enabled", false)).put("hours", p.getInt("hours", 4)).put("minutes", p.getInt("minutes", p.getInt("hours", 4) * 60))
             .put("last", p.getLong("last", 0)).put("notifications", NotificationManagerCompat.from(context).areNotificationsEnabled()))
+    }
+    @PluginMethod fun pending(call: PluginCall) {
+        if (HorizonLockPlugin.locked) { call.reject("Unlock Horizon first"); return }
+        val p = HorizonCheckins.prefs(context)
+        val a = try { HorizonCheckins.open(p.getString("pending", "") ?: "").optJSONArray("messages") ?: JSONArray() } catch (_: Exception) { JSONArray() }
+        call.resolve(JSObject().put("messages", a))
+    }
+    @PluginMethod fun ack(call: PluginCall) {
+        if (HorizonLockPlugin.locked) { call.reject("Unlock Horizon first"); return }
+        synchronized(HorizonCheckins) {
+            val p = HorizonCheckins.prefs(context)
+            val a = try { HorizonCheckins.open(p.getString("pending", "") ?: "").optJSONArray("messages") ?: JSONArray() } catch (_: Exception) { JSONArray() }
+            val out = JSONArray(); val id = call.getString("id")
+            for (i in 0 until a.length()) if (a.getJSONObject(i).optString("id") != id) out.put(a.get(i))
+            p.edit().putString("pending", HorizonCheckins.seal(JSONObject().put("messages", out).toString())).commit()
+        }
+        call.resolve()
     }
     @PluginMethod fun configure(call: PluginCall) {
         if (HorizonLockPlugin.locked) { call.reject("Unlock Horizon to change check-ins"); return }
@@ -96,6 +116,7 @@ class HorizonCheckinPlugin : Plugin() {
             require(provider == "pollinations" || apiKey.isNotBlank()) { "Set a key for the selected AI provider" }
             require(apiKey.length <= 4096) { "API key is too long" }
             val hours = (call.getInt("hours", 4) ?: 4).coerceIn(1, 24)
+            val minutes = (call.getInt("minutes", hours * 60) ?: hours * 60).coerceIn(15, 1440)
             val history = call.getArray("history") ?: JSONArray()
             val bounded = JSONArray()
             for (i in maxOf(0, history.length() - 12) until history.length()) {
@@ -104,17 +125,17 @@ class HorizonCheckinPlugin : Plugin() {
                 bounded.put(JSONObject().put("role", m.optString("role")).put("text", m.optString("text").take(600)))
             }
             val config = JSONObject().put("provider", provider).put("model", model).put("key", apiKey)
-                .put("history", bounded).put("updated", System.currentTimeMillis())
+                .put("history", bounded).put("chatId", (call.getString("chatId") ?: "").take(200)).put("updated", System.currentTimeMillis())
             val wasEnabled = p.getBoolean("enabled", false)
-            val oldHours = p.getInt("hours", 4)
+            val oldMinutes = p.getInt("minutes", p.getInt("hours", 4) * 60)
             // A stable generation identifies the consent session, so disabling/re-enabling invalidates old requests.
             val generation = if (wasEnabled) p.getString("generation", "") else UUID.randomUUID().toString()
             p.edit().putString("sealed", HorizonCheckins.seal(config.toString())).putBoolean("enabled", true)
-                .putString("generation", generation).putInt("hours", hours).commit()
+                .putString("generation", generation).putInt("hours", hours).putInt("minutes", minutes).commit()
             run {
-                val policy = if (!wasEnabled || oldHours != hours) ExistingPeriodicWorkPolicy.UPDATE else ExistingPeriodicWorkPolicy.KEEP
-                val work = PeriodicWorkRequestBuilder<HorizonCheckinWorker>(hours.toLong(), TimeUnit.HOURS)
-                    .setInitialDelay(hours.toLong(), TimeUnit.HOURS)
+                val policy = if (!wasEnabled || oldMinutes != minutes) ExistingPeriodicWorkPolicy.UPDATE else ExistingPeriodicWorkPolicy.KEEP
+                val work = PeriodicWorkRequestBuilder<HorizonCheckinWorker>(minutes.toLong(), TimeUnit.MINUTES)
+                    .setInitialDelay(minutes.toLong(), TimeUnit.MINUTES)
                     .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).setRequiresBatteryNotLow(true).build()).build()
                 manager.enqueueUniquePeriodicWork(HorizonCheckins.WORK, policy, work)
             }
@@ -128,8 +149,9 @@ class HorizonCheckinWorker(c: Context, params: WorkerParameters) : Worker(c, par
         val c = applicationContext; val p = HorizonCheckins.prefs(c)
         if (!p.getBoolean("enabled", false) || !NotificationManagerCompat.from(c).areNotificationsEnabled()) return Result.success()
         val generation = p.getString("generation", "")
-        val hours = p.getInt("hours", 4)
-        if (System.currentTimeMillis() - p.getLong("last", 0) < hours * 3600000L - 60000L) return Result.success()
+        val minutes = p.getInt("minutes", p.getInt("hours", 4) * 60)
+        if (HorizonLockPlugin.locked) return Result.success()
+        if (System.currentTimeMillis() - p.getLong("last", 0) < minutes * 60000L - 60000L) return Result.success()
         var connection: HttpURLConnection? = null
         try {
             val config = HorizonCheckins.open(p.getString("sealed", "") ?: "")
@@ -166,7 +188,7 @@ class HorizonCheckinWorker(c: Context, params: WorkerParameters) : Worker(c, par
                 connection.setRequestProperty("anthropic-version", "2023-06-01")
             } else if (provider != "pollinations") connection.setRequestProperty("Authorization", "Bearer " + config.getString("key"))
             // Recheck immediately before network I/O: a stopped worker must not initiate a new request.
-            if (isStopped || !p.getBoolean("enabled", false) || p.getString("generation", "") != generation) return Result.success()
+            if (isStopped || HorizonLockPlugin.locked || !p.getBoolean("enabled", false) || p.getString("generation", "") != generation) return Result.success()
             connection.outputStream.use { it.write(body.toString().toByteArray(Charsets.UTF_8)) }
             if (connection.responseCode !in 200..299) return Result.success() // next normal interval, no retry storm
             val raw = connection.inputStream.bufferedReader().use { it.readTextBounded(131072) }
@@ -189,7 +211,17 @@ class HorizonCheckinWorker(c: Context, params: WorkerParameters) : Worker(c, par
                 }
                 else -> json.optJSONArray("choices")?.optJSONObject(0)?.optJSONObject("message")?.optString("content") ?: ""
             }.trim().take(240)
-            if (text.isBlank() || isStopped || !p.getBoolean("enabled", false) || p.getString("generation", "") != generation) return Result.success()
+            if (text.isBlank() || isStopped || HorizonLockPlugin.locked || !p.getBoolean("enabled", false) || p.getString("generation", "") != generation) return Result.success()
+            synchronized(HorizonCheckins) {
+                if (!p.getBoolean("enabled", false) || p.getString("generation", "") != generation) return Result.success()
+                val a = try { HorizonCheckins.open(p.getString("pending", "") ?: "").optJSONArray("messages") ?: JSONArray() } catch (_: Exception) { JSONArray() }
+                val out = JSONArray()
+                for (i in maxOf(0, a.length() - 49) until a.length()) out.put(a.get(i))
+                out.put(JSONObject().put("id", UUID.randomUUID().toString()).put("text", text).put("chatId", config.optString("chatId"))
+                    .put("provider", provider).put("model", model).put("time", System.currentTimeMillis()))
+                p.edit().putString("pending", HorizonCheckins.seal(JSONObject().put("messages", out).toString())).putLong("last", System.currentTimeMillis()).commit()
+            }
+            HorizonAIPlugin.dispatchToJs("horizon-checkin", "{}")
             val nm = c.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             if (Build.VERSION.SDK_INT >= 26) nm.createNotificationChannel(NotificationChannel("horizon_checkin_v1", "Proactive check-ins", NotificationManager.IMPORTANCE_DEFAULT))
             val open = PendingIntent.getActivity(c, 7480, Intent(c, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)

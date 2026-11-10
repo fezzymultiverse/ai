@@ -59,6 +59,7 @@ jobs:
           npx playwright install --with-deps chromium
           npm run test:browser
           npm run test:voice-browser
+          npm run test:closed-feature
 
       - name: Apply app identity from repo variables
         env:

@@ -7,11 +7,11 @@
     <title>HORIZON · AI Interface</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <link rel="icon" type="image/png" href="icon.png">
-    <script src="horizon_release.js?v=1.93.0"></script>
+    <script src="horizon_release.js?v=1.93.1"></script>
     <script>(function(){try{var t=localStorage.getItem('horizon_theme');if(t!=='grey')t='cyan';document.documentElement.setAttribute('data-theme',t==='grey'?'grey':'neon');document.documentElement.setAttribute('data-accent',t);var m=document.querySelector('meta[name=theme-color]');if(m)m.setAttribute('content',t==='grey'?'#eceef1':'#000000');}catch(e){}})();</script>
     <style>html.hz-boot{background:#000}html.hz-boot[data-theme="grey"]{background:#eceef1}html.hz-boot body{visibility:hidden}</style>
     <script>(function(){var d=document.documentElement;d.classList.add('hz-boot');setTimeout(function(){d.classList.remove('hz-boot');},4000);})();</script>
-    <link rel="stylesheet" href="horizon_app.css?v=1.93.0">
+    <link rel="stylesheet" href="horizon_app.css?v=1.93.1">
 </head>
 <body>
 
@@ -387,14 +387,14 @@
             </div>
             <div class="settings-home" id="settingsHome" data-home role="tablist" aria-label="Settings sections">
                 <button class="set-row" role="tab" data-tab="providers" aria-selected="false" type="button">
-                    <span class="set-text"><h3>API PROVIDERS PLUS KEYS</h3><p>Gemini, Groq, Cohere, Mistral, OpenRouter, AnyAPI and Routeway (free models only) and GonkaRouter keys, plus free Pollinations (no key). Pick the model and choose which engine answers.</p></span>
+                    <span class="set-text"><h3>API PROVIDERS PLUS KEYS</h3><p>Gemini, Groq, Cohere, Mistral, OpenRouter, AnyAPI, Routeway, GonkaRouter, NVIDIA NIM, SambaNova and Together AI. Free access depends on the provider; Together is prepaid. Pick the model and choose which engine answers.</p></span>
                     <svg class="ic set-chev" aria-hidden="true"><use href="#i-chev-r"/></svg>
                 </button>
                 <button class="set-row" role="tab" data-tab="web" aria-selected="false" type="button">
                     <span class="set-text"><h3>WEB SCRAPING</h3><p>SerpAPI, Firecrawl, ScraperBee and Browserless keys, switches and tests.</p></span>
                     <svg class="ic set-chev" aria-hidden="true"><use href="#i-chev-r"/></svg>
                 </button>
-                <button class="set-row" role="tab" data-tab="permissions" aria-selected="false" type="button"><span class="set-text"><h3>PERMISSIONS</h3><p>Device access, WhatsApp Personal and Business, contacts and privacy.</p></span><svg class="ic set-chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+                <button class="set-row" role="tab" data-tab="permissions" aria-selected="false" type="button"><span class="set-text"><h3>PERMISSIONS</h3><p>Device access, notification draft permissions and privacy.</p></span><svg class="ic set-chev" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
                 <button class="set-row" role="tab" data-tab="personalisation" aria-selected="false" type="button">
                     <span class="set-text"><h3>PERSONALISATION</h3><p>Theme (Dark cyan or Light grey) and the voice that reads Horizon's replies aloud.</p></span>
                     <svg class="ic set-chev" aria-hidden="true"><use href="#i-chev-r"/></svg>
@@ -631,7 +631,6 @@
                     <button type="button" class="hz-app hz-app-term" data-term-open aria-label="Open terminal"><svg class="hzt-logo" viewBox="0 0 24 24" aria-hidden="true"><rect x="1" y="1" width="22" height="22" rx="6" fill="#fff" stroke="#000" stroke-width="1"/><text x="4.4" y="16.6" font-family="monospace" font-size="12.5" font-weight="700" fill="#000">$_</text></svg><span>Terminal</span></button>
                     <button type="button" class="hz-app" data-addon="lens"><svg class="ic" aria-hidden="true"><use href="#i-lens"/></svg><span>Lens</span></button>
                     <button type="button" class="hz-app" data-addon="youtube"><svg class="ic" aria-hidden="true"><use href="#i-yt"/></svg><span>YouTube</span></button>
-                    <button type="button" class="hz-app hz-contacts-open" aria-label="Open Contacts"><svg class="ic" aria-hidden="true"><use href="#i-users"/></svg><span>Contacts</span></button>
                 </div>
             </nav>
         </aside>
@@ -654,7 +653,6 @@
         <button type="button" class="hz-app hz-app-term" data-term-open aria-label="Open terminal"><svg class="hzt-logo" viewBox="0 0 24 24" aria-hidden="true"><rect x="1" y="1" width="22" height="22" rx="6" fill="#fff" stroke="#000" stroke-width="1"/><text x="4.4" y="16.6" font-family="monospace" font-size="12.5" font-weight="700" fill="#000">$_</text></svg><span>Terminal</span></button>
         <button type="button" class="hz-app" data-addon="lens"><svg class="ic" aria-hidden="true"><use href="#i-lens"/></svg><span>Lens</span></button>
         <button type="button" class="hz-app" data-addon="youtube"><svg class="ic" aria-hidden="true"><use href="#i-yt"/></svg><span>YouTube</span></button>
-        <button type="button" class="hz-app hz-contacts-open" aria-label="Open Contacts"><svg class="ic" aria-hidden="true"><use href="#i-users"/></svg><span>Contacts</span></button>
       </div>
       <section class="hz-addon-tile hz-addon-mini"><div class="mp-mini" id="mpMini" aria-label="Music widget"></div></section>
     </aside>
@@ -707,23 +705,23 @@
     </section>
 
     <script src="horizon_usage.js?v=1.93.0"></script>
-    <script src="horizon_about.js?v=1.93.0"></script>
+    <script src="horizon_about.js?v=1.93.1"></script>
     <script src="horizon_toast.js?v=1.93.0"></script>
     <script src="horizon_plus.js?v=1.93.0"></script>
     <script src="ember_document_engine.js?v=1.93.0"></script>
     <script src="horizon_pdf.js?v=1.93.0"></script>
     <script src="ember_artbox.js?v=1.93.0"></script>
-    <script src="horizon_key_import.js?v=1.93.0"></script>
+    <script src="horizon_key_import.js?v=1.93.1"></script>
     <script src="horizon_tts.js?v=1.93.0"></script>
     <script src="horizon_github.js?v=1.93.0"></script>
     <script src="horizon_native_audio.js?v=1.93.0"></script>
     <script src="horizon_music.js?v=1.93.0"></script>
     <script src="horizon_runlog.js?v=1.93.0"></script>
-    <script src="horizon_bridges.js?v=1.93.0"></script>
+    <script src="horizon_whatsapp_feature.js?v=1.93.1"></script>
+    <script src="horizon_bridges.js?v=1.93.1"></script>
     <script src="horizon_hub.js?v=1.93.0"></script>
-    <script src="horizon_contacts.js?v=1.93.0"></script>
-    <script src="horizon_group.js?v=1.93.0"></script>
-    <script src="horizon_chips.js?v=1.93.0"></script>
+    <script src="horizon_group.js?v=1.93.1"></script>
+    <script src="horizon_chips.js?v=1.93.1"></script>
     <script src="horizon_vault.js?v=1.93.0"></script>
     <script src="horizon_attach.js?v=1.93.0"></script>
     <script src="horizon_creator.js?v=1.93.0"></script>
@@ -1368,7 +1366,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                         }
                     }
                     if (res.status === 401 || res.status === 403) throw new Error(`${cfg.name} rejected the key. Check it at ${cfg.keyUrl}.`);
-                    if (res.status === 402) throw new Error(cfg.noCredit);
+                    if (res.status === 402) throw new Error(cfg.noCredit || cfg.name + ' requires provider credits. Check your account balance.');
                     throw new Error(lastWhy);
                 }
                 throw new Error(lastWhy);
@@ -1408,6 +1406,13 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             fallbackModels: ['deepseek-v4.1-flash:free', 'minimax-m3.1-flash:free', 'muse-glimmer-30b:free', 'gemma-4-26b-a4b-it-chimerax:free', 'gemma-4-26b-a4b-it-darksoul:free', 'gemma-4-26b-a4b-it-luminous:free', 'gemma-4-26b-a4b-it-moonlight:free', 'gemma-4-26b-a4b-it-musica:free', 'gemma-4-26b-a4b-it-meromero:free'],
             noCredit: 'Routeway says this needs credit. Horizon only sends :free models, so check your Routeway dashboard.'
         });
+        PROVIDERS.together = oaiGateway({name:'Together AI',icon:'i-layers',placeholder:'Together API key',keyUrl:'https://api.together.ai/settings/api-keys',base:'https://api.together.xyz/v1',defaultModel:'meta-llama/Llama-3.3-70B-Instruct-Turbo',fallbackModels:['meta-llama/Llama-3.3-70B-Instruct-Turbo']});
+        PROVIDERS.together.manualOnly = true; // Never silently fail over to a prepaid provider.
+        PROVIDERS.together.billingNote = 'Prepaid API · no ongoing free tier. Requires purchased credits.';
+        PROVIDERS.sambanova = oaiGateway({name:'SambaNova',icon:'i-zap',placeholder:'SambaNova API key',keyUrl:'https://cloud.sambanova.ai/apis',base:'https://api.sambanova.ai/v1',defaultModel:'Meta-Llama-3.3-70B-Instruct',fallbackModels:['Meta-Llama-3.3-70B-Instruct','DeepSeek-V3.1','gpt-oss-120b']});
+        PROVIDERS.sambanova.billingNote = 'Free tier without a payment method · limited daily requests. Check account limits; frequent check-ins can exhaust them.';
+        PROVIDERS.nvidia = oaiGateway({name:'NVIDIA NIM',icon:'i-cpu',placeholder:'NVIDIA API key',keyUrl:'https://build.nvidia.com/settings/api-keys',base:'https://integrate.api.nvidia.com/v1',defaultModel:'meta/llama-3.3-70b-instruct',fallbackModels:['meta/llama-3.3-70b-instruct']});
+        PROVIDERS.nvidia.billingNote = 'Free hosted development access, subject to account verification, model availability and provider limits. Not a production SLA.';
         const PROVIDER_IDS = Object.keys(PROVIDERS);
         // Public model catalogs are NOT proof that a secret belongs to this provider.
         PROVIDER_IDS.forEach(id => {
@@ -1440,7 +1445,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                     if (autoOn()) {
                         const needsEyes = (history || []).some(m => m.imgs && m.imgs.length);
                         for (const other of PROVIDER_IDS) {
-                            if (other === pid || !PROVIDERS[other].defaultModel || PROVIDERS[other].noChat) continue;
+                            if (other === pid || PROVIDERS[other].manualOnly || !PROVIDERS[other].defaultModel || PROVIDERS[other].noChat) continue;
                             if (!hasKey(other)) continue;
                             if (window.HzUsage && HzUsage.limitedNow(other)) continue;   // V1.40.0: autopilot skips a provider that is limited right now
                             const om = state.models[other] || PROVIDERS[other].defaultModel;
@@ -1731,6 +1736,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         }
         function getSystemPrompt() {
             const parts = [getPersona()];
+            parts.push('AUTOMATIC CHECK-INS: You cannot schedule yourself by saying you will. When the user requests automatic contact, Horizon offers an explicit native scheduling consent. Only claim it is enabled when the native check-in settings confirm it. Default is approximately 15 minutes, optionally 20; Android may delay it. Respect disable, privacy and provider limits. This applies to every provider and future provider.');
             const prefs = (lsGet(LS.prefs) || '').trim();
             if (prefs) parts.push(`FEZZY'S REPLY PREFERENCES (follow these; on style and format they beat the defaults above)\n${prefs}`);
             const mem = memoryBlock();
@@ -2413,7 +2419,9 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 try { tsp = localStorage.getItem('horizon_type_speed') || 'fast'; } catch (e) { /* default */ }
                 const TSP = { fast: [320, 16], normal: [700, 18], slow: [1400, 26] };
                 const tcfg = TSP[tsp] || TSP.fast;
-                const step = Math.max(1, Math.ceil(total / tcfg[0]));
+                const inGroup = !!(currentChat() && currentChat().group);
+                const frames = inGroup ? Math.ceil((tsp === 'slow' ? 1800 : tsp === 'normal' ? 1000 : 700) / tcfg[1]) : tcfg[0];
+                const step = Math.max(1, Math.ceil(total / frames));
                 let count = 0;
                 let raf = 0, t0 = 0;   // V1.93.1: frame-driven, replaces the setTimeout timer
                 let done = false;
@@ -2460,7 +2468,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 function tick(ts) {
                     raf = 0;
                     if (done) return;
-                    if (document.hidden) { finish(); return; }   // V1.67.9: Android throttles timers once you leave, so the rest of the reply lands at once
+                    if (document.hidden || window.hzTyping || window.hzKbBusy) { finish(); return; }   // V1.67.9: Android throttles timers once you leave, so the rest of the reply lands at once
                     const now = ts || performance.now();
                     if (!t0) t0 = now;
                     const nearBottom = chatScroll.scrollHeight - chatScroll.scrollTop - chatScroll.clientHeight < 90;
@@ -3083,6 +3091,9 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         }
         function flushChats() {
             if (!saveChats.t) return;
+            if (!document.hidden && (window.hzTyping || window.hzKbBusy)) {
+                clearTimeout(saveChats.t); saveChats.t = setTimeout(flushChats, 600); return;
+            }
             clearTimeout(saveChats.t); saveChats.t = 0;
             lsSet(LS.chats, JSON.stringify(state.chats));
         }
@@ -3098,7 +3109,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             chat.updated = m.ts;
             if (role === 'user' && chat.title === 'New chat') chat.title = text.replace(/\s+/g, ' ').slice(0, 42);
             saveChats();
-            renderChatList();
+            if (!pushMessage.listTimer) pushMessage.listTimer = setTimeout(() => { pushMessage.listTimer = 0; renderChatList(); }, 120);
             return m;
         }
 
@@ -3188,7 +3199,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         }
 
         function openChat(id) {
-            if (window.HorizonContacts) HorizonContacts.clear();
+            if (window.HorizonWhatsAppFeature) HorizonWhatsAppFeature.clear();
             const chat = state.chats.find(c => c.id === id);
             if (!chat) return;
             state.currentId = id;
@@ -3200,7 +3211,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         }
 
         function newChat() {
-            if (window.HorizonContacts) HorizonContacts.clear();
+            if (window.HorizonWhatsAppFeature) HorizonWhatsAppFeature.clear();
             skipTyping();
             ttsStop();
             state.currentId = null;
@@ -3623,6 +3634,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 if (has(/gemma/)) return 'Small open Google model. Quick and simple, lighter on detail.';
                 return 'Google Gemini model. Sees pictures and handles long chats.';
             }
+            if (PROVIDERS[prov] && PROVIDERS[prov].billingNote) return PROVIDERS[prov].billingNote;
             if (prov === 'groq') {
                 if (has(/whisper|guard|safeguard|tts|prompt-guard/)) return 'Support model for speech or safety checks, not for chatting.';
                 if (has(/gpt-oss-120b/)) return 'Large open reasoning model. Strong at code and multi-step problems.';
@@ -3970,6 +3982,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 </div>
                 <a class="get-key" data-role="link" target="_blank" rel="noopener"></a>`;
             providerList.appendChild(card);
+            if (p.billingNote) { const note = document.createElement('p'); note.className = 'hint'; note.textContent = p.billingNote; card.insertBefore(note, card.children[1]); }
             if (!p.keyless) {
                 // V1.63.1: backup keys are individual slots. Paste a key and it saves into its own slot (the box empties,
                 // ready for the next one). Each slot has its own health light and an X to delete it. Stored in the same list
@@ -5064,6 +5077,8 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             if (!opts.text && window.HzMsgMenu && HzMsgMenu.takeQuote) { const q = HzMsgMenu.takeQuote(); if (q) text = q + '\n\n' + text; }   // V1.77.0 F3
             if (atts.some(a => a.kind === 'image' || (a.kind === 'pdf' && !a.chars)) && !canSeeImages(id, state.models[id])) notice(`${p.name} (${state.models[id]}) cannot see pictures. Switch to Gemini to have images read.`, 'error');
             const chat = ensureChat();
+            if (window.HorizonWhatsAppFeature) HorizonWhatsAppFeature.bindChat(chat.id);
+            if (window.HorizonCheckin && /\b(?:automatically|on your own|every\s+\d+\s*(?:min|minute)|check\s*in\s*(?:on|with)\s*me)\b/i.test(text)) HorizonCheckin.offer(text);
             const lastAi = chat.messages.slice().reverse().find(m => m.role !== 'user');
             docMode = !state.pdfOn ? '' : (opts.pdf ? 'forced' : wantsPdf(text) || (lastAi && /<artifact\b/i.test(lastAi.text) && PDF_FOLLOW.test(text)) ? 'auto' : '');
             const userMsg = pushMessage(chat, 'user', text, 0, atts.length ? { att: atts } : null);
@@ -5152,6 +5167,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             setBusy(true);
             showLoading(docMode ? 'Writing your PDF...' : thinkLabel());
             thoughtAnalyse(text, chat, p, state.models[id]);
+            if (window.HorizonWhatsAppFeature && HorizonWhatsAppFeature.hasContext()) thoughtAdd('i-whatsapp', 'Pinned notification preview', true, 'Draft only · nothing will be sent to WhatsApp');
             const t0 = Date.now();
 
             try {
@@ -5803,12 +5819,19 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         const openAppSettings = () => callNative('HorizonPerms', 'openAppSettings');
 
         // V1.46.0: one-shot ask for the floating AI box in the terminal. Not saved in any chat. It only returns text; nothing is ever run.
+        window.HorizonFeatureHost = {
+            chatId: () => state.currentId || 'new',
+            busy: () => state.busy,
+            send: text => sendMessage({text}),
+            current: () => currentChat(),
+            thought: (label, detail) => thoughtAdd('i-whatsapp', label, true, detail)
+        };
         window.HorizonCheckinSnapshot = function () {
             const id = state.active, p = PROVIDERS[id];
             if (window.HzLock && HzLock.locked()) throw new Error('Unlock Horizon first');
             if (window.HzAbout && HzAbout.allow && !HzAbout.allow(id, p.name)) throw new Error(p.name + ' is switched off');
             const c = currentChat();
-            return { provider: id, model: state.models[id], key: p.keyless ? '' : keyOf(id),
+            return { provider: id, model: state.models[id], key: p.keyless ? '' : keyOf(id), chatId: state.currentId || '',
                 history: (c && c.messages || []).filter(m => m.role === 'user' || m.role === 'assistant').slice(-12)
                     .map(m => ({ role: m.role, text: String(m.text || '').slice(0, 600) })) };
         };
@@ -5825,6 +5848,26 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             finally { curTurn = keepTurn; docMode = keepDoc; }
         };
 
+        let drainingCheckins = false;
+        async function drainCheckins() {
+            if (drainingCheckins || !NATIVE || (window.HzLock && HzLock.locked())) return;
+            drainingCheckins = true;
+            try {
+                const r = await callNative('HorizonCheckin', 'pending');
+                for (const m of ((r && r.messages) || [])) {
+                    const c = state.chats.find(c => c.id === m.chatId);
+                    if (!c) continue;
+                    if (!c.messages.some(x => x.checkinId === m.id)) pushMessage(c, 'assistant', m.text, 0, {prov:m.provider,model:m.model,checkinId:m.id});
+                    if (state.currentId === c.id && !state.busy) renderMessages(c);
+                    flushChats();
+                    await callNative('HorizonCheckin', 'ack', {id:m.id});
+                }
+            } finally { drainingCheckins = false; }
+        }
+        window.addEventListener('horizon-checkin', drainCheckins);
+        window.addEventListener('horizon-resume', drainCheckins);
+        document.addEventListener('visibilitychange', () => { if (!document.hidden) drainCheckins(); });
+        setTimeout(drainCheckins, 2200);
         // ===== V1.14.1: Device & native check (Vault page, top) =====
         (function nativeCheckInit() {
             const btn = document.getElementById('nativeCheckRun');
@@ -7533,11 +7576,37 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             $('#ttsFxReset').addEventListener('click', () => { TTS.stop(); TTS.applyPreset('neutral'); syncStudio(); vEl.status.textContent = TTS.describe(); });
             [vEl.rate, vEl.pitch].forEach(input => input.addEventListener('input', syncStudio));
             syncStudio();
+            const localTestButtons = [];
+            function localTest(anchor, label) {
+                if (!anchor || !anchor.parentNode) return;
+                const b = document.createElement('button'); b.type = 'button'; b.className = 'use-btn hz-voice-test';
+                b.textContent = 'Test'; b.setAttribute('aria-label', 'Test ' + label + ' with current voice settings');
+                b.addEventListener('click', e => { e.preventDefault(); TTS.test(); });
+                anchor.insertAdjacentElement('afterend', b); localTestButtons.push(b);
+            }
+            [vEl.voice,vEl.lang,vEl.nEngine,vEl.rate,vEl.pitch,preset].forEach(e => localTest(e, e.id));
+            fxNodes.forEach(c => localTest(c.input, c.key));
+            // Expand only when requested: each preset gets its own inline preview, no audio bundles.
+            const previews = document.createElement('details'); previews.className = 'hz-voice-previews';
+            const summary = document.createElement('summary'); summary.textContent = 'Test individual sound presets'; previews.appendChild(summary);
+            previews.addEventListener('toggle', () => {
+                if (!previews.open || previews.dataset.built) return;
+                previews.dataset.built = '1';
+                TTS.presets.forEach(p => {
+                const row = document.createElement('div'); row.className = 'settings-row-header';
+                const label = document.createElement('span'); label.textContent = p.name;
+                const b = document.createElement('button'); b.type = 'button'; b.className = 'use-btn'; b.textContent = 'Test'; b.setAttribute('aria-label', 'Test ' + p.name);
+                b.addEventListener('click', () => { TTS.stop(); TTS.applyPreset(p.id); syncStudio(); TTS.test(); });
+                row.append(label,b); previews.appendChild(row);
+            });
+            });
+            preset.parentNode.insertBefore(previews, preset.nextSibling);
             vEl.test.addEventListener('click', () => TTS.test());
             TTS.onState(st => {
                 paintSpeakButtons(st);
                 const testing = st.id === 'test' && (st.state === 'loading' || st.state === 'playing');
                 vEl.test.textContent = testing ? 'Stop' : 'Test';
+                localTestButtons.forEach(b => { b.textContent = testing ? 'Stop' : 'Test'; });
                 vEl.test.classList.toggle('on', testing);
                 if (st.error) {
                     ttsToast(st.error, true);
@@ -7683,12 +7752,12 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
     <script src="horizon_mdview.js?v=1.93.0"></script>
     <script src="horizon_setai.js?v=1.93.0"></script>
     <script src="horizon_operator.js?v=1.93.0"></script>
-    <script src="horizon_lock.js?v=1.93.0"></script>
+    <script src="horizon_lock.js?v=1.93.1"></script>
     <script src="horizon_hdr2.js?v=1.93.0"></script>
     <script src="horizon_fold.js?v=1.93.0"></script>
     <script src="horizon_autoread.js?v=1.93.0"></script>
     <script src="horizon_daemon.js?v=1.93.0"></script>
-    <script src="horizon_checkin.js?v=1.93.0"></script>
+    <script src="horizon_checkin.js?v=1.93.1"></script>
     <script src="horizon_door.js?v=1.93.0"></script>
     <script src="horizon_speakwave.js?v=1.93.0"></script>
     <script src="horizon_laser.js?v=1.93.0"></script>
