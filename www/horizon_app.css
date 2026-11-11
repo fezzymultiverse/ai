@@ -4034,3 +4034,7 @@ html.hz-typing .avatar.live, html.hz-typing .meta-prov.live, html.hz-typing .sen
 html.hz-typing .hzb-net, html.hz-typing .hzb-net::after, html.hz-typing .th-step.act .th-dot, html.hz-typing .hzu-dot.run,
 html.hz-typing .att-card.busy .att-ic, html.hz-typing .ind-pv .ind-bar::after, html.hz-typing .hzsa-btn svg, html.hz-typing .gh-ring.spin .gh-arc,
 html.hz-typing .typing-indicator span { animation-play-state: paused !important; }
+
+/* V1.93.9: chat presets panel always opens; chips dim until there is an AI reply to act on */
+.hz-edge-tools.hz-idle .hz-chip{opacity:.45}.hz-edge-tools.hz-idle .hz-edge-handle span{opacity:.6}
+.hz-edge-handle{min-height:34px;touch-action:pan-y}

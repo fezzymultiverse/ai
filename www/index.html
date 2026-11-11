@@ -1382,8 +1382,10 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                         noteUsage(data.usage && (data.usage.prompt_tokens || data.usage.input_tokens), data.usage && (data.usage.completion_tokens || data.usage.output_tokens));
                         noteCut(data.stop_reason === 'max_tokens' ? 'length' : data.choices && data.choices[0] && data.choices[0].finish_reason);
                         const c = cfg.protocol === 'anthropic' ? (data.content || []).filter(p => p.type === 'text') : data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
-                        const out = (Array.isArray(c) ? c.map(p => (p && p.text) || '').join('') : (c || '')).trim();
-                        if (!out) throw new Error('Empty response' + (data.model ? ` from ${data.model}` : ''));
+                        const rawOut = (Array.isArray(c) ? c.map(p => (p && p.text) || '').join('') : (c || '')).trim();
+                        const sp = window.hzSplitThink(rawOut);   // V1.93.9: some models put their thinking in the reply as <think> text; keep it out of the chat
+                        const out = sp.text;
+                        if (!out) throw new Error(sp.cut ? cfg.name + ': the model used up its room thinking and sent no answer. Try again or pick another model.' : 'Empty response' + (data.model ? ` from ${data.model}` : ''));
                         return out;
                     }
                     const why = await errorText(res.clone());
@@ -1458,8 +1460,18 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         PROVIDERS.zai.billingNote = 'GLM Flash tier · free models, one request at a time on the free plan. Busy periods can return a limit message.';
         PROVIDERS.aionlabs = oaiGateway({name:'AionLabs',icon:'i-b-aionlabs',placeholder:'AionLabs API key',keyUrl:'https://aionlabs.ai',base:'https://api.aionlabs.ai/v1',defaultModel:'aion-labs/aion-2.0',fallbackModels:['aion-labs/aion-2.0','aion-labs/aion-2.5','aion-labs/aion-3.0','aion-labs/aion-3.5'],allow:/^(?:aion-labs\/)?aion-(?:2\.0|2\.5|3\.0|3\.5)$/i,modelsOptional:true});
         PROVIDERS.aionlabs.billingNote = 'Free provider · limits depend on your AionLabs account. Check your dashboard if replies stop.';
+        // V1.93.9: split <think>...</think> (also <thinking>/<reasoning>, and a lone </think>) off a reply. cut = the thinking never closed.
+        window.hzSplitThink = function (t) {
+            t = String(t || ''); let th = '', cut = false;
+            t = t.replace(/<(think|thinking|reasoning)>([\s\S]*?)<\/\1>/gi, (m, a, b) => { th += b.trim() + '\n'; return ''; });
+            const open = t.match(/<(think|thinking|reasoning)>/i);
+            if (open) { th += t.slice(open.index + open[0].length); t = t.slice(0, open.index); cut = true; }
+            const close = t.match(/<\/(think|thinking|reasoning)>/i);
+            if (close) { th += t.slice(0, close.index); t = t.slice(close.index + close[0].length); }
+            return { text: t.trim(), thought: th.trim(), cut };
+        };
         // LLM7.io: OpenAI-style, works with no key at all. A free token from LLM7 only raises the rate limit, so the key is optional.
-        PROVIDERS.llm7 = oaiGateway({name:'LLM7.io',icon:'i-b-llm7',placeholder:'LLM7 token (optional)',keyUrl:'https://llm7.io',base:'https://api.llm7.io/v1',defaultModel:'gpt-4o-mini',fallbackModels:['gpt-4o-mini','mistral-small-3.1-24b','qwen2.5-coder-32b'],modelsOptional:true,optionalKey:true,modelWalk:true});
+        PROVIDERS.llm7 = oaiGateway({name:'LLM7.io',icon:'i-b-llm7',placeholder:'LLM7 token (optional)',keyUrl:'https://llm7.io',base:'https://api.llm7.io/v1',defaultModel:'gpt-oss:20b',fallbackModels:['gpt-oss:20b','codestral-latest','mistral-Nemo-Instruct-2407'],modelsOptional:true,optionalKey:true,modelWalk:true});
         PROVIDERS.llm7.billingNote = 'Free · works without a key. The limit is low without a token; a free LLM7 token raises it. Limits can change, check LLM7 if replies stop.';
         // Cloudflare Workers AI: OpenAI-style at /accounts/<ACCOUNT_ID>/ai/v1. One key box holds "ACCOUNT_ID:API_TOKEN".
         const cfParts = k => { const m = /^([0-9a-fA-F]{32}):([A-Za-z0-9_.-]{20,})$/.exec(String(k || '').trim()); return m ? { acct: m[1], token: m[2] } : null; };
@@ -3229,7 +3241,8 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 const other = multi && m.role !== 'user' && m.prov && m.prov !== me && PROVIDERS[m.prov];
                 const role = (m.role === 'user' || other) ? 'user' : 'assistant';
                 const hasAtt = window.HorizonAttach && m.att && m.att.length;
-                const body = lite(m, i);
+                let body = lite(m, i);
+                if (m.role !== 'user' && window.hzSplitThink) { const sp = window.hzSplitThink(body); if (sp.text) body = sp.text; }   // V1.93.9: never pass an AI's leaked <think> text on to the next AI
                 let text = other ? `[${PROVIDERS[m.prov].name} said]: ${body}` : body;
                 if (hasAtt) text += '\n\n' + HorizonAttach.block(m.att, i === lastAtt);
                 const imgs = hasAtt && i === lastAtt ? HorizonAttach.images(m.att) : [];
@@ -3238,6 +3251,8 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 else out.push(imgs.length ? { role, text, imgs } : { role, text });
             });
             while (out.length && out[0].role !== 'user') out.shift();
+            // V1.93.9: the other AIs' replies are folded into a user turn, and small models then echo them. Say plainly whose turn it is.
+            if (multi && out.length) { const lt = out[out.length - 1]; if (lt.role === 'user' && /\[[^\]\n]{1,40} said\]:/.test(lt.text)) lt.text += '\n\n[Your turn. Answer Fezzy in your own words. Do not copy, quote or summarise what the other AIs said; add something new, or briefly agree or disagree.]'; }
             // V1.20.0: Lens pictures ride on the newest user message only (this turn, never stored in the chat).
             const lensImgs = window.HorizonLens ? HorizonLens.images() : [];
             if (lensImgs.length) {
@@ -4381,7 +4396,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
 
         async function fetchModels(id, key) {
             const p = PROVIDERS[id];
-            if (!p.keyless && !(p.optionalKey && !key)) {
+            if (!p.keyless && !p.optionalKey) {
                 const wrong = p.wrongKey(key);
                 if (wrong) throw new Error(wrong);
             }
@@ -4411,16 +4426,19 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 let check = null, usedModel = preferred;
                 for (const mdl of tryList) {
                     usedModel = mdl;
+                    try {
                     check = await timed(fetch(p.urlFor ? p.urlFor('chat', key) : p.chatUrl, {
                         method: 'POST', headers: Object.assign({'Content-Type':'application/json'}, p.headers(key)),
                         body: JSON.stringify({model: mdl, messages:[{role:'user',content:'Reply OK.'}],max_tokens:p.protocol === 'anthropic' ? 16 : 1,stream:false})
                     }), 45000);
+                    } catch (ne) { if (!p.optionalKey) throw ne; check = { ok: false, status: 0 }; break; }   // V1.93.9: optional token: a busy or unreachable server must not block saving it
                     if (check.ok || !p.modelWalk || [400, 404, 410, 503].indexOf(check.status) === -1) break;
                     p.dead.add(mdl);
                 }
                 if (check.ok && p.modelWalk && usedModel !== preferred) { state.models[id] = usedModel; lsSet(LS.model(id), usedModel); }
-                if (!check.ok) throw new Error(p.name + ' key could not be verified (HTTP ' + check.status + '). Nothing saved. Check the key, model access, quota or balance.');
-                const proof = await check.json();
+                const softOk = !check.ok && p.optionalKey && [0, 400, 404, 408, 410, 429, 500, 502, 503, 504].indexOf(check.status) !== -1;   // V1.93.9: only a 401/403 means the token itself is wrong
+                if (!check.ok && !softOk) throw new Error(p.name + ' key could not be verified (HTTP ' + check.status + '). Nothing saved. Check the key, model access, quota or balance.');
+                const proof = softOk ? { choices: [{}] } : await check.json();
                 if (proof.error || (p.protocol === 'anthropic' ? proof.type !== 'message' || !Array.isArray(proof.content) : !Array.isArray(proof.choices) || !proof.choices.length)) throw new Error(p.name + ' returned no authenticated completion. Nothing saved.');
             }
             if (p.modelWalk) { const live = list.filter(m => !p.dead.has(m)); if (live.length) list = live; }
@@ -4433,7 +4451,8 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             const btn = role(id, 'save');
             if (btn.disabled) return;
             if (p.keyless) { await refreshKeyless(id); return; }
-            const raw = (input.value || '').trim().replace(/^["']+|["']+$/g, '');
+            const raw0 = (input.value || '').trim().replace(/^["']+|["']+$/g, '');
+            const raw = p.optionalKey ? raw0.replace(/\s+/g, '') : raw0;   // V1.93.9: LLM7 tokens carry + / = and pick up line breaks when pasted
             let key = raw || state.keys[id];
             if (p.optionalKey && !key) { await refreshKeyless(id); return; }   // no token entered: just reload the free model list
             if (id === 'cloudflare') {
@@ -4459,7 +4478,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 setCardStatus(id, 'Paste a key first', 'error');
                 return;
             }
-            const wrong = p.wrongKey(key);
+            const wrong = p.optionalKey ? '' : p.wrongKey(key);   // V1.93.9: an LLM7 token can start with any letters
             if (wrong) {
                 input.classList.add('invalid');
                 setCardStatus(id, wrong, 'error');
@@ -4485,7 +4504,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 setCardStatus(id, `Validated · ••••${key.slice(-4)}`, 'ok');
             } catch (e) {
                 input.classList.add('invalid');
-                setCardStatus(id, 'Key not verified; nothing saved. Check provider, key, access, quota and connection.', 'error');
+                setCardStatus(id, 'Key not verified; nothing saved. ' + String((e && e.message) || 'Check provider, key, access, quota and connection.').slice(0, 170), 'error');
             } finally {
                 btn.disabled = false;
                 label.textContent = 'Save & validate';
@@ -4844,6 +4863,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             const u = sendBtn.querySelector('use');
             if (u) u.setAttribute('href', b ? '#i-stop' : '#i-up');
             decorateActions();
+            if (window.HorizonChips) HorizonChips.refresh();   // V1.93.9: re-check the reply tools handle whenever busy flips
         }
 
         async function runTurn(chat, p, key, model) {
@@ -7275,6 +7295,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         // V1.72.0: quick reply chips above the message box
         setTimeout(() => { if (window.HorizonChips) HorizonChips.init({
             anchor: toolMenu,
+            notice: (t, k) => notice(t, k),
             busy: () => !!state.busy,
             send: text => sendMessage({ text }),
             last: () => { const c = currentChat(); const m = c && c.messages ? c.messages.slice().reverse().find(x => x.role !== 'user' && x.text) : null; return m ? { prov: m.prov || '', name: m.prov && PROVIDERS[m.prov] ? PROVIDERS[m.prov].name : '', group: !!(c && c.group), img: !!m.img } : null; }
