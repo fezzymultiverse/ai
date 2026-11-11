@@ -1383,7 +1383,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                         noteCut(data.stop_reason === 'max_tokens' ? 'length' : data.choices && data.choices[0] && data.choices[0].finish_reason);
                         const c = cfg.protocol === 'anthropic' ? (data.content || []).filter(p => p.type === 'text') : data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
                         const rawOut = (Array.isArray(c) ? c.map(p => (p && p.text) || '').join('') : (c || '')).trim();
-                        const sp = window.hzSplitThink(rawOut);   // V1.93.9: some models put their thinking in the reply as <think> text; keep it out of the chat
+                        const sp = (window.hzSplitThink || (x => ({ text: x, thought: '', cut: false })))(rawOut);   // V1.93.9: some models put their thinking in the reply as <think> text; keep it out of the chat
                         const out = sp.text;
                         if (!out) throw new Error(sp.cut ? cfg.name + ': the model used up its room thinking and sent no answer. Try again or pick another model.' : 'Empty response' + (data.model ? ` from ${data.model}` : ''));
                         return out;
@@ -1472,6 +1472,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         };
         // LLM7.io: OpenAI-style, works with no key at all. A free token from LLM7 only raises the rate limit, so the key is optional.
         PROVIDERS.llm7 = oaiGateway({name:'LLM7.io',icon:'i-b-llm7',placeholder:'LLM7 token (optional)',keyUrl:'https://llm7.io',base:'https://api.llm7.io/v1',defaultModel:'gpt-oss:20b',fallbackModels:['gpt-oss:20b','codestral-latest','mistral-Nemo-Instruct-2407'],modelsOptional:true,optionalKey:true,modelWalk:true});
+        PROVIDERS.llm7.wrongKey = () => '';   // V1.93.9: an LLM7 token can start with any letters, so no look-alike-key rejection
         PROVIDERS.llm7.billingNote = 'Free · works without a key. The limit is low without a token; a free LLM7 token raises it. Limits can change, check LLM7 if replies stop.';
         // Cloudflare Workers AI: OpenAI-style at /accounts/<ACCOUNT_ID>/ai/v1. One key box holds "ACCOUNT_ID:API_TOKEN".
         const cfParts = k => { const m = /^([0-9a-fA-F]{32}):([A-Za-z0-9_.-]{20,})$/.exec(String(k || '').trim()); return m ? { acct: m[1], token: m[2] } : null; };
@@ -4396,7 +4397,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
 
         async function fetchModels(id, key) {
             const p = PROVIDERS[id];
-            if (!p.keyless && !p.optionalKey) {
+            if (!p.keyless && !(p.optionalKey && !key)) {
                 const wrong = p.wrongKey(key);
                 if (wrong) throw new Error(wrong);
             }
@@ -4478,7 +4479,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 setCardStatus(id, 'Paste a key first', 'error');
                 return;
             }
-            const wrong = p.optionalKey ? '' : p.wrongKey(key);   // V1.93.9: an LLM7 token can start with any letters
+            const wrong = p.wrongKey(key);
             if (wrong) {
                 input.classList.add('invalid');
                 setCardStatus(id, wrong, 'error');
