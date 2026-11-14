@@ -8,14 +8,6 @@ const server=http.createServer((req,res)=>{const pathname=decodeURIComponent(req
   const page=await browser.newPage({viewport:{width:412,height:915}});page.on('pageerror',e=>errors.push(e.message));
   await page.route('**/*',r=>r.request().url().startsWith('http://127.0.0.1:')?r.continue():r.abort());
   await page.goto('http://127.0.0.1:'+server.address().port,{waitUntil:'load'});await page.waitForTimeout(150);
-  await page.evaluate(async()=>{window.__xss=false;window.Capacitor={isNativePlatform:()=>true,Plugins:{HorizonWhatsApp:{status:async()=>({personal:true,toasts:true,aiSee:true}),consumeOpen:async()=>({}),drafts:async()=>({results:[],pending:false})}}};await HorizonWhatsAppFeature.refresh();});
-  await page.evaluate(()=>window.dispatchEvent(new CustomEvent('horizon-whatsapp',{detail:{id:'xss-preview',sender:'Friend <img src=x onerror=window.__xss=true>',text:'A private message',time:Date.now()}})));
-  await page.locator('#hzToasts button').filter({hasText:'☝ Pin'}).click();
-  assert.equal(await page.locator('.hz-wa-editor img').count(),0);assert.equal(await page.evaluate(()=>window.__xss),false);
-  await page.getByRole('button',{name:'Close',exact:true}).click();
-  for(const width of [320,412,768]){await page.setViewportSize({width,height:915});const rect=await page.locator('#hzWaPinned').boundingBox();assert.ok(rect.x>=0&&rect.x+rect.width<=width+1);}
-  checks.push('pinned notification sender is escaped and responsive; no Contacts messenger is loaded');
-  await page.locator('#hzWaPinned button').last().click();assert.equal(await page.evaluate(()=>HorizonWhatsAppFeature.block()),'');checks.push('Unpin clears the private preview from AI context');
   await page.reload({waitUntil:'load'});await page.waitForTimeout(300);
   const input=page.locator('#chatInput');await input.focus();await page.keyboard.type('Typing remains responsive. ');assert.equal(await input.inputValue(),'Typing remains responsive. ');
   await page.evaluate(()=>{const box=document.getElementById('chatInput');box.dispatchEvent(new CompositionEvent('compositionstart'));box.value+='IME composition';box.dispatchEvent(new InputEvent('input',{bubbles:true,isComposing:true}));window.hzKbNative(false,false);});

@@ -121,7 +121,6 @@
     function lock() {
         if (locked || !enabled() || !document.body) return;
         locked = true; typed = '';
-        if (window.HorizonWhatsAppFeature) HorizonWhatsAppFeature.clear();
         box = el('div', 'hzl'); box.id = 'hzLock'; box.setAttribute('role', 'dialog'); box.setAttribute('aria-modal', 'true'); box.setAttribute('aria-label', 'Horizon is locked');
         box.appendChild(el('div', 'hzl-brand', 'BOJACK SECURITY'));
         box.appendChild(el('div', 'hzl-title', 'Horizon is locked'));

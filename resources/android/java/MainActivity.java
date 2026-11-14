@@ -55,7 +55,6 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(HorizonLensPlugin.class);
         registerPlugin(HorizonStatsPlugin.class);
         registerPlugin(HorizonBrowserPlugin.class);
-        registerPlugin(HorizonWhatsAppPlugin.class);
         registerPlugin(HorizonCheckinPlugin.class);
         registerPlugin(HorizonTermuxPlugin.class);
         registerPlugin(HorizonExtractorPlugin.class);
@@ -71,6 +70,17 @@ public class MainActivity extends BridgeActivity {
                 assets.edit().putString("release", release).putBoolean("android_voice_studio_v1", true).apply();
             }
         } catch (Exception ignored) { /* Do not erase user storage or block launch. */ }
+        // V1.93.9: the WhatsApp notification-preview feature was removed. Wipe anything an older build left on this phone.
+        try {
+            android.content.SharedPreferences oldWa = getSharedPreferences("horizon_whatsapp", MODE_PRIVATE);
+            if (!oldWa.getAll().isEmpty()) oldWa.edit().clear().apply();
+            androidx.work.WorkManager.getInstance(this).cancelAllWorkByTag("horizon-wa-draft");
+            if (Build.VERSION.SDK_INT >= 26) {
+                android.app.NotificationManager waNm = (android.app.NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+                waNm.deleteNotificationChannel("horizon_whatsapp_v1");
+                waNm.deleteNotificationChannel("horizon_whatsapp_drafts_v2");
+            }
+        } catch (Exception ignored) { /* nothing to clean up, never block launch */ }
         handleAlarmIntent(getIntent());           // V1.68.0: opened by a ringing alarm: show over the lock screen
         showLastCrash();                          // V1.63.2: a saved crash report from the last run, if any
         HorizonPermsPlugin.paintBackdrop(this);   // V1.44.0: theme colour behind the page, no white flash
@@ -362,7 +372,6 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onPause() {
         HorizonAIPlugin.foreground = false;
-        HorizonWhatsAppListener.uiVisible = false;
         HorizonPermsPlugin.paintBackdrop(this);   // V1.44.0: repaint before Android hides the page
         super.onPause();
         // Let a reply that is still being fetched finish while the app is in the background.
@@ -377,7 +386,6 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onResume() {
         HorizonAIPlugin.foreground = true;
-        HorizonWhatsAppListener.uiVisible = true;
         super.onResume();
         HorizonPermsPlugin.paintBackdrop(this);
         requestHighRefresh();

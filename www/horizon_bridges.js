@@ -1,8 +1,8 @@
 /* Targeted native integrations. Existing chat, providers, Vault and shell stay intact. */
 (function () {
   'use strict';
-  var states = { wa: {}, termux: {} }, refreshing = null, recent = [];
-  var SRC = '\\[\\[(whatsapp\\.(?:read|reply|compose|send)|termux\\.(?:run|status|install))(?::\\s*((?:(?!\\]\\])[\\s\\S])*?))?\\s*\\]\\]|```(termux\\.run)[ \\t]*\\n([\\s\\S]*?)```';
+  var states = { termux: {} }, refreshing = null, recent = [];
+  var SRC = '\\[\\[(termux\\.(?:run|status|install))(?::\\s*((?:(?!\\]\\])[\\s\\S])*?))?\\s*\\]\\]|```(termux\\.run)[ \\t]*\\n([\\s\\S]*?)```';
   function plugin(name) { var c = window.Capacitor; return c && c.isNativePlatform && c.isNativePlatform() && c.Plugins && c.Plugins[name]; }
   function notice(text, bad) { if (window.HzToast) HzToast.show({ title: bad ? 'Needs attention' : 'Horizon bridge', sub: String(text), kind: bad ? 'bad' : '', ms: 8000 }); }
   function error(e) { return String(e && e.message || e); }
@@ -11,7 +11,6 @@
   async function refresh() {
     if (refreshing) return refreshing;
     refreshing = Promise.all([
-      plugin('HorizonWhatsApp') ? plugin('HorizonWhatsApp').status().then(function (s) { states.wa = s; }) : Promise.resolve(),
       plugin('HorizonTermux') ? plugin('HorizonTermux').status().then(function (s) { states.termux = s; }) : Promise.resolve()
     ]).catch(function (e) { notice(error(e), true); }).then(async function () {
       refreshing = null;
@@ -63,7 +62,7 @@
     var out = document.getElementById('hzTermuxStatus'); if (out) out.textContent = 'Last job: ' + r.id + ' · exit ' + r.exitCode;
   });
   document.addEventListener('visibilitychange', function () { if (document.hidden && approvalToken) closeApproval(false); });
-  function mount() { if (window.HorizonWhatsAppFeature) HorizonWhatsAppFeature.mount(); refresh(); }
+  function mount() { refresh(); }
   function mountTermux(host) {
     if (!host || document.getElementById('hzTermuxCard')) return;
     if (window.HorizonHub) window.HorizonHub.mount(host); paint();
@@ -194,7 +193,6 @@
     var rows = [];
     if (states.termux.enabled && states.termux.aiEnabled) rows.push('UNIFIED TERMUX TERMINAL (LIVE): ' + (window.HorizonRunLog ? HorizonRunLog.knowHow() : '') + ' [[termux.run: command]] runs a command; if the command contains ]] (for example bash [[ ]] tests) or spans many lines, use a fenced block whose language is exactly termux.run instead. [[termux.status]] checks permission; [[termux.install]] offers Python, yt-dlp, FFmpeg, curl and aria2. Music, video, playlists and ordinary file downloads work with yt-dlp, FFmpeg, curl or aria2c when installed (the YOUTUBE DOWNLOADS recipes above are the exact commands); save to $HOME/storage/downloads/Horizon if writable, otherwise $HOME/horizon-downloads, never bypass DRM. Every result starts with exit N; the run is also streaming in the terminal so Fezzy sees it; the AI mode in Terminal Controls decides whether he must approve each command.');
     else if (states.termux.installed) rows.push('TERMINAL IS OFF: Fezzy has a real Termux terminal you can drive with [[termux.run: command]]. It is not usable yet (' + (!states.termux.enabled ? 'Termux bridge is off' : !states.termux.aiEnabled ? 'AI mode is OFF' : 'Run commands permission missing') + '). If Fezzy asks you to run something, do NOT pretend to run it and do NOT emit the tool: tell him exactly to open Settings > Permissions > Terminal Controls, switch the Termux bridge on, set AI mode to ASK (he approves each command) or AUTO (runs by itself, needed when the app is in the background), grant Run commands, and make sure allow-external-apps=true is set in ~/.termux/termux.properties.');
-    if (window.HorizonWhatsAppFeature) { if (HorizonWhatsAppFeature.guide) rows.push(HorizonWhatsAppFeature.guide()); rows.push(HorizonWhatsAppFeature.block()); }   // V1.93.9: every AI always knows the feature; the pinned preview itself still goes only when pinned and allowed
     return rows.join('\n');
   }
   async function run(kind, arg) {
@@ -205,7 +203,7 @@
         var r = await termux(kind === 'termux.install' ? installCommand() : arg, kind === 'termux.install' ? 900000 : 600000, true);
         var rt = resultText(r); return { text: (r.exitCode !== 0 || r.error ? 'ERROR: ' : '') + (r.live ? rt.slice(-12000) : rt.slice(0, 12000)) };
       }
-      return { text: 'ERROR: WhatsApp is a viewer and draft editor only. Pin a preview and request a draft. Sending and automatic app opening are not supported.' };
+      return { text: 'ERROR: Unknown bridge tool.' };
     } catch (e) { return { text: 'ERROR: ' + error(e) }; }
   }
   document.addEventListener('visibilitychange', function () { if (!document.hidden) refresh(); });

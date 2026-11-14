@@ -427,12 +427,12 @@
             </div>
 
             <div class="tab-body" role="tabpanel" data-tab="permissions" hidden>
-            <div id="hzTerminalPermissions" class="hz-permissions" aria-label="Device permissions and WhatsApp">
+            <div id="hzTerminalPermissions" class="hz-permissions" aria-label="Device permissions">
                 <section class="provider-card" id="permIntro">
                     <div class="settings-row-header">
                         <div class="settings-row-content">
                             <h3><svg class="ic" aria-hidden="true"><use href="#i-shield"/></svg> Permissions</h3>
-                            <p>Device access · WhatsApp · privacy</p>
+                            <p>Device access · privacy</p>
                         </div>
                     </div>
                     <p class="hint">Tap a switch to turn it on. Horizon asks Android for the permission itself. If Android already blocked the prompt, Horizon opens the right settings page for you.</p>
@@ -733,7 +733,6 @@
     <script src="horizon_native_audio.js?v=1.93.8"></script>
     <script src="horizon_music.js?v=1.93.8"></script>
     <script src="horizon_runlog.js?v=1.93.8"></script>
-    <script src="horizon_whatsapp_feature.js?v=1.93.8"></script>
     <script src="horizon_display.js?v=1.93.9"></script>
     <script src="horizon_bridges.js?v=1.93.8"></script>
     <script src="horizon_hub.js?v=1.93.8"></script>
@@ -1487,16 +1486,6 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         PROVIDERS.cloudflare.billingNote = 'Free allowance of 10,000 neurons a day, resets at 00:00 UTC. Fill in both boxes: your Cloudflare Account ID and an API token with Workers AI access.';
         // V1.93.3: SambaNova and NVIDIA NIM removed.
         const PROVIDER_IDS = Object.keys(PROVIDERS);
-        PROVIDER_IDS.forEach(id => {
-            const original = PROVIDERS[id].chat;
-            if (typeof original !== 'function') return;
-            PROVIDERS[id].chat = async function (...args) {
-                if (window.HorizonWhatsAppFeature && HorizonWhatsAppFeature.prepare) {
-                    await HorizonWhatsAppFeature.prepare();
-                }
-                return original.apply(this, args);
-            };
-        });
         // Public model catalogs are NOT proof that a secret belongs to this provider.
         PROVIDER_IDS.forEach(id => {
             if (PROVIDERS[id].keyless) return;
@@ -3311,7 +3300,6 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         }
 
         function openChat(id) {
-            if (window.HorizonWhatsAppFeature) HorizonWhatsAppFeature.clear();
             const chat = state.chats.find(c => c.id === id);
             if (!chat) return;
             state.currentId = id;
@@ -3323,7 +3311,6 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         }
 
         function newChat() {
-            if (window.HorizonWhatsAppFeature) HorizonWhatsAppFeature.clear();
             skipTyping();
             ttsStop();
             state.currentId = null;
@@ -5296,7 +5283,6 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             if (!opts.text && window.HzMsgMenu && HzMsgMenu.takeQuote) { const q = HzMsgMenu.takeQuote(); if (q) text = q + '\n\n' + text; }   // V1.77.0 F3
             if (atts.some(a => a.kind === 'image' || (a.kind === 'pdf' && !a.chars)) && !canSeeImages(id, state.models[id])) notice(`${p.name} (${state.models[id]}) cannot see pictures. Switch to Gemini to have images read.`, 'error');
             const chat = ensureChat();
-            if (window.HorizonWhatsAppFeature) HorizonWhatsAppFeature.bindChat(chat.id);
             if (window.HorizonCheckin && /\b(?:automatically|on your own|every\s+\d+\s*(?:min|minute)|check\s*in\s*(?:on|with)\s*me)\b/i.test(text)) HorizonCheckin.offer(text);
             const lastAi = chat.messages.slice().reverse().find(m => m.role !== 'user');
             docMode = !state.pdfOn ? '' : (opts.pdf ? 'forced' : wantsPdf(text) || (lastAi && /<artifact\b/i.test(lastAi.text) && PDF_FOLLOW.test(text)) ? 'auto' : '');
@@ -5415,7 +5401,6 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             setBusy(true);
             showLoading(docMode ? 'Writing your PDF...' : thinkLabel());
             thoughtAnalyse(text, chat, p, state.models[id]);
-            if (window.HorizonWhatsAppFeature && HorizonWhatsAppFeature.hasContext()) thoughtAdd('i-whatsapp', 'Pinned notification preview', true, 'Draft only · nothing will be sent to WhatsApp');
             const t0 = Date.now();
 
             try {
@@ -6068,14 +6053,6 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         }
         const openAppSettings = () => callNative('HorizonPerms', 'openAppSettings');
 
-        // V1.46.0: one-shot ask for the floating AI box in the terminal. Not saved in any chat. It only returns text; nothing is ever run.
-        window.HorizonFeatureHost = {
-            chatId: () => state.currentId || 'new',
-            busy: () => state.busy,
-            send: text => sendMessage({text}),
-            current: () => currentChat(),
-            thought: (label, detail) => thoughtAdd('i-whatsapp', label, true, detail)
-        };
         window.HorizonCheckinSnapshot = function () {
             const id = state.active, p = PROVIDERS[id];
             if (window.HzLock && HzLock.locked()) throw new Error('Unlock Horizon first');

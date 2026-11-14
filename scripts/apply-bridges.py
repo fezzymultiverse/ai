@@ -6,12 +6,15 @@ from pathlib import Path
 root = Path(__file__).resolve().parent.parent
 app_id = json.loads((root / 'capacitor.config.json').read_text())['appId']
 java = root / 'android/app/src/main/java' / app_id.replace('.', '/')
-for name in ('HorizonWhatsAppPlugin.kt', 'HorizonTermuxPlugin.kt', 'HorizonExtractorPlugin.kt', 'HorizonCheckinPlugin.kt', 'HorizonWhatsAppDraftWorker.kt'):
+for name in ('HorizonTermuxPlugin.kt', 'HorizonExtractorPlugin.kt', 'HorizonCheckinPlugin.kt'):
     text = (root / 'resources/android/java' / name).read_text().replace('__APPID__', app_id)
     assert '__APPID__' not in text
     (java / name).write_text(text)
 # Remove obsolete Accessibility sender from an already-generated platform too.
 (java / 'HorizonWhatsAppAccessibility.kt').unlink(missing_ok=True)
+# The WhatsApp notification-preview feature was removed: purge its old sources from an already-generated platform too.
+for name in ('HorizonWhatsAppPlugin.kt', 'HorizonWhatsAppDraftWorker.kt'):
+    (java / name).unlink(missing_ok=True)
 (root / 'android/app/src/main/res/xml/horizon_whatsapp_accessibility.xml').unlink(missing_ok=True)
 m = root / 'android/app/src/main/AndroidManifest.xml'
 s = m.read_text()
@@ -19,18 +22,15 @@ s = m.read_text()
 s = re.sub(r'\s*<uses-permission\s+android:name="android.permission.READ_CONTACTS"\s*/>', '', s)
 if 'com.termux.permission.RUN_COMMAND' not in s:
     s = s.replace('</manifest>', '    <uses-permission android:name="com.termux.permission.RUN_COMMAND" />\n</manifest>')
-if 'android:name=".HorizonWhatsAppListener"' not in s:
-    s = s.replace('</application>', '''    <service android:name=".HorizonWhatsAppListener" android:label="Horizon WhatsApp access"
-            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" android:exported="true">
-            <intent-filter><action android:name="android.service.notification.NotificationListenerService" /></intent-filter>
-        </service>
-        <receiver android:name=".HorizonTermuxResultReceiver" android:exported="false" />
+# Purge the removed WhatsApp notification listener service and its package queries from an already-generated platform.
+s = re.sub(r'\s*<service[^>]*android:name="\.HorizonWhatsAppListener"[\s\S]*?</service>', '', s)
+s = re.sub(r'\s*<package\s+android:name="com\.whatsapp(?:\.w4b)?"\s*/>', '', s)
+if 'android:name=".HorizonTermuxResultReceiver"' not in s:
+    s = s.replace('</application>', '''    <receiver android:name=".HorizonTermuxResultReceiver" android:exported="false" />
     </application>''')
 if '<package android:name="com.termux"' not in s:
     s = s.replace('</manifest>', '''    <queries>
         <package android:name="com.termux" />
-        <package android:name="com.whatsapp" />
-        <package android:name="com.whatsapp.w4b" />
     </queries>
 </manifest>''')
 # Preserve every existing application attribute, adding only bridge data backup exclusions.
@@ -38,7 +38,7 @@ if 'android:fullBackupContent=' not in s:
     s = s.replace('<application', '<application android:fullBackupContent="@xml/horizon_bridge_backup"', 1)
 if 'android:dataExtractionRules=' not in s:
     s = s.replace('<application', '<application android:dataExtractionRules="@xml/horizon_bridge_extraction"', 1)
-# No Accessibility sender: WhatsApp is strictly a viewer/editor.
+# No Accessibility sender.
 s = re.sub(r'<service[^>]*android:name="\.HorizonWhatsAppAccessibility"[\s\S]*?</service>', '', s)
 m.write_text(s)
 g = root / 'android/build.gradle'
@@ -59,13 +59,11 @@ g = root / 'android/app/proguard-rules.pro'
 s = g.read_text()
 if '# Horizon NewPipe' not in s:
     s += '\n# Horizon NewPipe\n-keep class org.mozilla.javascript.** { *; }\n-keep class org.mozilla.classfile.ClassFileWriter\n-dontwarn org.mozilla.javascript.tools.**\n'
-draft_rule = '-keep class ' + app_id + '.HorizonWhatsAppDraftWorker { public <init>(android.content.Context, androidx.work.WorkerParameters); }'
-if draft_rule not in s: s += '\n' + draft_rule + '\n'
 worker_rule = '-keep class ' + app_id + '.HorizonCheckinWorker { public <init>(android.content.Context, androidx.work.WorkerParameters); }'
 if worker_rule not in s:
     s += '\n' + worker_rule + '\n'
 g.write_text(s)
-for plugin in ('HorizonWhatsAppPlugin', 'HorizonTermuxPlugin', 'HorizonExtractorPlugin', 'HorizonCheckinPlugin'):
+for plugin in ('HorizonTermuxPlugin', 'HorizonExtractorPlugin', 'HorizonCheckinPlugin'):
     assert 'registerPlugin(' + plugin + '.class)' in (java / 'MainActivity.java').read_text(), plugin
 assert 'HorizonTermuxResultReceiver' in m.read_text()
-print('[apply-bridges] WhatsApp, Termux and NewPipe sources + manifest + dependencies verified.')
+print('[apply-bridges] Termux, check-in and NewPipe sources + manifest + dependencies verified.')

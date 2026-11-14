@@ -26,7 +26,6 @@ const server=http.createServer((req,res)=>{
   await page.evaluate(()=>{
    window.__calls=[];window.__xss=false;
    window.Capacitor={isNativePlatform:()=>true,Plugins:{
-    HorizonWhatsApp:{status:async()=>({personal:true,replies:true,silent:true,access:true,connected:true,notifications:true}),read:async()=>({messages:[{id:'m1',conversation:'Test contact',sender:'Test contact',text:'<img src=x onerror="window.__xss=true">',time:1,canReply:true},{id:'m2',conversation:'Expired',sender:'Expired',text:'Old message',time:2,canReply:false}]}),reply:async x=>{window.__calls.push({kind:'reply',...x});return{submitted:true,delivered:false};}},
     HorizonTermux:{status:async()=>({enabled:true}),resolveApproval:async x=>{window.__calls.push({kind:'approval',...x});}}
    }};
   });
