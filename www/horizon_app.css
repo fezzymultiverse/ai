@@ -4038,3 +4038,8 @@ html.hz-typing .typing-indicator span { animation-play-state: paused !important;
 /* V1.93.9: chat presets panel always opens; chips dim until there is an AI reply to act on */
 .hz-edge-tools.hz-idle .hz-chip{opacity:.45}.hz-edge-tools.hz-idle .hz-edge-handle span{opacity:.6}
 .hz-edge-handle{min-height:34px;touch-action:pan-y}
+
+/* V1.93.9: WhatsApp pills show the message (up to 3 lines) instead of a one-line cut-off */
+#hzToasts .hz-tt.hz-wa-toast{border-radius:18px;align-items:flex-start}
+#hzToasts .hz-tt.hz-wa-toast .hz-tt-tx small{white-space:normal;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;opacity:.92}
+#hzToasts .hz-tt.hz-wa-toast .hz-tt-act{align-self:center;white-space:nowrap}

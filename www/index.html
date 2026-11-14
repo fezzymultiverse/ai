@@ -1195,6 +1195,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                     const sys = getSystemPrompt();
                     let cap = docMode ? 8000 : 0;
                     let lastWhy = 'Request failed';
+                    let fellBack = false;   // V1.93.9: was declared in another provider, so any OpenRouter error crashed with "fellBack is not defined"
                     const sleep = ms => new Promise(r => setTimeout(r, ms));
                     for (let attempt = 0; attempt < 4; attempt++) {
                         turnCheck(T);
@@ -5232,11 +5233,11 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 if (state.currentId === chat.id) await addAiMessage(reply, aiMsg.ts, false, ms, Object.assign({}, info, { imgSrc: shown }), thoughtWasOpen);
             } catch (e) {
                 if (e && e.skipped) {
-                    thoughtAdd('i-x', `${p.name} skipped`, true, 'No reply after 30 seconds. Tap Retry to try it again.', true);
+                    // V1.93.9: this is the image path, so there is no provider object or old reply to restore; the old code threw a ReferenceError here
+                    thoughtAdd('i-x', 'Pollinations skipped', true, 'No reply after 30 seconds. Tap Retry to try it again.', true);
                     lastTurnErr = e;
                     hideLoading();
-                    restoreOld();
-                    if (state.currentId === chat.id) notice(`${p.name} skipped. Moving on.`);
+                    if (state.currentId === chat.id) notice('Pollinations skipped. Moving on.');
                 } else if (e && e.stopped) {
                     thoughtAdd('i-x', 'Stopped by you', true, 'The image request was cancelled.', true);
                     hideLoading();

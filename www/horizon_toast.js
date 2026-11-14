@@ -17,7 +17,7 @@
     var host = ensure();
     var el = document.createElement('button');
     el.type = 'button';
-    el.className = 'hz-tt' + (o.kind ? ' ' + o.kind : '');
+    el.className = 'hz-tt' + (o.kind ? ' ' + o.kind : '') + (o.cls ? ' ' + o.cls : '');
     var ic = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     ic.setAttribute('class', 'ic');
     ic.setAttribute('aria-hidden', 'true');

@@ -278,10 +278,10 @@
       HzToast.show({
         icon: 'i-whatsapp',
         title: m.sender || 'WhatsApp',
-        sub:
-          (state.askDraft ? 'Need a reply draft? ' : '') +
-          String(m.text || '').slice(0, 220),
-        act: '☝ Pin',
+        // V1.93.9: the message itself comes first and wraps over up to 3 lines; the draft invitation moved to the button so it no longer hides the text.
+        sub: String(m.text || '').trim().slice(0, 220) || 'Preview hidden by WhatsApp',
+        cls: 'hz-wa-toast',
+        act: state.askDraft ? '☝ Pin · draft?' : '☝ Pin',
         ms: 12000,
         onTap: function () {
           pin(m);
@@ -507,9 +507,28 @@
         sender: m.sender,
         text: String(m.text || '').slice(0, 8000),
         business: !!m.business,
+        currentDraft: m.draft ? String(m.draft).slice(0, 4000) : undefined,
+        draftInstruction: m.instruction ? String(m.instruction).slice(0, 500) : undefined,
       }) +
       "\nViewer and draft editor ONLY. Follow the user's draft instructions. Never send, invoke messaging tools, or claim delivery. Nothing opens WhatsApp automatically. Do not reveal unrelated messages."
     );
+  }
+  // V1.93.9: every AI is told how this feature works and what state it is in, so none of them says it "can't see WhatsApp" when it can see a pinned preview.
+  function guide() {
+    if (locked()) return '';
+    var srcs = [];
+    if (state.personal) srcs.push('Personal WhatsApp');
+    if (state.business) srcs.push('WhatsApp Business');
+    var g =
+      'WHATSAPP NOTIFICATION PREVIEWS (a Horizon feature you know about; never claim it does not exist): Horizon can capture the notification previews WhatsApp shows on this phone (sources selected: ' +
+      (srcs.length ? srcs.join(' and ') : 'none') +
+      '). Each new preview appears as a small pill and the user taps the hand on it to PIN it. You can READ a pinned preview (sender and the preview text Android showed, never full chat history, hidden previews or other chats), WRITE a reply draft from it, and READ and EDIT the current draft of the user when it is shown below as currentDraft: improve it, shorten it, change the tone or fix it as asked, and put the new wording in your reply so they can copy it or paste it into the draft box. The user edits the draft in the Preview & draft editor. You cannot send, and you cannot open WhatsApp. If asked what a WhatsApp message says: if a pinned preview is shown below, answer from it; if not, say plainly that you can read a message once it is pinned, then explain the steps. Status now: ';
+    if (!native()) return g + 'not available in this browser build; the Android app is needed.';
+    if (!state.access) return g + 'Android notification access is not granted yet. Tell the user to open Terminal Controls, then Notification reply drafts, then Grant notification access.';
+    if (!srcs.length) return g + 'no WhatsApp source is selected. Tell the user to switch on Personal WhatsApp and/or WhatsApp Business under Notification reply drafts in Terminal Controls.';
+    if (!state.aiSee) return g + 'sharing with the AI is OFF. Tell the user to switch on "Allow AI to see pinned messages" under Notification reply drafts in Terminal Controls, then pin a preview.';
+    if (!currentPin()) return g + 'connected and ready, but nothing is pinned in this chat. Tell the user to tap the hand on a WhatsApp pill (or wait for the next message and pin it), then ask you again.';
+    return g + 'connected and a preview is pinned (below).';
   }
   window.addEventListener('horizon-whatsapp', function (e) {
     toast(e.detail || {});
@@ -534,6 +553,7 @@
   window.HorizonWhatsAppFeature = {
     mount: mount,
     block: block,
+    guide: guide,
     hasContext: function () {
       return !!block();
     },
