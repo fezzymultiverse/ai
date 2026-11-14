@@ -16,6 +16,13 @@ TARGETS = [
     ('POST', 'https://api.anyapi.ai/v1/chat/completions'),
     ('GET', 'https://api.routeway.ai/v1/models'),
     ('POST', 'https://api.routeway.ai/v1/chat/completions'),
+    ('GET', 'https://router.requesty.ai/v1/models'),
+    ('GET', 'https://models.github.ai/catalog/models'),
+    ('GET', 'https://api.kilo.ai/api/gateway/models'),
+    ('GET', 'https://oai.endpoints.kepler.ai.cloud.ovh.net/v1/models'),
+    ('POST', 'https://api.kilo.ai/api/gateway/chat/completions'),
+    ('POST', 'https://models.github.ai/inference/chat/completions'),
+    ('POST', 'https://router.requesty.ai/v1/chat/completions'),
 ]
 
 def probe(target):

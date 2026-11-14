@@ -4078,3 +4078,12 @@ html.hz-typing .typing-indicator span { animation-play-state: paused !important;
 .hzt-run-done .hzt-run-x{display:none}
 .hzt-run-ok{border-top-color:#22c55e}.hzt-run-ok .hzt-run-sp,.hzt-run-ok .hzt-run-a{color:#4ade80;text-shadow:none}
 .hzt-run-bad{border-top-color:#ff3b5c}.hzt-run-bad .hzt-run-sp,.hzt-run-bad .hzt-run-a{color:#ff6b86;text-shadow:none}
+
+/* V1.93.19: GitHub is a Settings row directly below PERSONALISATION (id hzLeftGh), no longer in the left Menu */
+/* V1.93.19: GitHub row keeps its logo (purple, same as the old Github Push button) with a purple edge like Vault and Security */
+#hzLeftGh .set-ic{width:24px;height:24px;color:#b388ff;stroke:#b388ff;fill:currentColor}
+#hzLeftGh{box-shadow:inset 3px 0 0 #b388ff}
+.settings-home #hzLeftGh .set-text h3{color:#b388ff}
+html[data-theme="grey"] #hzLeftGh .set-ic{color:#7c4dff;stroke:#7c4dff}
+html[data-theme="grey"] #hzLeftGh{box-shadow:inset 3px 0 0 #7c4dff}
+html[data-theme="grey"] .settings-home #hzLeftGh .set-text h3{color:#7c4dff}

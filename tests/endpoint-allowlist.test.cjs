@@ -16,7 +16,7 @@ test('native allowlist was parsed', () => {
 });
 
 test('gateway providers are allowed by the native bridge', () => {
-  for (const host of ['api.anyapi.ai', 'api.routeway.ai', 'api.gonkarouter.io']) {
+  for (const host of ['api.anyapi.ai', 'api.routeway.ai', 'api.gonkarouter.io', 'router.requesty.ai', 'models.github.ai', 'api.kilo.ai', 'oai.endpoints.kepler.ai.cloud.ovh.net']) {
     assert.ok(allowed.has(host), host + ' missing from HorizonAIPlugin.kt allowlist');
   }
 });
