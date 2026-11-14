@@ -68,13 +68,13 @@
         var c = chat(), show = !!(run && c && run.chatId === c.id);
         strip.hidden = !show;
         if (!show) return;
-        var now = Date.now(), slowId = '';
+        var now = Date.now(), thinkId = '';   // V1.93.29: Skip shows for whichever AI is thinking, from the first second
         strip.replaceChildren();
         run.order.forEach(function (id) {
             var s = run.st[id]; if (!s) return;
             var p = provOf(id), nm = p ? p.name : id;
             var slow = s.s === 'think' && now - s.t0 >= SLOW_MS;
-            if (slow) slowId = id;
+            if (s.s === 'think') thinkId = id;
             var it = el('span', 'hzr-it ' + s.s + (slow ? ' slow' : ''));
             it.appendChild(el('i', 'hzr-dot'));
             it.appendChild(el('span', 'hzr-t', nm));
@@ -85,9 +85,9 @@
             it.appendChild(el('span', 'hzr-s', tx));
             strip.appendChild(it);
         });
-        if (slowId) {
+        if (thinkId) {
             var sk = el('button', 'hzr-skip', 'Skip'); sk.type = 'button';
-            sk.setAttribute('aria-label', 'Skip ' + (provOf(slowId) ? provOf(slowId).name : 'this AI') + ' and carry on');
+            sk.setAttribute('aria-label', 'Skip ' + (provOf(thinkId) ? provOf(thinkId).name : 'this AI') + ' and carry on');
             sk.addEventListener('click', function () { safe(cfg.skip); });
             strip.appendChild(sk);
         }

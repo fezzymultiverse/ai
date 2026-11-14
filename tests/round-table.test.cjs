@@ -40,7 +40,10 @@ test('V1.93.6 round strip logic: slow after 30 s, skip, end', () => {
     HzRound.init({ input: { value: '', focus() {} }, current: () => chat, providers: () => [{ id: 'a', name: 'A', icon: 'i' }, { id: 'b', name: 'B', icon: 'i' }],
         skip: () => { skips++; }, onSlow: (id) => slow.push(id) });
     const tok = HzRound.start(chat, [{ id: 'a' }, { id: 'b' }]);
+    const strip = anchor.children[0].children[1];
+    assert.ok(!strip.children.some(c => c.className === 'hzr-skip'), 'no Skip while every AI is only queued');
     HzRound.set('a', 'think');
+    assert.ok(strip.children.some(c => c.className === 'hzr-skip'), 'V1.93.29: Skip is offered the moment an AI starts thinking, not after 30 s');
     now += 29000; tickFn(); assert.deepStrictEqual(slow, []);
     now += 2000; tickFn(); assert.deepStrictEqual(slow, ['a']);
     now += 5000; tickFn(); assert.deepStrictEqual(slow, ['a']);   // told once, not every second

@@ -20,9 +20,14 @@ TARGETS = [
     ('GET', 'https://models.github.ai/catalog/models'),
     ('GET', 'https://api.kilo.ai/api/gateway/models'),
     ('GET', 'https://oai.endpoints.kepler.ai.cloud.ovh.net/v1/models'),
+    ('POST', 'https://ch.at/v1/chat/completions'),
     ('POST', 'https://api.kilo.ai/api/gateway/chat/completions'),
     ('POST', 'https://models.github.ai/inference/chat/completions'),
     ('POST', 'https://router.requesty.ai/v1/chat/completions'),
+    ('GET', 'https://api.anthropic.com/v1/models'),
+    ('GET', 'https://api.openai.com/v1/models'),
+    ('GET', 'https://api.deepseek.com/models'),
+    ('GET', 'https://api.x.ai/v1/models'),
 ]
 
 def probe(target):

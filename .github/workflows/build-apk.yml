@@ -60,6 +60,8 @@ jobs:
           npm run test:browser
           npm run test:voice-browser
           npm run test:closed-feature
+          npm run test:key-boxes
+          npm run test:paid-providers
 
       - name: Apply app identity from repo variables
         env:

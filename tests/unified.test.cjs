@@ -6,7 +6,8 @@ const vm=require('node:vm');
 const root=path.resolve(__dirname,'..');
 require('../www/horizon_key_import.js');
 const K=global.HorizonKeyImport;
-const key='Ab9cd7Ef5Gh3Jk1Lm2Np4Qr6St8Uv0Wx';
+const MK=['Zx9yWv8uTs7rQp6o','Nm5lKj4iHg3fEd2c'].join('');
+const key=['Ab9cd7Ef5Gh3Jk1L','m2Np4Qr6St8Uv0Wx'].join('');
 test('scraper labels in JSON/env/markdown/HTML are extracted without executing markup',()=>{
  for(const note of ['FIRECRAWL_API_KEY="fc-'+key+'"','{"firecrawl":"fc-'+key+'"}','<div><b>Firecrawl</b>: <code>fc-'+key+'</code></div>','**Firecrawl**: `fc-'+key+'`'])assert.deepEqual(K.extract(note).items,[{provider:'firecrawl',key:'fc-'+key}]);
 });
@@ -46,6 +47,80 @@ test('release migration never clears user databases or starts reload loops',()=>
 test('terminal helper has event-based mounting and no document-wide observer',()=>{const s=fs.readFileSync(path.join(root,'www/horizon_termai.js'),'utf8');assert.match(s,/horizon-terminal-ready/);assert.ok(!s.includes('new MutationObserver'));});
 test('laser has no permanent idle interval and respects motion settings',()=>{const s=fs.readFileSync(path.join(root,'www/horizon_laser.js'),'utf8');assert.ok(!s.includes('setInterval'));assert.match(s,/prefers-reduced-motion/);assert.match(s,/document.hidden/);});
 test('one canonical stylesheet replaces the old layout patch files',()=>{assert.deepEqual(fs.readdirSync(path.join(root,'www')).filter(x=>x.endsWith('.css')),['horizon_app.css']);const html=fs.readFileSync(path.join(root,'www/index.html'),'utf8');assert.equal((html.match(/rel="stylesheet"/g)||[]).length,1);});
-test('one key note box handles AI and scraper keys without another store',()=>{const html=fs.readFileSync(path.join(root,'www/index.html'),'utf8');assert.ok(!html.includes('id="hzKeyNote"'));assert.equal((html.match(/id="hzWebKeyNote"/g)||[]).length,1);assert.match(html,/saveImportedAiKey/);assert.match(html,/xKeys\(id\)\.concat\(key\)/);});
+test('two key note boxes (Providers = AI keys, Web Scraping = scraper keys) share one extractor and one key store',()=>{const html=fs.readFileSync(path.join(root,'www/index.html'),'utf8');assert.ok(!html.includes('id="hzKeyNote"'));assert.match(html,/id: 'hzKeyImporter'/);assert.match(html,/id: 'hzWebKeyImporter'/);assert.match(html,/function makeKeyImporter/);assert.match(html,/saveImportedAiKey/);assert.match(html,/saveImportedWebKey/);assert.match(html,/xKeys\(id\)\.concat\(key\)/);assert.match(html,/xWebKeys\(id\)/);});
 test('oversized opaque token is rejected whole rather than imported in chunks',()=>{assert.equal(K.extract('SerpAPI: '+key.repeat(260)).items.length,0);});
 test('mixed AI and scraper notes retain exact provider routing',()=>{assert.deepEqual(K.extract('Groq: gsk_'+key+'\nFirecrawl: fc-'+key).items.map(x=>x.provider),['groq','firecrawl']);});
+
+// ---- V1.93.25: the extractor must place keys right and never invent them ----
+const G='gsk_Ab3dEfGh1jKlMnOpQrStUvWxYz0123456789ab', FC='fc-0a1b2c3d4e5f0a1b2c3d4e5f0a1b2c3d4e5f';
+test('model names, file names and hyphenated words are never taken as keys',()=>{
+ for(const note of ['Mistral model: mistral-small-latest-2506-instruct','Mistral config: settings_backup_final_v2.json','Cohere: command-a-03-2025-preview-large','Groq default is llama-3.3-70b-versatile'])assert.deepEqual(K.extract(note).items,[],note);
+});
+test('a key-sized run with odd characters is rejected whole, not cut into a shorter key',()=>{
+ assert.deepEqual(K.extract('Mistral: '+MK+'/extra!stuff?').items,[]);
+ assert.equal(K.extract('LLM7: ab12+cd34/ef56=gh78~ij90').items[0].key,'ab12+cd34/ef56=gh78~ij90');
+});
+test('the same key under two providers is dropped from both',()=>{
+ const r=K.extract('Mistral: '+MK+'\nCohere: '+MK+'');
+ assert.deepEqual(r.items,[]);assert.equal(r.ambiguous.length,1);
+});
+test('unlabelled keys without a unique prefix are never guessed',()=>assert.deepEqual(K.extract(''+MK+'').items,[]));
+test('a key with a unique prefix under the wrong label is refused, not moved',()=>assert.deepEqual(K.extract('Groq: '+FC).items,[]));
+test('GitHub, Cloudflare and OVH labels place keys where they belong',()=>{
+ assert.equal(K.extract('GitHub Models token: ghp_Ab3dEfGh1jKlMnOpQrStUvWxYz0123456789').items[0].provider,'githubmodels');
+ assert.equal(K.extract('Cloudflare: 0123456789abcdef0123456789abcdef:Ab3dEfGh1jKlMnOpQrStUvWxYz').items[0].provider,'cloudflare');
+ assert.equal(K.extract('OVH token: eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.abcDEF123.xyz789').items[0].provider,'ovh');
+});
+test('backup keys: two keys for one provider are both kept, in order',()=>{
+ const r=K.extract('Groq: '+G+'\nGroq backup: gsk_ZZZZ1111yyyy2222XXXX3333wwww4444');
+ assert.deepEqual(r.items.map(x=>x.provider),['groq','groq']);
+});
+test('scope keeps each box to its own list and reports the rest',()=>{
+ const note='Groq: '+G+'\nFirecrawl: '+FC;
+ const w=K.extract(note,{scope:'web'}),a=K.extract(note,{scope:'ai'});
+ assert.deepEqual(w.items.map(x=>x.provider),['firecrawl']);assert.deepEqual(w.elsewhere.map(x=>x.provider),['groq']);
+ assert.deepEqual(a.items.map(x=>x.provider),['groq']);assert.deepEqual(a.elsewhere.map(x=>x.provider),['firecrawl']);
+});
+test('ch.at is a keyless provider wired through the app, the native allowlist and the fallback path',()=>{
+ const html=fs.readFileSync(path.join(root,'www/index.html'),'utf8');
+ assert.match(html,/PROVIDERS\.chatat = oaiGateway/);assert.match(html,/id="i-b-chatat"/);assert.match(html,/keyless: true,\s*modelsOptional: true/);
+ assert.match(fs.readFileSync(path.join(root,'www/horizon_browser.js'),'utf8'),/id === 'chatat'/);
+ assert.match(fs.readFileSync(path.join(root,'resources/android/java/HorizonAIPlugin.kt'),'utf8'),/"ch\.at"/);
+ assert.match(fs.readFileSync(path.join(root,'resources/android/java/HorizonCheckinPlugin.kt'),'utf8'),/"chatat" to "https:\/\/ch\.at\/v1\/chat\/completions"/);
+});
+test('Requesty keys with + / = ~ are accepted on the card, and a GitHub classic token is accepted for GitHub Models',()=>{
+ const rq='sk-Ab3dEfGh1jKlMn+OpQrSt/UvWxYz0123456789==';
+ assert.equal(K.validate('requesty',rq),'');
+ assert.notEqual(K.validate('groq',rq),'');
+ const ghp='ghp_'+'Ab3dEfGh1jKlMnOpQrStUvWxYz0123456789'.slice(0,36);
+ assert.equal(K.identify(ghp),'githubmodels');assert.equal(K.validate('githubmodels',ghp),'');
+ assert.match(K.validate('requesty','short'),/complete API key/);
+});
+test('paid providers (Claude, ChatGPT, DeepSeek, Grok) are wired, manual-only and never auto-hopped',()=>{
+ const html=fs.readFileSync(path.join(root,'www/index.html'),'utf8');
+ for(const id of ['claude','openai','deepseek','xai']){
+  assert.match(html,new RegExp('PROVIDERS\\.'+id+' = oaiGateway'));assert.match(html,new RegExp('PROVIDERS\\.'+id+'\\.manualOnly = true'));
+  assert.match(html,new RegExp('id="i-b-'+id+'"'));assert.match(html,new RegExp("'card-"+id+"'"));
+  assert.match(fs.readFileSync(path.join(root,'www/horizon_usage.js'),'utf8'),new RegExp(id+": '#"));
+ }
+ assert.match(html,/protocol: 'anthropic',\s*placeholder: 'sk-ant-/);
+ assert.match(html,/PROVIDERS\.openai\.tokenParam = 'max_completion_tokens'/);
+ const kt=fs.readFileSync(path.join(root,'resources/android/java/HorizonAIPlugin.kt'),'utf8');
+ assert.match(kt,/"api\.gonkarouter\.io", "api\.anthropic\.com" ->/);
+ assert.match(fs.readFileSync(path.join(root,'www/horizon_browser.js'),'utf8'),/id === 'claude' \|\| id === 'openai' \|\| id === 'deepseek' \|\| id === 'xai'/);
+ // no paid provider is offered to background check-ins (they would spend money unattended)
+ const ck=fs.readFileSync(path.join(root,'resources/android/java/HorizonCheckinPlugin.kt'),'utf8');
+ for(const id of ['claude','openai','deepseek','xai']) assert.ok(!new RegExp('"'+id+'" to').test(ck));
+});
+test('key shapes: each paid key is filed under its own provider only',()=>{
+ const A='sk-ant-api03-Ab3dEfGh1jKlMnOpQrStUvWxYz0123456789';
+ const X='xai-Ab3dEfGh1jKlMnOpQrStUvWxYz0123456789ab';
+ const D='sk-'+'0123456789abcdef'.repeat(2);
+ const O='sk-proj-Ab3dEfGh1jKlMnOpQrStUvWxYz0123456789_-Ab';
+ assert.equal(K.identify(A),'claude');assert.equal(K.identify(X),'xai');assert.equal(K.identify(D),'deepseek');assert.equal(K.identify(O),'openai');
+ assert.equal(K.identify('sk-or-v1-Ab3dEfGh1jKlMnOpQrStUvWxYz0123456789'),'openrouter');
+ for(const [prov,key] of [['claude',A],['xai',X],['deepseek',D],['openai',O]]) assert.equal(K.validate(prov,key),'');
+ assert.match(K.validate('openai',A),/belongs to claude/);
+ const r=K.extract('Anthropic: '+A+'\nOpenAI: '+O+'\nDeepSeek: '+D+'\nGrok: '+X,{scope:'ai'});
+ assert.deepEqual(r.items.map(x=>x.provider).sort(),['claude','deepseek','openai','xai']);
+});

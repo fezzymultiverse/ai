@@ -17,6 +17,8 @@ import android.provider.Settings
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import com.getcapacitor.JSObject
+import org.json.JSONArray
+import org.json.JSONObject
 
 /**
  * V1.63.0: heads-up notifications. A reply now drops in front of whatever is on screen (banner), makes the
@@ -40,22 +42,108 @@ object HorizonNotify {
         .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
         .build()
 
+    // ---------- V1.93.29: notification tones ----------
+    // Each kind of notification has its own tone, picked in Settings > Personalisation. A tone is "default", "silent"
+    // or the content://media/ URI of one of the sounds the phone already has. It is kept in app preferences.
+    const val CAT_ALERT = "alert"       // AI replies
+    const val CAT_CHECKIN = "checkin"   // proactive check-ins
+    const val CAT_REMIND = "remind"     // calendar reminders
+    private const val TONE_PREFS = "horizon_tones"
+    private var preview: android.media.Ringtone? = null
+
+    @JvmStatic fun validCat(cat: String): Boolean = cat == CAT_ALERT || cat == CAT_CHECKIN || cat == CAT_REMIND
+
+    @JvmStatic fun validTone(tone: String): Boolean = tone == "default" || tone == "silent" || tone.startsWith("content://media/")
+
+    @JvmStatic fun toneOf(context: Context, cat: String): String {
+        val t = context.getSharedPreferences(TONE_PREFS, Context.MODE_PRIVATE).getString(cat, "default") ?: "default"
+        return if (validTone(t)) t else "default"
+    }
+
+    @JvmStatic fun setTone(context: Context, cat: String, tone: String) {
+        context.getSharedPreferences(TONE_PREFS, Context.MODE_PRIVATE).edit().putString(cat, tone).commit()
+    }
+
+    /** null means silent. */
+    private fun toneUri(tone: String): Uri? = when (tone) {
+        "silent" -> null
+        "default" -> soundUri()
+        else -> Uri.parse(tone)
+    }
+
+    /**
+     * Android freezes a channel's sound the moment it is created, so a new tone needs a new channel. The default tone keeps
+     * the original channel id; any other tone gets "<base>_t<hash>". Channels of the same family for other tones are removed,
+     * and the channel for the chosen tone is created if it is not there yet. Returns the channel id to post on.
+     */
+    @JvmStatic fun toneChannel(
+        context: Context, cat: String, base: String, name: String, desc: String,
+        importance: Int, vibrate: Boolean, rich: Boolean
+    ): String {
+        val tone = toneOf(context, cat)
+        val id = if (tone == "default") base else base + "_t" + Integer.toHexString(tone.hashCode())
+        if (Build.VERSION.SDK_INT < 26) return id
+        val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        for (c in nm.notificationChannels) {
+            val cid = c.id
+            if (cid != id && (cid == base || cid.startsWith(base + "_t"))) nm.deleteNotificationChannel(cid)
+        }
+        if (nm.getNotificationChannel(id) == null) {
+            val ch = NotificationChannel(id, name, importance)
+            ch.description = desc
+            val uri = toneUri(tone)
+            if (uri == null) ch.setSound(null, null) else ch.setSound(uri, audio())
+            ch.enableVibration(vibrate)
+            if (vibrate && rich) ch.vibrationPattern = BUZZ
+            if (rich) {
+                ch.enableLights(true)
+                ch.lockscreenVisibility = Notification.VISIBILITY_PRIVATE
+                ch.setShowBadge(true)
+            }
+            nm.createNotificationChannel(ch)
+        }
+        return id
+    }
+
+    /** The channel AI replies are posted on, for the tone chosen now. */
+    @JvmStatic fun alertChannel(context: Context): String = toneChannel(
+        context, CAT_ALERT, CH_ALERT, "AI replies (pop-up + sound)",
+        "Horizon's finished replies. Shown as a banner over the screen with a sound.",
+        NotificationManager.IMPORTANCE_HIGH, true, true
+    )
+
+    /** The sounds this phone offers for notifications, as [{title, uri}]. Empty if the phone will not list them. */
+    @JvmStatic fun toneList(context: Context): JSONArray {
+        val out = JSONArray()
+        try {
+            val rm = RingtoneManager(context)
+            rm.setType(RingtoneManager.TYPE_NOTIFICATION)
+            val cur = rm.cursor
+            while (cur.moveToNext()) {
+                val title = cur.getString(RingtoneManager.TITLE_COLUMN_INDEX) ?: continue
+                out.put(JSONObject().put("title", title).put("uri", rm.getRingtoneUri(cur.position).toString()))
+            }
+        } catch (e: Exception) { /* no list: Default and Silent still work */ }
+        return out
+    }
+
+    /** Plays a tone once so it can be heard before it is chosen. */
+    @JvmStatic fun previewTone(context: Context, tone: String) {
+        try { preview?.stop() } catch (e: Exception) { /* already stopped */ }
+        preview = null
+        val uri = toneUri(tone) ?: return
+        val r = RingtoneManager.getRingtone(context, uri) ?: return
+        try { r.setAudioAttributes(audio()) } catch (e: Exception) { /* keep the default attributes */ }
+        preview = r
+        r.play()
+    }
+
     /** Creates both channels (idempotent) and returns the manager. */
     @JvmStatic fun manager(context: Context): NotificationManager {
         val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         if (Build.VERSION.SDK_INT >= 26) {
             if (nm.getNotificationChannel(CH_OLD) != null) nm.deleteNotificationChannel(CH_OLD)
-            if (nm.getNotificationChannel(CH_ALERT) == null) {
-                val ch = NotificationChannel(CH_ALERT, "AI replies (pop-up + sound)", NotificationManager.IMPORTANCE_HIGH)
-                ch.description = "Horizon's finished replies. Shown as a banner over the screen with a sound."
-                ch.setSound(soundUri(), audio())
-                ch.enableVibration(true)
-                ch.vibrationPattern = BUZZ
-                ch.enableLights(true)
-                ch.lockscreenVisibility = Notification.VISIBILITY_PRIVATE
-                ch.setShowBadge(true)
-                nm.createNotificationChannel(ch)
-            }
+            alertChannel(context)
             if (nm.getNotificationChannel(CH_STATUS) == null) {
                 val ch = NotificationChannel(CH_STATUS, "AI status (quiet)", NotificationManager.IMPORTANCE_LOW)
                 ch.description = "Silent progress lines such as \"Horizon is thinking\"."
@@ -84,7 +172,8 @@ object HorizonNotify {
     ): Boolean {
         if (!canNotify(context)) return false
         val nm = manager(context)
-        val b = NotificationCompat.Builder(context, CH_ALERT)
+        val chAlert = alertChannel(context)
+        val b = NotificationCompat.Builder(context, chAlert)
             .setSmallIcon(android.R.drawable.stat_notify_chat)
             .setContentTitle(title)
             .setContentText(text.take(180))
@@ -94,7 +183,7 @@ object HorizonNotify {
             .setDefaults(NotificationCompat.DEFAULT_ALL)                // Android 7 and older: sound + vibrate + light
             .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
             .setPublicVersion(
-                NotificationCompat.Builder(context, CH_ALERT)
+                NotificationCompat.Builder(context, chAlert)
                     .setSmallIcon(android.R.drawable.stat_notify_chat)
                     .setContentTitle("Horizon replied")
                     .setContentText("Unlock to read")
@@ -103,7 +192,13 @@ object HorizonNotify {
             .setAutoCancel(true)
             .setShowWhen(true)
             .setContentIntent(open)
-        if (Build.VERSION.SDK_INT < 26) b.setSound(soundUri()).setVibrate(BUZZ)
+        if (Build.VERSION.SDK_INT < 26) {
+            // Android 7 and older have no channels, so the chosen tone is set on the notification itself.
+            val u = toneUri(toneOf(context, CAT_ALERT))
+            b.setDefaults(NotificationCompat.DEFAULT_LIGHTS or NotificationCompat.DEFAULT_VIBRATE)
+            if (u != null) b.setSound(u)
+            b.setVibrate(BUZZ)
+        }
         // Full-screen intent is what lets the banner open straight over a locked or busy screen.
         // Android 14+ asks the user for this one in Settings; without it the banner still drops down.
         if (canFullScreen(context)) b.setFullScreenIntent(open, true)
@@ -133,7 +228,7 @@ object HorizonNotify {
         var importance = -1
         var sound = false
         if (Build.VERSION.SDK_INT >= 26) {
-            val ch = nm.getNotificationChannel(CH_ALERT)
+            val ch = nm.getNotificationChannel(alertChannel(context))
             if (ch != null) { importance = ch.importance; sound = ch.sound != null }
         }
         o.put("importance", importance)
@@ -146,7 +241,7 @@ object HorizonNotify {
 
     @JvmStatic fun openChannelSettings(context: Context) {
         val i = if (Build.VERSION.SDK_INT >= 26)
-            Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS).putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName).putExtra(Settings.EXTRA_CHANNEL_ID, CH_ALERT)
+            Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS).putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName).putExtra(Settings.EXTRA_CHANNEL_ID, alertChannel(context))
         else Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra("app_package", context.packageName).putExtra("app_uid", context.applicationInfo.uid)
         i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         context.startActivity(i)

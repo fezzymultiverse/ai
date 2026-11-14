@@ -19,17 +19,12 @@ class HorizonAlarmReceiver : BroadcastReceiver() {
 
         @JvmStatic fun banner(c: Context, id: Int, title: String, body: String) = HorizonAlarmReceiver().postBanner(c, id, title, body)
 
-        @JvmStatic fun ensureRemindChannel(c: Context) {
-            if (Build.VERSION.SDK_INT < 26) return
-            val nm = c.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            if (nm.getNotificationChannel(CH_REMIND) != null) return
-            val ch = NotificationChannel(CH_REMIND, "Calendar reminders (exact)", NotificationManager.IMPORTANCE_HIGH)
-            ch.description = "Reminders from the Horizon calendar, delivered on the minute."
-            ch.setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION),
-                AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_NOTIFICATION).build())
-            ch.enableVibration(true)
-            nm.createNotificationChannel(ch)
-        }
+        /** V1.93.29: returns the channel to post on. The tone chosen in Personalisation decides which channel that is. */
+        @JvmStatic fun ensureRemindChannel(c: Context): String = HorizonNotify.toneChannel(
+            c, HorizonNotify.CAT_REMIND, CH_REMIND, "Calendar reminders (exact)",
+            "Reminders from the Horizon calendar, delivered on the minute.",
+            NotificationManager.IMPORTANCE_HIGH, true, false
+        )
     }
 
     override fun onReceive(context: Context, intent: Intent) {
@@ -74,10 +69,10 @@ class HorizonAlarmReceiver : BroadcastReceiver() {
     }
 
     fun postBanner(c: Context, id: Int, title: String, body: String) {
-        ensureRemindChannel(c)
+        val chId = ensureRemindChannel(c)
         val open = c.packageManager.getLaunchIntentForPackage(c.packageName)
         val pi = PendingIntent.getActivity(c, id, open, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-        val n = NotificationCompat.Builder(c, CH_REMIND)
+        val n = NotificationCompat.Builder(c, chId)
             .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
             .setContentTitle(title.ifEmpty { "Horizon reminder" })
             .setContentText(body)

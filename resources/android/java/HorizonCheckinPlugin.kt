@@ -74,6 +74,7 @@ internal object HorizonCheckins {
         "githubmodels" to "https://models.github.ai/inference/chat/completions",
         "kilo" to "https://api.kilo.ai/api/gateway/chat/completions",
         "ovh" to "https://oai.endpoints.kepler.ai.cloud.ovh.net/v1/chat/completions",
+        "chatat" to "https://ch.at/v1/chat/completions",
         "gonka" to "https://api.gonkarouter.io/v1/messages"
     )
     // Cloudflare Workers AI keeps the account ID in the URL, so its saved key is "ACCOUNT_ID:API_TOKEN".
@@ -207,7 +208,7 @@ class HorizonCheckinWorker(c: Context, params: WorkerParameters) : Worker(c, par
             else if (provider == "gonka") {
                 connection.setRequestProperty("x-api-key", config.getString("key"))
                 connection.setRequestProperty("anthropic-version", "2023-06-01")
-            } else if (provider != "pollinations" && !(provider == "ovh" && (config.getString("key").isBlank() || config.getString("key") == "free"))) connection.setRequestProperty("Authorization", "Bearer " + HorizonCheckins.bearer(provider, config.getString("key")))
+            } else if (provider != "pollinations" && provider != "chatat" && !(provider == "ovh" && (config.getString("key").isBlank() || config.getString("key") == "free"))) connection.setRequestProperty("Authorization", "Bearer " + HorizonCheckins.bearer(provider, config.getString("key")))
             // Recheck immediately before network I/O: a stopped worker must not initiate a new request.
             if (isStopped || HorizonLockPlugin.locked || !p.getBoolean("enabled", false) || p.getString("generation", "") != generation) return Result.success()
             connection.outputStream.use { it.write(body.toString().toByteArray(Charsets.UTF_8)) }
@@ -244,12 +245,12 @@ class HorizonCheckinWorker(c: Context, params: WorkerParameters) : Worker(c, par
             }
             HorizonAIPlugin.dispatchToJs("horizon-checkin", "{}")
             val nm = c.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            if (Build.VERSION.SDK_INT >= 26) nm.createNotificationChannel(NotificationChannel("horizon_checkin_v1", "Proactive check-ins", NotificationManager.IMPORTANCE_DEFAULT))
+            val chId = HorizonNotify.toneChannel(c, HorizonNotify.CAT_CHECKIN, "horizon_checkin_v1", "Proactive check-ins", "Messages Horizon sends on its own.", NotificationManager.IMPORTANCE_DEFAULT, false, false)
             val open = PendingIntent.getActivity(c, 7480, Intent(c, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
-            nm.notify(7480, NotificationCompat.Builder(c, "horizon_checkin_v1").setSmallIcon(android.R.drawable.stat_notify_chat)
+            nm.notify(7480, NotificationCompat.Builder(c, chId).setSmallIcon(android.R.drawable.stat_notify_chat)
                 .setContentTitle("Horizon check-in").setContentText(text).setStyle(NotificationCompat.BigTextStyle().bigText(text))
                 .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
-                .setPublicVersion(NotificationCompat.Builder(c, "horizon_checkin_v1").setSmallIcon(android.R.drawable.stat_notify_chat)
+                .setPublicVersion(NotificationCompat.Builder(c, chId).setSmallIcon(android.R.drawable.stat_notify_chat)
                     .setContentTitle("Horizon check-in").setContentText("Unlock to view").build())
                 .setContentIntent(open).setAutoCancel(true).build())
             p.edit().putLong("last", System.currentTimeMillis()).apply()

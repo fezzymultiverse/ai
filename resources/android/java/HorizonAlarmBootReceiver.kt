@@ -17,8 +17,8 @@ class HorizonAlarmBootReceiver : BroadcastReceiver() {
         for (o in missed) {
             val i = Intent(context, HorizonAlarmService::class.java)
             if (System.currentTimeMillis() - o.optLong("at") > 15 * 60_000L) {
-                HorizonAlarmReceiver.ensureRemindChannel(context)
-                val n = androidx.core.app.NotificationCompat.Builder(context, HorizonAlarmReceiver.CH_REMIND)
+                val chId = HorizonAlarmReceiver.ensureRemindChannel(context)
+                val n = androidx.core.app.NotificationCompat.Builder(context, chId)
                     .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
                     .setContentTitle("Missed: " + o.optString("title"))
                     .setContentText(o.optString("body"))

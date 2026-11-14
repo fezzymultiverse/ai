@@ -702,16 +702,30 @@
                 const c = ((j.choices || [])[0] || {}).message;
                 return (c && (Array.isArray(c.content) ? c.content.map(p => p.text || '').join('') : c.content)) || '(empty reply)';
             }
-            if (id === 'anyapi' || id === 'gonka' || id === 'routeway' || id === 'requesty' || id === 'githubmodels' || id === 'kilo' || id === 'ovh') {
-                const gw = id === 'ovh' ? { n: 'OVHcloud AI', u: 'https://oai.endpoints.kepler.ai.cloud.ovh.net/v1/chat/completions', d: 'gpt-oss-120b' } : id === 'kilo' ? { n: 'Kilo Gateway', u: 'https://api.kilo.ai/api/gateway/chat/completions', d: 'kilo-auto/free' } : id === 'githubmodels' ? { n: 'GitHub Models', u: 'https://models.github.ai/inference/chat/completions', d: 'openai/gpt-4o-mini' } : id === 'requesty' ? { n: 'Requesty', u: 'https://router.requesty.ai/v1/chat/completions', d: 'google/gemma-4-31b-it' } : id === 'routeway' ? { n: 'Routeway', u: 'https://api.routeway.ai/v1/chat/completions', d: 'deepseek-v4.1-flash:free' } : id === 'anyapi' ? { n: 'AnyAPI', u: 'https://api.anyapi.ai/v1/chat/completions', d: 'google/gemma-4-26b-a4b-it:free' } : { n: 'GonkaRouter', u: 'https://api.gonkarouter.io/v1/chat/completions', d: 'zai-org/GLM-5.3-Flash' };
-                if (!key && id !== 'kilo' && id !== 'ovh') throw new Error('Add your ' + gw.n + ' key in Horizon settings, or switch provider.');
+            if (id === 'anyapi' || id === 'gonka' || id === 'routeway' || id === 'requesty' || id === 'githubmodels' || id === 'kilo' || id === 'ovh' || id === 'chatat') {
+                const gw = id === 'chatat' ? { n: 'ch.at', u: 'https://ch.at/v1/chat/completions', d: 'gpt-4o' } : id === 'ovh' ? { n: 'OVHcloud AI', u: 'https://oai.endpoints.kepler.ai.cloud.ovh.net/v1/chat/completions', d: 'gpt-oss-120b' } : id === 'kilo' ? { n: 'Kilo Gateway', u: 'https://api.kilo.ai/api/gateway/chat/completions', d: 'kilo-auto/free' } : id === 'githubmodels' ? { n: 'GitHub Models', u: 'https://models.github.ai/inference/chat/completions', d: 'openai/gpt-4o-mini' } : id === 'requesty' ? { n: 'Requesty', u: 'https://router.requesty.ai/v1/chat/completions', d: 'google/gemma-4-31b-it' } : id === 'routeway' ? { n: 'Routeway', u: 'https://api.routeway.ai/v1/chat/completions', d: 'deepseek-v4.1-flash:free' } : id === 'anyapi' ? { n: 'AnyAPI', u: 'https://api.anyapi.ai/v1/chat/completions', d: 'google/gemma-4-26b-a4b-it:free' } : { n: 'GonkaRouter', u: 'https://api.gonkarouter.io/v1/chat/completions', d: 'zai-org/GLM-5.3-Flash' };
+                if (!key && id !== 'kilo' && id !== 'ovh' && id !== 'chatat') throw new Error('Add your ' + gw.n + ' key in Horizon settings, or switch provider.');
                 let gm = model || gw.d;
                 if ((id === 'anyapi' || id === 'routeway') && !/:free$/.test(gm)) gm = gw.d;
-                if ((id === 'requesty' || id === 'githubmodels' || id === 'kilo' || id === 'ovh') && !gm) gm = gw.d;
+                if ((id === 'requesty' || id === 'githubmodels' || id === 'kilo' || id === 'ovh' || id === 'chatat') && !gm) gm = gw.d;
                 const om = [{ role: 'system', content: system }].concat(history_.map(m => ({ role: m.role === 'ai' ? 'assistant' : 'user', content: m.text })), [{ role: 'user', content: question }]);
-                const r = await fetch(gw.u, { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, id === 'ovh' ? (key && key !== 'free' ? { Authorization: 'Bearer ' + key } : {}) : { Authorization: 'Bearer ' + (key && key !== 'free' ? key : 'anonymous') }), signal: ctl.signal, body: JSON.stringify({ model: gm, messages: om, max_tokens: (id === 'requesty' || id === 'kilo' || id === 'ovh') ? 4096 : undefined }) });
+                const r = await fetch(gw.u, { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, id === 'chatat' ? {} : id === 'ovh' ? (key && key !== 'free' ? { Authorization: 'Bearer ' + key } : {}) : { Authorization: 'Bearer ' + (key && key !== 'free' ? key : 'anonymous') }), signal: ctl.signal, body: JSON.stringify({ model: gm, messages: om, max_tokens: (id === 'requesty' || id === 'kilo' || id === 'ovh' || id === 'chatat') ? 4096 : undefined }) });
                 const j = await r.json().catch(() => ({}));
                 if (!r.ok || (j.error && !(j.choices || []).length)) throw new Error((j.error && (j.error.message || j.error)) || (gw.n + ' error ' + r.status));
+                const c = ((j.choices || [])[0] || {}).message;
+                return (c && (Array.isArray(c.content) ? c.content.map(p => p.text || '').join('') : c.content)) || '(empty reply)';
+            }
+            if (id === 'claude' || id === 'openai' || id === 'deepseek' || id === 'xai') {   // V1.93.27: paid providers
+                const pv = { claude: { n: 'Claude', u: 'https://api.anthropic.com/v1/messages', d: 'claude-haiku-5-5' }, openai: { n: 'ChatGPT', u: 'https://api.openai.com/v1/chat/completions', d: 'gpt-4o-mini' }, deepseek: { n: 'DeepSeek', u: 'https://api.deepseek.com/chat/completions', d: 'deepseek-chat' }, xai: { n: 'Grok', u: 'https://api.x.ai/v1/chat/completions', d: 'grok-4-fast' } }[id];
+                if (!key || key === 'free') throw new Error('Add your ' + pv.n + ' key in Horizon settings, or switch provider.');
+                const turns = history_.map(m => ({ role: m.role === 'ai' ? 'assistant' : 'user', content: m.text })).concat([{ role: 'user', content: question }]);
+                const isC = id === 'claude';
+                const hd = isC ? { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' } : { 'Content-Type': 'application/json', Authorization: 'Bearer ' + key };
+                const bd = isC ? { model: model || pv.d, max_tokens: 4096, system: system, messages: turns } : { model: model || pv.d, messages: [{ role: 'system', content: system }].concat(turns) };
+                const r = await fetch(pv.u, { method: 'POST', headers: hd, signal: ctl.signal, body: JSON.stringify(bd) });
+                const j = await r.json().catch(() => ({}));
+                if (!r.ok || j.error) throw new Error((j.error && (j.error.message || j.error)) || (pv.n + ' error ' + r.status));
+                if (isC) return (j.content || []).filter(p => p.type === 'text').map(p => p.text).join('') || '(empty reply)';
                 const c = ((j.choices || [])[0] || {}).message;
                 return (c && (Array.isArray(c.content) ? c.content.map(p => p.text || '').join('') : c.content)) || '(empty reply)';
             }

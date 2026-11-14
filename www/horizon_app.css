@@ -1,4 +1,4 @@
-/* HORIZON 1.93.8 — canonical application stylesheet.
+/* HORIZON 1.93.30 — canonical application stylesheet.
    One bundled layout source. Section order preserves the existing cascade.
    Edit this file; obsolete individual patch stylesheets have been removed. */
 
@@ -4087,3 +4087,28 @@ html.hz-typing .typing-indicator span { animation-play-state: paused !important;
 html[data-theme="grey"] #hzLeftGh .set-ic{color:#7c4dff;stroke:#7c4dff}
 html[data-theme="grey"] #hzLeftGh{box-shadow:inset 3px 0 0 #7c4dff}
 html[data-theme="grey"] .settings-home #hzLeftGh .set-text h3{color:#7c4dff}
+
+/* V1.93.28: free tier / paid tier headings in the AI picker and in Settings */
+.pk-sec { font-size: 12px; font-weight: 700; letter-spacing: .12em; color: var(--text-muted); padding: 10px 4px 2px; }
+.tier-head { display: flex; flex-direction: column; gap: 2px; padding: 14px 4px 6px; }
+.tier-head strong { font-size: 12px; font-weight: 700; letter-spacing: .12em; color: var(--text-muted); }
+/* V1.93.30: the keyless group is set apart with an accent bar and a rule above it */
+.pk-sec.keyless, .tier-head.keyless { margin-top: 14px; padding-left: 10px; border-left: 3px solid var(--accent-cyan); border-top: 1px solid var(--border-color); }
+.pk-sec.keyless { padding-top: 12px; padding-bottom: 4px; color: var(--accent-cyan); }
+.tier-head.keyless strong { color: var(--accent-cyan); }
+.tier-head span { font-size: 13px; color: var(--text-muted); }
+
+/* V1.93.30: notification tones card (Settings > Personalisation) */
+.hzt-cats { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+.hzt-cat { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--border-color); background: transparent; color: var(--text-main); text-align: left; cursor: pointer; font: inherit; }
+.hzt-cat:active { background: var(--surface); }
+.hzt-cat.on { background: var(--accent-cyan-light); border-color: var(--accent-cyan); }
+.hzt-tx { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.hzt-tx b { font-size: 15px; }
+.hzt-tx small { font-size: 13px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hzt-go { flex: 0 0 auto; font-size: 12px; font-weight: 700; letter-spacing: .06em; color: var(--accent-cyan); }
+.hzt-list { display: flex; flex-direction: column; gap: 2px; margin-top: 8px; max-height: 280px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 12px; padding: 6px; -webkit-overflow-scrolling: touch; }
+.hzt-h { margin: 4px 6px 6px; font-size: 13px; color: var(--text-muted); }
+.hzt-opt { text-align: left; width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid transparent; background: transparent; color: var(--text-main); font: inherit; font-size: 15px; cursor: pointer; }
+.hzt-opt:active { background: var(--surface); }
+.hzt-opt[aria-checked="true"] { background: var(--accent-cyan-light); border-color: var(--accent-cyan); font-weight: 700; }

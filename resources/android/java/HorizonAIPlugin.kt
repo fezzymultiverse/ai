@@ -126,7 +126,7 @@ class HorizonAIPlugin : Plugin() {
         // Only the existing AI provider endpoints may receive stored credentials.
         val parsedUrl = try { URL(url) } catch (_: Exception) { null }
         val host = parsedUrl?.host ?: ""
-        if (parsedUrl == null || parsedUrl.protocol != "https" || parsedUrl.userInfo != null || parsedUrl.port !in setOf(-1, 443) || host !in setOf("generativelanguage.googleapis.com", "api.groq.com", "api.cohere.com", "api.mistral.ai", "openrouter.ai", "text.pollinations.ai", "api.anyapi.ai", "api.routeway.ai", "router.requesty.ai", "models.github.ai", "api.kilo.ai", "oai.endpoints.kepler.ai.cloud.ovh.net", "api.gonkarouter.io", "api.z.ai", "api.aionlabs.ai", "api.llm7.io", "api.cloudflare.com")) {
+        if (parsedUrl == null || parsedUrl.protocol != "https" || parsedUrl.userInfo != null || parsedUrl.port !in setOf(-1, 443) || host !in setOf("generativelanguage.googleapis.com", "api.groq.com", "api.cohere.com", "api.mistral.ai", "openrouter.ai", "text.pollinations.ai", "api.anyapi.ai", "api.routeway.ai", "router.requesty.ai", "models.github.ai", "api.kilo.ai", "oai.endpoints.kepler.ai.cloud.ovh.net", "ch.at", "api.anthropic.com", "api.openai.com", "api.deepseek.com", "api.x.ai", "api.gonkarouter.io", "api.z.ai", "api.aionlabs.ai", "api.llm7.io", "api.cloudflare.com")) {
             call.reject("Unsupported AI endpoint")
             return
         }
@@ -233,7 +233,7 @@ class HorizonAIPlugin : Plugin() {
                                     val parts = data.optJSONObject("message")?.optJSONArray("content")
                                     (0 until (parts?.length() ?: 0)).joinToString("") { parts?.optJSONObject(it)?.optString("text", "") ?: "" }
                                 }
-                                "api.gonkarouter.io" -> {
+                                "api.gonkarouter.io", "api.anthropic.com" -> {
                                     val parts = data.optJSONArray("content")
                                     (0 until (parts?.length() ?: 0)).filter { parts?.optJSONObject(it)?.optString("type", "") == "text" }
                                         .joinToString("") { parts?.optJSONObject(it)?.optString("text", "") ?: "" }
@@ -514,5 +514,43 @@ class HorizonAIPlugin : Plugin() {
     @PluginMethod
     fun notifyOpenFullScreen(call: PluginCall) {
         try { HorizonNotify.openFullScreenSettings(context); call.resolve() } catch (e: Exception) { call.reject("Could not open settings: ${e.message}") }
+    }
+
+    // ---------- V1.93.29: notification tones ----------
+
+    /** The sounds this phone offers, and the tone chosen for AI replies, check-ins and reminders. */
+    @PluginMethod
+    fun toneList(call: PluginCall) {
+        try {
+            call.resolve(
+                JSObject()
+                    .put("tones", HorizonNotify.toneList(context))
+                    .put("alert", HorizonNotify.toneOf(context, HorizonNotify.CAT_ALERT))
+                    .put("checkin", HorizonNotify.toneOf(context, HorizonNotify.CAT_CHECKIN))
+                    .put("remind", HorizonNotify.toneOf(context, HorizonNotify.CAT_REMIND))
+            )
+        } catch (e: Exception) { call.reject("Could not read the tones: ${e.message}") }
+    }
+
+    /** Saves a tone for one kind of notification (cat = alert, checkin or remind; tone = default, silent or a content://media/ sound). */
+    @PluginMethod
+    fun toneSet(call: PluginCall) {
+        val cat = call.getString("cat") ?: ""
+        val tone = call.getString("tone") ?: "default"
+        if (!HorizonNotify.validCat(cat)) { call.reject("Unknown notification kind"); return }
+        if (!HorizonNotify.validTone(tone)) { call.reject("That sound cannot be used"); return }
+        try {
+            HorizonNotify.setTone(context, cat, tone)
+            if (cat == HorizonNotify.CAT_ALERT && Build.VERSION.SDK_INT >= 26) HorizonNotify.alertChannel(context)
+            call.resolve()
+        } catch (e: Exception) { call.reject("Could not save the tone: ${e.message}") }
+    }
+
+    /** Plays a tone once so it can be heard before it is picked. */
+    @PluginMethod
+    fun tonePreview(call: PluginCall) {
+        val tone = call.getString("tone") ?: "default"
+        if (!HorizonNotify.validTone(tone)) { call.reject("That sound cannot be used"); return }
+        try { HorizonNotify.previewTone(context, tone); call.resolve() } catch (e: Exception) { call.reject("Could not play the tone: ${e.message}") }
     }
 }

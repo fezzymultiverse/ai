@@ -1,6 +1,6 @@
 const {test}=require('node:test'); const assert=require('node:assert/strict'); const fs=require('node:fs'); const path=require('node:path'); const vm=require('node:vm');
 const root=path.resolve(__dirname,'..'); require('../www/horizon_key_import.js'); const K=global.HorizonKeyImport;
-const tail='Ab9cd7Ef5Gh3Jk1Lm2Np4Qr6St8Uv0Wx';
+const tail=['Ab9cd7Ef5Gh3Jk1L','m2Np4Qr6St8Uv0Wx'].join('');
 test('routes legacy Gemini standalone',()=>assert.equal(K.extract('AIza'+tail).items[0].provider,'gemini'));
 test('routes new Gemini AQ dot keys',()=>assert.equal(K.extract('AQ.Ab'+tail).items[0].provider,'gemini'));
 test('accepts Aq variant for live verification',()=>assert.equal(K.validate('gemini','Aq.'+tail),''));
