@@ -29,6 +29,20 @@ public class MainActivity extends BridgeActivity {
             });
         } catch (Exception ignored) { /* nothing to do */ }
     }
+    // V1.93.9: "Bigger" UI size. Raises only this app's density, before any view exists, so the WebView lays out at the new width.
+    @Override
+    protected void attachBaseContext(android.content.Context base) {
+        try {
+            int dens = HorizonDisplayPlugin.densityFor(base);
+            if (dens > 0) {
+                android.content.res.Configuration c = new android.content.res.Configuration(base.getResources().getConfiguration());
+                c.densityDpi = dens;
+                super.attachBaseContext(base.createConfigurationContext(c));
+                return;
+            }
+        } catch (Exception ignored) { /* fall through to the normal size */ }
+        super.attachBaseContext(base);
+    }
     @Override
     public void onCreate(Bundle savedInstanceState) {
         liveRef = new java.lang.ref.WeakReference<>(this);
@@ -47,6 +61,7 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(HorizonExtractorPlugin.class);
         registerPlugin(HorizonLockPlugin.class);
         registerPlugin(HorizonAlarmPlugin.class);   // V1.68.0: calendar wake-up alarms
+        registerPlugin(HorizonDisplayPlugin.class);   // V1.93.9: UI size and refresh rate (Personalisation)
         super.onCreate(savedInstanceState);
         try {
             String release = getPackageManager().getPackageInfo(getPackageName(), 0).versionName;

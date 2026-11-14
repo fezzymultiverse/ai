@@ -4043,3 +4043,21 @@ html.hz-typing .typing-indicator span { animation-play-state: paused !important;
 #hzToasts .hz-tt.hz-wa-toast{border-radius:18px;align-items:flex-start}
 #hzToasts .hz-tt.hz-wa-toast .hz-tt-tx small{white-space:normal;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;opacity:.92}
 #hzToasts .hz-tt.hz-wa-toast .hz-tt-act{align-self:center;white-space:nowrap}
+
+/* V1.93.9: lag report showed 100-200 ms of paint after every key on a 30 Hz screen. These loops were not on the pause list, so each key waited behind their repaints. They hold still while the keyboard is open, moving, or keys are landing. */
+:is(.hz-kb-open, .hz-kb-moving, .hz-typing) :is(.th-step.act .th-dot, .speak-btn.loading, .gh-ring.spin .gh-arc, .att-card.busy .att-ic, .rec-dot, .hzu-dot.run, .dlx-bar.wait i, .dlx-live-bar.wait i, .dlx-spin, .hzb-tab.loading .dot, .hzb-widget .track, .hzb-eye.on .pupil, .hzr-av[data-state="think"] .hzr-ring, .hzr-it.think .hzr-dot, .caret),
+:is(.hz-kb-open, .hz-kb-moving, .hz-typing) .th-body small.th-pw.live::after,
+:is(.hz-kb-open, .hz-kb-moving, .hz-typing) .gh-term::after,
+:is(.hz-kb-open, .hz-kb-moving, .hz-typing) .hzb-pill.busy::after,
+:is(.hz-kb-open, .hz-kb-moving, .hz-typing) .hz-badge.busy::after,
+:is(.hz-kb-open, .hz-kb-moving, .hz-typing) .hzb-m.ai.typing::after,
+:is(.hz-kb-open, .hz-kb-moving, .hz-typing) .ind-pv .ind-bar::after,
+:is(.hz-kb-open, .hz-kb-moving, .hz-typing) .hzt-bar::after,
+:is(.hz-kb-open, .hz-kb-moving, .hz-typing) .hzt-caret::after,
+:is(.hz-kb-open, .hz-kb-moving, .hz-typing) .hzc-cap::before,
+:is(.hz-kb-open, .hz-kb-moving, .hz-typing) html[data-ind="orbit"] .th-top .typing-indicator::before,
+:is(.hz-kb-open, .hz-kb-moving, .hz-typing) html[data-ind="cursor"] .th-top .typing-indicator::before { animation-play-state: paused !important; }
+
+/* V1.93.9: Screen size and Refresh rate cards. An option the screen cannot give shows dimmed and says why. */
+.theme-opt[aria-disabled="true"]{opacity:.5}
+#hzSizeCard .theme-list,#hzRateCard .theme-list{margin-top:6px}

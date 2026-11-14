@@ -148,7 +148,7 @@ put_sources() {
     done
 }
 
-JAVA_SOURCES="HorizonPermsPlugin.java HorizonBgService.java HorizonMediaPlugin.java HorizonMediaService.java HorizonArt.java HorizonSpeechPlugin.java HorizonLensPlugin.java HorizonStatsPlugin.java HorizonBrowserPlugin.java MainActivity.java"
+JAVA_SOURCES="HorizonPermsPlugin.java HorizonBgService.java HorizonMediaPlugin.java HorizonMediaService.java HorizonArt.java HorizonSpeechPlugin.java HorizonLensPlugin.java HorizonStatsPlugin.java HorizonBrowserPlugin.java HorizonDisplayPlugin.java MainActivity.java"
 # Android-only TTS voice studio (no neural runtime or downloaded models).
 put_sources HorizonVoiceDsp.java
 KOTLIN_SOURCES="HorizonAlarms.kt HorizonAlarmReceiver.kt HorizonAlarmBootReceiver.kt HorizonAlarmService.kt HorizonAlarmPlugin.kt HorizonAIPlugin.kt HorizonAIService.kt HorizonReplyReceiver.kt HorizonSpeakService.kt HorizonLockPlugin.kt HorizonNotify.kt HorizonScopes.kt HorizonDaemonPlugin.kt"
@@ -211,7 +211,7 @@ say "Horizon Kotlin AI jobs and reply notifications applied."
 for f in $JAVA_SOURCES $KOTLIN_SOURCES; do
     [ -s "$JAVA_DIR/$f" ] || die "Native source missing after apply: $f"
 done
-for p in HorizonAIPlugin HorizonLensPlugin HorizonStatsPlugin HorizonBrowserPlugin HorizonDaemonPlugin; do
+for p in HorizonAIPlugin HorizonLensPlugin HorizonStatsPlugin HorizonBrowserPlugin HorizonDaemonPlugin HorizonDisplayPlugin; do
     need "$JAVA_DIR/MainActivity.java" "registerPlugin($p.class)" "MainActivity does not register $p"
 done
 need "$MANIFEST" 'android:name=".HorizonReplyReceiver"' "Reply receiver missing from the manifest"

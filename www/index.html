@@ -734,6 +734,7 @@
     <script src="horizon_music.js?v=1.93.8"></script>
     <script src="horizon_runlog.js?v=1.93.8"></script>
     <script src="horizon_whatsapp_feature.js?v=1.93.8"></script>
+    <script src="horizon_display.js?v=1.93.9"></script>
     <script src="horizon_bridges.js?v=1.93.8"></script>
     <script src="horizon_hub.js?v=1.93.8"></script>
     <script src="horizon_hold.js?v=1.93.8"></script>
@@ -3512,7 +3513,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             rightPanel.querySelectorAll('#settingsHome [role="tab"]').forEach(r => r.setAttribute('aria-selected', r.dataset.tab === name ? 'true' : 'false'));
             rightPanel.scrollTop = 0;
             if (name === 'permissions') { refreshAllPerms(); if (window.HorizonBridges) HorizonBridges.refresh(); }
-            if (name === 'personalisation') paintVoice();
+            if (name === 'personalisation') { paintVoice(); if (window.HorizonDisplay) HorizonDisplay.refresh(); }
             if (name === 'usage' && window.HzUsage) HzUsage.open();
             if (name === 'about' && window.HzAbout) HzAbout.open();
             if (name === 'security' && window.HzAbout && HzAbout.openSecurity) HzAbout.openSecurity();

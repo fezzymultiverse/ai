@@ -84,7 +84,7 @@ class HorizonWhatsAppPlugin: Plugin() {
         val p=HorizonWhatsAppStore.prefs(context)
         val out=JSObject().put("access", NotificationManagerCompat.getEnabledListenerPackages(context).contains(context.packageName))
             .put("notifications", NotificationManagerCompat.from(context).areNotificationsEnabled()).put("connected", HorizonWhatsAppListener.connected)
-        for(k in arrayOf("personal","business","toasts","aiSee","askDraft","alerts")) out.put(k,p.getBoolean(k,false))
+        for(k in arrayOf("personal","business","toasts","aiSee","aiRecent","askDraft","alerts")) out.put(k,p.getBoolean(k,false))
         call.resolve(out)
     }
     @PluginMethod fun configure(call: PluginCall) {
@@ -93,7 +93,7 @@ class HorizonWhatsAppPlugin: Plugin() {
             try {
                 HorizonWhatsAppStore.migrate(context)
                 val p=HorizonWhatsAppStore.prefs(context);val e=p.edit()
-                for(k in arrayOf("personal","business","toasts","aiSee","askDraft","alerts"))call.getBoolean(k)?.let{e.putBoolean(k,it)}
+                for(k in arrayOf("personal","business","toasts","aiSee","aiRecent","askDraft","alerts"))call.getBoolean(k)?.let{e.putBoolean(k,it)}
                 e.commit()
                 if(call.getBoolean("aiSee")==false || call.getBoolean("personal")==false || call.getBoolean("business")==false) HorizonWhatsAppStore.clear(context)
                 HorizonWhatsAppStore.save(context,HorizonWhatsAppStore.rows(context))
@@ -115,6 +115,16 @@ class HorizonWhatsAppPlugin: Plugin() {
         }catch(e:Exception){call.reject(e.message)}
     }}
     // Explicit user action only; never called by model tools, never pre-fills or sends.
+    // V1.93.9: opt-in only. The newest previews (at most 10, last 24 h) for the selected AI, without a pin. Needs aiSee AND aiRecent.
+    @PluginMethod fun recent(call:PluginCall){if(!unlocked(call))return;io.execute{
+        try {val p=HorizonWhatsAppStore.prefs(context)
+            if(!p.getBoolean("aiSee",false)||!p.getBoolean("aiRecent",false)){call.reject("AI preview access is off");return@execute}
+            val a=HorizonWhatsAppStore.rows(context);val out=org.json.JSONArray()
+            for(i in maxOf(0,a.length()-10) until a.length()){val m=a.getJSONObject(i)
+                out.put(org.json.JSONObject().put("sender",m.optString("sender")).put("text",m.optString("text").take(500)).put("time",m.optLong("time")).put("business",m.optString("package")=="com.whatsapp.w4b"))}
+            call.resolve(JSObject().put("messages",out))
+        }catch(e:Exception){call.reject(e.message)}
+    }}
     @PluginMethod fun openSource(call:PluginCall){if(!unlocked(call))return;io.execute{
         val m=HorizonWhatsAppStore.find(context,call.getString("id")?:"")
         if(m==null){call.reject("Preview expired or its source is off");return@execute}
