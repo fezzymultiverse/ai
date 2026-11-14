@@ -1,0 +1,1341 @@
+
+> horizon@1.93.14 test:all
+> npm test && npm run test:voice-dsp && npm run test:browser && npm run test:voice-browser && npm run test:closed-feature && npm run test:keyboard-browser && npm run test:approval-browser && npm run test:deepscan-browser
+
+
+> horizon@1.93.14 test
+> node --test tests/*.test.cjs
+
+TAP version 13
+# Subtest: all application JavaScript parses
+ok 1 - all application JavaScript parses
+  ---
+  duration_ms: 30.557985
+  type: 'test'
+  ...
+# Subtest: bridge tools are absent from prompt when the Termux bridge is off
+ok 2 - bridge tools are absent from prompt when the Termux bridge is off
+  ---
+  duration_ms: 1.649769
+  type: 'test'
+  ...
+# Subtest: bridge parser accepts supported tools, caps each round at three and no longer knows removed WhatsApp tools
+ok 3 - bridge parser accepts supported tools, caps each round at three and no longer knows removed WhatsApp tools
+  ---
+  duration_ms: 1.399624
+  type: 'test'
+  ...
+# Subtest: nonzero Termux exit code returns an AI tool error
+ok 4 - nonzero Termux exit code returns an AI tool error
+  ---
+  duration_ms: 1.163815
+  type: 'test'
+  ...
+# Subtest: Termux success requires a completed native result
+ok 5 - Termux success requires a completed native result
+  ---
+  duration_ms: 1.001742
+  type: 'test'
+  ...
+# Subtest: shell quoting preserves untrusted URLs literally
+ok 6 - shell quoting preserves untrusted URLs literally
+  ---
+  duration_ms: 5.121587
+  type: 'test'
+  ...
+# Subtest: invalid YouTube ID never reaches Termux execution
+ok 7 - invalid YouTube ID never reaches Termux execution
+  ---
+  duration_ms: 1.288706
+  type: 'test'
+  ...
+# Subtest: yt-dlp uses a literal URL, no playlist, retries, and a quoted destination
+ok 8 - yt-dlp uses a literal URL, no playlist, retries, and a quoted destination
+  ---
+  duration_ms: 0.953749
+  type: 'test'
+  ...
+# Subtest: torrent commands stop seeding and quote the entire magnet
+ok 9 - torrent commands stop seeding and quote the entire magnet
+  ---
+  duration_ms: 1.252467
+  type: 'test'
+  ...
+# Subtest: native permissions and components are wired into the generated build
+ok 10 - native permissions and components are wired into the generated build
+  ---
+  duration_ms: 0.534988
+  type: 'test'
+  ...
+# Subtest: Termux keeps token-bound approval
+ok 11 - Termux keeps token-bound approval
+  ---
+  duration_ms: 0.346098
+  type: 'test'
+  ...
+# Subtest: music library automatically scans, is single-flight and waits for initialization
+ok 12 - music library automatically scans, is single-flight and waits for initialization
+  ---
+  duration_ms: 0.662565
+  type: 'test'
+  ...
+# Subtest: keyboard fixes avoid late blur and defer measuring during composition
+ok 13 - keyboard fixes avoid late blur and defer measuring during composition
+  ---
+  duration_ms: 3.523163
+  type: 'test'
+  ...
+# Subtest: AI Termux gate refuses command before native execution
+ok 14 - AI Termux gate refuses command before native execution
+  ---
+  duration_ms: 0.900569
+  type: 'test'
+  ...
+# Subtest: AI Termux requests carry native-enforced origin flag
+ok 15 - AI Termux requests carry native-enforced origin flag
+  ---
+  duration_ms: 1.880596
+  type: 'test'
+  ...
+# Subtest: manual Termux path does not require AI toggle
+ok 16 - manual Termux path does not require AI toggle
+  ---
+  duration_ms: 0.674908
+  type: 'test'
+  ...
+# Subtest: removed neural TTS runtime cannot ship or download packs
+ok 17 - removed neural TTS runtime cannot ship or download packs
+  ---
+  duration_ms: 0.125204
+  type: 'test'
+  ...
+# Subtest: Android DSP helper is explicitly applied to native build
+ok 18 - Android DSP helper is explicitly applied to native build
+  ---
+  duration_ms: 0.111095
+  type: 'test'
+  ...
+# Subtest: AI downloader fallback cannot bypass the AI Termux switch
+ok 19 - AI downloader fallback cannot bypass the AI Termux switch
+  ---
+  duration_ms: 0.790584
+  type: 'test'
+  ...
+# Subtest: old contact messenger is removed and the WhatsApp notification-preview feature is gone from the whole build
+ok 20 - old contact messenger is removed and the WhatsApp notification-preview feature is gone from the whole build
+  ---
+  duration_ms: 3.567569
+  type: 'test'
+  ...
+# Subtest: all provider ids exist in foreground and native background registries
+ok 21 - all provider ids exist in foreground and native background registries
+  ---
+  duration_ms: 2.153363
+  type: 'test'
+  ...
+# Subtest: Together AI, SambaNova and NVIDIA NIM are fully removed from UI, routing, native allowlists and key import, and old saved data is cleared
+ok 22 - Together AI, SambaNova and NVIDIA NIM are fully removed from UI, routing, native allowlists and key import, and old saved data is cleared
+  ---
+  duration_ms: 3.178179
+  type: 'test'
+  ...
+# Subtest: saved group chats drop removed providers and fall back to a normal chat below two members
+ok 23 - saved group chats drop removed providers and fall back to a normal chat below two members
+  ---
+  duration_ms: 0.213158
+  type: 'test'
+  ...
+# Subtest: Rate Limit Rescue tries Z.ai and AionLabs first and skips only manual-only or chat-less providers
+ok 24 - Rate Limit Rescue tries Z.ai and AionLabs first and skips only manual-only or chat-less providers
+  ---
+  duration_ms: 1.423469
+  type: 'test'
+  ...
+# Subtest: new providers use the exact endpoints and models requested
+ok 25 - new providers use the exact endpoints and models requested
+  ---
+  duration_ms: 0.369347
+  type: 'test'
+  ...
+# Subtest: automatic check-ins use minutes, persist encrypted results and preserve originating chat
+ok 26 - automatic check-ins use minutes, persist encrypted results and preserve originating chat
+  ---
+  duration_ms: 0.507797
+  type: 'test'
+  ...
+# Subtest: every provider inherits honest scheduler capability rules
+ok 27 - every provider inherits honest scheduler capability rules
+  ---
+  duration_ms: 0.272314
+  type: 'test'
+  ...
+# Subtest: composer has no idle polling and group typing yields to keyboard
+ok 28 - composer has no idle polling and group typing yields to keyboard
+  ---
+  duration_ms: 0.281728
+  type: 'test'
+  ...
+# Subtest: zai uses tested gateway transport with selected model and common system rules
+ok 29 - zai uses tested gateway transport with selected model and common system rules
+  ---
+  duration_ms: 2.426329
+  type: 'test'
+  ...
+# Subtest: aionlabs uses tested gateway transport with selected model and common system rules
+ok 30 - aionlabs uses tested gateway transport with selected model and common system rules
+  ---
+  duration_ms: 1.102691
+  type: 'test'
+  ...
+# Subtest: Cerebras is fully removed from UI, routing, native allowlist, background registry and key import; its saved data is cleared
+ok 31 - Cerebras is fully removed from UI, routing, native allowlist, background registry and key import; its saved data is cleared
+  ---
+  duration_ms: 2.465758
+  type: 'test'
+  ...
+# Subtest: LLM7.io and Cloudflare Workers AI are allowed natively and the native registry builds the right request
+ok 32 - LLM7.io and Cloudflare Workers AI are allowed natively and the native registry builds the right request
+  ---
+  duration_ms: 0.233327
+  type: 'test'
+  ...
+# Subtest: LLM7.io needs no key: it is ready, shows the optional-key wording, and sends the placeholder bearer only when no token is saved
+ok 33 - LLM7.io needs no key: it is ready, shows the optional-key wording, and sends the placeholder bearer only when no token is saved
+  ---
+  duration_ms: 1.437372
+  type: 'test'
+  ...
+# Subtest: Cloudflare Workers AI builds its URL from ACCOUNT_ID:API_TOKEN, sends only the token as bearer, and rejects a malformed key
+ok 34 - Cloudflare Workers AI builds its URL from ACCOUNT_ID:API_TOKEN, sends only the token as bearer, and rejects a malformed key
+  ---
+  duration_ms: 3.548317
+  type: 'test'
+  ...
+# Subtest: key importer accepts LLM7 tokens and Cloudflare ACCOUNT_ID:API_TOKEN and no longer knows Cerebras
+ok 35 - key importer accepts LLM7 tokens and Cloudflare ACCOUNT_ID:API_TOKEN and no longer knows Cerebras
+  ---
+  duration_ms: 1.205401
+  type: 'test'
+  ...
+# Subtest: an alarm the AI sets shows a toast that reports success, the notification fallback, failure and a passed time honestly
+ok 36 - an alarm the AI sets shows a toast that reports success, the notification fallback, failure and a passed time honestly
+  ---
+  duration_ms: 22.436481
+  type: 'test'
+  ...
+# Subtest: complete YouTube range produces exact bytes
+ok 37 - complete YouTube range produces exact bytes
+  ---
+  duration_ms: 2.277573
+  type: 'test'
+  ...
+# Subtest: short/truncated byte range fails rather than saving a corrupt file
+ok 38 - short/truncated byte range fails rather than saving a corrupt file
+  ---
+  duration_ms: 1.071412
+  type: 'test'
+  ...
+# Subtest: missing and out-of-order content ranges are refused
+ok 39 - missing and out-of-order content ranges are refused
+  ---
+  duration_ms: 2.042946
+  type: 'test'
+  ...
+# Subtest: ignored Range 200 returns full file once, not duplicate parts
+ok 40 - ignored Range 200 returns full file once, not duplicate parts
+  ---
+  duration_ms: 0.799107
+  type: 'test'
+  ...
+# Subtest: truncated full-body response is not accepted
+ok 41 - truncated full-body response is not accepted
+  ---
+  duration_ms: 0.795415
+  type: 'test'
+  ...
+# Subtest: loop cap cannot return a partial file as success
+ok 42 - loop cap cannot return a partial file as success
+  ---
+  duration_ms: 6.388115
+  type: 'test'
+  ...
+# Subtest: empty and HTTP-failed media responses fail honestly
+ok 43 - empty and HTTP-failed media responses fail honestly
+  ---
+  duration_ms: 1.442242
+  type: 'test'
+  ...
+# Subtest: optional API token is NOT marked verified on quota/auth/server/network failure
+ok 44 - optional API token is NOT marked verified on quota/auth/server/network failure
+  ---
+  duration_ms: 7.11685
+  type: 'test'
+  ...
+# Subtest: optional API token verification requires a real successful completion payload
+ok 45 - optional API token verification requires a real successful completion payload
+  ---
+  duration_ms: 0.90124
+  type: 'test'
+  ...
+# Subtest: weather geocodes city, retains units/time, omits credentials and caches repeats
+ok 46 - weather geocodes city, retains units/time, omits credentials and caches repeats
+  ---
+  duration_ms: 2.757427
+  type: 'test'
+  ...
+# Subtest: weather missing place and invalid coordinates return failure without invented values
+ok 47 - weather missing place and invalid coordinates return failure without invented values
+  ---
+  duration_ms: 0.929917
+  type: 'test'
+  ...
+# Subtest: technology headlines retain real links/dates and do not claim article reading
+ok 48 - technology headlines retain real links/dates and do not claim article reading
+  ---
+  duration_ms: 2.155735
+  type: 'test'
+  ...
+# Subtest: no matching headlines return no sources rather than fabricated news
+ok 49 - no matching headlines return no sources rather than fabricated news
+  ---
+  duration_ms: 0.918067
+  type: 'test'
+  ...
+# Subtest: IP lookup accepts self only; no arbitrary-IP, localhost or URL network fetch
+ok 50 - IP lookup accepts self only; no arbitrary-IP, localhost or URL network fetch
+  ---
+  duration_ms: 1.14061
+  type: 'test'
+  ...
+# Subtest: public service failure never claims live facts were verified
+ok 51 - public service failure never claims live facts were verified
+  ---
+  duration_ms: 0.892134
+  type: 'test'
+  ...
+# Subtest: unknown tool and empty topic do not make network requests
+ok 52 - unknown tool and empty topic do not make network requests
+  ---
+  duration_ms: 0.715635
+  type: 'test'
+  ...
+# Subtest: SSE parses CRLF, comments, event labels, multiline JSON and DONE at every character boundary
+ok 53 - SSE parses CRLF, comments, event labels, multiline JSON and DONE at every character boundary
+  ---
+  duration_ms: 3.279312
+  type: 'test'
+  ...
+# Subtest: SSE supports LF, bare CR, final unterminated event and empty data
+ok 54 - SSE supports LF, bare CR, final unterminated event and empty data
+  ---
+  duration_ms: 0.16532
+  type: 'test'
+  ...
+# Subtest: OpenAI joins unicode, reasoning, content arrays, final usage and actual model
+ok 55 - OpenAI joins unicode, reasoning, content arrays, final usage and actual model
+  ---
+  duration_ms: 0.516329
+  type: 'test'
+  ...
+# Subtest: Groq x_groq final usage is preserved
+ok 56 - Groq x_groq final usage is preserved
+  ---
+  duration_ms: 0.1503
+  type: 'test'
+  ...
+# Subtest: partial stream followed by error NEVER becomes success
+ok 57 - partial stream followed by error NEVER becomes success
+  ---
+  duration_ms: 0.294595
+  type: 'test'
+  ...
+# Subtest: truncated and malformed streams do not become complete replies
+ok 58 - truncated and malformed streams do not become complete replies
+  ---
+  duration_ms: 0.197159
+  type: 'test'
+  ...
+# Subtest: streamed tool-call arguments are reassembled and bounded
+ok 59 - streamed tool-call arguments are reassembled and bounded
+  ---
+  duration_ms: 0.301704
+  type: 'test'
+  ...
+# Subtest: Gemini preserves thought boundaries, finish reason and exact usage
+ok 60 - Gemini preserves thought boundaries, finish reason and exact usage
+  ---
+  duration_ms: 0.189588
+  type: 'test'
+  ...
+# Subtest: Gemini blocked prompts remain explicit
+ok 61 - Gemini blocked prompts remain explicit
+  ---
+  duration_ms: 0.276365
+  type: 'test'
+  ...
+# Subtest: Cohere v2 delta format and real input/output usage
+ok 62 - Cohere v2 delta format and real input/output usage
+  ---
+  duration_ms: 0.359102
+  type: 'test'
+  ...
+# Subtest: Anthropic/Gonka format preserves start and end usage independently
+ok 63 - Anthropic/Gonka format preserves start and end usage independently
+  ---
+  duration_ms: 0.213481
+  type: 'test'
+  ...
+# Subtest: missing token metadata stays estimated, explicit zero is real and malformed counters are bounded
+ok 64 - missing token metadata stays estimated, explicit zero is real and malformed counters are bounded
+  ---
+  duration_ms: 1.610142
+  type: 'test'
+  ...
+# Subtest: check-in snapshot retains app ai-role replies as bounded assistant history
+ok 65 - check-in snapshot retains app ai-role replies as bounded assistant history
+  ---
+  duration_ms: 1.123404
+  type: 'test'
+  ...
+# Subtest: stale usage completion does not clear a newer running request
+ok 66 - stale usage completion does not clear a newer running request
+  ---
+  duration_ms: 1.130406
+  type: 'test'
+  ...
+# Subtest: native allowlist was parsed
+ok 67 - native allowlist was parsed
+  ---
+  duration_ms: 0.983357
+  type: 'test'
+  ...
+# Subtest: gateway providers are allowed by the native bridge
+ok 68 - gateway providers are allowed by the native bridge
+  ---
+  duration_ms: 0.141861
+  type: 'test'
+  ...
+# Subtest: every https base URL used by oaiGateway is allowed natively
+ok 69 - every https base URL used by oaiGateway is allowed natively
+  ---
+  duration_ms: 0.605799
+  type: 'test'
+  ...
+# Subtest: original hosts are still allowed
+ok 70 - original hosts are still allowed
+  ---
+  duration_ms: 0.137251
+  type: 'test'
+  ...
+# Subtest: guard list parsed
+ok 71 - guard list parsed
+  ---
+  duration_ms: 0.78612
+  type: 'test'
+  ...
+# Subtest: dangerous commands are paused for approval
+ok 72 - dangerous commands are paused for approval
+  ---
+  duration_ms: 1.433506
+  type: 'test'
+  ...
+# Subtest: normal download and file work is NOT paused
+ok 73 - normal download and file work is NOT paused
+  ---
+  duration_ms: 0.32551
+  type: 'test'
+  ...
+# Subtest: horizon_hold.js loads before the group script and the main script
+ok 74 - horizon_hold.js loads before the group script and the main script
+  ---
+  duration_ms: 1.192388
+  type: 'test'
+  ...
+# Subtest: automatic scrolling asks HorizonHold first; only deliberate jumps force it
+ok 75 - automatic scrolling asks HorizonHold first; only deliberate jumps force it
+  ---
+  duration_ms: 0.888748
+  type: 'test'
+  ...
+# Subtest: hold controller pauses on touch, selection and scroll-up, and exposes its API
+ok 76 - hold controller pauses on touch, selection and scroll-up, and exposes its API
+  ---
+  duration_ms: 0.324914
+  type: 'test'
+  ...
+# Subtest: the scroll-to-bottom arrow resumes follow and shows while a scroll is held back
+ok 77 - the scroll-to-bottom arrow resumes follow and shows while a scroll is held back
+  ---
+  duration_ms: 0.26553
+  type: 'test'
+  ...
+# Subtest: Debate and Judge queue while the AIs are answering instead of bouncing
+ok 78 - Debate and Judge queue while the AIs are answering instead of bouncing
+  ---
+  duration_ms: 1.431718
+  type: 'test'
+  ...
+# Subtest: routes legacy Gemini standalone
+ok 79 - routes legacy Gemini standalone
+  ---
+  duration_ms: 3.428651
+  type: 'test'
+  ...
+# Subtest: routes new Gemini AQ dot keys
+ok 80 - routes new Gemini AQ dot keys
+  ---
+  duration_ms: 0.803953
+  type: 'test'
+  ...
+# Subtest: accepts Aq variant for live verification
+ok 81 - accepts Aq variant for live verification
+  ---
+  duration_ms: 0.130222
+  type: 'test'
+  ...
+# Subtest: routes Groq and OpenRouter standalone
+ok 82 - routes Groq and OpenRouter standalone
+  ---
+  duration_ms: 0.789804
+  type: 'test'
+  ...
+# Subtest: does not guess ambiguous standalone owner
+ok 83 - does not guess ambiguous standalone owner
+  ---
+  duration_ms: 0.280902
+  type: 'test'
+  ...
+# Subtest: rejects mismatched provider labels
+ok 84 - rejects mismatched provider labels
+  ---
+  duration_ms: 0.218929
+  type: 'test'
+  ...
+# Subtest: rejects Gemini key in gateway field
+ok 85 - rejects Gemini key in gateway field
+  ---
+  duration_ms: 0.152561
+  type: 'test'
+  ...
+# Subtest: extracts labelled unprefixed keys
+ok 86 - extracts labelled unprefixed keys
+  ---
+  duration_ms: 0.220664
+  type: 'test'
+  ...
+# Subtest: accepts note heading and following key
+ok 87 - accepts note heading and following key
+  ---
+  duration_ms: 0.331614
+  type: 'test'
+  ...
+# Subtest: deduplicates keys
+ok 88 - deduplicates keys
+  ---
+  duration_ms: 0.367268
+  type: 'test'
+  ...
+# Subtest: extracts JSON provider note
+ok 89 - extracts JSON provider note
+  ---
+  duration_ms: 0.225564
+  type: 'test'
+  ...
+# Subtest: extracts environment style note
+ok 90 - extracts environment style note
+  ---
+  duration_ms: 0.13254
+  type: 'test'
+  ...
+# Subtest: rejects placeholders, whitespace, urls and short text
+ok 91 - rejects placeholders, whitespace, urls and short text
+  ---
+  duration_ms: 0.100308
+  type: 'test'
+  ...
+# Subtest: new JS files parse
+ok 92 - new JS files parse
+  ---
+  duration_ms: 3.469074
+  type: 'test'
+  ...
+# Subtest: all inline scripts parse
+ok 93 - all inline scripts parse
+  ---
+  duration_ms: 11.96429
+  type: 'test'
+  ...
+# Subtest: importer is privacy masked and clears notes only after success
+ok 94 - importer is privacy masked and clears notes only after success
+  ---
+  duration_ms: 3.215958
+  type: 'test'
+  ...
+# Subtest: grey reply fix scoped to actual theme and bar
+ok 95 - grey reply fix scoped to actual theme and bar
+  ---
+  duration_ms: 1.746273
+  type: 'test'
+  ...
+# Subtest: ten page requests enter section plan
+ok 96 - ten page requests enter section plan
+  ---
+  duration_ms: 4.008515
+  type: 'test'
+  ...
+# Subtest: extracts shell and PowerShell environment variables without losing AQ dot
+ok 97 - extracts shell and PowerShell environment variables without losing AQ dot
+  ---
+  duration_ms: 0.186876
+  type: 'test'
+  ...
+# Subtest: Gronkrouter spelling maps to existing GonkaRouter provider id
+ok 98 - Gronkrouter spelling maps to existing GonkaRouter provider id
+  ---
+  duration_ms: 0.086043
+  type: 'test'
+  ...
+# Subtest: cached old header mode cannot reactivate an obsolete layout
+ok 99 - cached old header mode cannot reactivate an obsolete layout
+  ---
+  duration_ms: 0.113906
+  type: 'test'
+  ...
+# Subtest: all permission hosts have exactly one owner in Settings
+ok 100 - all permission hosts have exactly one owner in Settings
+  ---
+  duration_ms: 3.12246
+  type: 'test'
+  ...
+# Subtest: thought visibility rejects hidden ancestors and CSS-hidden modules
+ok 101 - thought visibility rejects hidden ancestors and CSS-hidden modules
+  ---
+  duration_ms: 1.941331
+  type: 'test'
+  ...
+# Subtest: download X removes completed and queued rows, stopping parent events
+ok 102 - download X removes completed and queued rows, stopping parent events
+  ---
+  duration_ms: 2.950201
+  type: 'test'
+  ...
+# Subtest: dismissing a running download does not release its concurrency slot
+ok 103 - dismissing a running download does not release its concurrency slot
+  ---
+  duration_ms: 2.910931
+  type: 'test'
+  ...
+# Subtest: tray removal handles restored numeric and string ids consistently
+ok 104 - tray removal handles restored numeric and string ids consistently
+  ---
+  duration_ms: 1.55823
+  type: 'test'
+  ...
+# Subtest: check-in snapshot is bounded text-only, not the system prompt or tool context
+ok 105 - check-in snapshot is bounded text-only, not the system prompt or tool context
+  ---
+  duration_ms: 1.758985
+  type: 'test'
+  ...
+# Subtest: check-in worker is opt-in, encrypted and persists messages without opening apps
+ok 106 - check-in worker is opt-in, encrypted and persists messages without opening apps
+  ---
+  duration_ms: 0.497283
+  type: 'test'
+  ...
+# Subtest: native approvals are one-shot, command-bound and expire; HTML uses text nodes
+ok 107 - native approvals are one-shot, command-bound and expire; HTML uses text nodes
+  ---
+  duration_ms: 0.414342
+  type: 'test'
+  ...
+# Subtest: Accessibility messaging fallback stays removed
+ok 108 - Accessibility messaging fallback stays removed
+  ---
+  duration_ms: 0.208685
+  type: 'test'
+  ...
+# Subtest: background credentials retain backup guards
+ok 109 - background credentials retain backup guards
+  ---
+  duration_ms: 0.419849
+  type: 'test'
+  ...
+# Subtest: V1.93.5 alarm notification cannot be swiped away
+ok 110 - V1.93.5 alarm notification cannot be swiped away
+  ---
+  duration_ms: 0.87808
+  type: 'test'
+  ...
+# Subtest: V1.93.6 round table is wired into the group round
+ok 111 - V1.93.6 round table is wired into the group round
+  ---
+  duration_ms: 3.290526
+  type: 'test'
+  ...
+# Subtest: V1.93.6 round strip logic: slow after 30 s, skip, end
+ok 112 - V1.93.6 round strip logic: slow after 30 s, skip, end
+  ---
+  duration_ms: 3.766476
+  type: 'test'
+  ...
+# Subtest: V1.93.6 background hold wakes the page and chat visuals are wired
+ok 113 - V1.93.6 background hold wakes the page and chat visuals are wired
+  ---
+  duration_ms: 5.438633
+  type: 'test'
+  ...
+# Subtest: first run uses only direct Android speech and reports actual native start
+ok 114 - first run uses only direct Android speech and reports actual native start
+  ---
+  duration_ms: 12.395289
+  type: 'test'
+  ...
+# Subtest: all legacy engine selections migrate to Android, never cloud or neural packs
+ok 115 - all legacy engine selections migrate to Android, never cloud or neural packs
+  ---
+  duration_ms: 7.555895
+  type: 'test'
+  ...
+# Subtest: Android-only controller does not expose model packs, cloud voices or HD downloads
+ok 116 - Android-only controller does not expose model packs, cloud voices or HD downloads
+  ---
+  duration_ms: 1.133872
+  type: 'test'
+  ...
+# Subtest: seventeen bounded controls and twenty-two distinct presets (two natural voices, ten character transforms)
+ok 117 - seventeen bounded controls and twenty-two distinct presets (two natural voices, ten character transforms)
+  ---
+  duration_ms: 2.915642
+  type: 'test'
+  ...
+# Subtest: neutral bypasses DSP; every sound effect selects the processing path
+ok 118 - neutral bypasses DSP; every sound effect selects the processing path
+  ---
+  duration_ms: 1.944346
+  type: 'test'
+  ...
+# Subtest: controls clamp invalid stored and live input without NaN or infinity
+ok 119 - controls clamp invalid stored and live input without NaN or infinity
+  ---
+  duration_ms: 1.032814
+  type: 'test'
+  ...
+# Subtest: preset controls go to Android speech once, with no second speed or pitch transform
+ok 120 - preset controls go to Android speech once, with no second speed or pitch transform
+  ---
+  duration_ms: 1.32505
+  type: 'test'
+  ...
+# Subtest: effects use short segments and preserve all words
+ok 121 - effects use short segments and preserve all words
+  ---
+  duration_ms: 1.518118
+  type: 'test'
+  ...
+# Subtest: hard split never drops characters in long unbroken text
+ok 122 - hard split never drops characters in long unbroken text
+  ---
+  duration_ms: 1.14904
+  type: 'test'
+  ...
+# Subtest: Markdown speech cleaning skips code, strips markup, avoids reading URLs
+ok 123 - Markdown speech cleaning skips code, strips markup, avoids reading URLs
+  ---
+  duration_ms: 1.272117
+  type: 'test'
+  ...
+# Subtest: stop cancels pending native speech without fallback or stale events
+ok 124 - stop cancels pending native speech without fallback or stale events
+  ---
+  duration_ms: 8.776578
+  type: 'test'
+  ...
+# Subtest: effects pause and resume retain audio position through native player controls
+ok 125 - effects pause and resume retain audio position through native player controls
+  ---
+  duration_ms: 6.769771
+  type: 'test'
+  ...
+# Subtest: direct Android speech pause resumes the current chunk instead of dropping it
+ok 126 - direct Android speech pause resumes the current chunk instead of dropping it
+  ---
+  duration_ms: 4.240288
+  type: 'test'
+  ...
+# Subtest: Android failure is reported honestly and does not use another provider
+ok 127 - Android failure is reported honestly and does not use another provider
+  ---
+  duration_ms: 1.543665
+  type: 'test'
+  ...
+# Subtest: browser preview never uses browser synthesis or pretends Android is available
+ok 128 - browser preview never uses browser synthesis or pretends Android is available
+  ---
+  duration_ms: 1.032574
+  type: 'test'
+  ...
+# Subtest: stable voice names and group voice slots preserve language
+ok 129 - stable voice names and group voice slots preserve language
+  ---
+  duration_ms: 1.352991
+  type: 'test'
+  ...
+# Subtest: voice enumeration is cached and concurrent requests coalesce
+ok 130 - voice enumeration is cached and concurrent requests coalesce
+  ---
+  duration_ms: 1.101189
+  type: 'test'
+  ...
+# Subtest: online Android voices are labelled and no offline guarantee is invented
+ok 131 - online Android voices are labelled and no offline guarantee is invented
+  ---
+  duration_ms: 1.838086
+  type: 'test'
+  ...
+# Subtest: blocked local storage does not break speech
+ok 132 - blocked local storage does not break speech
+  ---
+  duration_ms: 1.424489
+  type: 'test'
+  ...
+# Subtest: missing voice list fails cleanly, with no browser fallback
+ok 133 - missing voice list fails cleanly, with no browser fallback
+  ---
+  duration_ms: 1.084098
+  type: 'test'
+  ...
+# Subtest: rapid replacement allows only the most recent request to reach Android speak
+ok 134 - rapid replacement allows only the most recent request to reach Android speak
+  ---
+  duration_ms: 1.218321
+  type: 'test'
+  ...
+# Subtest: immediate direct pause-resume does not lose the current chunk to a cancellation race
+ok 135 - immediate direct pause-resume does not lose the current chunk to a cancellation race
+  ---
+  duration_ms: 4.397038
+  type: 'test'
+  ...
+# Subtest: listeners can unsubscribe and unsafe mutation of presets is prevented
+ok 136 - listeners can unsubscribe and unsafe mutation of presets is prevented
+  ---
+  duration_ms: 0.941138
+  type: 'test'
+  ...
+# Subtest: ten added character transforms survive manual EQ and installed voice changes
+ok 137 - ten added character transforms survive manual EQ and installed voice changes
+  ---
+  duration_ms: 4.831916
+  type: 'test'
+  ...
+# Subtest: six new processors reach the native bridge with independent bounded controls
+ok 138 - six new processors reach the native bridge with independent bounded controls
+  ---
+  duration_ms: 1.307706
+  type: 'test'
+  ...
+# Subtest: natural voices: gender is read from the voice name, never guessed
+ok 139 - natural voices: gender is read from the voice name, never guessed
+  ---
+  duration_ms: 1.049277
+  type: 'test'
+  ...
+# Subtest: natural male and female presets speak the best installed English voice of that gender, directly and with no effects
+ok 140 - natural male and female presets speak the best installed English voice of that gender, directly and with no effects
+  ---
+  duration_ms: 2.090083
+  type: 'test'
+  ...
+# Subtest: natural voices skip online voices while the phone is offline
+ok 141 - natural voices skip online voices while the phone is offline
+  ---
+  duration_ms: 1.463042
+  type: 'test'
+  ...
+# Subtest: the accent setting steers natural voices, and they stay English whatever language is selected
+ok 142 - the accent setting steers natural voices, and they stay English whatever language is selected
+  ---
+  duration_ms: 1.498632
+  type: 'test'
+  ...
+# Subtest: a voice picked by ear overrides the automatic match, and a manual Android voice takes over from the preset
+ok 143 - a voice picked by ear overrides the automatic match, and a manual Android voice takes over from the preset
+  ---
+  duration_ms: 1.711782
+  type: 'test'
+  ...
+# Subtest: group chat slots alternate male and female natural voices
+ok 144 - group chat slots alternate male and female natural voices
+  ---
+  duration_ms: 2.244706
+  type: 'test'
+  ...
+# Subtest: with no matching voice installed the default English voice is shifted in pitch and the person is told
+ok 145 - with no matching voice installed the default English voice is shifted in pitch and the person is told
+  ---
+  duration_ms: 1.536485
+  type: 'test'
+  ...
+# Subtest: naturalVoices groups every English voice for the settings panel and hides nothing
+ok 146 - naturalVoices groups every English voice for the settings panel and hides nothing
+  ---
+  duration_ms: 1.973361
+  type: 'test'
+  ...
+# Subtest: scraper labels in JSON/env/markdown/HTML are extracted without executing markup
+ok 147 - scraper labels in JSON/env/markdown/HTML are extracted without executing markup
+  ---
+  duration_ms: 4.867234
+  type: 'test'
+  ...
+# Subtest: all four scraper labels share canonical parser and ScraperBee alias
+ok 148 - all four scraper labels share canonical parser and ScraperBee alias
+  ---
+  duration_ms: 0.344722
+  type: 'test'
+  ...
+# Subtest: browserless token environment variable is recognised
+ok 149 - browserless token environment variable is recognised
+  ---
+  duration_ms: 0.262593
+  type: 'test'
+  ...
+# Subtest: messy scraper note deduplicates across formats and rejects conflicting owner
+ok 150 - messy scraper note deduplicates across formats and rejects conflicting owner
+  ---
+  duration_ms: 0.216332
+  type: 'test'
+  ...
+# Subtest: HTML headings can precede a key in the next block
+ok 151 - HTML headings can precede a key in the next block
+  ---
+  duration_ms: 0.133871
+  type: 'test'
+  ...
+# Subtest: a labelled URL is not imported as an unprefixed secret
+ok 152 - a labelled URL is not imported as an unprefixed secret
+  ---
+  duration_ms: 0.112237
+  type: 'test'
+  ...
+# Subtest: zero-width paste artifacts and curly quotes do not corrupt scraper tokens
+ok 153 - zero-width paste artifacts and curly quotes do not corrupt scraper tokens
+  ---
+  duration_ms: 1.502326
+  type: 'test'
+  ...
+# Subtest: a standalone opaque key never guesses its service
+ok 154 - a standalone opaque key never guesses its service
+  ---
+  duration_ms: 0.210562
+  type: 'test'
+  ...
+# Subtest: placeholder scraper keys are refused
+ok 155 - placeholder scraper keys are refused
+  ---
+  duration_ms: 0.361659
+  type: 'test'
+  ...
+# Subtest: manual and AI commands share exactly one bridge owner
+ok 156 - manual and AI commands share exactly one bridge owner
+  ---
+  duration_ms: 2.687284
+  type: 'test'
+  ...
+# Subtest: concurrent submission is refused before a second native call
+ok 157 - concurrent submission is refused before a second native call
+  ---
+  duration_ms: 10.289137
+  type: 'test'
+  ...
+# Subtest: approval rejection releases lock and surfaces one error
+ok 158 - approval rejection releases lock and surfaces one error
+  ---
+  duration_ms: 0.955747
+  type: 'test'
+  ...
+# Subtest: unknown completion holds lock until a late result arrives
+ok 159 - unknown completion holds lock until a late result arrives
+  ---
+  duration_ms: 0.969991
+  type: 'test'
+  ...
+# Subtest: AI download capability instructions describe supported tools truthfully
+ok 160 - AI download capability instructions describe supported tools truthfully
+  ---
+  duration_ms: 1.025347
+  type: 'test'
+  ...
+# Subtest: obsolete native shell implementation and AI route are removed
+ok 161 - obsolete native shell implementation and AI route are removed
+  ---
+  duration_ms: 2.448822
+  type: 'test'
+  ...
+# Subtest: all application JavaScript parses
+ok 162 - all application JavaScript parses
+  ---
+  duration_ms: 27.590303
+  type: 'test'
+  ...
+# Subtest: release migration never clears user databases or starts reload loops
+ok 163 - release migration never clears user databases or starts reload loops
+  ---
+  duration_ms: 0.130482
+  type: 'test'
+  ...
+# Subtest: terminal helper has event-based mounting and no document-wide observer
+ok 164 - terminal helper has event-based mounting and no document-wide observer
+  ---
+  duration_ms: 0.158739
+  type: 'test'
+  ...
+# Subtest: laser has no permanent idle interval and respects motion settings
+ok 165 - laser has no permanent idle interval and respects motion settings
+  ---
+  duration_ms: 0.182884
+  type: 'test'
+  ...
+# Subtest: one canonical stylesheet replaces the old layout patch files
+ok 166 - one canonical stylesheet replaces the old layout patch files
+  ---
+  duration_ms: 2.982765
+  type: 'test'
+  ...
+# Subtest: one key note box handles AI and scraper keys without another store
+ok 167 - one key note box handles AI and scraper keys without another store
+  ---
+  duration_ms: 4.314052
+  type: 'test'
+  ...
+# Subtest: oversized opaque token is rejected whole rather than imported in chunks
+ok 168 - oversized opaque token is rejected whole rather than imported in chunks
+  ---
+  duration_ms: 0.231383
+  type: 'test'
+  ...
+# Subtest: mixed AI and scraper notes retain exact provider routing
+ok 169 - mixed AI and scraper notes retain exact provider routing
+  ---
+  duration_ms: 0.11738
+  type: 'test'
+  ...
+# Subtest: native speech synthesizes only with Android and never accepts arbitrary audio/base64 blobs
+ok 170 - native speech synthesizes only with Android and never accepts arbitrary audio/base64 blobs
+  ---
+  duration_ms: 0.991394
+  type: 'test'
+  ...
+# Subtest: native DSP queue, file size, duration, encoding and cancellation are bounded
+ok 171 - native DSP queue, file size, duration, encoding and cancellation are bounded
+  ---
+  duration_ms: 0.313667
+  type: 'test'
+  ...
+# Subtest: native start events carry caller utterance IDs but completion uses internal unguessable IDs
+ok 172 - native start events carry caller utterance IDs but completion uses internal unguessable IDs
+  ---
+  duration_ms: 0.159421
+  type: 'test'
+  ...
+# Subtest: native browser programmatic loads and downloads use HTTP(S) allowlists
+ok 173 - native browser programmatic loads and downloads use HTTP(S) allowlists
+  ---
+  duration_ms: 1.24107
+  type: 'test'
+  ...
+# Subtest: browser disables file-to-network access, keeps TLS rejection, pauses hidden tabs and limits memory
+ok 174 - browser disables file-to-network access, keeps TLS rejection, pauses hidden tabs and limits memory
+  ---
+  duration_ms: 0.272506
+  type: 'test'
+  ...
+# Subtest: exported alarm receiver ignores non-system actions
+ok 175 - exported alarm receiver ignores non-system actions
+  ---
+  duration_ms: 0.151805
+  type: 'test'
+  ...
+# Subtest: native caches migrate once without touching unrelated user data
+ok 176 - native caches migrate once without touching unrelated user data
+  ---
+  duration_ms: 0.19831
+  type: 'test'
+  ...
+# Subtest: CI applies Android DSP tests, voice browser tests and rejects neural payloads
+ok 177 - CI applies Android DSP tests, voice browser tests and rejects neural payloads
+  ---
+  duration_ms: 0.171176
+  type: 'test'
+  ...
+# Subtest: build removes stale neural generated sources on upgrades, preserving other assets
+ok 178 - build removes stale neural generated sources on upgrades, preserving other assets
+  ---
+  duration_ms: 0.340367
+  type: 'test'
+  ...
+# Subtest: patched build dependencies have a guarded default-import compatibility shim
+ok 179 - patched build dependencies have a guarded default-import compatibility shim
+  ---
+  duration_ms: 0.487302
+  type: 'test'
+  ...
+# Subtest: dead public Piped/Invidious layer is gone from the app
+ok 180 - dead public Piped/Invidious layer is gone from the app
+  ---
+  duration_ms: 1.898345
+  type: 'test'
+  ...
+# Subtest: yt.download accepts a video kind and the download runner honours it
+ok 181 - yt.download accepts a video kind and the download runner honours it
+  ---
+  duration_ms: 0.500476
+  type: 'test'
+  ...
+# Subtest: Termux AI know-how carries exact yt-dlp recipes
+ok 182 - Termux AI know-how carries exact yt-dlp recipes
+  ---
+  duration_ms: 1.179513
+  type: 'test'
+  ...
+# Subtest: yt-dlp search fallback is exported and validates ids
+ok 183 - yt-dlp search fallback is exported and validates ids
+  ---
+  duration_ms: 0.269204
+  type: 'test'
+  ...
+# Subtest: stale storage keys are cleaned on release
+ok 184 - stale storage keys are cleaned on release
+  ---
+  duration_ms: 0.167973
+  type: 'test'
+  ...
+1..184
+# tests 184
+# suites 0
+# pass 184
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2351.828649
+
+> horizon@1.93.14 test:voice-dsp
+> node tests/voice-dsp.cjs
+
+PASS neutral bypasses DSP
+PASS NaN is neutral
+PASS infinity is neutral
+PASS native bounds enforced
+PASS neutral gain remains within 2 percent
+PASS low shelf boosts low frequencies
+PASS low shelf attenuates low frequencies
+PASS high shelf boosts high frequencies
+PASS presence bell boosts its centre frequency
+PASS envelope compressor reduces loud signal RMS
+PASS comb reverb creates a decaying tail
+PASS feedback delay creates a 190ms echo
+PASS ring modulation changes the signal without silence
+PASS pitch-snap does not invent sound from silence
+PASS voiced pitch-snap produces finite audible output
+PASS 225 Hz fixture snaps toward A3 (220 Hz), measured 220.0070703027437
+PASS all effects at maximum remain finite and peak-limited
+PASS short edge fades avoid abrupt clicks
+PASS character 1 audibly transforms finite PCM
+PASS character 1 remains controllable by downstream EQ
+PASS character 1 preserves silence
+PASS character 1 zero mix is neutral
+PASS character 2 audibly transforms finite PCM
+PASS character 2 remains controllable by downstream EQ
+PASS character 2 preserves silence
+PASS character 2 zero mix is neutral
+PASS character 3 audibly transforms finite PCM
+PASS character 3 remains controllable by downstream EQ
+PASS character 3 preserves silence
+PASS character 3 zero mix is neutral
+PASS character 4 audibly transforms finite PCM
+PASS character 4 remains controllable by downstream EQ
+PASS character 4 preserves silence
+PASS character 4 zero mix is neutral
+PASS character 5 audibly transforms finite PCM
+PASS character 5 remains controllable by downstream EQ
+PASS character 5 preserves silence
+PASS character 5 zero mix is neutral
+PASS character 6 audibly transforms finite PCM
+PASS character 6 remains controllable by downstream EQ
+PASS character 6 preserves silence
+PASS character 6 zero mix is neutral
+PASS character 7 audibly transforms finite PCM
+PASS character 7 remains controllable by downstream EQ
+PASS character 7 preserves silence
+PASS character 7 zero mix is neutral
+PASS character 8 audibly transforms finite PCM
+PASS character 8 remains controllable by downstream EQ
+PASS character 8 preserves silence
+PASS character 8 zero mix is neutral
+PASS character 9 audibly transforms finite PCM
+PASS character 9 remains controllable by downstream EQ
+PASS character 9 preserves silence
+PASS character 9 zero mix is neutral
+PASS character 10 audibly transforms finite PCM
+PASS character 10 remains controllable by downstream EQ
+PASS character 10 preserves silence
+PASS character 10 zero mix is neutral
+PASS hard limiter obeys 0.25 ceiling at 100 percent
+PASS normalize targets 0.9 peak
+PASS normalize never invents audio from silence
+PASS limiter ceiling survives normalization
+PASS humanize changes microtiming without losing speech energy
+PASS de-esser reduces strong high-frequency sibilance
+PASS de-esser preserves low-frequency speech body
+PASS noise gate attenuates sub-threshold noise
+PASS saturation adds bounded harmonic drive
+PASS new effects combined stable at 8000 Hz
+PASS new effects combined stable at 16000 Hz
+PASS new effects combined stable at 22050 Hz
+PASS new effects combined stable at 24000 Hz
+PASS new effects combined stable at 44100 Hz
+PASS new effects combined stable at 48000 Hz
+PASS WAV render includes reverb tail
+PASS output is a WAV container
+PASS stereo input downmixes to bounded mono PCM
+PASS malformed WAV rejected
+PASS overflow/truncated chunk length rejected
+PASS unsupported PCM encoding rejected with direct-speech escape route
+PASS overlong processing input rejected
+PASS oversized processing input rejected before allocating PCM
+PASS cancellation prevents processing
+PASS DSP stable at 8000 Hz
+PASS DSP stable at 16000 Hz
+PASS DSP stable at 22050 Hz
+PASS DSP stable at 24000 Hz
+PASS DSP stable at 44100 Hz
+PASS DSP stable at 48000 Hz
+RESULT 88 DSP tests passed
+
+> horizon@1.93.14 test:browser
+> node tests/browser.smoke.cjs
+
+{
+  "checks": [
+    "boot has no uncaught JavaScript errors",
+    "old layout and duplicate shell preferences removed without erasing data",
+    "all live DOM IDs are unique at startup",
+    "Termux controls are lazy, not built in Permissions at startup",
+    "four remaining right-panel app tiles share a single row at 320, 412 and 768px",
+    "Permissions owns the Device/native check, has no WhatsApp card, and no shell or Termux controls",
+    "messy key paste is deduplicated, owner-checked, masked and never saved during extraction",
+    "503 verification failure does not save a key or erase pasted notes",
+    "verified key uses existing provider store; mixed/failed note is retained",
+    "big Terminal owns one prompt and Termux-only Controls/Options, no duplicate small shell",
+    "browser preview does not fake shell execution",
+    "manual and AI command routing both hit the same mocked native Termux bridge",
+    "reopening terminal/settings does not duplicate controls",
+    "removed WhatsApp Contacts messenger has no orphaned app launcher",
+    "Android-only voice studio has seventeen controls, twenty presets, functioning selection/reset and no cloud/model UI",
+    "removed WhatsApp send route returns an error; no contacts messenger is loaded",
+    "new chat works and the removed WhatsApp feature leaves no globals behind",
+    "original Music extension still opens",
+    "original Group chat configuration still opens",
+    "late keyboard-hidden event preserves typed text and focus",
+    "all three lightweight chat visuals render on existing message DOM",
+    "Termux options fit narrow and wide layouts"
+  ],
+  "errors": [],
+  "missing": [],
+  "elapsedMs": 5172,
+  "androidDeviceTested": false,
+  "nativeCommandsMocked": true
+}
+
+> horizon@1.93.14 test:voice-browser
+> node tests/voice-studio.browser.cjs
+
+{
+  "checks": [
+    "seventeen controls, twenty-two presets plus Custom, natural male/female pickers present, no old TTS provider or download UI",
+    "legacy engine and Cloud TTS key migrate safely",
+    "all twenty-two presets drive the native speech bridge and complete with real-start events (mock Android bridge)",
+    "Use male and Use female apply the natural presets, speak English through the native bridge and keep the preset list in sync",
+    "effects pause, resume and stop use native bridge without provider fallback",
+    "live EQ adjustment switches to Custom and persists",
+    "voice controls fit 320, 412 and 768px widths",
+    "reset clears every effect and returns to direct Android speech"
+  ],
+  "errors": [],
+  "androidDeviceTested": false,
+  "nativeSpeechMocked": true
+}
+
+> horizon@1.93.14 test:closed-feature
+> node tests/closed-feature.browser.cjs
+
+{
+  "checks": [
+    "single cyan handle replaces old pills; nine actions in requested order",
+    "composer tools remain a 3 by 3 grid at 320, 412 and 768px",
+    "handle preserves editor focus, Escape closes the tools",
+    "Permissions has no WhatsApp card, inbox or contacts UI",
+    "the WhatsApp feature is gone: no toast or pin for a preview event, no feature globals, bridge refuses its old tools",
+    "all twenty-two sound presets have individual Test controls plus local effect/voice Test buttons"
+  ],
+  "errors": []
+}
+
+> horizon@1.93.14 test:keyboard-browser
+> node tests/recipient-keyboard.browser.cjs
+
+{
+  "checks": [
+    "composition survives delayed keyboard-hidden events without blur, lost text or a hidden editor",
+    "repeated native keyboard-start signals cannot indefinitely extend the busy watchdog",
+    "continuous resize events recover instead of keeping the keyboard guard stuck",
+    "typing still accepts input after watchdog recovery"
+  ],
+  "errors": [],
+  "androidDeviceTested": false,
+  "previewBridgeMocked": true,
+  "keyboardSignalsSimulated": true
+}
+
+> horizon@1.93.14 test:approval-browser
+> node tests/requested-fixes.browser.cjs
+
+{
+  "checks": [
+    "check-in is opt-in/off, with one settings section; web-only mode is disabled",
+    "removed WhatsApp inbox stays absent; no stale inbox entry point is called",
+    "Termux command and warnings cannot inject HTML; Cancel, Run and background dismissal acknowledge only the native token",
+    "check-in consent decline makes no request; enable, interval change, snapshot refresh and disable use the native worker bridge"
+  ],
+  "errors": [],
+  "androidDeviceTested": false,
+  "nativeBridgesMocked": true
+}
+
+> horizon@1.93.14 test:deepscan-browser
+> node tests/deepscan.browser.cjs
+
+{
+  "checks": [
+    "clean boot, no uncaught JavaScript errors",
+    "YouTube, Music, GitHub, Lens and Downloads extension panels all open and close",
+    "all 7 Settings pages open and return through Back",
+    "all ten visual choices, persistence, unique selection and 320/412/768px layout",
+    "all 13 providers execute streaming protocol fixtures with exact 11-in/7-out usage and credential routing",
+    "JSON instead of SSE is accepted and actual returned model is retained",
+    "unsupported usage-stream option retries once without it",
+    "explicitly unsupported streaming falls back to JSON without disabling other providers",
+    "partial stream plus upstream error is surfaced, never saved as a complete answer",
+    "Stop aborts a pending browser provider request",
+    "timeout aborts pending transport and returns promptly",
+    "rescue records primary 429 separately and credits successful tokens/model only to Groq",
+    "same-provider backup rotation succeeds independently of cross-provider rescue",
+    "auxiliary Terminal/creator AI request owns busy state and releases it without racing chat",
+    "all 13 provider adapters preserve HTTP 401 authentication status",
+    "keyless tools obey global Web-off without a network request",
+    "keyless weather dispatch works with no scraper key and retains units/time/source"
+  ],
+  "errors": []
+}

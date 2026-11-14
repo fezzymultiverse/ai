@@ -5,7 +5,7 @@
     "all live DOM IDs are unique at startup",
     "Termux controls are lazy, not built in Permissions at startup",
     "four remaining right-panel app tiles share a single row at 320, 412 and 768px",
-    "Permissions owns Device/native check and independent WhatsApp sources, no shell or Termux controls",
+    "Permissions owns the Device/native check, has no WhatsApp card, and no shell or Termux controls",
     "messy key paste is deduplicated, owner-checked, masked and never saved during extraction",
     "503 verification failure does not save a key or erase pasted notes",
     "verified key uses existing provider store; mixed/failed note is retained",
@@ -15,8 +15,8 @@
     "reopening terminal/settings does not duplicate controls",
     "removed WhatsApp Contacts messenger has no orphaned app launcher",
     "Android-only voice studio has seventeen controls, twenty presets, functioning selection/reset and no cloud/model UI",
-    "retired WhatsApp send route is explicitly refused; no contacts messenger is loaded",
-    "new chat has no inherited pinned WhatsApp context",
+    "removed WhatsApp send route returns an error; no contacts messenger is loaded",
+    "new chat works and the removed WhatsApp feature leaves no globals behind",
     "original Music extension still opens",
     "original Group chat configuration still opens",
     "late keyboard-hidden event preserves typed text and focus",
@@ -25,7 +25,7 @@
   ],
   "errors": [],
   "missing": [],
-  "elapsedMs": 6092,
+  "elapsedMs": 5172,
   "androidDeviceTested": false,
   "nativeCommandsMocked": true
 }

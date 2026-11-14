@@ -36,7 +36,7 @@ class HorizonTermuxPlugin : Plugin() {
         fun prefs(c: Context) = c.getSharedPreferences("horizon_termux", Context.MODE_PRIVATE)
         private val live = ConcurrentHashMap<String, LiveJob>()
         private val GUARDS: List<Pair<Regex, String>> = listOf(
-            Regex("""(^|[;&|(]\s*)(sudo|su|tsu|doas)(\s|$)""") to "root / privilege escalation",
+            Regex("""(^|[;&|(\n])\s*(?:(?:env|command|exec)\s+(?:-\S+\s+|[A-Za-z_][A-Za-z0-9_]*=\S+\s+)*)?(sudo|su|tsu|doas)(\s|$)""") to "root / privilege escalation",
             Regex("""\brm\b[^;&|\n]*\s(/|/\*|~/?|~/\*|[$]HOME/?|[$]HOME/\*|[$]PREFIX/?|\.\.?/?|\*)(\s|$|[;&|])""") to "deletes /, home, PREFIX or the whole current folder",
             Regex(""":\(\)\s*\{""") to "fork bomb",
             Regex("""\bmkfs""") to "formats a filesystem",

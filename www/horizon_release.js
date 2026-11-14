@@ -1,7 +1,7 @@
 /* Release migration: obsolete layout preferences only. Chats, keys, Vault and audio stay intact. */
 (function () {
   'use strict';
-  var release = '1.93.8';
+  var release = '1.93.14';
   window.HorizonRelease = release;
   try {
     ['horizon_door', 'hzShellOn', 'horizon_yt_instances', 'horizon_yt_discovered', 'horizon_yt_good'].forEach(function (key) { localStorage.removeItem(key); });

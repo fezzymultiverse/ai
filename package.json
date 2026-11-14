@@ -1,6 +1,6 @@
 {
   "name": "horizon",
-  "version": "1.93.9",
+  "version": "1.93.14",
   "private": true,
   "description": "Horizon Bojack Security",
   "license": "MIT",
@@ -20,7 +20,12 @@
     "test:voice-dsp": "node tests/voice-dsp.cjs",
     "test:voice-browser": "node tests/voice-studio.browser.cjs",
     "postinstall": "node scripts/patch-cli-tar.cjs",
-    "test:closed-feature": "node tests/closed-feature.browser.cjs"
+    "test:closed-feature": "node tests/closed-feature.browser.cjs",
+    "test:deepscan-browser": "node tests/deepscan.browser.cjs",
+    "test:keyboard-browser": "node tests/recipient-keyboard.browser.cjs",
+    "test:approval-browser": "node tests/requested-fixes.browser.cjs",
+    "test:all": "npm test && npm run test:voice-dsp && npm run test:browser && npm run test:voice-browser && npm run test:closed-feature && npm run test:keyboard-browser && npm run test:approval-browser && npm run test:deepscan-browser",
+    "test:live-public": "node tests/public-live.cjs && node tests/public-live.browser.cjs"
   },
   "overrides": {
     "tar": "7.5.22",

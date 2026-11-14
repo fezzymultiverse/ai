@@ -1,0 +1,11 @@
+{
+  "checks": [
+    "boot has no uncaught JavaScript errors",
+    "old layout and duplicate shell preferences removed without erasing data",
+    "all live DOM IDs are unique at startup",
+    "Termux controls are lazy, not built in Permissions at startup"
+  ],
+  "errors": [],
+  "missing": [],
+  "error": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n5 !== 4\n\n    at /home/claude/h/Horizon-V1_93_12-Cloudflare-Errors/tests/browser.smoke.cjs:41:14"
+}

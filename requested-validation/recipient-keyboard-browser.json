@@ -1,7 +1,5 @@
 {
   "checks": [
-    "pinned notification sender is escaped and responsive; no Contacts messenger is loaded",
-    "Unpin clears the private preview from AI context",
     "composition survives delayed keyboard-hidden events without blur, lost text or a hidden editor",
     "repeated native keyboard-start signals cannot indefinitely extend the busy watchdog",
     "continuous resize events recover instead of keeping the keyboard guard stuck",

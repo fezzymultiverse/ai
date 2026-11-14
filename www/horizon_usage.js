@@ -10,7 +10,7 @@
     var MAXLAT = 40, MAXT = 40, KEEP_DAYS = 30;
     var COLORS = { gemini: '#4f8cff', groq: '#f97316', cohere: '#a855f7', mistral: '#ff8205', openrouter: '#8b5cf6', anyapi: '#22d3ee', gonka: '#fbbf24', routeway: '#a78bfa', llm7: '#38bdf8', cloudflare: '#f6821f', pollinations: 'var(--neon)' };
     var EXTRA = ['#06b6d4', '#eab308', '#ec4899', '#14b8a6'];
-    var cfg = null, live = null, tick = 0, saveT = 0, root = null;
+    var cfg = null, live = null, tick = 0, saveT = 0, root = null, ticketSeq = 0;
     var net = { busy: false, data: null, err: '', at: 0 };
     var chkBusy = false, wipeArm = 0;
 
@@ -54,18 +54,19 @@
         Object.keys(attrs || {}).forEach(function (k) { n.setAttribute(k, attrs[k]); });
         return n;
     }
-    function shortErr(s) { s = String(s || '').replace(/\s+/g, ' ').trim(); return s.length > 140 ? s.slice(0, 140) + '...' : s; }
+    function shortErr(s) { s = String(s || '').replace(/(?:Bearer\s+)[^\s,;]+/gi, 'Bearer [redacted]').replace(/(?:AIza|AQ[.]?|gsk_|sk-(?:or-v1-)?)[A-Za-z0-9_.-]{10,}/g, '[redacted]').replace(/([?&](?:api_key|key|token)=)[^&\s]+/gi, '$1[redacted]').replace(/\s+/g, ' ').trim(); return s.length > 140 ? s.slice(0, 140) + '...' : s; }
     function prov(id) { var s = store.p[id]; if (!s) { s = store.p[id] = { req: 0, err: 0, i: 0, o: 0, est: 0, okN: 0, sumMs: 0, lat: [], last: null, chk: null, lastTurn: null }; } return s; }
 
     /* ---------- recording ---------- */
     function begin(id, model) {
-        live = { id: id, model: model, t0: Date.now(), estIn: 0 };
+        live = { id: id, model: model, t0: Date.now(), estIn: 0, ticket: ++ticketSeq };
         clearInterval(tick);
         tick = setInterval(function () { if (document.hidden) return; paintBadge(); }, 250);
         paintBadge();
+        return live.ticket;
     }
     function end(id, model, r) {
-        clearInterval(tick); tick = 0; live = null;
+        if (!r || !r.ticket || (live && live.ticket === r.ticket)) { clearInterval(tick); tick = 0; live = null; }
         if (!r || r.stopped) { paintBadge(); return; }
         var s = prov(id), dk = dayKey(), day = (store.d[dk] = store.d[dk] || {});
         var dd = (day[id] = day[id] || { r: 0, e: 0, i: 0, o: 0 });

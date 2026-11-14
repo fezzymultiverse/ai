@@ -1,4 +1,4 @@
-/* HORIZON 1.93.8 — canonical application stylesheet.
+/* HORIZON 1.93.14 — canonical application stylesheet.
    One bundled layout source. Section order preserves the existing cascade.
    Edit this file; obsolete individual patch stylesheets have been removed. */
 
@@ -4052,3 +4052,34 @@ html.hz-typing .typing-indicator span { animation-play-state: paused !important;
 /* V1.93.9: Screen size and Refresh rate cards. An option the screen cannot give shows dimmed and says why. */
 .theme-opt[aria-disabled="true"]{opacity:.5}
 #hzSizeCard .theme-list,#hzRateCard .theme-list{margin-top:6px}
+
+/* V1.93.14: opt-in visual preferences; Original leaves all existing rules intact. */
+.hz-visual-prefs { padding:14px; }
+.hz-visual-prefs p { font-size:12px; opacity:.8; line-height:1.5; }
+.hz-visual-prefs fieldset { min-width:0; border:0; margin:12px 0 0; padding:0; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px; }
+.hz-visual-prefs legend { font-size:13px; font-weight:700; margin-bottom:8px; }
+.hz-visual-option { min-height:58px; min-width:0; border:1px solid rgba(var(--accent-rgb),.25); border-radius:10px; background:transparent; color:inherit; padding:8px; text-align:left; font:inherit; font-size:12px; cursor:pointer; }
+.hz-visual-option[aria-checked="true"] { border:2px solid var(--neon); padding:7px; background:rgba(var(--accent-rgb),.08); }
+.hz-visual-option:focus-visible { outline:2px solid var(--neon); outline-offset:2px; }
+.hz-visual-swatch { display:block; height:20px; margin-bottom:5px; border-radius:4px; background:rgba(var(--accent-rgb),.06); }
+[data-preview="surface-original"] { background-image:radial-gradient(rgba(var(--accent-rgb),.5) 1px,transparent 1px); background-size:8px 8px; }
+[data-preview="surface-grid"] { background-image:linear-gradient(rgba(var(--accent-rgb),.3) 1px,transparent 1px),linear-gradient(90deg,rgba(var(--accent-rgb),.3) 1px,transparent 1px); background-size:8px 8px; }
+[data-preview="surface-lines"] { background-image:repeating-linear-gradient(transparent 0 6px,rgba(var(--accent-rgb),.3) 6px 7px); }
+[data-preview="surface-halo"] { background-image:radial-gradient(ellipse,rgba(var(--accent-rgb),.5),transparent 70%); }
+[data-preview^="spacing-"] { background:repeating-linear-gradient(transparent 0 3px,rgba(var(--accent-rgb),.5) 3px 5px); background-size:100% 8px; }
+[data-preview="spacing-compact"] { background-size:100% 5px; }
+[data-preview="spacing-balanced"] { background-size:100% 9px; }
+[data-preview="spacing-roomy"] { background-size:100% 13px; }
+[data-preview="spacing-reading"] { background-size:100% 17px; }
+html[data-hz-surface="plain"] #chatScroll { background-image:none; }
+html[data-hz-surface="grid"] #chatScroll { background-image:linear-gradient(rgba(var(--accent-rgb),.08) 1px,transparent 1px),linear-gradient(90deg,rgba(var(--accent-rgb),.08) 1px,transparent 1px); background-size:26px 26px; }
+html[data-hz-surface="lines"] #chatScroll { background-image:repeating-linear-gradient(transparent 0 27px,rgba(var(--accent-rgb),.09) 27px 28px); background-size:auto; }
+html[data-hz-surface="halo"] #chatScroll { background-image:radial-gradient(ellipse at 50% 10%,rgba(var(--accent-rgb),.1),transparent 65%); background-size:100% 100%; }
+html[data-hz-spacing="compact"] #chatMessages > .message { margin-block:8px; }
+html[data-hz-spacing="compact"] #chatMessages .bubble { line-height:1.45; }
+html[data-hz-spacing="balanced"] #chatMessages > .message { margin-block:16px; }
+html[data-hz-spacing="balanced"] #chatMessages .bubble { line-height:1.6; }
+html[data-hz-spacing="roomy"] #chatMessages > .message { margin-block:24px; }
+html[data-hz-spacing="roomy"] #chatMessages .bubble { line-height:1.8; }
+html[data-hz-spacing="reading"] #chatMessages > .message { margin-block:32px; }
+html[data-hz-spacing="reading"] #chatMessages .bubble { line-height:2; }

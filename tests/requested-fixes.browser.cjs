@@ -29,18 +29,10 @@ const server=http.createServer((req,res)=>{
     HorizonTermux:{status:async()=>({enabled:true}),resolveApproval:async x=>{window.__calls.push({kind:'approval',...x});}}
    }};
   });
-  await page.evaluate(async()=>{await HorizonBridges.refresh();await HorizonBridges.inbox();});
-  const input=page.locator('.hzb-inbox textarea');
-  assert.equal(await input.count(),1);
-  const style=await input.evaluate(el=>{const s=getComputedStyle(el);return{color:s.color,bg:s.backgroundColor,fill:s.webkitTextFillColor};});
-  assert.deepEqual(style,{color:'rgb(255, 255, 255)',bg:'rgb(7, 94, 84)',fill:'rgb(255, 255, 255)'});
-  assert.equal(await page.locator('.hzb-inbox img').count(),0);assert.equal(await page.evaluate(()=>window.__xss),false);
-  assert.match(await page.locator('.hzb-inbox').innerText(),/No active reply action/);
-  await input.fill('exact reply | keep pipe');await page.locator('.hzb-inbox').getByRole('button',{name:'Send reply',exact:true}).click();
-  assert.deepEqual(await page.evaluate(()=>window.__calls[0]),{kind:'reply',id:'m1',text:'exact reply | keep pipe'});
-  assert.equal(await input.inputValue(),'');
-  await page.locator('.hzb-inbox').getByRole('button',{name:'Close',exact:true}).click();
-  results.push('inbox displays white text on dark green, renders previews as text, shows expired action status, and sends exact reply');
+  await page.evaluate(async()=>{await HorizonBridges.refresh();});
+  assert.equal(await page.evaluate(()=>typeof HorizonBridges.inbox),'undefined');
+  assert.equal(await page.locator('.hzb-inbox').count(),0);
+  results.push('removed WhatsApp inbox stays absent; no stale inbox entry point is called');
   const payload={token:'test-token-1',title:'Termux review',command:'printf "<img src=x onerror=window.__xss=true>"',warning:'<script>window.__xss=true</script>'};
   await page.evaluate(d=>window.dispatchEvent(new CustomEvent('horizon-termux-approval',{detail:d})),payload);
   assert.equal(await page.locator('.hzb-approval img,.hzb-approval script').count(),0);
@@ -69,8 +61,8 @@ const server=http.createServer((req,res)=>{
   settings.once('dialog',d=>d.accept());await settings.locator('#hzCheckinToggle').check();
   await settings.waitForFunction(()=>window.__configured.length===1);
   assert.equal(await settings.evaluate(()=>window.__configured[0].enabled),true);
-  await settings.locator('#hzCheckinHours').selectOption('8');await settings.waitForFunction(()=>window.__configured.length===2);
-  assert.equal(await settings.evaluate(()=>window.__configured[1].hours),8);
+  await settings.locator('#hzCheckinMinutes').selectOption('720');await settings.waitForFunction(()=>window.__configured.length===2);
+  assert.equal(await settings.evaluate(()=>window.__configured[1].minutes),720);
   await settings.evaluate(()=>{window.__snapshot.history[0].text='refreshed';window.HorizonCheckin.scheduleSync();});
   await settings.waitForFunction(()=>window.__configured.length===3);
   await settings.locator('#hzCheckinToggle').uncheck();await settings.waitForFunction(()=>window.__configured.at(-1).enabled===false);

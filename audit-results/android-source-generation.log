@@ -1,0 +1,19 @@
+[apply-android] Horizon icons and splash applied (verified).
+[apply-android] Manifest permissions applied (verified).
+[apply-android] Horizon permissions and native plugin applied.
+[apply-android] Horizon Kotlin AI jobs and reply notifications applied.
+[apply-android] Native plugin sources verified.
+[apply-android] Gradle libraries applied (verified).
+[apply-android] App lock, theme backdrop and pop-up notifications verified.
+[apply-android] Keyboard resize mode and 90 Hz request applied (verified).
+[apply-bridges] Termux, check-in and NewPipe sources + manifest + dependencies verified.
+[apply-android] All Android patches applied and verified.
+✔ Copying web assets from www to android/app/src/main/assets/public in 37.76ms
+✔ Creating capacitor.config.json in android/app/src/main/assets in 638.06μs
+✔ copy android in 44.49ms
+✔ Updating Android plugins in 1.23ms
+[info] Found 2 Capacitor plugins for android:
+       @capacitor/filesystem@6.0.4
+       @capacitor/local-notifications@6.1.3
+✔ update android in 30.73ms
+[info] Sync finished in 0.095s

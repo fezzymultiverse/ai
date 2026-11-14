@@ -1,0 +1,10 @@
+  ok       package.json                       1.93.14
+  ok       package-lock.json (top)            1.93.14
+  ok       package-lock.json (root package)   1.93.14
+  ok       horizon_about.js VERSION           1.93.14
+  ok       horizon_release.js release         1.93.14
+  ok       index.html ?v= tags                1.93.14
+  ok       horizon_app.css banner             1.93.14
+  ok       README.md banner                   1.93.14
+  ok       horizon_about.js newest changelog  1.93.14
+[bump-version] All stamps agree.

@@ -1,0 +1,225 @@
+HORIZON V1.93.14 — DEEP AUDIT AND TARGETED REPAIRS
+Audit date (UTC): 2026-11-14
+Input: Horizon-V1_93_13-Deepscan-Fixes.zip
+Delivery: repaired source project, not a signed APK.
+
+EXECUTIVE RESULT
+The original passed 154 unit tests and its standard browser smoke test, yet
+important error, routing, verification and completion paths were not covered.
+The repaired source now passes 184 unit tests, 88 Java audio/DSP assertions,
+and all 6 browser suites (61 named check groups). All 13 provider adapters
+were exercised with controlled network fixtures, not real customer API keys.
+Android source generation, plugin patching, asset sync and the Gradle task
+:app:compileDebugKotlin succeeded. No physical Android device was available.
+This is not a claim that every native permission, remote service or UI control
+was exercised under every real-world condition, or that all bugs are eliminated.
+
+SCOPE AND CHANGE LIMITS
+Existing architecture, navigation and app identity retained. No provider was
+added or removed. No new runtime dependency. Exactly two optional visual
+customisation features were added inside Personalisation, five choices each.
+The small, bounded keyless-data extension uses the existing Web/tool dispatcher.
+No user key was supplied or used for paid-provider testing. No user data was
+intentionally erased. The release migration still only clears the same obsolete
+layout/cache preferences as the input release; chat/key/Vault data is not reset.
+Back up the installed app before any update. Build with the existing app ID and
+signing key. Do not uninstall the installed app merely to bypass a signature
+mismatch: that can erase app data. The source does not contain your signing key.
+
+CONFIRMED REPAIRS
+1. PROVIDER STREAMING: The old source streamed Gemini and selected Groq reasoning
+   calls, while most adapters used JSON-only requests. Chat requests now negotiate
+   streaming for all 13 adapters. OpenAI-compatible, Gemini, Cohere v2 and
+   Anthropic/Gonka event formats are normalized separately. Real usage frames
+   are requested for OpenAI-style streams. The UI reports receiving character
+   counts during streaming; final replies still use the existing message renderer.
+2. PROTOCOL FALLBACK: Providers returning JSON instead of SSE are read as JSON.
+   Explicit stream-options rejection retries once without that option. Explicitly
+   unsupported streaming falls back to the existing JSON protocol. This does not
+   silently treat an upstream model error as a successful reply.
+3. SSE FRAMING: CRLF, LF, CR, comment/event lines, multiline data events, UTF-8
+   decoding flush and the final unterminated event are handled. Parser and joiner
+   are independent, dependency-free code with adversarial tests.
+4. FALSE SUCCESS: A provider error after partial text now fails the request;
+   malformed and prematurely ended streams are not presented as complete answers.
+   Background notifications are withheld for errored/incomplete/cancelled streams.
+5. STOP/TIMEOUT: Browser requests have abort controllers, native request IDs can
+   disconnect their connections, and timers are cleared after settled requests.
+   Stop/Skip cancel outstanding provider transports. Late results are checked
+   against their turn rather than written into a later turn's usage/model state.
+   These controls do not undo a provider request already billed or a Termux
+   command already executed.
+6. ROUTING/USAGE: Rescue records the failed provider separately and credits the
+   answering provider. Same-provider backup rotation is tested. Actual returned
+   model IDs or the actually sent model are retained for labels. Old usage
+   completions cannot clear the live status of newer requests. Missing usage is
+   estimated and marked; real zero counts stay zero; negative/nonfinite counters
+   cannot corrupt totals. Usage here is local app telemetry, not an account-wide
+   billing reconciliation across other apps or a guarantee of exact provider cost.
+7. HTTP STATUS: Authentication and limit statuses survive provider error handling;
+   all 13 adapters are tested for HTTP 401 preservation. Gemini 429 triggers the
+   tested rescue path correctly. Non-429 failures are not called successful keys.
+8. FALSE KEY VERIFICATION: The old optional-token path could turn a failed
+   completion check into a synthetic choices payload and accept it as verification.
+   Removed. An unavailable, unauthenticated or rate-limited optional token is NOT
+   labelled verified/saved on that basis. Entered notes remain for retry. Keyless
+   operation and model-list refresh still work without entering a token.
+9. AUXILIARY AI: Terminal/creator helper requests own busy/cancellation state and
+   restore prior turn context only when they still own it. They no longer race
+   a normal chat turn while replacing the global current-turn pointer.
+10. CHECK-IN HISTORY: App messages saved with role 'ai' are included as bounded
+    'assistant' text in the opt-in snapshot; previously only user and literal
+    'assistant' roles survived. Attachments, tool messages and the system prompt
+    remain excluded from that snapshot.
+11. YOUTUBE DOWNLOADS: Reject missing/out-of-order ranges, mismatched chunk sizes,
+    empty/truncated bodies and a loop that ends before the full file. If a server
+    ignores a later Range and returns the complete file, earlier pieces are not
+    prepended to it. Large transfers exceeding the bounded in-memory route fail
+    explicitly and direct the user to the existing Termux route, not a corrupt
+    partial-file success. Search/extraction availability still depends on YouTube.
+12. TERMUX APPROVAL: Privilege-command matching now covers leading whitespace,
+    newlines and env/command/exec prefixes. Existing native confirmation tokens,
+    expiry, lock checks and permissions remain in place. A regex guard is NOT a
+    shell sandbox; arbitrary shell languages admit obfuscation and dangerous
+    commands. Review commands and keep automatic execution off unless trusted.
+13. SCRAPE TARGETS: Basic private/loopback/local/internal URL targets and embedded
+    URL credentials are rejected. This is a defensive filter, NOT a comprehensive
+    SSRF or DNS-rebinding guarantee; external scraper providers resolve the URL.
+14. DIAGNOSTICS: Common bearer/API-key/query-token patterns are redacted from newly
+    recorded short provider errors. This is best effort, not a universal secret
+    classifier, and does not retroactively scrub historical saved error strings.
+15. GROUNDING: Shared instructions now explicitly separate evidence, failed tools,
+    stale data and untrusted page/file/transcript text. A failed lookup has no
+    fabricated values or citations. These are guardrails, not proof that an LLM
+    cannot hallucinate or follow an adversarial prompt. Critical claims still
+    need source verification; no claim of a complete prompt-injection solution.
+16. RELEASE/TEST DRIFT: Package, About, asset cache tags, CSS, release migration,
+    README and changelog agree on 1.93.14. The version script can update a README
+    banner below the first line. A stale browser harness expected a removed
+    WhatsApp inbox and an obsolete hours selector; it now asserts removal and
+    tests the existing minutes-based check-in interface. Removed WhatsApp features
+    were NOT reintroduced. New browser checks are wired into the Android CI job.
+
+PERSONALISATION — ONLY TWO NEW VISUAL FEATURES
+Chat surface: Original dots / Plain / Blueprint grid / Notebook lines / Soft halo.
+Message spacing: Original / Compact / Balanced / Roomy / Reading room.
+All ten choices have visual previews, immediate effect, local persistence, radio
+selection state and keyboard navigation. Tested at widths 320, 412 and 768 pixels.
+Original keeps the pre-existing appearance. No message text is rewritten.
+Screenshot: audit-results/personalisation.png.
+
+KEYLESS LIVE DATA
+- Weather: Open-Meteo city geocoding or explicit latitude/longitude, modelled
+  current conditions, units and timestamps. No implicit GPS prompt.
+- IP: ipwho.is self/public-egress lookup only, with VPN/carrier-location warning.
+  No arbitrary target-IP lookup. The model is instructed to use this only for
+  an explicit user request. The runtime does not independently interpret user
+  intent, so this instruction alone is not an absolute consent enforcement layer.
+- News: Hacker News / Algolia newest technology headline metadata and source links.
+  This is deliberately NOT a comprehensive world-news wire. The model is told
+  that article contents were not read. No hidden general-news API was added.
+These tools obey global Web and per-chat Web switches. Public calls omit stored
+provider credentials, have bounded deadlines and in-memory caches, and fail with
+an explicit error when offline, unavailable or rate limited. The new helper
+itself makes no background polling request. The pre-existing DASH has its own
+network/location lifecycle, which was not replaced.
+
+LIVE RESULTS — IMPORTANT DISTINCTION
+Audit-host direct connectivity: weather, news and IP succeeded. Public LLM7 model
+listing returned 200 (71 models); legacy Pollinations model listing returned 200
+(1 model). Those list responses do not prove working chat generation or token
+validity. No live paid-provider chat was billed.
+Live browser/CORS run: technology headlines succeeded; weather timed out; IP
+returned HTTP 429. Both failures returned an honest error with zero sources.
+Therefore keyless upstream availability is NOT a blanket PASS. See the exact
+public-live.json and public-live-browser.json logs. These APIs can impose terms,
+limits or change behavior. The audit-host IP value was not retained in reports.
+
+AUTOMATED VALIDATION
+- Unit tests: 184/184, zero failures (30 more than the original 154).
+- Java DSP/audio: 88/88. This is generated PCM processing, not real handset sound.
+- Browser suites: 6/6; 61 named check groups, no uncaught page errors.
+- All 7 Settings destinations open/return. YouTube, Music, GitHub, Lens and
+  Downloads extension panels open/close. The original smoke suite also checks
+  the unified Terminal, mocked native Termux, key extraction and verified saving,
+  Group chat, composer focus/keyboard events, and existing chat visuals.
+- Stream fixtures: 13 adapters with known 11-input/7-output counters, proper
+  Cloudflare account/token split, Anthropic headers and model identity.
+- Error tests: malformed/incomplete streams, HTTP 401, primary 429 rescue,
+  independent backup rotation, Stop, timeout, JSON fallback, unsupported options,
+  missing/zero telemetry, fake optional-token verification, range truncation,
+  helper isolation, removed-feature absence and native approval UI safety.
+- Static analysis: 70 app JS/inline scripts; zero findings under the selected
+  undefined-variable, unreachable/duplicate code, constant-expression and typeof
+  rules with declared browser/export globals. This is NOT all possible lint rules.
+- Dependency audit: npm reported zero known vulnerabilities for this lockfile at
+  audit time. It is not a security proof for bundled vendor JS, native libraries,
+  third-party services or unpublished issues.
+- Native: Android platform generated/patched/synced; Gradle Kotlin compile passed.
+  Not an instrumented device test, signed release APK build, or Play Store review.
+- Version stamps and git diff whitespace checks passed.
+
+PERFORMANCE — MEASURED, NOT A SPEED CLAIM
+Local Chromium, 412x915 viewport, 4x CPU throttle, five fresh contexts per build,
+alternating before/after, external services blocked:
+  Median load: original 776 ms; repaired 850 ms.
+  DOMContentLoaded: original 772 ms; repaired 846 ms.
+  Resource count: original 64; repaired 67.
+The three small modules add startup work. This result is not a statistically
+established regression threshold or a real-phone battery/latency measurement.
+No claim that the repaired build is faster. No new animated effects were added.
+
+KNOWN BOUNDARIES / REQUIRED DEVICE CHECKS
+1. No real provider key/account was available. Fixture protocol correctness does
+   not establish account access, remaining quota, endpoint uptime, current free
+   tiers or the availability of every cached/default model. Refresh/Test models
+   against your account. Future model retirement cannot be fixed permanently.
+2. Actual Android microphone/camera/GPS/notifications/alarms/biometrics/storage,
+   OEM battery behavior, refresh modes and background/process-death recovery were
+   not exercised on a handset. Speech and Termux bridges in browser tests are mocks.
+3. Real Termux installation/initialisation, allow-external-apps, Android RUN_COMMAND
+   permission, Python/ffmpeg/yt-dlp/aria2 packages, environment/path/permissions and
+   real command output require your device. Approval checks are not a sandbox.
+4. No real YouTube stream playback/media download, age-restricted video, regional
+   block or CAPTCHA was bypassed/tested end-to-end. Range logic uses synthetic
+   bytes. Native extractor compilation is not proof every video is playable.
+5. API keys in the existing app provider store remain in localStorage. App lock
+   does not encrypt that store. This audit did not migrate credentials into the
+   native keystore or claim an enterprise penetration test. Use the existing
+   encrypted Vault for sensitive material where appropriate; XSS/device compromise
+   remains a threat to secrets available to running application code.
+6. Native cancellation disconnects the tracked socket; it does not prove provider
+   billing cancellation. The legacy background Check-in worker retains its own
+   independent opt-in protocol and is not the streaming UI adapter.
+7. Real GitHub push/download credentials, browser sites, user files and downloads
+   require authorized end-to-end tests. Not every possible control/data combination
+   or every third-party response was exercised. Treat this as a tested repair,
+   not a promise that every option can never fail.
+
+REPEAT THE CHECKS
+From the extracted project root (Node 22 and Java 21 used here):
+  npm ci
+  npx playwright install --with-deps chromium
+  npm run test:all
+  bash scripts/bump-version.sh --check
+Optional live public-service checks (can fail due to service/network limits):
+  npm run test:live-public
+For the native build, use the existing Android CI workflow or the documented
+Capacitor generation/apply/sync flow with Android SDK 34. Keep your existing app
+ID/signing key. Rebuilding is necessary for the native cancellation changes;
+replacing the web assets alone cannot add the new native cancelRequest method.
+
+BEFORE DAILY USE ON YOUR PHONE
+Back up; update without uninstalling; verify one provider at a time; refresh its
+model list; send a short real prompt and inspect model/usage/errors; test Stop;
+turn Web off and confirm live tools stop; test each native permission and TTS;
+review and run a harmless Termux command such as printf/ pwd; test one authorized
+small YouTube download; verify the saved file plays and is complete; finally
+exercise background reply and lock behavior. Do not paste real secrets into an
+audit log or a support chat.
+
+EVIDENCE
+The authoritative fresh records are under audit-results/. Older validation and
+changelog artifacts shipped with the input are historical, not evidence for this
+release. summary.json enumerates scope flags and measured outcomes. The delivery
+also includes a unified source patch and SHA-256 manifest.
