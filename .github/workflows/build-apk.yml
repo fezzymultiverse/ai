@@ -7,6 +7,11 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      publish:
+        description: 'Publish this build as a GitHub release (tag V<version> from package.json) so Obtainium and Komi Store can see it'
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -169,9 +174,24 @@ jobs:
         run: |
           VERSION="$(node -p "require('./package.json').version")"
           NAME="Horizon-V${VERSION//./_}-b${GITHUB_RUN_NUMBER}.apk"
-          mkdir -p dist
+          RELEASE_NAME="Horizon-V${VERSION//./_}.apk"
+          # A pushed tag must match package.json, otherwise Obtainium and Komi Store would compare the wrong version.
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            TAG="$GITHUB_REF_NAME"
+            if [ "${TAG#[Vv]}" != "$VERSION" ]; then
+              echo "::error::Tag ${TAG} does not match package.json version ${VERSION}. Retag as V${VERSION} or bump the version."
+              exit 1
+            fi
+          else
+            TAG="V${VERSION}"
+          fi
+          mkdir -p dist release
           cp "$RUNNER_TEMP/signed.apk" "dist/${NAME}"
+          # One stable file name per version for the release, so a re-run replaces the APK instead of adding a second one.
+          cp "$RUNNER_TEMP/signed.apk" "release/${RELEASE_NAME}"
           echo "name=${NAME}" >> "$GITHUB_OUTPUT"
+          echo "release_name=${RELEASE_NAME}" >> "$GITHUB_OUTPUT"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
@@ -192,8 +212,14 @@ jobs:
           ls -l android/app/src/main/java/*/*/*/ 2>/dev/null || echo "(no sources)"
 
       - name: Publish GitHub Release
-        if: startsWith(github.ref, 'refs/tags/')
+        if: startsWith(github.ref, 'refs/tags/') || (github.event_name == 'workflow_dispatch' && inputs.publish)
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/${{ steps.apk.outputs.name }}
+          tag_name: ${{ steps.apk.outputs.tag }}
+          name: Horizon ${{ steps.apk.outputs.tag }}
+          target_commitish: ${{ github.sha }}
+          files: release/${{ steps.apk.outputs.release_name }}
+          fail_on_unmatched_files: true
+          make_latest: 'true'
+          prerelease: false
           generate_release_notes: true

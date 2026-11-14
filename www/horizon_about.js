@@ -1,10 +1,12 @@
 /* Horizon V1.26.0: ABOUT & UPDATES page: version, release check, backup export/import, changelog, privacy awareness + reminder switch. */
 (function () {
     'use strict';
-    var VERSION = 'V1.93.36';
+    var VERSION = 'V1.93.38';
     var LSK = 'horizon_privacy_notice';
     var REPO_API = 'https://api.github.com/repos/fezzymultiverse/ai';
     var LOG = [
+        ['V1.93.38', ['DOUBLE-TAP TO SELECT: double-tap text in a chat message and Horizon selects the sentence under your finger and shows a Copy button beside it. Double-tap the same sentence again to widen it to the whole paragraph (or list item); once more goes back to the sentence. Double-tap inside a code block to select the whole block. Links, buttons, cards and the code header are left alone, and the long-press menu and swipe-to-quote work as before.']],
+        ['V1.93.37', ['TWO NEW KEYLESS PROVIDERS: VLM Run (Qwen3.8 27B, also sees pictures, about 10 requests a minute and 100 a day) and AI Horde (community models run by volunteers; anonymous requests wait in a queue, so replies can be slow). Both sit under the KEYLESS heading with their own icon and no key box. KeylessAI was checked and not added because it could not be confirmed working. Needs an APK rebuild because gateway.vlm.run and oai.aihorde.net were added to the Android allowlist.']],
         ['V1.93.36', ['BLOCKRUN MODELS CORRECTED: the built-in model names were out of date (a phone test showed BlockRun answering Unknown model). Horizon now uses the real free list read from BlockRun itself: Nemotron 3 Super (default), Nemotron 3.5 Lightning, Nemotron 3 Ultra, Nemotron Nano Omni, Nemotron 3.5 Bolt, MiniMax M3.1 Flash, Muse Glimmer, Cohere North Mini Code and Poolside Laguna XS.']],
         ['V1.93.35', ['BLOCKRUN FIXED FROM A REAL PHONE TEST: BlockRun answers "free model capacity exhausted" per model, so Horizon now skips the busy model at once and tries the next free one instead of waiting. The model list now keeps only models BlockRun itself marks as free, so no paid model can appear in the picker.']],
         ['V1.93.34', ['BLOCKRUN: a new free AI provider that needs no account and no key. Its free NVIDIA-hosted models (GPT-OSS 120B, DeepSeek V4 Flash, Step Flash and Nemotron) are listed under the KEYLESS heading with their own icon and no key box. Per-IP limits apply, and a cold model can fail once, so Horizon tries the next one. Needs an APK rebuild because blockrun.ai was added to the Android allowlist.']],

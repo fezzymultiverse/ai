@@ -16,7 +16,7 @@ test('native allowlist was parsed', () => {
 });
 
 test('gateway providers are allowed by the native bridge', () => {
-  for (const host of ['api.anyapi.ai', 'api.routeway.ai', 'api.gonkarouter.io', 'router.requesty.ai', 'api.kilo.ai', 'oai.endpoints.kepler.ai.cloud.ovh.net', 'ch.at', 'blockrun.ai', 'api.anthropic.com', 'api.openai.com', 'api.deepseek.com', 'api.x.ai']) {
+  for (const host of ['api.anyapi.ai', 'api.routeway.ai', 'api.gonkarouter.io', 'router.requesty.ai', 'api.kilo.ai', 'oai.endpoints.kepler.ai.cloud.ovh.net', 'ch.at', 'blockrun.ai', 'gateway.vlm.run', 'oai.aihorde.net', 'api.anthropic.com', 'api.openai.com', 'api.deepseek.com', 'api.x.ai']) {
     assert.ok(allowed.has(host), host + ' missing from HorizonAIPlugin.kt allowlist');
   }
 });

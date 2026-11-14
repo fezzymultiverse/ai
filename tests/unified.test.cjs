@@ -95,6 +95,33 @@ test('BlockRun is a keyless provider wired through the app, the native allowlist
  assert.match(fs.readFileSync(path.join(root,'resources/android/java/HorizonAIPlugin.kt'),'utf8'),/"blockrun\.ai"/);
  assert.match(fs.readFileSync(path.join(root,'resources/android/java/HorizonCheckinPlugin.kt'),'utf8'),/"blockrun" to "https:\/\/blockrun\.ai\/api\/v1\/chat\/completions"/);
 });
+test('Double-tap select is loaded after the message menu and never touches links, buttons or code headers',()=>{
+ const html=fs.readFileSync(path.join(root,'www/index.html'),'utf8');
+ const a=html.indexOf('horizon_msgmenu.js'),b=html.indexOf('horizon_dtsel.js');
+ assert.ok(a>0&&b>a,'horizon_dtsel.js must load after horizon_msgmenu.js');
+ const js=fs.readFileSync(path.join(root,'www/horizon_dtsel.js'),'utf8');
+ assert.match(js,/var SKIP = 'a, button, input, textarea, select, \.code-head/);
+ assert.match(js,/window\.HorizonDtSel = \{/);
+ assert.match(js,/mem\.stage === 1/);
+ assert.match(fs.readFileSync(path.join(root,'www/horizon_app.css'),'utf8'),/\.hz-dtpill \{/);
+});
+test('VLM Run and AI Horde are keyless providers wired through the app, the native allowlist and the fallback path',()=>{
+ const html=fs.readFileSync(path.join(root,'www/index.html'),'utf8');
+ assert.match(html,/PROVIDERS\.vlmrun = oaiGateway/);assert.match(html,/PROVIDERS\.aihorde = oaiGateway/);
+ assert.match(html,/id="i-b-vlmrun"/);assert.match(html,/id="i-b-aihorde"/);
+ assert.match(html,/base: 'https:\/\/gateway\.vlm\.run\/v1\/openai',[\s\S]{0,160}keyless: true/);
+ assert.match(html,/base: 'https:\/\/oai\.aihorde\.net\/v1',[\s\S]{0,160}keyless: true/);
+ assert.match(html,/PROVIDERS\.aihorde\.headers = \(\) => \(\{ Authorization: 'Bearer 0000000000' \}\)/);
+ assert.match(html,/PROVIDERS\.vlmrun\.headers = \(\) => \(\{\}\)/);
+ const br=fs.readFileSync(path.join(root,'www/horizon_browser.js'),'utf8');
+ assert.match(br,/id === 'vlmrun'/);assert.match(br,/id === 'aihorde'/);
+ const kt=fs.readFileSync(path.join(root,'resources/android/java/HorizonAIPlugin.kt'),'utf8');
+ assert.match(kt,/"gateway\.vlm\.run"/);assert.match(kt,/"oai\.aihorde\.net"/);
+ const ci=fs.readFileSync(path.join(root,'resources/android/java/HorizonCheckinPlugin.kt'),'utf8');
+ assert.match(ci,/"vlmrun" to "https:\/\/gateway\.vlm\.run\/v1\/openai\/chat\/completions"/);
+ assert.match(ci,/"aihorde" to "https:\/\/oai\.aihorde\.net\/v1\/chat\/completions"/);
+ assert.match(ci,/"aihorde" -> if \(key\.isBlank\(\) \|\| key == "free"\) "0000000000" else key/);
+});
 test('BlockRun skips a model that answers free capacity exhausted and lists only billing_mode free models',()=>{
  const html=fs.readFileSync(path.join(root,'www/index.html'),'utf8');
  assert.match(html,/walkOnCapacity: true/);assert.match(html,/free model capacity exhausted\|FREE_MODEL_FAILED/);assert.match(html,/m\.billing_mode \? \/free\/i/);

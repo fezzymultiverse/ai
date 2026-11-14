@@ -75,6 +75,8 @@ internal object HorizonCheckins {
         "ovh" to "https://oai.endpoints.kepler.ai.cloud.ovh.net/v1/chat/completions",
         "chatat" to "https://ch.at/v1/chat/completions",
         "blockrun" to "https://blockrun.ai/api/v1/chat/completions",
+        "vlmrun" to "https://gateway.vlm.run/v1/openai/chat/completions",
+        "aihorde" to "https://oai.aihorde.net/v1/chat/completions",
         "gonka" to "https://api.gonkarouter.io/v1/messages"
     )
     // Cloudflare Workers AI keeps the account ID in the URL, so its saved key is "ACCOUNT_ID:API_TOKEN".
@@ -90,6 +92,7 @@ internal object HorizonCheckins {
         "cloudflare" -> cloudflareKey.matchEntire(key.trim())?.groupValues?.get(2) ?: ""
         "llm7" -> if (key.isBlank() || key == "free") "unused" else key
         "kilo" -> if (key.isBlank() || key == "free") "anonymous" else key
+        "aihorde" -> if (key.isBlank() || key == "free") "0000000000" else key
         else -> key
     }
 }
@@ -208,7 +211,7 @@ class HorizonCheckinWorker(c: Context, params: WorkerParameters) : Worker(c, par
             else if (provider == "gonka") {
                 connection.setRequestProperty("x-api-key", config.getString("key"))
                 connection.setRequestProperty("anthropic-version", "2023-06-01")
-            } else if (provider != "pollinations" && provider != "chatat" && provider != "blockrun" && !(provider == "ovh" && (config.getString("key").isBlank() || config.getString("key") == "free"))) connection.setRequestProperty("Authorization", "Bearer " + HorizonCheckins.bearer(provider, config.getString("key")))
+            } else if (provider != "pollinations" && provider != "chatat" && provider != "blockrun" && provider != "vlmrun" && !(provider == "ovh" && (config.getString("key").isBlank() || config.getString("key") == "free"))) connection.setRequestProperty("Authorization", "Bearer " + HorizonCheckins.bearer(provider, config.getString("key")))
             // Recheck immediately before network I/O: a stopped worker must not initiate a new request.
             if (isStopped || HorizonLockPlugin.locked || !p.getBoolean("enabled", false) || p.getString("generation", "") != generation) return Result.success()
             connection.outputStream.use { it.write(body.toString().toByteArray(Charsets.UTF_8)) }

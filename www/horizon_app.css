@@ -1,4 +1,4 @@
-/* HORIZON 1.93.36 — canonical application stylesheet.
+/* HORIZON 1.93.38 — canonical application stylesheet.
    One bundled layout source. Section order preserves the existing cascade.
    Edit this file; obsolete individual patch stylesheets have been removed. */
 
@@ -4112,3 +4112,12 @@ html[data-theme="grey"] .settings-home #hzLeftGh .set-text h3{color:#7c4dff}
 .hzt-opt { text-align: left; width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid transparent; background: transparent; color: var(--text-main); font: inherit; font-size: 15px; cursor: pointer; }
 .hzt-opt:active { background: var(--surface); }
 .hzt-opt[aria-checked="true"] { background: var(--accent-cyan-light); border-color: var(--accent-cyan); font-weight: 700; }
+
+/* V1.93.38: double-tap select. The Copy button that appears beside the selected text, and a neon selection colour in chat. */
+#chatMessages .bubble { touch-action: manipulation; }
+#chatMessages .bubble ::selection { background: rgba(var(--neon-rgb), 0.45); color: inherit; }
+.hz-dtpill { position: fixed; z-index: 2147482000; display: inline-flex; align-items: center; gap: 7px; padding: 10px 16px; border-radius: 999px; border: 1px solid rgba(var(--neon-rgb), 0.75); background: var(--neon-surface, #1e0b36); color: var(--neon-hi, #f3e8ff); font-size: 14px; font-weight: 700; line-height: 1; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 14px rgba(var(--neon-rgb), 0.35); -webkit-tap-highlight-color: transparent; -webkit-user-select: none; user-select: none; touch-action: manipulation; opacity: 0; transform: translateY(5px) scale(0.96); transition: opacity 0.14s ease, transform 0.14s ease; }
+.hz-dtpill.on { opacity: 1; transform: none; }
+.hz-dtpill:active { transform: scale(0.96); }
+.hz-dtpill .ic { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+:root[data-theme="light"] .hz-dtpill { background: #ffffff; color: var(--neon-deep); box-shadow: 0 8px 22px rgba(15, 23, 42, 0.22), 0 0 0 1px rgba(var(--neon-rgb), 0.25); }

@@ -47,10 +47,10 @@ const server = http.createServer((req, res) => {
       const hk = order.indexOf('H:KEYLESS');
       assert.ok(hk > hf && hk < hp, 'Settings needs a KEYLESS heading between FREE TIER and PAID TIER');
       const kl = order.slice(hk + 1, hp).map(x => x.replace(/^C:/, ''));
-      assert.ok(kl.length >= 6, 'KEYLESS holds Pollinations, ch.at, BlockRun, Kilo, LLM7.io and OVHcloud');
+      assert.ok(kl.length >= 8, 'KEYLESS holds AI Horde, Pollinations, ch.at, BlockRun, Kilo, LLM7.io, OVHcloud and VLM Run');
       const sorted = kl.slice().sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
       assert.deepEqual(kl, sorted, 'KEYLESS cards are A to Z');
-      assert.ok(!order.slice(hf + 1, hk).some(x => /Pollinations|ch\.at|Kilo|LLM7|OVH/i.test(x)), 'no keyless provider left under FREE TIER');
+      assert.ok(!order.slice(hf + 1, hk).some(x => /Pollinations|ch\.at|Kilo|LLM7|OVH|AI Horde|VLM Run/i.test(x)), 'no keyless provider left under FREE TIER');
       checks.push('Settings: KEYLESS group sits between FREE TIER and PAID TIER, A to Z: ' + kl.join(', '));
     }
     await page.locator('#settingsBackBtn').click();

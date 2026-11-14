@@ -126,7 +126,7 @@ class HorizonAIPlugin : Plugin() {
         // Only the existing AI provider endpoints may receive stored credentials.
         val parsedUrl = try { URL(url) } catch (_: Exception) { null }
         val host = parsedUrl?.host ?: ""
-        if (parsedUrl == null || parsedUrl.protocol != "https" || parsedUrl.userInfo != null || parsedUrl.port !in setOf(-1, 443) || host !in setOf("generativelanguage.googleapis.com", "api.groq.com", "api.cohere.com", "api.mistral.ai", "openrouter.ai", "text.pollinations.ai", "api.anyapi.ai", "api.routeway.ai", "router.requesty.ai", "api.kilo.ai", "oai.endpoints.kepler.ai.cloud.ovh.net", "ch.at", "blockrun.ai", "api.anthropic.com", "api.openai.com", "api.deepseek.com", "api.x.ai", "api.gonkarouter.io", "api.z.ai", "api.aionlabs.ai", "api.llm7.io", "api.cloudflare.com")) {
+        if (parsedUrl == null || parsedUrl.protocol != "https" || parsedUrl.userInfo != null || parsedUrl.port !in setOf(-1, 443) || host !in setOf("generativelanguage.googleapis.com", "api.groq.com", "api.cohere.com", "api.mistral.ai", "openrouter.ai", "text.pollinations.ai", "api.anyapi.ai", "api.routeway.ai", "router.requesty.ai", "api.kilo.ai", "oai.endpoints.kepler.ai.cloud.ovh.net", "ch.at", "blockrun.ai", "gateway.vlm.run", "oai.aihorde.net", "api.anthropic.com", "api.openai.com", "api.deepseek.com", "api.x.ai", "api.gonkarouter.io", "api.z.ai", "api.aionlabs.ai", "api.llm7.io", "api.cloudflare.com")) {
             call.reject("Unsupported AI endpoint")
             return
         }
