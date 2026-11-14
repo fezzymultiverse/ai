@@ -3955,6 +3955,7 @@ html.hz-lite *, html.hz-lite *::before, html.hz-lite *::after { box-shadow: none
 .hz-edge-handle:focus-visible{outline:2px solid #2de2eb;outline-offset:-3px;border-radius:10px}
 .hz-edge-menu{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:10px 10px 14px;border:1px solid #2de2eb40;border-radius:16px;background:var(--surface,#101a20);box-shadow:0 8px 22px #0002}
 .hz-edge-menu[hidden]{display:none}.hz-edge-menu .hz-chip{min-height:42px;white-space:normal;padding:8px 6px;font-size:12px;width:100%}
+.hz-edge-menu .hz-chip:last-child:nth-child(odd){grid-column:auto}
 .hz-wa-pin{display:flex;align-items:center;gap:6px;padding:4px 10px;width:100%;min-width:0}.hz-wa-pin button:first-child{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left;color:#2de2eb}.hz-wa-pin button:last-child{min-width:40px}
 .hz-wa-editor{margin:auto;color:inherit;background:var(--surface,#10191e);border:1px solid #2de2eb55;border-radius:22px;padding:20px;max-width:480px;width:calc(100% - 24px);max-height:85dvh;overflow:auto;box-sizing:border-box;box-shadow:0 20px 70px #0007}
 .hz-wa-editor::backdrop{background:#0009}.hz-wa-editor textarea{display:block;width:100%;box-sizing:border-box;min-height:90px;resize:vertical;background:transparent;color:inherit;border:1px solid #74828b70;border-radius:12px;padding:12px;margin:10px 0;font:inherit;font-size:14px}.hz-wa-editor textarea:last-of-type{min-height:160px}
