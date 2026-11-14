@@ -1,4 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="horizon_whatsapp_accessibility_description">Optional fallback for a reply you approve in Horizon when a WhatsApp notification reply is unavailable. Opens only Personal or Business WhatsApp, verifies the selected direct contact, enters your approved text and taps Send once. Existing drafts are not overwritten. No screenshots or access to other apps. Each attempt expires after 20 seconds. You can disable this service at any time.</string>
-</resources>
