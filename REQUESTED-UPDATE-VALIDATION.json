@@ -1,0 +1,132 @@
+{
+  "source_archive": "Horizon-V1_93_0-Android-Voice-Studio.zip",
+  "output_archive": "Horizon-V1_93_0-Requested-Fixes.zip",
+  "version_and_app_identity_preserved": true,
+  "interpretation": "10 additional character timbre presets; the named four processors plus two additional processors = six processors.",
+  "changes": [
+    "10 additional local character transforms: Bojack-inspired gravelly baritone, velvet storyteller, masked enforcer, digital cyborg, vintage telephone, airy whisper, double-tracked performer, warbling alien, 8-bit arcade and rumbling ogre.",
+    "6 processors: hard limiter, peak normalize, humanize, de-esser, noise gate and warm saturation.",
+    "Single Android synthesis-to-file -> character transformation -> editable user EQ -> processors -> one processed-audio player. No simultaneous native dry TTS playback for transformed speech.",
+    "Voice groups collapse independently: Android voice/language, speed/pitch, character voices, EQ, dynamics/cleanup and creative effects. Character group is initially open; other groups initially collapsed.",
+    "Character transform and mix survive manual EQ edits or installed Android voice changes. Settings take effect on next playback; this is not a live mid-utterance EQ re-render.",
+    "Silent WhatsApp mode refuses all visible fallback/compose routes and fallback notifications, including expired PendingIntents. Rate limit, contacts verification, app lock, source permissions and explicit silent opt-in are preserved.",
+    "A removable contact card shows the attached recipient name/number above the composer. Recipient state clears on navigation, new chat or lock. Contact data renders as text, never HTML.",
+    "Keyboard watchdog is bounded under repeated native/resize signals; Android animation busy state recovers if onEnd is lost; textarea value setter defers layout and preserves IME composition/focus."
+  ],
+  "tests": {
+    "javascript_passed": 138,
+    "javascript_failed": 0,
+    "native_DSP_signal_tests_passed": 88,
+    "browser_navigation": "passed",
+    "voice_presets_browser": "all 20 presets passed using mocked Android speech bridge",
+    "recipient_and_keyboard_browser": "8 checks passed with mocked contacts and simulated keyboard signals",
+    "existing_fixes_browser": "4 checks passed",
+    "android_debug_build": "BUILD SUCCESSFUL",
+    "debug_apk_bytes": 10573996,
+    "debug_apk_sha256": "8781587c534468e11fe29c1cfaa637b1744cf2f760a37685536b1f64f8453a1b",
+    "debug_apk_signature": "verified; v1 JAR-entry coverage warnings retained in log"
+  },
+  "limitations": [
+    "No physical Android device or WhatsApp account used for runtime tests. Notification delivery, OEM keyboard behavior, device audio quality and intelligibility still require on-device testing.",
+    "These are original DSP character effects, not a trained Bojack/actor voice clone. Android TTS remains the synthesis source. No Android system-wide voice replacement is installed.",
+    "Silent WhatsApp sends require an enabled source, reply permission and a matching live direct-chat notification with a free-form Reply action; unsupported/new/expired chats fail unsent without opening a popup. Submitted is not delivered.",
+    "Silent mode intentionally blocks visible drafts until the user turns Silent send off. Incoming-message alert preferences are unchanged.",
+    "The optional test APK is debug-signed, not signed with the user existing release key. Do not uninstall an existing release to force installation; use the unchanged release-signing workflow for a normal app update."
+  ],
+  "validation_notes": [
+    "Validation caught and corrected a Java field forward-reference issue before final build.",
+    "Earlier local native-build attempts hit memory contention and a generated-package mismatch. Final build uses the existing generation scripts with bounded-memory local JVM flags; build scripts and dependencies were not changed."
+  ],
+  "changed_original_files": [
+    {
+      "file": "resources/android/java/HorizonSpeechPlugin.java",
+      "before_sha256": "996f00522dd18c702bc6102dc5260b120850d00000f6e6a83f9e2b47f3176db8",
+      "after_sha256": "b6788be6260af4e65205a6707676cb2583a5b30ea03f3651d4fe5fd475a79861"
+    },
+    {
+      "file": "resources/android/java/HorizonVoiceDsp.java",
+      "before_sha256": "a220c9aa28a90f2557891abac0d79e7d7488e9c60f3657a84862ba505cebc6a8",
+      "after_sha256": "611d57778d46a1e19031616dc30eaf2b9c85128f0ea38db542faa88b1901fe44"
+    },
+    {
+      "file": "resources/android/java/HorizonWhatsAppPlugin.kt",
+      "before_sha256": "571db2421922269e6958379df02ed930c7e6532ce6fb0bc70dfa8d16ca736eec",
+      "after_sha256": "6856171cca8472a0d41b95a27e53f401c8e98df0c8aec136240ad61b6557fab8"
+    },
+    {
+      "file": "resources/android/java/MainActivity.java",
+      "before_sha256": "c92ec1bd8e6b6c8eb82faedd51ebfcc48401354384a6a1c7cc04e3546f6435a2",
+      "after_sha256": "e9a2117bf7fedc4134a912081862775e95aad01780f4bac4fe60a32a4dc13ac2"
+    },
+    {
+      "file": "tests/HorizonVoiceDspTest.java",
+      "before_sha256": "5821f5047eeb29020df66808aa0e6dbfc7f3f5c96516105a3d69bcfa2be353c9",
+      "after_sha256": "068605b6a0edc5010a8fb0721d313e13b19a9ac95470a5b48fda519d95b6e99c"
+    },
+    {
+      "file": "tests/bridges.test.cjs",
+      "before_sha256": "5501d2715a3daa464ee84a9036ac0820365a1b3ffecb25ad82cae9ac730fdd62",
+      "after_sha256": "7d6baaec743563db9d68ebf9fb89cbef7da46e387fde028ff5531186b4199d30"
+    },
+    {
+      "file": "tests/browser.smoke.cjs",
+      "before_sha256": "ab5a4e4c619345424f10ef642a4a9ed5a3f3a9c12777e94ad68b8bd97e5f5fb0",
+      "after_sha256": "1db5feeb42d95181384b4c6a96783478991cc41399e54c343b3c813cc2fbdee6"
+    },
+    {
+      "file": "tests/tts.test.cjs",
+      "before_sha256": "85e944647fa54b6c650feeb8e08076c84d90b8d61c3a79e829ac87db207df961",
+      "after_sha256": "4b9202d4995df4f7b1b622de898ffe491e7ff885f479f74e771dbeb8c79da884"
+    },
+    {
+      "file": "tests/voice-studio.browser.cjs",
+      "before_sha256": "4789228d9d1b304c2797c589f5398c19708c992bad5abdd508aafd8c329a5d4b",
+      "after_sha256": "13d5f2f4707628e6f078c2ebd3615c8394d9103d417620a502ddf36aa9ccbb25"
+    },
+    {
+      "file": "www/horizon_app.css",
+      "before_sha256": "72f747ad52627a483b9c8d4a5a6faa005cb9d61025f8a801bc3e94c90de0f2a1",
+      "after_sha256": "4958c6027ced2a51a4f92b47be08da04e54c9cc185907c0818332e13f8f52d85"
+    },
+    {
+      "file": "www/horizon_bridges.js",
+      "before_sha256": "0d361c8c2a3e37ee49e2f4806e1919809acae81a5da548200249980a6bebcbb4",
+      "after_sha256": "1b6bb651c754451c2aeed5e247b8c107d9187df5cf748a540428703d12719519"
+    },
+    {
+      "file": "www/horizon_contacts.js",
+      "before_sha256": "d551dcece33202d7f03cc4a0eaca1eac4fba24aef8d9f987e8bcb69742048dbc",
+      "after_sha256": "34ef3c27baf59d4d868fda944738748702287fd46d2d6267986b6fb0f6faf3f7"
+    },
+    {
+      "file": "www/horizon_perf.js",
+      "before_sha256": "cd8fbc00689926faa4b6eb10e6d1aa7e8973a9e0102804e65644a665cc2ef862",
+      "after_sha256": "2081db2beb506d08ba8ce311ad68859a2d7f132092061110f67cb091c6ea5034"
+    },
+    {
+      "file": "www/horizon_tts.js",
+      "before_sha256": "2f006083a127c54d3c769440b097bbcf49b6d6b60e2b91b505102c599cf6b420",
+      "after_sha256": "77d306e7f67e6bdf9bc2ee881f86f5836374b5745355afd9849174033d02f021"
+    },
+    {
+      "file": "www/index.html",
+      "before_sha256": "c84701e70f19569dafe31d797508aafc57e48df78953848cc4b46b639e5c4a25",
+      "after_sha256": "3636989217ab972c8844ec3bd95566f4e4645dd8e2441abf2770d0ef88e4e338"
+    }
+  ],
+  "production_files_changed": [
+    "resources/android/java/HorizonSpeechPlugin.java",
+    "resources/android/java/HorizonVoiceDsp.java",
+    "resources/android/java/HorizonWhatsAppPlugin.kt",
+    "resources/android/java/MainActivity.java",
+    "www/horizon_app.css",
+    "www/horizon_bridges.js",
+    "www/horizon_contacts.js",
+    "www/horizon_perf.js",
+    "www/horizon_tts.js",
+    "www/index.html"
+  ],
+  "unchanged_original_file_count": 159,
+  "removed_original_files": [],
+  "original_build_scripts_dependencies_icons_and_unrelated_features": "byte-identical to uploaded ZIP"
+}

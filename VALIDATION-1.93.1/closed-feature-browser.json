@@ -1,0 +1,19 @@
+{
+  "checks": [
+    "single cyan handle replaces old pills; six actions in requested order",
+    "composer tools remain a 3 by 2 grid at 320, 412 and 768px",
+    "handle preserves editor focus, Escape closes the tools",
+    "Permissions contains matching toggle controls, no inbox, contacts or silent-send UI",
+    "message appears only in toast until explicit pin, no unpinned AI context",
+    "hand pins preview; editor has no send action, AI sharing remains gated",
+    "Generate cannot share when AI permission is off",
+    "draft queues natively with exact preview, instruction, selected provider and source chat",
+    "background result returns to editable draft without sending or leaving app",
+    "closing and reopening the editor preserves manual draft edits",
+    "only explicit confirmed Open WhatsApp can leave Horizon",
+    "clearing/unpinning removes AI context, disabled toast permission suppresses preview",
+    "all twenty sound presets have individual Test controls plus local effect/voice Test buttons"
+  ],
+  "errors": [],
+  "scope": "Desktop Chromium mobile viewport, mocked Android bridge. Not physical phone, WhatsApp delivery or live provider tests."
+}

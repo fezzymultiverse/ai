@@ -1,0 +1,14 @@
+{
+  "checks": [
+    "seventeen controls, twenty presets plus Custom, no old TTS provider or download UI",
+    "legacy engine and Cloud TTS key migrate safely",
+    "all twenty presets drive the native speech bridge and complete with real-start events (mock Android bridge)",
+    "effects pause, resume and stop use native bridge without provider fallback",
+    "live EQ adjustment switches to Custom and persists",
+    "voice controls fit 320, 412 and 768px widths",
+    "reset clears every effect and returns to direct Android speech"
+  ],
+  "errors": [],
+  "androidDeviceTested": false,
+  "nativeSpeechMocked": true
+}

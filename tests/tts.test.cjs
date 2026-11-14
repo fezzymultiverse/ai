@@ -1,0 +1,119 @@
+const {test}=require('node:test'),assert=require('node:assert/strict'),vm=require('node:vm'),fs=require('node:fs');
+function setup(opts={}){
+ const store=new Map(Object.entries(opts.saved||{})),events=new Map(),calls=[],spoken=[],states=[];
+ const voices=opts.voices||[{name:'en-us-local',lang:'en-US',network:false},{name:'en-us-other',lang:'en-US',network:false},{name:'fr-fr-network',lang:'fr-FR',network:true}];
+ const speech={getEngines:async()=>({default:'android.default',engines:[]}),getSupportedVoices:async()=>{calls.push('voices');if(opts.noVoices)throw Error('Engine not ready');return{voices};},
+ addListener:async(n,fn)=>{events.set(n,fn);return{remove:async()=>events.delete(n)};},
+ speak:async args=>{spoken.push(args);events.get('speechStart')?.({id:args.utteranceId});if(opts.fail)throw Error('Android voice data missing');if(opts.pending)return new Promise((resolve,reject)=>{speech.pending={resolve,reject}});},
+ stop:async()=>{calls.push('stop');if(speech.pending){speech.pending.reject(Error('Speech cancelled'));speech.pending=null;}},
+ pauseAudio:async()=>calls.push('pause'),resumeAudio:async()=>calls.push('resume')};
+ const root={navigator:{language:'en-US',onLine:opts.online},localStorage:{getItem:k=>store.get(k)||null,setItem:(k,v)=>{if(opts.blockWrites)throw Error('blocked');store.set(k,v)},removeItem:k=>store.delete(k)},addEventListener:()=>{},fetch:()=>{throw Error('TTS must never access network')},speechSynthesis:{speak:()=>{throw Error('No browser speech permitted')}}};
+ vm.runInNewContext(fs.readFileSync(require.resolve('../www/horizon_tts.js'),'utf8'),{window:root,setTimeout,clearTimeout,console});
+ const T=root.HorizonTTS;T.init({native:opts.native!==false,plug:n=>n==='HorizonSpeech'?speech:null});T.onState(s=>states.push(s));return{T,speech,store,calls,spoken,states,events};
+}
+const tick=()=>new Promise(r=>setTimeout(r,0));
+async function pending(h){for(let i=0;i<100&&!h.speech.pending;i++)await tick();assert.ok(h.speech.pending);}
+
+test('first run uses only direct Android speech and reports actual native start',async()=>{const h=setup();assert.equal(h.T.settings().engine,'standard');assert.equal(await h.T.speak('a','Hello.'),true);assert.equal(h.spoken.length,1);assert.ok(h.states.some(s=>s.state==='playing'));assert.equal(h.T.status().state,'idle');assert.equal(h.events.size,0);});
+test('all legacy engine selections migrate to Android, never cloud or neural packs',async()=>{for(const engine of ['gemini','gcloud','kokoro','sherpa','openai']){const h=setup({saved:{horizon_tts_engine:engine,horizon_tts_gcloud_key:'old-key',horizon_tts_nengine:'old.custom'}});assert.equal(h.T.settings().engine,'standard');assert.equal(h.store.has('horizon_tts_gcloud_key'),false);assert.equal(h.T.settings().nengine,'');assert.equal(await h.T.speak('a','Hello.'),true);}});
+test('Android-only controller does not expose model packs, cloud voices or HD downloads',()=>{const {T}=setup();assert.equal(T.packs,undefined);assert.equal(T.cloud,undefined);assert.equal(T.hd,undefined);const s=fs.readFileSync(require.resolve('../www/horizon_tts.js'),'utf8');assert.ok(!s.includes('fetch('));assert.ok(!s.includes('speechSynthesis'));});
+test('seventeen bounded controls and twenty-two distinct presets (two natural voices, ten character transforms)',()=>{const {T}=setup();assert.equal(T.controls.length,17);assert.equal(T.presets.length,22);const values=new Set();for(const p of T.presets){assert.equal(T.applyPreset(p.id),true);const s=T.settings();for(const c of T.controls)assert.ok(s[c.key]>=c.min&&s[c.key]<=c.max);values.add(JSON.stringify([s.gender,s.character,...T.controls.map(c=>s[c.key]) ]));}assert.equal(values.size,22);});
+test('neutral bypasses DSP; every sound effect selects the processing path',()=>{const {T}=setup();assert.equal(T.hasEffects(),false);for(const c of T.controls.filter(c=>!['rate','pitch'].includes(c.key))){T.applyPreset('neutral');T.set(c.key,5);assert.equal(T.hasEffects(),true,c.key);}T.applyPreset('neutral');T.set('rate',1.5);T.set('pitch',1.2);assert.equal(T.hasEffects(),false);});
+test('controls clamp invalid stored and live input without NaN or infinity',()=>{const {T}=setup({saved:{horizon_tts_rate:'NaN',horizon_tts_pitch:'Infinity',horizon_tts_bass:'-100'}});assert.equal(T.settings().rate,1);assert.equal(T.settings().pitch,1);assert.equal(T.settings().bass,-12);T.set('rate',999);T.set('reverb',-100);assert.equal(T.settings().rate,2);assert.equal(T.settings().reverb,0);assert.equal(T.settings().preset,'custom');assert.equal(T.set('unknown',1),false);});
+test('preset controls go to Android speech once, with no second speed or pitch transform',async()=>{const h=setup();h.T.applyPreset('villain');assert.equal(await h.T.speak('a','Hello.'),true);const a=h.spoken[0];assert.equal(a.rate,.85);assert.equal(a.pitch,.65);assert.equal(a.effects.bass,6);assert.equal(a.effects.reverb,23);});
+test('effects use short segments and preserve all words',async()=>{const h=setup();h.T.applyPreset('robot');const text=Array(110).fill('word').join(' ');assert.equal(await h.T.speak('a',text),true);assert.ok(h.spoken.length>1);assert.ok(h.spoken.every(a=>a.text.length<=240));assert.equal(h.spoken.map(a=>a.text).join(' ').replace(/\.$/,''),text);});
+test('hard split never drops characters in long unbroken text',()=>{const {T}=setup();const s='0123456789'.repeat(70);assert.equal(T.chunkText(s,120).join(''),s);assert.ok(T.chunkText(s,120).every(s=>s.length<=120));});
+test('Markdown speech cleaning skips code, strips markup, avoids reading URLs',()=>{const {T}=setup();const out=T.speakable('# Title\n```js\nsecret()\n```\n[hello](https://example.com) **world** https://site.invalid');assert.ok(out.includes('Code block skipped.'));assert.ok(!out.includes('secret'));assert.ok(!out.includes('https://'));assert.ok(!out.includes('**'));});
+test('stop cancels pending native speech without fallback or stale events',async()=>{const h=setup({pending:true});const run=h.T.speak('a','Hello.');await pending(h);h.T.stop();assert.equal(await run,false);assert.equal(h.spoken.length,1);assert.equal(h.T.status().state,'idle');assert.equal(h.events.size,0);});
+test('effects pause and resume retain audio position through native player controls',async()=>{const h=setup({pending:true});h.T.applyPreset('ghost');const run=h.T.speak('a','Hello.');await pending(h);h.T.pause();await tick();assert.equal(h.T.isPaused(),true);h.T.resume();await tick();assert.ok(h.calls.includes('pause'));assert.ok(h.calls.includes('resume'));h.speech.pending.resolve();h.speech.pending=null;assert.equal(await run,true);});
+test('direct Android speech pause resumes the current chunk instead of dropping it',async()=>{const h=setup({pending:true});const run=h.T.speak('a','Hello.');await pending(h);h.T.pause();await tick();assert.equal(h.T.isPaused(),true);h.T.resume();await pending(h);assert.equal(h.spoken.length,2);h.speech.pending.resolve();h.speech.pending=null;assert.equal(await run,true);});
+test('Android failure is reported honestly and does not use another provider',async()=>{const h=setup({fail:true});assert.equal(await h.T.test(),false);assert.ok(h.states.some(s=>/voice data missing/.test(s.error)));assert.equal(h.spoken.length,1);});
+test('browser preview never uses browser synthesis or pretends Android is available',async()=>{const h=setup({native:false});assert.equal(await h.T.test(),false);assert.equal(h.spoken.length,0);assert.ok(h.states.some(s=>/Android app only/.test(s.error)));});
+test('stable voice names and group voice slots preserve language',async()=>{const h=setup();h.T.set('voice','en-us-local');await h.T.speak('a','Hello.',{slot:1});assert.equal(h.spoken[0].voiceName,'en-us-other');assert.equal(h.spoken[0].lang,'en-US');});
+test('voice enumeration is cached and concurrent requests coalesce',async()=>{const h=setup();await Promise.all([h.T.listVoices(),h.T.listVoices(),h.T.listVoices()]);assert.equal(h.calls.filter(c=>c==='voices').length,1);await h.T.listVoices(true);assert.equal(h.calls.filter(c=>c==='voices').length,2);});
+test('online Android voices are labelled and no offline guarantee is invented',async()=>{const h=setup();const l=await h.T.listVoices();assert.ok(l.voices.find(v=>v.id==='fr-fr-network').label.includes('online'));});
+test('blocked local storage does not break speech',async()=>{const h=setup({blockWrites:true});h.T.applyPreset('robot');assert.equal(await h.T.speak('a','Hello.'),true);});
+test('missing voice list fails cleanly, with no browser fallback',async()=>{const h=setup({noVoices:true});assert.equal(await h.T.test(),false);assert.equal(h.spoken.length,0);});
+test('rapid replacement allows only the most recent request to reach Android speak',async()=>{const h=setup();const a=h.T.speak('old','Old.');const b=h.T.speak('new','New.');assert.equal(await a,false);assert.equal(await b,true);assert.equal(h.spoken.length,1);assert.equal(h.spoken[0].text,'New.');});
+test('immediate direct pause-resume does not lose the current chunk to a cancellation race',async()=>{const h=setup({pending:true});const run=h.T.speak('a','Hello.');await pending(h);h.T.pause();h.T.resume();await pending(h);assert.equal(h.spoken.length,2);h.speech.pending.resolve();h.speech.pending=null;assert.equal(await run,true);});
+test('listeners can unsubscribe and unsafe mutation of presets is prevented',()=>{const h=setup();let n=0;const unsub=h.T.onState(()=>n++);unsub();h.T.stop();assert.equal(n,0);assert.ok(Object.isFrozen(h.T.presets));assert.ok(Object.isFrozen(h.T.presets[0].values));});
+
+test('ten added character transforms survive manual EQ and installed voice changes',async()=>{
+ const h=setup();const added=h.T.presets.filter(p=>p.values.character);assert.equal(added.length,10);
+ for(const p of added){
+  h.T.applyPreset(p.id);const character=h.T.settings().character;
+  h.T.set('bass',7);h.T.set('presence',-2);h.T.set('treble',3);h.T.set('voice','en-us-other');
+  assert.equal(h.T.settings().character,character);assert.equal(h.T.settings().preset,'custom');
+  assert.equal(h.T.settings().characterMix,100);await h.T.speak('eq','Exact words.');
+  const a=h.spoken.at(-1);assert.equal(a.effects.character,character);assert.equal(a.effects.bass,7);assert.equal(a.effects.presence,-2);assert.equal(a.effects.treble,3);assert.equal(a.voiceName,'en-us-other');
+ }
+ h.T.applyPreset('neutral');assert.equal(h.T.settings().character,0);assert.equal(h.T.hasEffects(),false);
+});
+test('six new processors reach the native bridge with independent bounded controls',async()=>{
+ const h=setup();for(const key of ['limiter','normalize','humanize','deesser','noiseGate','saturation'])h.T.set(key,60);
+ await h.T.speak('processors','Hello.');for(const key of ['limiter','normalize','humanize','deesser','noiseGate','saturation'])assert.equal(h.spoken[0].effects[key],60);
+});
+
+const natVoices=[
+ {name:'en-us-x-sfg-local',lang:'en-US',network:false},
+ {name:'en-us-x-iom-local',lang:'en-US',network:false},
+ {name:'en-us-x-iol-network',lang:'en-US',network:true},
+ {name:'en-us-x-tpf-network',lang:'en-US',network:true},
+ {name:'en-gb-x-gba-local',lang:'en-GB',network:false},
+ {name:'en-gb-x-rjs-local',lang:'en-GB',network:false},
+ {name:'en-us-x-zzz-local',lang:'en-US',network:false},
+ {name:'fr-fr-x-vlf-local',lang:'fr-FR',network:false}
+];
+const fxOff=a=>Object.values(a.effects).every(v=>v===0);
+test('natural voices: gender is read from the voice name, never guessed',()=>{
+ const {T}=setup();const g=id=>T.voiceGender({id});
+ assert.equal(g('en-us-x-sfg-local'),'female');assert.equal(g('en-us-x-iom-network'),'male');assert.equal(g('en-gb-x-rjs-local'),'male');assert.equal(g('en-au-x-aua-local'),'female');
+ assert.equal(g('English female voice'),'female');assert.equal(g('en_US_male_1'),'male');assert.equal(g('en-us-x-zzz-local'),'');assert.equal(g('fr-fr-x-vlf-local'),'');assert.equal(g(''),'');
+});
+test('natural male and female presets speak the best installed English voice of that gender, directly and with no effects',async()=>{
+ const h=setup({voices:natVoices});
+ h.T.applyPreset('natural-male');assert.equal(h.T.settings().gender,'male');assert.equal(h.T.hasEffects(),false);
+ assert.equal(await h.T.speak('m','Hello there.'),true);let a=h.spoken.at(-1);
+ assert.equal(a.voiceName,'en-us-x-iol-network');assert.equal(a.lang,'en-US');assert.equal(a.pitch,1);assert.equal(a.rate,.97);assert.ok(fxOff(a));
+ h.T.applyPreset('natural-female');assert.equal(h.T.settings().gender,'female');
+ assert.equal(await h.T.speak('f','Hello there.'),true);a=h.spoken.at(-1);
+ assert.equal(a.voiceName,'en-us-x-tpf-network');assert.equal(a.lang,'en-US');assert.equal(a.pitch,1);assert.equal(a.rate,.99);assert.ok(fxOff(a));
+ h.T.applyPreset('neutral');assert.equal(h.T.settings().gender,'');assert.equal(h.T.hasEffects(),false);
+});
+test('natural voices skip online voices while the phone is offline',async()=>{
+ const h=setup({voices:natVoices,online:false});
+ h.T.applyPreset('natural-male');await h.T.speak('m','Hello.');assert.equal(h.spoken.at(-1).voiceName,'en-us-x-iom-local');
+ h.T.applyPreset('natural-female');await h.T.speak('f','Hello.');assert.equal(h.spoken.at(-1).voiceName,'en-us-x-sfg-local');
+});
+test('the accent setting steers natural voices, and they stay English whatever language is selected',async()=>{
+ const h=setup({voices:natVoices,online:false});
+ h.T.set('lang','en-GB');h.T.applyPreset('natural-male');await h.T.speak('m','Hello.');let a=h.spoken.at(-1);assert.equal(a.voiceName,'en-gb-x-rjs-local');assert.equal(a.lang,'en-GB');
+ h.T.set('lang','fr-FR');h.T.applyPreset('natural-female');await h.T.speak('f','Hello.');a=h.spoken.at(-1);assert.equal(a.voiceName,'en-us-x-sfg-local');assert.equal(a.lang,'en-US');
+});
+test('a voice picked by ear overrides the automatic match, and a manual Android voice takes over from the preset',async()=>{
+ const h=setup({voices:natVoices,online:false});
+ h.T.set('maleVoice','en-us-x-zzz-local');h.T.applyPreset('natural-male');await h.T.speak('m','Hello.');assert.equal(h.spoken.at(-1).voiceName,'en-us-x-zzz-local');
+ h.T.set('maleVoice','not-installed');await h.T.speak('m','Hello.');assert.equal(h.spoken.at(-1).voiceName,'en-us-x-iom-local');
+ h.T.set('voice','en-gb-x-gba-local');assert.equal(h.T.settings().gender,'');assert.equal(h.T.settings().preset,'custom');
+ await h.T.speak('x','Hello.');assert.equal(h.spoken.at(-1).voiceName,'en-gb-x-gba-local');
+});
+test('group chat slots alternate male and female natural voices',async()=>{
+ const h=setup({voices:natVoices,online:false});h.T.applyPreset('natural-male');const names=[];
+ for(let slot=0;slot<4;slot++){await h.T.speak('g'+slot,'Hello.',{slot});names.push(h.spoken.at(-1).voiceName);}
+ assert.deepEqual(names,['en-us-x-iom-local','en-us-x-sfg-local','en-gb-x-rjs-local','en-gb-x-gba-local']);
+ assert.equal(h.T.voiceFor(1).gender,'male');
+});
+test('with no matching voice installed the default English voice is shifted in pitch and the person is told',async()=>{
+ const h=setup({voices:[{name:'en-us-local',lang:'en-US',network:false},{name:'fr-fr-network',lang:'fr-FR',network:true}]});
+ h.T.applyPreset('natural-male');await h.T.speak('m','Hello.');let a=h.spoken.at(-1);
+ assert.equal(a.voiceName,'');assert.equal(a.lang,'en-US');assert.equal(a.pitch,.88);assert.ok(fxOff(a));assert.ok(h.states.some(s=>/No English male voice is installed/.test(s.note||'')));
+ h.T.applyPreset('natural-female');h.T.set('pitch',1.5);h.T.applyPreset('natural-female');await h.T.speak('f','Hello.');a=h.spoken.at(-1);assert.equal(a.pitch,1.1);
+ h.T.set('pitch',1.9);await h.T.speak('f','Hello.');assert.equal(h.spoken.at(-1).pitch,2);
+});
+test('naturalVoices groups every English voice for the settings panel and hides nothing',()=>{
+ const {T}=setup({online:false});const r=T.naturalVoices({voices:natVoices.map(v=>({id:v.name,name:v.name,lang:v.lang,network:v.network}))});
+ assert.deepEqual(r.male.map(v=>v.id),['en-us-x-iom-local','en-gb-x-rjs-local','en-us-x-iol-network']);// offline: online voices are listed last, not hidden
+ assert.deepEqual(r.female.map(v=>v.id),['en-us-x-sfg-local','en-gb-x-gba-local','en-us-x-tpf-network']);
+ assert.deepEqual(r.other.map(v=>v.id),['en-us-x-zzz-local']);
+ const none=JSON.stringify({male:[],female:[],other:[]});assert.equal(JSON.stringify(T.naturalVoices({voices:[]})),none);assert.equal(JSON.stringify(T.naturalVoices(null)),none);
+});

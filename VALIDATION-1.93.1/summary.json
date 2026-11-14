@@ -1,0 +1,88 @@
+{
+  "version": "1.93.1",
+  "date": "2026-11-10",
+  "android": {
+    "assembleDebug": "PASS",
+    "kotlinAndJavaCompilation": "PASS",
+    "package": "com.festers.horizon",
+    "versionName": "1.93.1",
+    "versionCode": 193010001,
+    "signing": "Android Debug; NOT the original release signing key",
+    "physicalDeviceTested": false
+  },
+  "tests": {
+    "nodeTestsPassed": 152,
+    "nodeTestsFailed": 0,
+    "dspTestsPassed": 88,
+    "navigationBrowser": "PASS",
+    "voiceBrowser": "PASS",
+    "closedFeatureBrowser": "PASS",
+    "keyboardBrowser": "PASS",
+    "nativeBridgeInBrowser": "MOCKED",
+    "liveProviderCallsTested": false,
+    "liveWhatsAppNotificationsTested": false
+  },
+  "webBytes": {
+    "original": 7254942,
+    "updated": 7260143,
+    "difference": 5201
+  },
+  "startupExperiment": {
+    "before": {
+      "domContentLoadedMs": 1165,
+      "loadMs": 1179,
+      "stylesheetRequests": 1,
+      "resourceCount": 61
+    },
+    "after": {
+      "domContentLoadedMs": 1092,
+      "loadMs": 1099,
+      "stylesheetRequests": 1,
+      "resourceCount": 61
+    }
+  },
+  "startupCaution": "Local Chromium only; five fresh contexts at 4x CPU throttle. Initial concurrent-build run was noisier and slightly slower after changes. Final idle run is recorded. This is not evidence of a phone speedup or a guarantee that freezing is fixed.",
+  "groupAnimationBudgetMs": {
+    "fast": 700,
+    "normal": 1000,
+    "slow": 1800,
+    "keyboardActivity": "finish animation immediately"
+  },
+  "changedFiles": [
+    ".github/workflows/build-apk.yml",
+    "package-lock.json",
+    "package.json",
+    "resources/android/java/HorizonAIPlugin.kt",
+    "resources/android/java/HorizonCheckinPlugin.kt",
+    "resources/android/java/HorizonWhatsAppAccessibility.kt",
+    "resources/android/java/HorizonWhatsAppDraftWorker.kt",
+    "resources/android/java/HorizonWhatsAppPlugin.kt",
+    "resources/android/res/xml/horizon_whatsapp_accessibility.xml",
+    "scripts/apply-bridges.py",
+    "tests/bridges.test.cjs",
+    "tests/browser.smoke.cjs",
+    "tests/closed-feature.browser.cjs",
+    "tests/closed-feature.test.cjs",
+    "tests/recipient-keyboard.browser.cjs",
+    "tests/requested-fixes.test.cjs",
+    "www/horizon_about.js",
+    "www/horizon_app.css",
+    "www/horizon_bridges.js",
+    "www/horizon_checkin.js",
+    "www/horizon_chips.js",
+    "www/horizon_contacts.js",
+    "www/horizon_group.js",
+    "www/horizon_key_import.js",
+    "www/horizon_lock.js",
+    "www/horizon_release.js",
+    "www/horizon_whatsapp_feature.js",
+    "www/index.html"
+  ],
+  "providerPolicySources": {
+    "together": "https://docs.together.ai/docs/billing-credits",
+    "perplexity": "https://www.perplexity.ai/help-center/en/articles/10354847-api-payment-and-billing",
+    "sambanova": "https://docs.sambanova.ai/docs/en/models/rate-limits",
+    "nvidia": "https://build.nvidia.com/explore/discover",
+    "androidScheduling": "https://developer.android.com/develop/background-work/background-tasks/persistent/getting-started/define-work"
+  }
+}

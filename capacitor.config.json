@@ -1,8 +1,17 @@
 {
-  "appId": "com.fezzy.festersbrowser",
-  "appName": "Festers Browser",
+  "appId": "com.festers.horizon",
+  "appName": "Horizon",
   "webDir": "www",
-  "backgroundColor": "#ffffff",
-  "android": { "allowMixedContent": false },
-  "plugins": { "CapacitorHttp": { "enabled": true } }
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": false,
+    "backgroundColor": "#000000"
+  },
+  "plugins": {
+    "CapacitorHttp": {
+      "enabled": true
+    }
+  }
 }

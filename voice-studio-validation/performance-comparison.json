@@ -1,0 +1,83 @@
+{
+  "scope": "Local Chromium, 412x915, 4x CPU throttle, five fresh contexts per build, alternating order, external services blocked. NOT Android/device speed or live API latency.",
+  "summary": {
+    "before": {
+      "domContentLoadedMs": 951,
+      "loadMs": 956,
+      "stylesheetRequests": 1,
+      "resourceCount": 61
+    },
+    "after": {
+      "domContentLoadedMs": 977,
+      "loadMs": 984,
+      "stylesheetRequests": 1,
+      "resourceCount": 61
+    }
+  },
+  "runs": {
+    "before": [
+      {
+        "domContentLoadedMs": 1282,
+        "loadMs": 1287,
+        "stylesheetRequests": 1,
+        "resourceCount": 61
+      },
+      {
+        "domContentLoadedMs": 1079,
+        "loadMs": 1089,
+        "stylesheetRequests": 1,
+        "resourceCount": 61
+      },
+      {
+        "domContentLoadedMs": 951,
+        "loadMs": 956,
+        "stylesheetRequests": 1,
+        "resourceCount": 61
+      },
+      {
+        "domContentLoadedMs": 907,
+        "loadMs": 912,
+        "stylesheetRequests": 1,
+        "resourceCount": 61
+      },
+      {
+        "domContentLoadedMs": 923,
+        "loadMs": 928,
+        "stylesheetRequests": 1,
+        "resourceCount": 61
+      }
+    ],
+    "after": [
+      {
+        "domContentLoadedMs": 1004,
+        "loadMs": 1011,
+        "stylesheetRequests": 1,
+        "resourceCount": 61
+      },
+      {
+        "domContentLoadedMs": 977,
+        "loadMs": 984,
+        "stylesheetRequests": 1,
+        "resourceCount": 61
+      },
+      {
+        "domContentLoadedMs": 989,
+        "loadMs": 995,
+        "stylesheetRequests": 1,
+        "resourceCount": 61
+      },
+      {
+        "domContentLoadedMs": 866,
+        "loadMs": 875,
+        "stylesheetRequests": 1,
+        "resourceCount": 61
+      },
+      {
+        "domContentLoadedMs": 943,
+        "loadMs": 948,
+        "stylesheetRequests": 1,
+        "resourceCount": 61
+      }
+    ]
+  }
+}

@@ -1,0 +1,907 @@
+{
+  "source_archive": "Horizon-V1_93_0-perf.zip",
+  "source_archive_sha256": "6534dc71f4ebf9691b06557b9b531fea576edc19c02380b1351610246b282062",
+  "result_type": "Updated source project, not an APK",
+  "scope": "Only the nine requested fixes, their native wiring/security boundaries, and directly related tests. Original version, branding, providers, unrelated UI and assets preserved.",
+  "changed_original_files": [
+    "www/horizon_contacts.js",
+    "www/index.html",
+    "www/horizon_bridges.js",
+    "www/horizon_app.css",
+    "scripts/apply-bridges.py",
+    "tests/bridges.test.cjs",
+    "resources/android/java/HorizonAIPlugin.kt",
+    "resources/android/java/MainActivity.java",
+    "resources/android/java/HorizonWhatsAppPlugin.kt",
+    "resources/android/java/HorizonTermuxPlugin.kt",
+    "resources/android/res/xml/horizon_bridge_backup.xml",
+    "resources/android/res/xml/horizon_bridge_extraction.xml"
+  ],
+  "new_source_or_test_files": [
+    "www/horizon_checkin.js",
+    "resources/android/java/HorizonCheckinPlugin.kt",
+    "resources/android/java/HorizonWhatsAppAccessibility.kt",
+    "resources/android/res/xml/horizon_whatsapp_accessibility.xml",
+    "resources/android/res/values/horizon_accessibility_strings.xml",
+    "tests/requested-fixes.test.cjs",
+    "tests/requested-fixes.browser.cjs"
+  ],
+  "unchanged_original_file_count": 134,
+  "unit_tests": {
+    "baseline_passed": 111,
+    "final_passed": 122,
+    "failed": 0
+  },
+  "existing_browser_suite": {
+    "checks": [
+      "boot has no uncaught JavaScript errors",
+      "old layout and duplicate shell preferences removed without erasing data",
+      "all live DOM IDs are unique at startup",
+      "Termux controls are lazy, not built in Permissions at startup",
+      "five right-panel app tiles share a single row at 320, 412 and 768px",
+      "Permissions owns Device/native check and independent WhatsApp sources, no shell or Termux controls",
+      "messy key paste is deduplicated, owner-checked, masked and never saved during extraction",
+      "503 verification failure does not save a key or erase pasted notes",
+      "verified key uses existing provider store; mixed/failed note is retained",
+      "big Terminal owns one prompt and Termux-only Controls/Options, no duplicate small shell",
+      "browser preview does not fake shell execution",
+      "manual and AI command routing both hit the same mocked native Termux bridge",
+      "reopening terminal/settings does not duplicate controls",
+      "existing Contacts dialog still opens and closes",
+      "existing Cloud TTS key field remains masked and clears after local save",
+      "WhatsApp selected contact route preserves background send, business source and exact body",
+      "new chat still clears selected recipient",
+      "original Music extension still opens",
+      "original Group chat configuration still opens",
+      "late keyboard-hidden event preserves typed text and focus",
+      "all three lightweight chat visuals render on existing message DOM",
+      "Termux options fit narrow and wide layouts"
+    ],
+    "errors": [],
+    "missing": [],
+    "elapsedMs": 5606,
+    "androidDeviceTested": false,
+    "nativeCommandsMocked": true
+  },
+  "requested_fixes_browser_suite": {
+    "checks": [
+      "check-in is opt-in/off, with one settings section; web-only mode is disabled",
+      "inbox displays white text on dark green, renders previews as text, shows expired action status, and sends exact reply",
+      "Termux command and warnings cannot inject HTML; Cancel, Run and background dismissal acknowledge only the native token",
+      "check-in consent decline makes no request; enable, interval change, snapshot refresh and disable use the native worker bridge"
+    ],
+    "errors": [],
+    "androidDeviceTested": false,
+    "nativeBridgesMocked": true
+  },
+  "android_compile": {
+    "status": "PASS",
+    "tasks": [
+      ":app:compileDebugKotlin",
+      ":app:compileDebugJavaWithJavac"
+    ],
+    "java": "OpenJDK 17",
+    "compile_sdk": 34,
+    "voice_api": "Unmodified upstream sherpa-onnx v1.12.14 Tts.kt fetched into disposable generated Android project, as the existing bundle-voice.sh does. Native voice libraries/model were not downloaded or packaged. No APK is claimed.",
+    "manifest_resources": "Resource/manifest processing passed as compile dependencies. Native wiring applied repeatedly without duplicate declarations."
+  },
+  "fixes": [
+    {
+      "request": 1,
+      "result": "thoughtAnalyse checks DOM hidden ancestors, layout boxes and CSS visibility; music and YouTube visibility is separate from enabled AI controls; web reports availability rather than claiming use."
+    },
+    {
+      "request": 2,
+      "result": "Opt-in Proactive check-in in the existing Proactive Daemon settings card; selectable 1/2/4/8/12/24-hour WorkManager intervals; network/battery constraints; notifications only; selected-provider credentials and at most 12 text excerpts of 600 characters encrypted using Android Keystore AES-GCM. Snapshot refreshes while app is open and expires after seven days. Disable cancels work and removes snapshot. All existing provider request protocols are preserved, including Gonka Anthropic Messages and AnyAPI/Routeway :free-only models."
+    },
+    {
+      "request": 3,
+      "result": "Download tray X stops parent event propagation and removes finished/queued/running rows. Running transfers are dismissed, not cancelled, and keep their concurrency slot until completion. Separate download history continues updating."
+    },
+    {
+      "request": 4,
+      "result": "Existing RemoteInput path reused for background replies, now also respecting silent mode in the inbox. PendingIntent creator package validated. Unspecified contact routing uses captured Personal/Business identity and refuses ambiguity. Contacts has Automatic/Personal/Business routing. Package-pinned fallback helper checks installed/enabled source; no account guessing."
+    },
+    {
+      "request": 5,
+      "result": "Existing private notification inbox retained and repaired rather than duplicated. It supports read/reply/refresh, indicates expired reply actions, and offers eligible accessibility fallback. This is a captured-preview inbox, not WhatsApp history access."
+    },
+    {
+      "request": 6,
+      "result": "Reply text and caret are white on #075E54 with readable placeholder. Native notification previews are dispatched before the persistence queue. Background status notifications are filtered, and notification history tails are not replayed as a toast burst. No network/AI request blocks that path."
+    },
+    {
+      "request": 7,
+      "result": "Optional AccessibilityService, restricted to the two WhatsApp packages and a single approved direct-contact send. Separate Android permission and per-send confirmation required. Verifies recipient header and exact composer text, refuses existing drafts, expires after 20 seconds, and attempts Send at most once. No PiP coercion; visible app opening is disclosed."
+    },
+    {
+      "request": 8,
+      "result": "Horizon-owned native Termux command confirmation replaced by a neon HTML dialog with plain-text command/warnings and Cancel/Run. Native-generated one-shot token binds approval to the original command closure; expires after two minutes; cancel-on-background and native lock/permission/enable checks remain. Existing explicit auto-run settings preserved. Android OS permission prompts are not replaced."
+    },
+    {
+      "request": 9,
+      "result": "Targeted security review: validate WhatsApp PendingIntent creator/package, pin deep-link packages, gate inbox configure/clear under app lock, protect AccessibilityService with system bind permission, retain non-exported result receiver, bound and clean up accessibility requests/nodes/callbacks, render new external text with textContent, use native expiring Termux approval tokens, quote native event names, reject credential-bearing/nonstandard-port native AI URLs and retain no-redirect behavior, encrypt and exclude background credentials from backup."
+    }
+  ],
+  "on_device_validation_required": [
+    "RemoteInput submission and Personal/Business routing with actual installed WhatsApp versions; submissions are never claimed delivered.",
+    "Android notification/accessibility permission flows, OEM background restrictions and screen-lock behavior.",
+    "Accessibility view IDs and recipient-header layout differ between WhatsApp versions. A mismatch times out/refuses rather than guessing; it is not a guarantee of compatibility.",
+    "WorkManager intervals are approximate and may be delayed by Doze/battery/network restrictions. Android force-stop pauses work until the app is reopened. No live provider requests or real WhatsApp messages were sent during tests.",
+    "The Termux HTML dialog replaces app-level confirmation only. Android retains its own required permission prompts.",
+    "The security review is scoped to these changes and inspected boundaries; this is not a full penetration test or a guarantee of no remaining vulnerabilities."
+  ],
+  "activation": {
+    "check_ins": "Settings > Personalisation > Proactive Daemon > Proactive check-in (in the existing daemon settings card). Allow notifications and choose interval.",
+    "whatsapp": "Existing Permissions > WhatsApp bridge: enable desired sources, notification access and replies; silent mode is optional. Accessibility fallback requires its own toggle plus Android Accessibility settings and a separate per-send approval.",
+    "termux": "Existing Terminal Controls: keep required Termux Run commands permission and enabled bridge. Review the new HTML dialog unless existing auto-run preferences allow the command.",
+    "build": "Use the original build/CI workflow. It already applies scripts/apply-android.sh and scripts/bundle-voice.sh. Generated android/, node_modules/, SDKs and build caches are not included."
+  },
+  "file_integrity": [
+    {
+      "file": "PERFORMANCE-PLAN.txt",
+      "original_sha256": "1d45fcc2ad3c1ad15f23d659c8d68b3bca3bfccd00b472618d2734543d475479",
+      "patched_sha256": "1d45fcc2ad3c1ad15f23d659c8d68b3bca3bfccd00b472618d2734543d475479"
+    },
+    {
+      "file": "www/horizon_youtube.js",
+      "original_sha256": "203181803bcc6ec561a6af351f0eba05b8e72c77a2f71a5167b2a2e3e514a713",
+      "patched_sha256": "203181803bcc6ec561a6af351f0eba05b8e72c77a2f71a5167b2a2e3e514a713"
+    },
+    {
+      "file": "www/horizon_runlog.js",
+      "original_sha256": "da12e9d468be013755b56d4e949c61fd8de1794e5d7c7a0a14e912ae107cbeb2",
+      "patched_sha256": "da12e9d468be013755b56d4e949c61fd8de1794e5d7c7a0a14e912ae107cbeb2"
+    },
+    {
+      "file": "www/horizon_addons.js",
+      "original_sha256": "2954619ca0b336790b1b83150a6e0028c5f75fe399e768e9c45390b8aee7f97f",
+      "patched_sha256": "2954619ca0b336790b1b83150a6e0028c5f75fe399e768e9c45390b8aee7f97f"
+    },
+    {
+      "file": "www/horizon_msgmenu.js",
+      "original_sha256": "a8ff697f4cd23cd684e5066912f7ed7c6f11142a516c8c7284d9d26e6794d395",
+      "patched_sha256": "a8ff697f4cd23cd684e5066912f7ed7c6f11142a516c8c7284d9d26e6794d395"
+    },
+    {
+      "file": "www/horizon_dash.js",
+      "original_sha256": "741479cb8ac1ea8fdfbf064f13cf61a3e1d2f7254b9b4da861b35bd4d18e72b4",
+      "patched_sha256": "741479cb8ac1ea8fdfbf064f13cf61a3e1d2f7254b9b4da861b35bd4d18e72b4"
+    },
+    {
+      "file": "www/horizon_toast.js",
+      "original_sha256": "ec4b4f834c189f4b8ae7b6feb4bad450edc0b9251aaef72ce0ac7a7df31b9e89",
+      "patched_sha256": "ec4b4f834c189f4b8ae7b6feb4bad450edc0b9251aaef72ce0ac7a7df31b9e89"
+    },
+    {
+      "file": "www/ember_document_engine.js",
+      "original_sha256": "d95fa4e7a767fc49036b8ae273bc0aefe9658c779493719130ff1d00de21aaf0",
+      "patched_sha256": "d95fa4e7a767fc49036b8ae273bc0aefe9658c779493719130ff1d00de21aaf0"
+    },
+    {
+      "file": "www/horizon_speakwave.js",
+      "original_sha256": "38783207d0eee7897d4e9fac844e2bd3e303e379c8bdcb7de35c4ab3ef607df1",
+      "patched_sha256": "38783207d0eee7897d4e9fac844e2bd3e303e379c8bdcb7de35c4ab3ef607df1"
+    },
+    {
+      "file": "www/icon.png",
+      "original_sha256": "a16276ccc108ccccf1bb1b55f358a9b9b54e5133f592867dfd34810946775f4f",
+      "patched_sha256": "a16276ccc108ccccf1bb1b55f358a9b9b54e5133f592867dfd34810946775f4f"
+    },
+    {
+      "file": "www/horizon_chips.js",
+      "original_sha256": "6a65ca8c402008067137ad968275396691c98a3a537e04c26ead6b0eec60a186",
+      "patched_sha256": "6a65ca8c402008067137ad968275396691c98a3a537e04c26ead6b0eec60a186"
+    },
+    {
+      "file": "www/horizon_contacts.js",
+      "original_sha256": "7c8b134bf18c8f0f525807718cc389f9f4e6c08104df38cf4d948f080e95ee66",
+      "patched_sha256": "d551dcece33202d7f03cc4a0eaca1eac4fba24aef8d9f987e8bcb69742048dbc"
+    },
+    {
+      "file": "www/horizon_door.js",
+      "original_sha256": "06bbd9aabadc39416e608e8208a5d1c66f18ac7b6a09484ddd0596f47e77ba0b",
+      "patched_sha256": "06bbd9aabadc39416e608e8208a5d1c66f18ac7b6a09484ddd0596f47e77ba0b"
+    },
+    {
+      "file": "www/horizon_v2.js",
+      "original_sha256": "6b2ac2ad1bf16c65b39805fa97531d991cb25387f8372ac3ebcdb94b4a9274f2",
+      "patched_sha256": "6b2ac2ad1bf16c65b39805fa97531d991cb25387f8372ac3ebcdb94b4a9274f2"
+    },
+    {
+      "file": "www/horizon_ind.js",
+      "original_sha256": "2adcf8d5c8db977466866eccf04fce2096fb2cba2cb11979a36c4921f70b9646",
+      "patched_sha256": "2adcf8d5c8db977466866eccf04fce2096fb2cba2cb11979a36c4921f70b9646"
+    },
+    {
+      "file": "www/horizon_hdr2.js",
+      "original_sha256": "629e6aca03c2007b1627062cbb69f8e1dcab1fae20b5f600abb9366044aee836",
+      "patched_sha256": "629e6aca03c2007b1627062cbb69f8e1dcab1fae20b5f600abb9366044aee836"
+    },
+    {
+      "file": "www/horizon_lock.js",
+      "original_sha256": "a77a79c26edea147a81d1d33afcfd191e0ffe4936719490e1cfbe7c9672e0aed",
+      "patched_sha256": "a77a79c26edea147a81d1d33afcfd191e0ffe4936719490e1cfbe7c9672e0aed"
+    },
+    {
+      "file": "www/horizon_pdf.js",
+      "original_sha256": "b8bebb072e4d5c281282fadb4092edc4da96f742f5876b9203b68d4ad60a4da9",
+      "patched_sha256": "b8bebb072e4d5c281282fadb4092edc4da96f742f5876b9203b68d4ad60a4da9"
+    },
+    {
+      "file": "www/horizon_setai.js",
+      "original_sha256": "6f63f2ac0358556fd27b3e101a1bfdb8eecc877c337efefb511e8641762fcce9",
+      "patched_sha256": "6f63f2ac0358556fd27b3e101a1bfdb8eecc877c337efefb511e8641762fcce9"
+    },
+    {
+      "file": "www/horizon_screen.js",
+      "original_sha256": "f9623408bc1d3157bb2eb84af7492d9e6c2787400d1927cbfb72d5b69a9d27ee",
+      "patched_sha256": "f9623408bc1d3157bb2eb84af7492d9e6c2787400d1927cbfb72d5b69a9d27ee"
+    },
+    {
+      "file": "www/horizon_fab.js",
+      "original_sha256": "86310a95bf1df72060406aba84eeaa9a8557c435352ebfe89db8e95e371e1787",
+      "patched_sha256": "86310a95bf1df72060406aba84eeaa9a8557c435352ebfe89db8e95e371e1787"
+    },
+    {
+      "file": "www/index.html",
+      "original_sha256": "02403b0f6c048337a2617a61f3fd9c28fd74e965722bd78873486b0a8c125bf2",
+      "patched_sha256": "d79452fbd824a36567eaa350a63c427bf286c1b4ec40fb4a241b8a3925e6ed96"
+    },
+    {
+      "file": "www/horizon_geo.js",
+      "original_sha256": "f0b6f1ac7af2ee2798254f840ac190d35239d98fb586db886e2f080426642104",
+      "patched_sha256": "f0b6f1ac7af2ee2798254f840ac190d35239d98fb586db886e2f080426642104"
+    },
+    {
+      "file": "www/horizon_perf.js",
+      "original_sha256": "cd8fbc00689926faa4b6eb10e6d1aa7e8973a9e0102804e65644a665cc2ef862",
+      "patched_sha256": "cd8fbc00689926faa4b6eb10e6d1aa7e8973a9e0102804e65644a665cc2ef862"
+    },
+    {
+      "file": "www/horizon_hub.js",
+      "original_sha256": "0bae3b21e06a02e5f9758b777de9b9a9a9d0131a9680d80dadaa7f074476c6f3",
+      "patched_sha256": "0bae3b21e06a02e5f9758b777de9b9a9a9d0131a9680d80dadaa7f074476c6f3"
+    },
+    {
+      "file": "www/horizon_browser.js",
+      "original_sha256": "5120afd573e53c8c4a53f342474bbe8682569d0da7d793c2a9ccc874fa447bef",
+      "patched_sha256": "5120afd573e53c8c4a53f342474bbe8682569d0da7d793c2a9ccc874fa447bef"
+    },
+    {
+      "file": "www/horizon_header.js",
+      "original_sha256": "47d1af5a7476621608b578b3dacd4ed6d29a3610f28eb1b947eec387df7e1151",
+      "patched_sha256": "47d1af5a7476621608b578b3dacd4ed6d29a3610f28eb1b947eec387df7e1151"
+    },
+    {
+      "file": "www/horizon_attach.js",
+      "original_sha256": "7a852948a898e0dfa88d3a0fc99ca31999b11b4c421e8bb616c239387e8df373",
+      "patched_sha256": "7a852948a898e0dfa88d3a0fc99ca31999b11b4c421e8bb616c239387e8df373"
+    },
+    {
+      "file": "www/horizon_slash.js",
+      "original_sha256": "ba0cff061b829e9d503b62cdb806eeec7c727303f5cf865652a84399bd027ac2",
+      "patched_sha256": "ba0cff061b829e9d503b62cdb806eeec7c727303f5cf865652a84399bd027ac2"
+    },
+    {
+      "file": "www/horizon_bridges.js",
+      "original_sha256": "7aa5904178e35cfe03f0c9930a83bf600814f75faa37b3033f0d150f0f999786",
+      "patched_sha256": "0d361c8c2a3e37ee49e2f4806e1919809acae81a5da548200249980a6bebcbb4"
+    },
+    {
+      "file": "www/horizon_release.js",
+      "original_sha256": "9b4dc4107a33961e128ab8687b38c56aa986dcf54343ec6ea61f0092e6c2611a",
+      "patched_sha256": "9b4dc4107a33961e128ab8687b38c56aa986dcf54343ec6ea61f0092e6c2611a"
+    },
+    {
+      "file": "www/horizon_ytdirect.js",
+      "original_sha256": "912d0a736a4ec9a9e7686c5be50850c90decf676067345b75760330a8c63e6c5",
+      "patched_sha256": "912d0a736a4ec9a9e7686c5be50850c90decf676067345b75760330a8c63e6c5"
+    },
+    {
+      "file": "www/horizon_music.js",
+      "original_sha256": "06aa4dfc50868a9e44b2e10b5cdfe609f7931c2d260cf2a34b4f45ca7ea82eb2",
+      "patched_sha256": "06aa4dfc50868a9e44b2e10b5cdfe609f7931c2d260cf2a34b4f45ca7ea82eb2"
+    },
+    {
+      "file": "www/horizon_termlive.js",
+      "original_sha256": "0b887e66059a1bf4c4673d15993059d2f8e5f0714fd93d0fe45c63bf548a4b06",
+      "patched_sha256": "0b887e66059a1bf4c4673d15993059d2f8e5f0714fd93d0fe45c63bf548a4b06"
+    },
+    {
+      "file": "www/horizon_voice.js",
+      "original_sha256": "c75b82b7c27a368789b7f542c78d1e1a4d6e4762238b57d3356b0ea55ba3cbf6",
+      "patched_sha256": "c75b82b7c27a368789b7f542c78d1e1a4d6e4762238b57d3356b0ea55ba3cbf6"
+    },
+    {
+      "file": "www/horizon_htmlview.js",
+      "original_sha256": "372b518d6d9d65ff2544462d2d3b85cdbfe970b93684010126876b7b41070a02",
+      "patched_sha256": "372b518d6d9d65ff2544462d2d3b85cdbfe970b93684010126876b7b41070a02"
+    },
+    {
+      "file": "www/horizon_key_import.js",
+      "original_sha256": "a06f34dfa594942a9438872e390aab1d3aed829c7de9f4c83d0fc751d5303a66",
+      "patched_sha256": "a06f34dfa594942a9438872e390aab1d3aed829c7de9f4c83d0fc751d5303a66"
+    },
+    {
+      "file": "www/horizon_toolgrid.js",
+      "original_sha256": "2a77862b0068e4a700547163c40d4e213e10b7460165750d6b7ad769f3427b61",
+      "patched_sha256": "2a77862b0068e4a700547163c40d4e213e10b7460165750d6b7ad769f3427b61"
+    },
+    {
+      "file": "www/ember_artbox.js",
+      "original_sha256": "eb2f22b126f970df9f0e81adf48d4513b8f35d6cd2b9f40ed62c28e5ac9af041",
+      "patched_sha256": "eb2f22b126f970df9f0e81adf48d4513b8f35d6cd2b9f40ed62c28e5ac9af041"
+    },
+    {
+      "file": "www/horizon_fold.js",
+      "original_sha256": "87b3d12387f3434bd56d84f37bc7c43f5dc6dfc3dc27f7ce786fd59c35d8145d",
+      "patched_sha256": "87b3d12387f3434bd56d84f37bc7c43f5dc6dfc3dc27f7ce786fd59c35d8145d"
+    },
+    {
+      "file": "www/horizon_bojack.js",
+      "original_sha256": "e9be1cce661316d01ad64d20bc3e5c27319bcfa05b923ed557468986f4d13f08",
+      "patched_sha256": "e9be1cce661316d01ad64d20bc3e5c27319bcfa05b923ed557468986f4d13f08"
+    },
+    {
+      "file": "www/horizon_github.js",
+      "original_sha256": "80bceb0a0e78ae43372183ccde8d91b1eed16c2048712a32e81b5ffe00d6147c",
+      "patched_sha256": "80bceb0a0e78ae43372183ccde8d91b1eed16c2048712a32e81b5ffe00d6147c"
+    },
+    {
+      "file": "www/horizon_terminal.js",
+      "original_sha256": "9366c423bf1fd2fcfe68c8fd20fe27fe7da18e5775e5a84b0f194e378232ca77",
+      "patched_sha256": "9366c423bf1fd2fcfe68c8fd20fe27fe7da18e5775e5a84b0f194e378232ca77"
+    },
+    {
+      "file": "www/horizon_autoread.js",
+      "original_sha256": "9de265cf304bddcd53090e03ed9e3042c53b67dec469cca00e1662090aacf744",
+      "patched_sha256": "9de265cf304bddcd53090e03ed9e3042c53b67dec469cca00e1662090aacf744"
+    },
+    {
+      "file": "www/horizon_plus.js",
+      "original_sha256": "63f770f2783a5d1aef23ed1a194c199700488f3cd7e8c71c106030be2c21e2fb",
+      "patched_sha256": "63f770f2783a5d1aef23ed1a194c199700488f3cd7e8c71c106030be2c21e2fb"
+    },
+    {
+      "file": "www/horizon_termai.js",
+      "original_sha256": "937efcc2e81673b04f7294b98d72431d39dd4b8454f31370ead71719d6863210",
+      "patched_sha256": "937efcc2e81673b04f7294b98d72431d39dd4b8454f31370ead71719d6863210"
+    },
+    {
+      "file": "www/horizon_group.js",
+      "original_sha256": "b1e0c33f9c8dccd572f2f86f2fa71c7d5d7eabdbf5c2a56accb4d12bb27de827",
+      "patched_sha256": "b1e0c33f9c8dccd572f2f86f2fa71c7d5d7eabdbf5c2a56accb4d12bb27de827"
+    },
+    {
+      "file": "www/horizon_lens.js",
+      "original_sha256": "739de04733d734dbd8549fe8a2a1c56e95a72c4aa073d3a5c69696bda82123f2",
+      "patched_sha256": "739de04733d734dbd8549fe8a2a1c56e95a72c4aa073d3a5c69696bda82123f2"
+    },
+    {
+      "file": "www/horizon_usage.js",
+      "original_sha256": "4775d2c9f464d15435565d557cea00b867e145b11b892094dbcf03afb4dfebdd",
+      "patched_sha256": "4775d2c9f464d15435565d557cea00b867e145b11b892094dbcf03afb4dfebdd"
+    },
+    {
+      "file": "www/vendor/pdfmake-0.2.20.min.js",
+      "original_sha256": "c2fd3a5e24db096c9139bb7d266765de433b0b866d03ba356c2ef4d9ae1a53b7",
+      "patched_sha256": "c2fd3a5e24db096c9139bb7d266765de433b0b866d03ba356c2ef4d9ae1a53b7"
+    },
+    {
+      "file": "www/vendor/pdfmake-0.2.20-fonts.js",
+      "original_sha256": "f91db5690400fc851536c3a9322f822619f8e9f681abe42013e572d88d3c1f38",
+      "patched_sha256": "f91db5690400fc851536c3a9322f822619f8e9f681abe42013e572d88d3c1f38"
+    },
+    {
+      "file": "www/vendor/pdfjs/pdf.worker.mjs",
+      "original_sha256": "5e9f76bd5e65fbd1602b29fc50e50490aeeacd34a715b2282b73f7e8029242e0",
+      "patched_sha256": "5e9f76bd5e65fbd1602b29fc50e50490aeeacd34a715b2282b73f7e8029242e0"
+    },
+    {
+      "file": "www/vendor/pdfjs/pdf.mjs",
+      "original_sha256": "081d3b6f426d38a8029766f8839f505e9cbf2c81a71d62c26eada142e6c21ae4",
+      "patched_sha256": "081d3b6f426d38a8029766f8839f505e9cbf2c81a71d62c26eada142e6c21ae4"
+    },
+    {
+      "file": "www/vendor/pdfjs/LICENSE.txt",
+      "original_sha256": "0d542e0c8804e39aa7f37eb00da5a762149dc682d7829451287e11b938e94594",
+      "patched_sha256": "0d542e0c8804e39aa7f37eb00da5a762149dc682d7829451287e11b938e94594"
+    },
+    {
+      "file": "www/vendor/pdfmake-LICENSE.txt",
+      "original_sha256": "009e509bbd25a0f7572b184781707263f5df9e89d2ed751c46e0f6edf0c5d42e",
+      "patched_sha256": "009e509bbd25a0f7572b184781707263f5df9e89d2ed751c46e0f6edf0c5d42e"
+    },
+    {
+      "file": "www/horizon_tts.js",
+      "original_sha256": "fcf0bce0ea82b82ef60622be2644fcb2237a42621bde263b55e7f8332eed9a23",
+      "patched_sha256": "fcf0bce0ea82b82ef60622be2644fcb2237a42621bde263b55e7f8332eed9a23"
+    },
+    {
+      "file": "www/horizon_creator.js",
+      "original_sha256": "83ec7256455a7a4c8885496fd14daaf98b14dfcbea2fd1a9ea54602b3682bd33",
+      "patched_sha256": "83ec7256455a7a4c8885496fd14daaf98b14dfcbea2fd1a9ea54602b3682bd33"
+    },
+    {
+      "file": "www/horizon_app.css",
+      "original_sha256": "5f5e6bb806122fd9f39a825060cd60c6ba9954a92650c9075fcc81f49d8085e9",
+      "patched_sha256": "72f747ad52627a483b9c8d4a5a6faa005cb9d61025f8a801bc3e94c90de0f2a1"
+    },
+    {
+      "file": "www/horizon_downloads.js",
+      "original_sha256": "b8ee5a804d462887abcec06a59d11a5df75bd4d52a878038f1f0109a31298dc1",
+      "patched_sha256": "b8ee5a804d462887abcec06a59d11a5df75bd4d52a878038f1f0109a31298dc1"
+    },
+    {
+      "file": "www/horizon_about.js",
+      "original_sha256": "432cc5fbf3dcfc52ef8b89082cf55c2ca4e0b3795e213287e91fd263a863fd72",
+      "patched_sha256": "432cc5fbf3dcfc52ef8b89082cf55c2ca4e0b3795e213287e91fd263a863fd72"
+    },
+    {
+      "file": "www/horizon_vault.js",
+      "original_sha256": "525a7c37bea34d5d5bc1a9e7e93e1dfcd5a3c86bbf09771240c04c58b56aece2",
+      "patched_sha256": "525a7c37bea34d5d5bc1a9e7e93e1dfcd5a3c86bbf09771240c04c58b56aece2"
+    },
+    {
+      "file": "www/horizon_mdview.js",
+      "original_sha256": "8ff9b488304fa4db4a133c230780af8412ddb808d0a6812df86a9b7218c8f45c",
+      "patched_sha256": "8ff9b488304fa4db4a133c230780af8412ddb808d0a6812df86a9b7218c8f45c"
+    },
+    {
+      "file": "www/horizon_lift.js",
+      "original_sha256": "5b7506c7a3c2beb3845c32a4b181904ec721148904995a301640b4f752971d9e",
+      "patched_sha256": "5b7506c7a3c2beb3845c32a4b181904ec721148904995a301640b4f752971d9e"
+    },
+    {
+      "file": "www/horizon_daemon.js",
+      "original_sha256": "1564f15bec75aa033f254b489a7089b2d41a22af17c28bfc7bddaace3ab1d6c1",
+      "patched_sha256": "1564f15bec75aa033f254b489a7089b2d41a22af17c28bfc7bddaace3ab1d6c1"
+    },
+    {
+      "file": "www/horizon_laser.js",
+      "original_sha256": "5778d62e6a30c5fd186c6d353757d3ff863404249533daad81d8e1549905c659",
+      "patched_sha256": "5778d62e6a30c5fd186c6d353757d3ff863404249533daad81d8e1549905c659"
+    },
+    {
+      "file": "www/horizon_operator.js",
+      "original_sha256": "296ddb46e730c98f4d5f2de2fe367275c94aa0dcb9c6d90ef97989fc7608a249",
+      "patched_sha256": "296ddb46e730c98f4d5f2de2fe367275c94aa0dcb9c6d90ef97989fc7608a249"
+    },
+    {
+      "file": "www/horizon_native_audio.js",
+      "original_sha256": "ad2f5611c85d1a3247a791d44547020fc7a3cce3f1d59b04381a452e60f46175",
+      "patched_sha256": "ad2f5611c85d1a3247a791d44547020fc7a3cce3f1d59b04381a452e60f46175"
+    },
+    {
+      "file": "www/horizon_archive.js",
+      "original_sha256": "3f9298d6b130bd3178e189dcc4af30532f97e1293164be7aa5e6fe4fab879c66",
+      "patched_sha256": "3f9298d6b130bd3178e189dcc4af30532f97e1293164be7aa5e6fe4fab879c66"
+    },
+    {
+      "file": "www/horizon_typing.js",
+      "original_sha256": "a09e7df29fe2b2f6f1bf925d87649bdc15dd439f826a962db118f5f7c5ec6f3b",
+      "patched_sha256": "a09e7df29fe2b2f6f1bf925d87649bdc15dd439f826a962db118f5f7c5ec6f3b"
+    },
+    {
+      "file": ".github/workflows/build-apk.yml",
+      "original_sha256": "257535648865b32d25e31a33b0d64a6a1cbae8964b0ef0553f1def92ef8028b3",
+      "patched_sha256": "257535648865b32d25e31a33b0d64a6a1cbae8964b0ef0553f1def92ef8028b3"
+    },
+    {
+      "file": "README.md",
+      "original_sha256": "2a42dc63d5ae6b4ff184b67d0415f1114b187ab8438f5e32b312a55feb17764f",
+      "patched_sha256": "2a42dc63d5ae6b4ff184b67d0415f1114b187ab8438f5e32b312a55feb17764f"
+    },
+    {
+      "file": "LICENSE",
+      "original_sha256": "e9094fc0dbf1a51cd8843e20a52460941caccd4764ec8da2dc96aef85a06e659",
+      "patched_sha256": "e9094fc0dbf1a51cd8843e20a52460941caccd4764ec8da2dc96aef85a06e659"
+    },
+    {
+      "file": "scripts/apply-bridges.py",
+      "original_sha256": "ff11877de76b312cc89ce9a65e948c470fb44bcc0234b75357307a5e8e26f3bd",
+      "patched_sha256": "ca2f6cc08c3194a9dc19385113243fce291d4f4fcc05e4f250e356a36fa71640"
+    },
+    {
+      "file": "scripts/make_icons.py",
+      "original_sha256": "4ac601ea6390767c21990bcce6fa109ae39cb2209388dc9d3716f5710277f2cf",
+      "patched_sha256": "4ac601ea6390767c21990bcce6fa109ae39cb2209388dc9d3716f5710277f2cf"
+    },
+    {
+      "file": "scripts/bundle-voice.sh",
+      "original_sha256": "655e9606b7dea0a305f6fea6727a917f93514fdfc52e1b429e38545a403aaa00",
+      "patched_sha256": "655e9606b7dea0a305f6fea6727a917f93514fdfc52e1b429e38545a403aaa00"
+    },
+    {
+      "file": "scripts/bump-version.sh",
+      "original_sha256": "db322212451e42ebdbf6ac536b60cf95709583fda7b3df2651320e10a2f0cb88",
+      "patched_sha256": "db322212451e42ebdbf6ac536b60cf95709583fda7b3df2651320e10a2f0cb88"
+    },
+    {
+      "file": "scripts/apply-android.sh",
+      "original_sha256": "31ffe91ab422a222a053127d0a7badb6875589168e37a087c6a73a5bf2e4ff71",
+      "patched_sha256": "31ffe91ab422a222a053127d0a7badb6875589168e37a087c6a73a5bf2e4ff71"
+    },
+    {
+      "file": "scripts/set-version.sh",
+      "original_sha256": "c31efd98608039d9f7c396c0860466cd8eb11d2e2442147ecd1f6fab22343d95",
+      "patched_sha256": "c31efd98608039d9f7c396c0860466cd8eb11d2e2442147ecd1f6fab22343d95"
+    },
+    {
+      "file": "scripts/check-endpoints.py",
+      "original_sha256": "ecaee78e6cda1b5d1dc56ae13d288fd4f974cf2a1d948887ef5ccbfe7f11ab5e",
+      "patched_sha256": "ecaee78e6cda1b5d1dc56ae13d288fd4f974cf2a1d948887ef5ccbfe7f11ab5e"
+    },
+    {
+      "file": ".gitignore",
+      "original_sha256": "7ce521083aff4504449959a79b4544a0ccc318d8b51aea574b5427e6e87a41bb",
+      "patched_sha256": "7ce521083aff4504449959a79b4544a0ccc318d8b51aea574b5427e6e87a41bb"
+    },
+    {
+      "file": "package-lock.json",
+      "original_sha256": "89609fc0b47ba747e2b28953a72d25b10fee0a411cc7a90956bf7be35d26e8cc",
+      "patched_sha256": "89609fc0b47ba747e2b28953a72d25b10fee0a411cc7a90956bf7be35d26e8cc"
+    },
+    {
+      "file": "tests/youtube.test.cjs",
+      "original_sha256": "c0eb833c325a96eccd03cd02abdcad24a8ff174e7f9f96f7a4c7b19dcae7675a",
+      "patched_sha256": "c0eb833c325a96eccd03cd02abdcad24a8ff174e7f9f96f7a4c7b19dcae7675a"
+    },
+    {
+      "file": "tests/guard.test.cjs",
+      "original_sha256": "e3747d85d0de6c787531ee83901bd402994675f23f565ced53f62e1c3fe629fc",
+      "patched_sha256": "e3747d85d0de6c787531ee83901bd402994675f23f565ced53f62e1c3fe629fc"
+    },
+    {
+      "file": "tests/regression.test.cjs",
+      "original_sha256": "36f4b44744235e17ab807b1dc88c4c22eef037b697a2cfef1b82be6f3512c5a0",
+      "patched_sha256": "36f4b44744235e17ab807b1dc88c4c22eef037b697a2cfef1b82be6f3512c5a0"
+    },
+    {
+      "file": "tests/tts.test.cjs",
+      "original_sha256": "04d7db3e3e6847fa1f9fd0a01b3590cdfdb878ca83bdd94703c1e6a22cd6113c",
+      "patched_sha256": "04d7db3e3e6847fa1f9fd0a01b3590cdfdb878ca83bdd94703c1e6a22cd6113c"
+    },
+    {
+      "file": "tests/performance.compare.cjs",
+      "original_sha256": "7c9e8bb725b13fa9a85921cf116c9632128d0de63bebcc5ad642ec3cb7da2ccd",
+      "patched_sha256": "7c9e8bb725b13fa9a85921cf116c9632128d0de63bebcc5ad642ec3cb7da2ccd"
+    },
+    {
+      "file": "tests/unified.test.cjs",
+      "original_sha256": "14976ea50d1d0c445a29bbbbc41ddf478c4dbf5d4463b1e9bab54f18f6403669",
+      "patched_sha256": "14976ea50d1d0c445a29bbbbc41ddf478c4dbf5d4463b1e9bab54f18f6403669"
+    },
+    {
+      "file": "tests/bridges.test.cjs",
+      "original_sha256": "b5aea804b7af7cb8b586ec109dc49e9bacd5e914ddce440ba3c899be636ffb42",
+      "patched_sha256": "044b06f251e7914d8b90a9ebda2b9653364c67a2dfa5515d67b53bb5c458706e"
+    },
+    {
+      "file": "tests/endpoint-allowlist.test.cjs",
+      "original_sha256": "0928ed71b330d6a5f03ecb5cbaf219bf7c7b581d46c87cf248b1b2511006d69b",
+      "patched_sha256": "0928ed71b330d6a5f03ecb5cbaf219bf7c7b581d46c87cf248b1b2511006d69b"
+    },
+    {
+      "file": "tests/browser.smoke.cjs",
+      "original_sha256": "545116cb6c9c583ee57b0cdfb2bf6db0d0446111556ec91e76d9cce74bb40aa5",
+      "patched_sha256": "545116cb6c9c583ee57b0cdfb2bf6db0d0446111556ec91e76d9cce74bb40aa5"
+    },
+    {
+      "file": "capacitor.config.json",
+      "original_sha256": "10db2988f419a6b27f87b89295769d0911a04e54dd94c062b87af89d05838f2e",
+      "patched_sha256": "10db2988f419a6b27f87b89295769d0911a04e54dd94c062b87af89d05838f2e"
+    },
+    {
+      "file": "UPGRADE-REPORT-V1_93_0.txt",
+      "original_sha256": "f44527660d9100a18c21d0de449e22e60f318fcd413cb33a1e7da626ee335648",
+      "patched_sha256": "f44527660d9100a18c21d0de449e22e60f318fcd413cb33a1e7da626ee335648"
+    },
+    {
+      "file": "package.json",
+      "original_sha256": "17838209d58411417ccc8d77a13b6c1b0968d11493de426c410d0aec8f044808",
+      "patched_sha256": "17838209d58411417ccc8d77a13b6c1b0968d11493de426c410d0aec8f044808"
+    },
+    {
+      "file": "resources/icon.png",
+      "original_sha256": "a3e38e74d180b36532abf2626a839ca9b57e8633ca99e758febcb5c67427970d",
+      "patched_sha256": "a3e38e74d180b36532abf2626a839ca9b57e8633ca99e758febcb5c67427970d"
+    },
+    {
+      "file": "resources/android/java/HorizonBgService.java",
+      "original_sha256": "32c6342a322e7299b51943114a9b425ea72b3bcfebcdf535300a97e2450109db",
+      "patched_sha256": "32c6342a322e7299b51943114a9b425ea72b3bcfebcdf535300a97e2450109db"
+    },
+    {
+      "file": "resources/android/java/HorizonAIService.kt",
+      "original_sha256": "ce729af3fd0a7a1dc360febda4a36b54095e86c33f6e962f9436bea39a512f99",
+      "patched_sha256": "ce729af3fd0a7a1dc360febda4a36b54095e86c33f6e962f9436bea39a512f99"
+    },
+    {
+      "file": "resources/android/java/HorizonAIPlugin.kt",
+      "original_sha256": "c51bd7effc06e255e66fc7662ef52527f1f733e8df85bcfea22b66f87a387d32",
+      "patched_sha256": "88dee990a6ba4aac59a46092ab81cd3e2b538b94b826daedcc5ce75122cd1dd8"
+    },
+    {
+      "file": "resources/android/java/MainActivity.java",
+      "original_sha256": "1b0e102294884491ae57ffdf8be285653b0a3987b042cc32b7881c66be8db462",
+      "patched_sha256": "f8a13698ef8ef4dbb3b77c28324160de72c3ff9827a3f0539e6fe6060c47f7c0"
+    },
+    {
+      "file": "resources/android/java/HorizonNotify.kt",
+      "original_sha256": "53cb995e0fef9366058f90df4f036df7d4f214fa227ce04b01989d8185b7dec4",
+      "patched_sha256": "53cb995e0fef9366058f90df4f036df7d4f214fa227ce04b01989d8185b7dec4"
+    },
+    {
+      "file": "resources/android/java/HorizonAlarmPlugin.kt",
+      "original_sha256": "829b7c4101feddc73e3a9139c94ae6b2b062958fd627523867ffb78e9a58a104",
+      "patched_sha256": "829b7c4101feddc73e3a9139c94ae6b2b062958fd627523867ffb78e9a58a104"
+    },
+    {
+      "file": "resources/android/java/HorizonPermsPlugin.java",
+      "original_sha256": "1b497380b1411259f9aa0b028f0a7ab4c1887467fbf65a37ff8d654eb6c68fd4",
+      "patched_sha256": "1b497380b1411259f9aa0b028f0a7ab4c1887467fbf65a37ff8d654eb6c68fd4"
+    },
+    {
+      "file": "resources/android/java/HorizonBrowserPlugin.java",
+      "original_sha256": "8e39017a088e30cf78028f629f7cac7b38a1a59a968ef47748d9c5c9ba66181e",
+      "patched_sha256": "8e39017a088e30cf78028f629f7cac7b38a1a59a968ef47748d9c5c9ba66181e"
+    },
+    {
+      "file": "resources/android/java/HorizonSpeakService.kt",
+      "original_sha256": "1a2e149e4b5f873f259dec61771297509d07b049bb2419e486f97fdce7b3a207",
+      "patched_sha256": "1a2e149e4b5f873f259dec61771297509d07b049bb2419e486f97fdce7b3a207"
+    },
+    {
+      "file": "resources/android/java/HorizonAlarmBootReceiver.kt",
+      "original_sha256": "1e0e4f9496607d08b4971b958087d15dd09509e57b33d159dbd5a60c04f5b14a",
+      "patched_sha256": "1e0e4f9496607d08b4971b958087d15dd09509e57b33d159dbd5a60c04f5b14a"
+    },
+    {
+      "file": "resources/android/java/HorizonReplyReceiver.kt",
+      "original_sha256": "9539f96724c21b66aa6809161857a2298fee4b54c8fc42b45f0dfa13759bf826",
+      "patched_sha256": "9539f96724c21b66aa6809161857a2298fee4b54c8fc42b45f0dfa13759bf826"
+    },
+    {
+      "file": "resources/android/java/HorizonSpeechPlugin.java",
+      "original_sha256": "34d865f3c0bdc966c08a4de82e20ce99c9b3476935cfde1eb1548e9dd2315695",
+      "patched_sha256": "34d865f3c0bdc966c08a4de82e20ce99c9b3476935cfde1eb1548e9dd2315695"
+    },
+    {
+      "file": "resources/android/java/HorizonExtractorPlugin.kt",
+      "original_sha256": "b79e0a5183ec89ef05f22917111e5ba89f7d6ca9b015d97bd160828d414cbe8e",
+      "patched_sha256": "b79e0a5183ec89ef05f22917111e5ba89f7d6ca9b015d97bd160828d414cbe8e"
+    },
+    {
+      "file": "resources/android/java/HorizonMediaPlugin.java",
+      "original_sha256": "431e4df3d3528934880c396dd96c01a26d6b252c77e27b323b5d1bdf65610d2e",
+      "patched_sha256": "431e4df3d3528934880c396dd96c01a26d6b252c77e27b323b5d1bdf65610d2e"
+    },
+    {
+      "file": "resources/android/java/HorizonMediaService.java",
+      "original_sha256": "15eaf1c172a20acc62b7113a93aa87793d20d363220b0de94505ae3a512e908e",
+      "patched_sha256": "15eaf1c172a20acc62b7113a93aa87793d20d363220b0de94505ae3a512e908e"
+    },
+    {
+      "file": "resources/android/java/HorizonAlarms.kt",
+      "original_sha256": "8d65bd68f2a1297ee67d10f44bf6c98eb0ecf2b25560a60ef64fbfdd42747167",
+      "patched_sha256": "8d65bd68f2a1297ee67d10f44bf6c98eb0ecf2b25560a60ef64fbfdd42747167"
+    },
+    {
+      "file": "resources/android/java/HorizonLockPlugin.kt",
+      "original_sha256": "b880748d1b8fb7aabb54f6e514bf392a5bab6c4dcd1ef528de2c0eeb4cbff62f",
+      "patched_sha256": "b880748d1b8fb7aabb54f6e514bf392a5bab6c4dcd1ef528de2c0eeb4cbff62f"
+    },
+    {
+      "file": "resources/android/java/HorizonAlarmReceiver.kt",
+      "original_sha256": "c6dfba1d57b944e55795d6c9a2b741b50e1a71a26a5e84f7dae56a15866b8701",
+      "patched_sha256": "c6dfba1d57b944e55795d6c9a2b741b50e1a71a26a5e84f7dae56a15866b8701"
+    },
+    {
+      "file": "resources/android/java/HorizonWhatsAppPlugin.kt",
+      "original_sha256": "3d656888fe73b6e5b09a522082fa06d976ddc6e6b266f15822a508c505b1ae96",
+      "patched_sha256": "571db2421922269e6958379df02ed930c7e6532ce6fb0bc70dfa8d16ca736eec"
+    },
+    {
+      "file": "resources/android/java/HorizonStatsPlugin.java",
+      "original_sha256": "6fa2168fcb8c1d91def7c75e51af96f93224351fd97c9633c440dde63c650971",
+      "patched_sha256": "6fa2168fcb8c1d91def7c75e51af96f93224351fd97c9633c440dde63c650971"
+    },
+    {
+      "file": "resources/android/java/HorizonDaemonPlugin.kt",
+      "original_sha256": "138a2812c8ff1e6bc81eb899f65a843de9b96c5e10c01abbb706d57a31fd1ef9",
+      "patched_sha256": "138a2812c8ff1e6bc81eb899f65a843de9b96c5e10c01abbb706d57a31fd1ef9"
+    },
+    {
+      "file": "resources/android/java/HorizonTermuxPlugin.kt",
+      "original_sha256": "2eb9c71558e172361712a2ab7606bbb966e250c6244246aa55698ca44c0ca1c0",
+      "patched_sha256": "157825366c8ecd7c66575ff99ad01a166f5008472ac2900f00a61a0c21f05ce7"
+    },
+    {
+      "file": "resources/android/java/HorizonArt.java",
+      "original_sha256": "af210a7a6f0c959c19748a0ca426c09b6180d4952a59c53d1083e3d03961cd7d",
+      "patched_sha256": "af210a7a6f0c959c19748a0ca426c09b6180d4952a59c53d1083e3d03961cd7d"
+    },
+    {
+      "file": "resources/android/java/HorizonScopes.kt",
+      "original_sha256": "dd0cc6cb80ae3fe8b579a2ccd5fa82bf0a32093535aad94378c335e0b73836af",
+      "patched_sha256": "dd0cc6cb80ae3fe8b579a2ccd5fa82bf0a32093535aad94378c335e0b73836af"
+    },
+    {
+      "file": "resources/android/java/HorizonAlarmService.kt",
+      "original_sha256": "4ecb25535c747ac97c4ad530471d1bdead14b7765cdfe1a277b26d73a5a0b394",
+      "patched_sha256": "4ecb25535c747ac97c4ad530471d1bdead14b7765cdfe1a277b26d73a5a0b394"
+    },
+    {
+      "file": "resources/android/java/HorizonVoicePlugin.kt",
+      "original_sha256": "7d09796b2bde1446c22ac262b1e2390fbb22eac38357cba53dfe7498149c4b2d",
+      "patched_sha256": "7d09796b2bde1446c22ac262b1e2390fbb22eac38357cba53dfe7498149c4b2d"
+    },
+    {
+      "file": "resources/android/java/HorizonLensPlugin.java",
+      "original_sha256": "08177f24e42fb29ee8f1863d32eb9e6cbee1d684f699d5c9b698e517920fbc08",
+      "patched_sha256": "08177f24e42fb29ee8f1863d32eb9e6cbee1d684f699d5c9b698e517920fbc08"
+    },
+    {
+      "file": "resources/android/res/xml/horizon_bridge_backup.xml",
+      "original_sha256": "f2dacde9e83f5ccc7804ba185a60e34508e0a3540fb30227cbbb04335fe32f1a",
+      "patched_sha256": "a8c4cfa9bd795fa9921fb7c747918302c679757ebaa3ad2c2dd6807afe0642d0"
+    },
+    {
+      "file": "resources/android/res/xml/horizon_bridge_extraction.xml",
+      "original_sha256": "0d68a05a0bc9f0dd83adf507f5ec4dc51d499fc176dc80d7aa5b541e1a092615",
+      "patched_sha256": "01c110a4b484bb8f1b734f62a3a33ffb0987f843f8d192d2aa193170449ad510"
+    },
+    {
+      "file": "resources/android/res/mipmap-hdpi/ic_launcher_round.png",
+      "original_sha256": "ac229ea400ec74ecf37c6c609b02e89618a6641439eaa80d674fdc14c928398b",
+      "patched_sha256": "ac229ea400ec74ecf37c6c609b02e89618a6641439eaa80d674fdc14c928398b"
+    },
+    {
+      "file": "resources/android/res/mipmap-hdpi/ic_launcher_foreground.png",
+      "original_sha256": "0dd52e80d2b884761fa497cc75cc1f1b78be01735f7f98955885955d10e80798",
+      "patched_sha256": "0dd52e80d2b884761fa497cc75cc1f1b78be01735f7f98955885955d10e80798"
+    },
+    {
+      "file": "resources/android/res/mipmap-hdpi/ic_launcher.png",
+      "original_sha256": "8b5bec66ed41dc1f5ed56cd80f9baef6798003a03cdf6cff02cd8a3089b5282f",
+      "patched_sha256": "8b5bec66ed41dc1f5ed56cd80f9baef6798003a03cdf6cff02cd8a3089b5282f"
+    },
+    {
+      "file": "resources/android/res/mipmap-anydpi-v26/ic_launcher_round.xml",
+      "original_sha256": "d03d20b2e161527e98cc63433fceead6b4f748e3c4952c2af9bcfcf555fbf7c3",
+      "patched_sha256": "d03d20b2e161527e98cc63433fceead6b4f748e3c4952c2af9bcfcf555fbf7c3"
+    },
+    {
+      "file": "resources/android/res/mipmap-anydpi-v26/ic_launcher.xml",
+      "original_sha256": "d03d20b2e161527e98cc63433fceead6b4f748e3c4952c2af9bcfcf555fbf7c3",
+      "patched_sha256": "d03d20b2e161527e98cc63433fceead6b4f748e3c4952c2af9bcfcf555fbf7c3"
+    },
+    {
+      "file": "resources/android/res/values/ic_launcher_background.xml",
+      "original_sha256": "b54bc246c11f5e12b46926eef269f08b67cf612cc8e9a9580f86d95820b1a2b1",
+      "patched_sha256": "b54bc246c11f5e12b46926eef269f08b67cf612cc8e9a9580f86d95820b1a2b1"
+    },
+    {
+      "file": "resources/android/res/mipmap-xxhdpi/ic_launcher_round.png",
+      "original_sha256": "8a6ba12fdf2f08ecca2044636489fe6eb52cdfe9641bca27854c258d7331900a",
+      "patched_sha256": "8a6ba12fdf2f08ecca2044636489fe6eb52cdfe9641bca27854c258d7331900a"
+    },
+    {
+      "file": "resources/android/res/mipmap-xxhdpi/ic_launcher_foreground.png",
+      "original_sha256": "c50ad2dafad28825d3ede016fe589f0f6c9ad2546f51426438302ad91039c84a",
+      "patched_sha256": "c50ad2dafad28825d3ede016fe589f0f6c9ad2546f51426438302ad91039c84a"
+    },
+    {
+      "file": "resources/android/res/mipmap-xxhdpi/ic_launcher.png",
+      "original_sha256": "eb81e5ecbec01bd20b59eef1cd55cc1c247014d252f9907c7adea1bb281e7a0a",
+      "patched_sha256": "eb81e5ecbec01bd20b59eef1cd55cc1c247014d252f9907c7adea1bb281e7a0a"
+    },
+    {
+      "file": "resources/android/res/mipmap-xxxhdpi/ic_launcher_round.png",
+      "original_sha256": "9784710b4163670d65635db20b44dbd0f02c254a545889ba5ab01b44788f6ef9",
+      "patched_sha256": "9784710b4163670d65635db20b44dbd0f02c254a545889ba5ab01b44788f6ef9"
+    },
+    {
+      "file": "resources/android/res/mipmap-xxxhdpi/ic_launcher_foreground.png",
+      "original_sha256": "cb8157126c06658f2f31a3817162f70b849b9453b6f191a74fdc720d5d25cbb5",
+      "patched_sha256": "cb8157126c06658f2f31a3817162f70b849b9453b6f191a74fdc720d5d25cbb5"
+    },
+    {
+      "file": "resources/android/res/mipmap-xxxhdpi/ic_launcher.png",
+      "original_sha256": "a16276ccc108ccccf1bb1b55f358a9b9b54e5133f592867dfd34810946775f4f",
+      "patched_sha256": "a16276ccc108ccccf1bb1b55f358a9b9b54e5133f592867dfd34810946775f4f"
+    },
+    {
+      "file": "resources/android/res/raw/horizon_live.sh",
+      "original_sha256": "dc7104a2eafe151c2fd434c371de042426cba14c98321b4b10305d8806fb4e28",
+      "patched_sha256": "dc7104a2eafe151c2fd434c371de042426cba14c98321b4b10305d8806fb4e28"
+    },
+    {
+      "file": "resources/android/res/mipmap-xhdpi/ic_launcher_round.png",
+      "original_sha256": "6d75f7cbfc7969fae3fb7ff2e554b5374a63ea493a504ea5eedfcec858ea79b8",
+      "patched_sha256": "6d75f7cbfc7969fae3fb7ff2e554b5374a63ea493a504ea5eedfcec858ea79b8"
+    },
+    {
+      "file": "resources/android/res/mipmap-xhdpi/ic_launcher_foreground.png",
+      "original_sha256": "e57dd29eba3b62067b0fd43a4e1476beaea1d515a9837e934aed8025ff4747b8",
+      "patched_sha256": "e57dd29eba3b62067b0fd43a4e1476beaea1d515a9837e934aed8025ff4747b8"
+    },
+    {
+      "file": "resources/android/res/mipmap-xhdpi/ic_launcher.png",
+      "original_sha256": "d7a2f25018242997e6f5071fdd6d96fbd727ca3e9e75dbc82fa6d51cef017f46",
+      "patched_sha256": "d7a2f25018242997e6f5071fdd6d96fbd727ca3e9e75dbc82fa6d51cef017f46"
+    },
+    {
+      "file": "resources/android/res/drawable/ic_horizon_whatsapp.xml",
+      "original_sha256": "06c2318f7ddeb5a96a27821b6f740cdc9ff047748379b649b00181b54ada0c9e",
+      "patched_sha256": "06c2318f7ddeb5a96a27821b6f740cdc9ff047748379b649b00181b54ada0c9e"
+    },
+    {
+      "file": "resources/android/res/drawable/splash.xml",
+      "original_sha256": "9bcb97e840064c642922a253cda2e5562bf08c92a052ad5cdf70d301842b8db4",
+      "patched_sha256": "9bcb97e840064c642922a253cda2e5562bf08c92a052ad5cdf70d301842b8db4"
+    },
+    {
+      "file": "resources/android/res/mipmap-mdpi/ic_launcher_round.png",
+      "original_sha256": "f750d907674f98baa0f8e4a816dd64129f7e37d8ce58153de70c424e423a5260",
+      "patched_sha256": "f750d907674f98baa0f8e4a816dd64129f7e37d8ce58153de70c424e423a5260"
+    },
+    {
+      "file": "resources/android/res/mipmap-mdpi/ic_launcher_foreground.png",
+      "original_sha256": "a199c7e1a2d90ad9ea27787a4ea7d355c21bc38cb83f84f980178a6518226de3",
+      "patched_sha256": "a199c7e1a2d90ad9ea27787a4ea7d355c21bc38cb83f84f980178a6518226de3"
+    },
+    {
+      "file": "resources/android/res/mipmap-mdpi/ic_launcher.png",
+      "original_sha256": "bd1ea7043dbb1f5651c545d412f6486d1d1ee2d9a842c12d18461135cf404efb",
+      "patched_sha256": "bd1ea7043dbb1f5651c545d412f6486d1d1ee2d9a842c12d18461135cf404efb"
+    },
+    {
+      "file": "resources/android/NEWPIPE-LICENSE.txt",
+      "original_sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
+      "patched_sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986"
+    },
+    {
+      "file": "resources/icon-foreground.png",
+      "original_sha256": "edba23818166a544db911aaa3c527cc9270d5446d55d35cf3154023bf73d8ea7",
+      "patched_sha256": "edba23818166a544db911aaa3c527cc9270d5446d55d35cf3154023bf73d8ea7"
+    },
+    {
+      "file": "www/horizon_checkin.js",
+      "patched_sha256": "ffa429a25ef6578144afadfb572da5a8a00a558f4886f1751f3b38e053d86e2c",
+      "new_file": true
+    },
+    {
+      "file": "resources/android/java/HorizonCheckinPlugin.kt",
+      "patched_sha256": "5b36f7afa0d6f2e69b278ff4a28c434694b45deb84d6b504e674c5911ed86006",
+      "new_file": true
+    },
+    {
+      "file": "resources/android/java/HorizonWhatsAppAccessibility.kt",
+      "patched_sha256": "a7fc32a430ea05c37b0e6ea12af528802163af1979a655260c18d14120030158",
+      "new_file": true
+    },
+    {
+      "file": "resources/android/res/xml/horizon_whatsapp_accessibility.xml",
+      "patched_sha256": "c4f492b7698e013d62e1d2352406ccaac7b7a5c5c29a630a9d91fe42239b4c95",
+      "new_file": true
+    },
+    {
+      "file": "resources/android/res/values/horizon_accessibility_strings.xml",
+      "patched_sha256": "5176da7f261d3a97fdec9b5aeb5d202edacffe86c9bc3d4b5fdc697a77ce974f",
+      "new_file": true
+    },
+    {
+      "file": "tests/requested-fixes.test.cjs",
+      "patched_sha256": "9b71f8ed438a4bb1fe05e539cfbe3fac6af0c82a1ad3cb32189797067050460f",
+      "new_file": true
+    },
+    {
+      "file": "tests/requested-fixes.browser.cjs",
+      "patched_sha256": "63b80c8db3663b88019f47636b1a581253b846b4df6493a41d7968407e2cc284",
+      "new_file": true
+    }
+  ]
+}

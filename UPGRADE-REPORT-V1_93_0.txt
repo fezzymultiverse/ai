@@ -1,0 +1,125 @@
+Horizon V1.93.0 - HD voice (Kokoro, open source) in Settings > Voice
+Source patch on Horizon V1.92.4
+
+CHANGES IN THIS RELEASE
+1. New HD voice card at the top of Settings > Voice (open the Voice row). One tap downloads the Kokoro pack once (about 130 MB,
+   official sherpa-onnx archive kokoro-int8-multi-lang-v1_0, Apache-2.0), selects it with the best voice (Heart) and Test plays it.
+   It then runs offline through the same sherpa-onnx runtime as before: no key, no account, no limit. The Voice row subtitle says
+   "open to get the free HD voice" until it is installed, and "HD voice (Heart ...)" once it is on. The Voice library rows below
+   still work and share the same download (progress shows in both places).
+   Buttons: Get HD voice / Cancel / Use HD voice (downloaded but another voice picked) / Test HD voice.
+     www/index.html          #ttsHd card, paintHd(), wireHd(), copy in the Voice hint
+     www/horizon_app.css     .tts-hd styles (end of file)
+     www/horizon_tts.js      HorizonTTS.hd { pack, info, installed, active, use, get }
+2. Kokoro voices listed best first (stars): Heart, Bella, Nicole, Fenrir, Michael, Puck, Emma, then the rest, weakest last. The order
+   follows the quality grades in the Kokoro-82M voice list. When a pack is installed its voices now come before the 8 small built-in
+   Kitten voices, so the default pick after a download is Heart. Speaker ids did not change (af 0-10, am 11-19, bf 20-23, bm 24-27);
+   a test locks all 28.
+3. Speed is made inside the model for every on-phone voice (Kokoro, Piper, Kitten): speed goes to sherpa-onnx (clamped 0.5 to 2) and
+   playback runs at 1x. Pitch stays a playback control. Before, the finished audio was sped up by the player.
+4. Faster first sound: the first piece an on-phone voice speaks is cut to about one sentence (90 characters), the rest stays in
+   normal chunks; the next chunk is still made while the current one plays.
+5. About changelog entry for V1.93.0; every version stamp set with scripts/bump-version.sh 1.93.0 (--check: all agree).
+
+NOT CHANGED ON PURPOSE
+- No Kotlin, Java, workflow or build-script change. HorizonVoicePlugin.kt already took speed, packs and downloads.
+- The sherpa-onnx runtime stays pinned to v1.12.14 (the upstream main branch is 2.0.x and removed the espeak phonemizer these packs use).
+  Newer voice models (Pocket TTS, Supertonic 3, Kitten v0.8) need that newer runtime and are a separate migration.
+
+CHECKED AGAINST UPSTREAM (k2-fsa/sherpa-onnx, read from their repo in this session)
+- Archive names kokoro-int8-multi-lang-v1_0, kokoro-multi-lang-v1_0 and kokoro-int8-multi-lang-v1_1 are produced by their export-kokoro workflow
+  and uploaded to the tts-models release.
+- Kokoro speaker order af 0-10, am 11-19, bf 20-23, bm 24-27 matches their kokoro-multi-lang-v1_0 page.
+- The v1.12.14 Kotlin API has OfflineTtsKokoroModelConfig and generate(text, sid, speed), which the plugin uses.
+- Not checked: the exact archive size on the release page (the card says about 130 MB), and whether the posted int8 archive already includes upstream
+  change #4087 (int8 Kokoro export keeps the STFT convolutions in float32). If int8 Kokoro ever sounds buzzy, delete the pack and download it again later.
+
+TESTED: node --check on every JS file; node unit tests 111/111 (6 new: HD download and select, hd.use, 28-voice list and speaker ids,
+speed goes to the model with 1x playback and pitch kept, speed clamp, short first piece); headless Chromium at 412x915 with a stubbed
+HorizonVoice plugin: card text per state, download progress 10/40/80 %, engine switches to Kokoro, status line, voice list starts with
+Heart, Test calls load -> synth(sid 3, speed 1) -> play(rate 1, pitch 1), no page errors, screenshot checked.
+NOT TESTED: Kotlin and Java compile (nothing changed there), APK build, the real download on a phone, how the real Kokoro sounds and how fast
+it speaks on the Honor X5b. Rebuild through the GitHub workflow, then: Settings > Voice > Get HD voice (Wi-Fi), Test, read a long reply.
+If the first sentence takes too long on the phone, pick a Piper voice (small) from the Voice library for speed.
+
+--- V1.92.4 REPORT (unchanged) ---
+
+Horizon V1.92.4 - Downloads tap fix (folds in the V1.92.3 cleanup below)
+Source patch on Horizon V1.92.3
+
+CHANGES IN THIS RELEASE
+1. Settings > DOWNLOADS did nothing when tapped. It (and the live progress card) opened Downloads by clicking a
+   .hz-app[data-addon="downloads"] tile, and that tile is no longer in the APPS dock (the dock is Music, Terminal, Lens,
+   YouTube, Contacts). Both now call HorizonAddons.open('downloads') directly.
+     www/horizon_v2.js          line 10   Settings DOWNLOADS row
+     www/horizon_downloads.js   line 100  progress card tap
+2. The red failed-count badge had no tile to sit on, so it never showed. It now attaches to the Settings DOWNLOADS row
+   (www/horizon_downloads.js line 134) with two CSS lines at the end of www/horizon_app.css (#hzDlRow positioning).
+3. About changelog entry for V1.92.4; every version stamp set with scripts/bump-version.sh 1.92.4 (--check: all agree).
+Nothing else was touched.
+
+TESTED: node --check on every JS file; node unit tests 105/105; tests/browser.smoke.cjs (no uncaught errors, no missing
+assets); headless Chromium at 412x915 with a finished and a failed record seeded: Settings > DOWNLOADS opens the
+Downloads window, "My downloads" lists both rows, Retry shows on the failed one, the badge shows "1" on the Settings row,
+no page errors.
+NOT TESTED: Kotlin and Java compile, APK build, on-device behaviour.
+Rebuild through the GitHub workflow, then check: Settings > DOWNLOADS opens; start a download, tap its progress card.
+
+--- V1.92.3 REPORT (unchanged) ---
+
+Horizon V1.92.3 - cleanup release (folds in V1.92.0 to V1.92.2)
+Source patch on Horizon V1.92.0
+
+CHANGES IN THIS RELEASE
+1. Version drift fixed. The V1.92.0 source already contained V1.92.1 (long chats open on the newest 40 messages),
+   V1.92.2 (live download progress card) and V1.92.3 (one-line tool descriptions) work, but package.json, the ?v= cache
+   tags, About, the release migration and the changelog all still said 1.92.0, and package-lock.json said 1.91.0.
+   Every stamp now reads 1.92.3 and the About changelog has entries for V1.92.1, V1.92.2 and V1.92.3.
+2. New scripts/bump-version.sh: "bash scripts/bump-version.sh 1.92.4" stamps every version location, and
+   "bash scripts/bump-version.sh --check" lists them and exits 1 if any disagree (it also checks the newest changelog entry).
+3. Removed the LeakCanary stub: HorizonCanary.kt, the /canary slash menu, canaryStatus / canarySet / canaryOpen in
+   HorizonAIPlugin.kt, HorizonCanary.init in MainActivity.java, its check and file entry in apply-android.sh and its name in
+   the APK class check in build-apk.yml.
+4. Removed Snooze leftovers: the #snoozeBtn lookups in index.html and horizon_screen.js (the Screen tool no longer shows a
+   permanent "Snooze off" chip) and the stale snooze comments in index.html and horizon_hdr2.js.
+5. Removed unused native calls HorizonAlarm.nextRing, HorizonAlarm.clearSong and HorizonBrowser.closeAll (no JS or Java caller).
+6. Removed 19 CSS declarations that a later rule with the same selector always overrode. A before/after check of the
+   final value for every selector and property shows 0 differences. Fallback pairs (100vh then 100dvh and similar) were kept.
+7. Removed stale files: UPGRADE-REPORT.txt (identical to the V1.91.0 report), UPGRADE-REPORT-V1_91_0.txt,
+   UPGRADE-REPORT-V1_92_0.txt (folded in here) and the validation/ folder (V1.88.0 results). validation/ is now in
+   .gitignore and tests/performance.compare.cjs creates it when it needs it.
+8. README: first banner updated, stale V1.90.0 banner and the validation/ note removed.
+9. Stale comment in horizon_ind.js (pointed at a stylesheet that no longer exists) corrected.
+
+KEPT ON PURPOSE
+- PERFORMANCE-PLAN.txt: its Phase 2 real-phone checks were never run.
+- The old About changelog entries and the README history: they are history, not dead code.
+
+V1.92.0 NOTES (unchanged)
+- WhatsApp silent background send toggle (default OFF): no dialog, WhatsApp never opens. 10 sends/hour cap.
+- Reply actions survive notification dismissal; stale ones fail cleanly and report "Nothing was sent".
+- No live reply action: Horizon posts a tap-to-send notification and the AI is told to inform you.
+- "AI sees new messages and reads without asking" toggle: recent previews go into the AI context.
+- Needs: Notification access, Allow confirmed replies ON, contact must have messaged since Horizon connected.
+- Not integrated: WhatsApp Business Cloud API (needs Meta token + phone number ID + a webhook server).
+- Colors: light/neon greens now use --neon (#bf5fff) on dark pills; light themes use --neon-deep. PDF export colors untouched.
+- Speed: chat save debounced (400 ms, flushed on hide/backup); Lite mode (auto on <=4 GB RAM or <=6 cores) removes
+  shadows/blur. Set localStorage hzLite=0 to turn Lite off.
+- Terminal: the AI is told when Termux is installed but off and how to switch it on. Defaults are still OFF.
+
+TESTED: node --check on every JS file and the inline script; bash -n on every script and shellcheck on bump-version.sh
+(clean); node unit tests 105/105; tests/browser.smoke.cjs passes (no uncaught errors, no missing assets, unique IDs);
+a headless-Chromium check that the slash menu has no /canary, the Tools menu paints its check chips and 12 descriptions
+with no errors and no Snooze chip; CSS brace balance and a before/after cascade comparison (0 differences);
+bump-version.sh --check (all stamps agree); repeat dead-code scans (no orphan scripts, no unreferenced CSS classes,
+no unused inline functions).
+NOT TESTED: Kotlin and Java compile, APK build, on-device behaviour, real startup time.
+Rebuild through the GitHub workflow, then check: /notif still works, the Tools menu opens, a download shows its card,
+a long chat opens on the newest messages.
+
+LEFT UNDONE (not in this cleanup)
+- Header is still built in two passes (horizon_hdr2.js then horizon_door.js).
+- Old-key cleanup is spread over horizon_door.js, horizon_v2.js and horizon_release.js.
+- horizon_about.js still carries the whole changelog (about 50 KB) at startup.
+- README is still mostly an old changelog.
+- apply-android.sh plus apply-bridges.py is still a two-layer patcher.

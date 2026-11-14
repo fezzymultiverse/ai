@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<full-backup-content>
+    <exclude domain="sharedpref" path="horizon_whatsapp.xml" />
+    <exclude domain="sharedpref" path="horizon_termux.xml" />
+        <exclude domain="sharedpref" path="horizon_checkin.xml" />
+</full-backup-content>

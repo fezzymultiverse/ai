@@ -1,0 +1,38 @@
+
+> horizon@1.93.0 test:voice-dsp
+> node tests/voice-dsp.cjs
+
+PASS neutral bypasses DSP
+PASS NaN is neutral
+PASS infinity is neutral
+PASS native bounds enforced
+PASS neutral gain remains within 2 percent
+PASS low shelf boosts low frequencies
+PASS low shelf attenuates low frequencies
+PASS high shelf boosts high frequencies
+PASS presence bell boosts its centre frequency
+PASS envelope compressor reduces loud signal RMS
+PASS comb reverb creates a decaying tail
+PASS feedback delay creates a 190ms echo
+PASS ring modulation changes the signal without silence
+PASS pitch-snap does not invent sound from silence
+PASS voiced pitch-snap produces finite audible output
+PASS 225 Hz fixture snaps toward A3 (220 Hz), measured 220.0070703027437
+PASS all effects at maximum remain finite and peak-limited
+PASS short edge fades avoid abrupt clicks
+PASS WAV render includes reverb tail
+PASS output is a WAV container
+PASS stereo input downmixes to bounded mono PCM
+PASS malformed WAV rejected
+PASS overflow/truncated chunk length rejected
+PASS unsupported PCM encoding rejected with direct-speech escape route
+PASS overlong processing input rejected
+PASS oversized processing input rejected before allocating PCM
+PASS cancellation prevents processing
+PASS DSP stable at 8000 Hz
+PASS DSP stable at 16000 Hz
+PASS DSP stable at 22050 Hz
+PASS DSP stable at 24000 Hz
+PASS DSP stable at 44100 Hz
+PASS DSP stable at 48000 Hz
+RESULT 33 DSP tests passed

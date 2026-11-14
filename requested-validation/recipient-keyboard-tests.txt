@@ -1,0 +1,16 @@
+{
+  "checks": [
+    "selected contact appears as a safe, responsive name/number card in the composer",
+    "Remove clears both recipient card and AI recipient context",
+    "new conversation clears recipient selection",
+    "locking the app clears the private recipient preview",
+    "composition survives delayed keyboard-hidden events without blur, lost text or a hidden editor",
+    "repeated native keyboard-start signals cannot indefinitely extend the busy watchdog",
+    "continuous resize events recover instead of keeping the keyboard guard stuck",
+    "typing still accepts input after watchdog recovery"
+  ],
+  "errors": [],
+  "androidDeviceTested": false,
+  "contactsBridgeMocked": true,
+  "keyboardSignalsSimulated": true
+}
