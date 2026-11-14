@@ -47,7 +47,7 @@ const server = http.createServer((req, res) => {
       const hk = order.indexOf('H:KEYLESS');
       assert.ok(hk > hf && hk < hp, 'Settings needs a KEYLESS heading between FREE TIER and PAID TIER');
       const kl = order.slice(hk + 1, hp).map(x => x.replace(/^C:/, ''));
-      assert.ok(kl.length >= 5, 'KEYLESS holds Pollinations, ch.at, Kilo, LLM7.io and OVHcloud');
+      assert.ok(kl.length >= 6, 'KEYLESS holds Pollinations, ch.at, BlockRun, Kilo, LLM7.io and OVHcloud');
       const sorted = kl.slice().sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
       assert.deepEqual(kl, sorted, 'KEYLESS cards are A to Z');
       assert.ok(!order.slice(hf + 1, hk).some(x => /Pollinations|ch\.at|Kilo|LLM7|OVH/i.test(x)), 'no keyless provider left under FREE TIER');
@@ -63,9 +63,9 @@ const server = http.createServer((req, res) => {
       const rows = await page.evaluate(() => [...document.querySelectorAll('#pkList > *')].map(k => k.classList.contains('pk-sec') ? 'H:' + k.textContent : 'R:' + ((k.querySelector('.pk-name,b,strong') || {}).textContent || k.textContent.slice(0, 20)).trim()));
       const a = rows.indexOf('H:KEYLESS'), b = rows.indexOf('H:PAID TIER');
       assert.ok(a > 0 && a < b, 'Choose an AI needs a KEYLESS heading between FREE TIER and PAID TIER');
-      assert.equal(b - a - 1, 5, 'five keyless rows');
+      assert.equal(b - a - 1, 6, 'six keyless rows');
       const names = rows.slice(a + 1, b).map(x => x.replace(/^R:/, ''));
-      checks.push('Choose an AI: KEYLESS group of 5 rows between the tiers: ' + names.join(' | '));
+      checks.push('Choose an AI: KEYLESS group of 6 rows between the tiers: ' + names.join(' | '));
     }
     await page.keyboard.press('Escape'); await page.evaluate(() => { const o = document.querySelector('#pkSheet'); if (!o.hidden) document.querySelector('#pkClose, #pkSheet .pk-close')?.click(); });
     const want = { claude: 'https://api.anthropic.com/v1/messages', openai: 'https://api.openai.com/v1/chat/completions', deepseek: 'https://api.deepseek.com/chat/completions', xai: 'https://api.x.ai/v1/chat/completions' };

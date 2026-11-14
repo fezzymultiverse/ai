@@ -66,8 +66,8 @@ test('the same key under two providers is dropped from both',()=>{
 });
 test('unlabelled keys without a unique prefix are never guessed',()=>assert.deepEqual(K.extract(''+MK+'').items,[]));
 test('a key with a unique prefix under the wrong label is refused, not moved',()=>assert.deepEqual(K.extract('Groq: '+FC).items,[]));
-test('GitHub, Cloudflare and OVH labels place keys where they belong',()=>{
- assert.equal(K.extract('GitHub Models token: ghp_Ab3dEfGh1jKlMnOpQrStUvWxYz0123456789').items[0].provider,'githubmodels');
+test('Cloudflare and OVH labels place keys where they belong, and a GitHub token is filed under no provider (GitHub Models is retired)',()=>{
+ assert.deepEqual(K.extract('GitHub Models token: ghp_Ab3dEfGh1jKlMnOpQrStUvWxYz0123456789').items,[]);
  assert.equal(K.extract('Cloudflare: 0123456789abcdef0123456789abcdef:Ab3dEfGh1jKlMnOpQrStUvWxYz').items[0].provider,'cloudflare');
  assert.equal(K.extract('OVH token: eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.abcDEF123.xyz789').items[0].provider,'ovh');
 });
@@ -88,12 +88,21 @@ test('ch.at is a keyless provider wired through the app, the native allowlist an
  assert.match(fs.readFileSync(path.join(root,'resources/android/java/HorizonAIPlugin.kt'),'utf8'),/"ch\.at"/);
  assert.match(fs.readFileSync(path.join(root,'resources/android/java/HorizonCheckinPlugin.kt'),'utf8'),/"chatat" to "https:\/\/ch\.at\/v1\/chat\/completions"/);
 });
-test('Requesty keys with + / = ~ are accepted on the card, and a GitHub classic token is accepted for GitHub Models',()=>{
+test('BlockRun is a keyless provider wired through the app, the native allowlist and the fallback path',()=>{
+ const html=fs.readFileSync(path.join(root,'www/index.html'),'utf8');
+ assert.match(html,/PROVIDERS\.blockrun = oaiGateway/);assert.match(html,/id="i-b-blockrun"/);assert.match(html,/base: 'https:\/\/blockrun\.ai\/api\/v1',[\s\S]{0,120}keyless: true/);
+ assert.match(fs.readFileSync(path.join(root,'www/horizon_browser.js'),'utf8'),/id === 'blockrun'/);
+ assert.match(fs.readFileSync(path.join(root,'resources/android/java/HorizonAIPlugin.kt'),'utf8'),/"blockrun\.ai"/);
+ assert.match(fs.readFileSync(path.join(root,'resources/android/java/HorizonCheckinPlugin.kt'),'utf8'),/"blockrun" to "https:\/\/blockrun\.ai\/api\/v1\/chat\/completions"/);
+});
+test('BlockRun skips a model that answers free capacity exhausted and lists only billing_mode free models',()=>{
+ const html=fs.readFileSync(path.join(root,'www/index.html'),'utf8');
+ assert.match(html,/walkOnCapacity: true/);assert.match(html,/free model capacity exhausted\|FREE_MODEL_FAILED/);assert.match(html,/m\.billing_mode \? \/free\/i/);
+});
+test('Requesty keys with + / = ~ are accepted on the card',()=>{
  const rq='sk-Ab3dEfGh1jKlMn+OpQrSt/UvWxYz0123456789==';
  assert.equal(K.validate('requesty',rq),'');
  assert.notEqual(K.validate('groq',rq),'');
- const ghp='ghp_'+'Ab3dEfGh1jKlMnOpQrStUvWxYz0123456789'.slice(0,36);
- assert.equal(K.identify(ghp),'githubmodels');assert.equal(K.validate('githubmodels',ghp),'');
  assert.match(K.validate('requesty','short'),/complete API key/);
 });
 test('paid providers (Claude, ChatGPT, DeepSeek, Grok) are wired, manual-only and never auto-hopped',()=>{

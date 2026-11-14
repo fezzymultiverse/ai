@@ -14,10 +14,10 @@
         anyapi: 'anyapi', gonka: 'gonka', gonkarouter: 'gonka', gronkrouter: 'gonka', routeway: 'routeway', requesty: 'requesty',
         llm7: 'llm7', zai: 'zai', 'z.ai': 'zai', aionlabs: 'aionlabs', aion: 'aionlabs',
         claude: 'claude', anthropic: 'claude', openai: 'openai', chatgpt: 'openai', deepseek: 'deepseek', xai: 'xai', grok: 'xai',
-        cloudflare: 'cloudflare', kilo: 'kilo', ovh: 'ovh', ovhcloud: 'ovh', github: 'githubmodels', githubmodels: 'githubmodels',
+        cloudflare: 'cloudflare', kilo: 'kilo', ovh: 'ovh', ovhcloud: 'ovh',
         serpapi: 'serpapi', firecrawl: 'firecrawl', scrapingbee: 'scrapingbee', scraperbee: 'scrapingbee', browserless: 'browserless'
     };
-    const LABELS = 'gemini|google|groq|cohere|mistral|openrouter|anyapi|gronkrouter|gonkarouter|gonka|routeway|requesty|claude|anthropic|chatgpt|openai|deepseek|grok|xai|llm7|aionlabs|aion|z\\.ai|zai|cloudflare|kilo|ovhcloud|ovh|githubmodels|github|serpapi|firecrawl|scrapingbee|scraperbee|browserless';
+    const LABELS = 'gemini|google|groq|cohere|mistral|openrouter|anyapi|gronkrouter|gonkarouter|gonka|routeway|requesty|claude|anthropic|chatgpt|openai|deepseek|grok|xai|llm7|aionlabs|aion|z\\.ai|zai|cloudflare|kilo|ovhcloud|ovh|serpapi|firecrawl|scrapingbee|scraperbee|browserless';
     const KEYWORD = '(?:[_ -]*(?:(?:api[_ -]*)?key|token|secret))?';
     // The label must end at a real boundary. "mistral-small-latest" is a model name, not the label "mistral".
     const LABEL_RE = new RegExp('(?:^|[^a-z0-9_.-])(' + LABELS + ')' + KEYWORD + '(?:[\\s:="\'|>]|$)', 'i');
@@ -32,7 +32,6 @@
         if (/^xai-[A-Za-z0-9]{20,}$/.test(key)) return 'xai';
         if (/^sk-[0-9a-f]{32}$/.test(key)) return 'deepseek';
         if (/^sk-(?:proj-|svcacct-|admin-)[A-Za-z0-9_-]{20,}$/.test(key) || /^sk-[A-Za-z0-9]{40,}$/.test(key)) return 'openai';
-        if (/^(?:gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,})$/.test(key)) return 'githubmodels';
         return '';
     }
     // Shape guard for keys that carry no unique prefix. A real secret is random: it mixes letters and digits and is not made of words.

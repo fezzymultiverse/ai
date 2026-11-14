@@ -126,7 +126,7 @@ class HorizonAIPlugin : Plugin() {
         // Only the existing AI provider endpoints may receive stored credentials.
         val parsedUrl = try { URL(url) } catch (_: Exception) { null }
         val host = parsedUrl?.host ?: ""
-        if (parsedUrl == null || parsedUrl.protocol != "https" || parsedUrl.userInfo != null || parsedUrl.port !in setOf(-1, 443) || host !in setOf("generativelanguage.googleapis.com", "api.groq.com", "api.cohere.com", "api.mistral.ai", "openrouter.ai", "text.pollinations.ai", "api.anyapi.ai", "api.routeway.ai", "router.requesty.ai", "models.github.ai", "api.kilo.ai", "oai.endpoints.kepler.ai.cloud.ovh.net", "ch.at", "api.anthropic.com", "api.openai.com", "api.deepseek.com", "api.x.ai", "api.gonkarouter.io", "api.z.ai", "api.aionlabs.ai", "api.llm7.io", "api.cloudflare.com")) {
+        if (parsedUrl == null || parsedUrl.protocol != "https" || parsedUrl.userInfo != null || parsedUrl.port !in setOf(-1, 443) || host !in setOf("generativelanguage.googleapis.com", "api.groq.com", "api.cohere.com", "api.mistral.ai", "openrouter.ai", "text.pollinations.ai", "api.anyapi.ai", "api.routeway.ai", "router.requesty.ai", "api.kilo.ai", "oai.endpoints.kepler.ai.cloud.ovh.net", "ch.at", "blockrun.ai", "api.anthropic.com", "api.openai.com", "api.deepseek.com", "api.x.ai", "api.gonkarouter.io", "api.z.ai", "api.aionlabs.ai", "api.llm7.io", "api.cloudflare.com")) {
             call.reject("Unsupported AI endpoint")
             return
         }
@@ -255,7 +255,12 @@ class HorizonAIPlugin : Plugin() {
     }
 
     private fun publishReply(chatId: String, rawText: String): Boolean {
-        if (foreground || !canNotify(context)) return false
+        // V1.93.31: inside the app the AI replies tone still plays (sound only, no banner), one per reply.
+        if (foreground) {
+            try { HorizonNotify.previewTone(context, HorizonNotify.toneOf(context, HorizonNotify.CAT_ALERT)) } catch (e: Exception) { /* a tone must never break a reply */ }
+            return false
+        }
+        if (!canNotify(context)) return false
         val text = rawText.take(3500)
         val nm = HorizonNotify.manager(context)
         val nid = notificationId(chatId)

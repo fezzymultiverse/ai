@@ -8,7 +8,7 @@
     'use strict';
     var KEY = 'horizon_usage_v1';
     var MAXLAT = 40, MAXT = 40, KEEP_DAYS = 30;
-    var COLORS = { gemini: '#4f8cff', groq: '#f97316', cohere: '#a855f7', mistral: '#ff8205', openrouter: '#8b5cf6', anyapi: '#22d3ee', gonka: '#fbbf24', routeway: '#a78bfa', requesty: '#2dd4bf', githubmodels: '#c084fc', kilo: '#facc15', ovh: '#60a5fa', chatat: '#4ade80', claude: '#d97757', openai: '#10a37f', deepseek: '#4d6bfe', xai: '#e5e7eb', llm7: '#38bdf8', cloudflare: '#f6821f', pollinations: 'var(--neon)' };
+    var COLORS = { gemini: '#4f8cff', groq: '#f97316', cohere: '#a855f7', mistral: '#ff8205', openrouter: '#8b5cf6', anyapi: '#22d3ee', gonka: '#fbbf24', routeway: '#a78bfa', requesty: '#2dd4bf', githubmodels: '#c084fc', kilo: '#facc15', ovh: '#60a5fa', chatat: '#4ade80', blockrun: '#818cf8', claude: '#d97757', openai: '#10a37f', deepseek: '#4d6bfe', xai: '#e5e7eb', llm7: '#38bdf8', cloudflare: '#f6821f', pollinations: 'var(--neon)' };
     var EXTRA = ['#06b6d4', '#eab308', '#ec4899', '#14b8a6'];
     var cfg = null, live = null, tick = 0, saveT = 0, root = null;
     var net = { busy: false, data: null, err: '', at: 0 };
