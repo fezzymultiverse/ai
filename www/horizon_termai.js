@@ -1,4 +1,4 @@
-/* Horizon V1.90.0: terminal AI now RUNS commands (run blocks) through the live Termux bridge and reads the result back. Native approval mode applies. Earlier: V1.58.0 docked panel.
+/* Horizon V1.93.16: the AI only gets terminal output made AFTER its last task (its own earlier runs are never resent), labelled reference-only, and the rules say answer only the newest request. Earlier: V1.93.15: own provider + model picker (terminal only), 30 s slow notice with SKIP, provider and model tag on every reply. Earlier: V1.90.0: terminal AI now RUNS commands (run blocks) through the live Termux bridge and reads the result back. Native approval mode applies. Earlier: V1.58.0 docked panel.
  * A slim panel sits between the output and the prompt. EYE = whether the AI sees the last terminal output (on = sent with every
  * message, red and slashed = hidden from the AI). The drop-down arrow minimizes the panel to its title bar so the copy cards never
  * crowd the terminal. Nothing moves, nothing is dragged. The AI never runs anything: every command has COPY and ->$ (puts it in the prompt). */
@@ -9,13 +9,14 @@
         return 'You are the terminal operator inside Horizon for Fezzy (Admin). '
             + 'TO RUN SOMETHING put it in a fenced block whose language is exactly run, for example:\n```run\nmkdir -pv "$HOME/demo" && cp -v notes.txt "$HOME/demo/"\n```\n'
             + 'Only run blocks execute (live in his terminal). sh/bash blocks are examples he can copy. Write ONE run block per step, then stop and wait: the result (exit code, output tail, files copied/moved/removed) comes back automatically as the next message and you continue until the task is done, then answer in plain words with no run block. Maximum 8 steps per request. '
+            + ' Answer ONLY the newest request. Terminal output shown to you is reference only: never continue, repeat or redo an older task from it unless he asks. '
             + (window.HorizonRunLog ? HorizonRunLog.knowHow() : '') + ' Keep replies short.';
     }
-    var st = { want: false, min: false, eye: true, run: true, hist: [], busy: false, stop: false };
+    var st = { want: false, min: false, eye: true, run: true, hist: [], mark: 0, busy: false, stop: false, prov: '', model: '', pk: false, ctl: null };
     var el = {}, built = false;
 
-    try { var s = JSON.parse(localStorage.getItem(KEY) || 'null'); if (s) { st.want = !!s.want; st.min = !!s.min; st.eye = s.eye !== false; st.run = s.run !== false; } } catch (e) { /* ignore */ }
-    function save() { try { localStorage.setItem(KEY, JSON.stringify({ want: st.want, min: st.min, eye: st.eye, run: st.run })); } catch (e) { /* ignore */ } }
+    try { var s = JSON.parse(localStorage.getItem(KEY) || 'null'); if (s) { st.want = !!s.want; st.min = !!s.min; st.eye = s.eye !== false; st.run = s.run !== false; st.prov = String(s.prov || ''); st.model = String(s.model || ''); } } catch (e) { /* ignore */ }
+    function save() { try { localStorage.setItem(KEY, JSON.stringify({ want: st.want, min: st.min, eye: st.eye, run: st.run, prov: st.prov, model: st.model })); } catch (e) { /* ignore */ } }
     function mk(tag, cls, txt) { var n = document.createElement(tag); if (cls) n.className = cls; if (txt != null) n.textContent = txt; return n; }
     function btn(cls, txt, label, fn) { var b = mk('button', cls, txt); b.type = 'button'; b.setAttribute('aria-label', label); b.title = label; b.addEventListener('click', fn); return b; }
     function term() { return document.getElementById('hzTerm'); }
@@ -39,6 +40,29 @@
         inp.value = t; inp.dispatchEvent(new Event('input', { bubbles: true })); return true;
     }
 
+    /* ---- own provider + model (terminal only; empty = follow the main chat) ---- */
+    function plist() { try { return typeof window.HorizonAIList === 'function' ? window.HorizonAIList() : []; } catch (e) { return []; } }
+    function curLabel() {
+        var L = plist(), id = st.prov, p;
+        if (!id) { var a = window.HorizonAskAI && window.HorizonAskAI.last; return a ? 'main chat' : 'main chat AI'; }
+        p = L.filter(function (x) { return x.id === id; })[0];
+        return p ? p.name + ' \u00b7 ' + (st.model || p.model) : id;
+    }
+    function fillPicker() {
+        var L = plist(), sp = el.sel, sm = el.mod, cur;
+        sp.textContent = '';
+        var o0 = mk('option', null, 'Main chat AI (follows the chat)'); o0.value = ''; sp.appendChild(o0);
+        L.forEach(function (p) { var o = mk('option', null, p.name + (p.ready ? '' : ' (no key)')); o.value = p.id; sp.appendChild(o); });
+        sp.value = st.prov;
+        if (sp.value !== st.prov) { st.prov = ''; st.model = ''; sp.value = ''; }
+        sm.textContent = '';
+        cur = L.filter(function (x) { return x.id === st.prov; })[0];
+        if (!cur) { sm.disabled = true; var om = mk('option', null, 'Model: set in the main chat'); om.value = ''; sm.appendChild(om); return; }
+        sm.disabled = false;
+        var ms = cur.models.slice(); if (st.model && ms.indexOf(st.model) < 0) ms.unshift(st.model); if (!ms.length) ms.push(cur.model);
+        ms.forEach(function (m) { var o = mk('option', null, m); o.value = m; sm.appendChild(o); });
+        sm.value = st.model || cur.model;
+    }
     function paint() {
         if (!built) return;
         el.o.hidden = !st.want;
@@ -50,7 +74,9 @@
         el.eye.setAttribute('aria-pressed', String(st.eye));
         var lab = st.eye ? 'AI can see the terminal output. Tap to hide it from the AI.' : 'Terminal hidden from the AI. Tap to show it.';
         el.eye.setAttribute('aria-label', lab); el.eye.title = lab;
-        el.sub.textContent = st.eye ? 'sees last output' : 'terminal hidden';
+        el.sub.textContent = (st.eye ? 'sees last output' : 'terminal hidden') + ' \u00b7 ' + curLabel();
+        if (el.pkb) el.pkb.classList.toggle('on', st.pk || !!st.prov);
+        if (el.pkr) el.pkr.hidden = !st.pk;
         if (el.tb) el.tb.classList.toggle('on', !!st.want);
     }
 
@@ -101,19 +127,40 @@
     function snapshot() {
         var o = document.querySelector('#hzTerm .hzt-out'); if (!o) return '';
         var rows = [].map.call(o.querySelectorAll('.hzt-l:not(.hzt-welcome)'), function (n) { return n.textContent; });
-        return rows.slice(-40).join('\n').slice(-3500);
+        if (st.mark > rows.length) st.mark = 0;   // terminal was cleared
+        return rows.slice(st.mark).slice(-40).join('\n').slice(-3500);
     }
+    function markNow() { var o = document.querySelector('#hzTerm .hzt-out'); st.mark = o ? o.querySelectorAll('.hzt-l:not(.hzt-welcome)').length : 0; }
     function ask() {
         var msgs = st.hist.map(function (m, i) { return i === 0 && m.role === 'user' ? { role: 'user', text: rules() + '\n\n' + m.text } : m; });
         if (msgs[0].role !== 'user') msgs.shift();
-        return window.HorizonAskAI(msgs);
+        st.ctl = {};
+        var opts = { ctl: st.ctl, prov: st.prov || undefined, model: st.prov ? (st.model || undefined) : undefined, onSlow: function () { st.slow = true; } };
+        return window.HorizonAskAI(msgs, opts);
+    }
+    function who() {
+        var l = window.HorizonAskAI && window.HorizonAskAI.last;
+        return l ? (l.name + ' \u00b7 ' + l.model) : '';
+    }
+    /* waiting line: live seconds, and after 30 s a SKIP button so the panel is never silent */
+    function waitLine(label) {
+        var d = mk('div', 'hza-m hza-dim hza-wait'), tx = mk('span', null, label), sk = btn('hza-k hza-skip', 'SKIP', 'Skip this slow AI', function () { if (st.ctl && st.ctl.skip) st.ctl.skip(); });
+        sk.hidden = true; d.appendChild(tx); d.appendChild(sk); el.log.appendChild(d); el.log.scrollTop = el.log.scrollHeight;
+        var t0 = Date.now(); st.slow = false;
+        d._iv = setInterval(function () {
+            var sec = Math.round((Date.now() - t0) / 1000), l = window.HorizonAskAI && window.HorizonAskAI.last;
+            tx.textContent = label + ' ' + sec + 's' + (l ? ' \u00b7 ' + l.name + ' \u00b7 ' + l.model : '');
+            if (sec >= 30 || st.slow) { sk.hidden = false; d.classList.add('hza-slow'); tx.textContent = (l ? l.name : 'The AI') + ' is slow (' + sec + 's). Tap SKIP to stop waiting.'; }
+        }, 1000);
+        d.remove = function () { clearInterval(d._iv); Element.prototype.remove.call(d); };
+        return d;
     }
     async function loop() {
         for (var step = 0; step < 8 && !st.stop; step++) {
-            var wait = say(step ? 'thinking about the result…' : 'thinking…', 'hza-dim'), reply;
-            try { reply = String(await ask() || '').trim() || '(empty reply)'; } catch (e) { wait.remove(); st.hist.pop(); say(String((e && e.message) || e || 'Failed'), 'hza-err'); return; }
+            var wait = waitLine(step ? 'thinking about the result…' : 'thinking…'), reply;
+            try { reply = String(await ask() || '').trim() || '(empty reply)'; } catch (e) { wait.remove(); st.hist.pop(); var w2 = who(); if (st.stop) { say('Stopped.', 'hza-dim'); return; } if (e && e.skipped) say('Skipped' + (w2 ? ' (' + w2 + ')' : '') + '. Pick another AI with the \u21C4 button or send again.', 'hza-dim'); else say(String((e && e.message) || e || 'Failed') + (w2 ? '  [' + w2 + ']' : ''), 'hza-err'); return; }
             wait.remove(); st.hist.push({ role: 'assistant', text: reply });
-            var runs = []; render(reply, el.log, runs); el.log.scrollTop = el.log.scrollHeight;
+            var runs = [], tg = who(); if (tg) el.log.appendChild(mk('div', 'hza-tag', '\u25C6 ' + tg)); render(reply, el.log, runs); el.log.scrollTop = el.log.scrollHeight;
             if (!runs.length || !st.run) return;
             var first = runs[0];   // one run per step: the result decides the next one
             first.stat.textContent = 'running'; var r;
@@ -125,17 +172,22 @@
             runs.slice(1).forEach(function (x) { x.stat.textContent = 'skipped'; });
             st.hist.push({ role: 'user', text: resultMsg(r) }); st.hist = st.hist.slice(-14);
         }
-        if (!st.stop) say('Step limit reached. Tell me to continue if there is more to do.', 'hza-dim');
+        if (st.stop) say('Stopped. Nothing else will run until you send a new request.', 'hza-dim'); else say('Step limit reached. Tell me to continue if there is more to do.', 'hza-dim');
     }
+    window.addEventListener('horizon-term-interrupt', function () {
+        if (!st.busy) return;
+        st.stop = true;
+        if (st.ctl && st.ctl.skip) { try { st.ctl.skip(); } catch (e) { /* ignore */ } }
+    });
     async function send() {
         var v = el.ta.value.trim(); if (!v || st.busy) return;
         if (typeof window.HorizonAskAI !== 'function') { say('The AI link is missing in this build.', 'hza-err'); return; }
         var body = v, seen = false;
-        if (st.eye) { var sn = snapshot(); if (sn) { body += '\n\nTerminal output (last lines):\n```\n' + sn + '\n```'; seen = true; } }
+        if (st.eye) { var sn = snapshot(); if (sn) { body += '\n\nTerminal output since my last task (reference only, not a request):\n```\n' + sn + '\n```'; seen = true; } }
         el.ta.value = ''; el.ta.style.height = 'auto'; var u = say(v, 'hza-u'); if (seen) u.appendChild(mk('span', 'hza-seen', ' · output sent'));
         st.hist.push({ role: 'user', text: body }); st.hist = st.hist.slice(-14);
         st.busy = true; st.stop = false; el.go.disabled = true; el.sp.hidden = false;
-        try { await loop(); } finally { st.busy = false; el.go.disabled = false; el.sp.hidden = true; el.log.scrollTop = el.log.scrollHeight; }
+        try { await loop(); } finally { markNow(); st.busy = false; el.go.disabled = false; el.sp.hidden = true; el.log.scrollTop = el.log.scrollHeight; }
     }
 
     /* ---- build: docked between the output and the prompt ---- */
@@ -152,10 +204,18 @@
         el.rn = btn('hza-b hza-rn', 'RUN', 'AI runs its run blocks itself. Off: you press RUN on each block.', function () { st.run = !st.run; save(); paint(); });
         el.sp = btn('hza-b hza-sp', 'STOP', 'Stop the running command and the AI loop', function () { st.stop = true; if (window.HorizonBridges) window.HorizonBridges.kill(); }); el.sp.hidden = true;
         var clr = btn('hza-b hza-clr', '\u232B', 'Clear the AI chat', function () { st.hist = []; el.log.textContent = ''; hello(); });
+        el.pkb = btn('hza-b hza-pkb', '\u21C4', 'Choose the AI provider and model for this terminal panel', function () { st.pk = !st.pk; if (st.pk) fillPicker(); paint(); });
         el.mn = btn('hza-b hza-mn', '', 'Minimize the AI panel', function () { st.min = !st.min; save(); paint(); });
         el.mn.innerHTML = SVG_CHEV;
-        [ti, el.sp, el.rn, el.eye, clr, el.mn].forEach(function (n) { head.appendChild(n); });
+        [ti, el.sp, el.pkb, el.rn, el.eye, clr, el.mn].forEach(function (n) { head.appendChild(n); });
+        var pr = mk('div', 'hza-pkr'); pr.hidden = true; el.pkr = pr;
+        el.sel = mk('select', 'hza-sel'); el.sel.setAttribute('aria-label', 'Terminal AI provider');
+        el.mod = mk('select', 'hza-sel'); el.mod.setAttribute('aria-label', 'Terminal AI model');
+        el.sel.addEventListener('change', function () { st.prov = el.sel.value; st.model = ''; save(); fillPicker(); paint(); });
+        el.mod.addEventListener('change', function () { st.model = el.mod.value; save(); paint(); });
+        pr.appendChild(el.sel); pr.appendChild(el.mod);
         var body = mk('div', 'hza-body');
+        body.appendChild(pr);
         el.log = mk('div', 'hza-log'); el.log.setAttribute('role', 'log');
         var inw = mk('div', 'hza-in');
         el.ta = mk('textarea', 'hza-ta'); el.ta.rows = 1; el.ta.placeholder = 'Tell me what to do on the box\u2026'; el.ta.setAttribute('autocapitalize', 'off'); el.ta.setAttribute('autocorrect', 'off'); el.ta.spellcheck = false;

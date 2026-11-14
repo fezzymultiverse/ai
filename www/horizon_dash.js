@@ -195,6 +195,22 @@
         return out;
     }
 
+    /* V1.93.14: what the dashboard already shows (IP, place, weather) goes to every AI in the shared system prompt, so no provider has to guess or invent a lookup tag. */
+    function placeBlock() {
+        var n = S.net, w = S.wx;
+        if (!n && !(w && typeof w.t === 'number')) return '';
+        var L = ['DEVICE, PLACE AND WEATHER (live from Fezzy\'s dashboard; already known, so never try to look these up)'];
+        if (n && n.ip) {
+            var where = ipPlace(n) + (n.country && ipPlace(n) !== n.country ? ', ' + n.country : '');
+            L.push('- Public IP: ' + n.ip + (where ? ' (' + where + ')' : '') + (n.isp ? ' on ' + n.isp : '') + (n.tz ? ', time zone ' + n.tz : '') + (S.vpn ? '. A VPN is likely on, so this may not be his real location' : '') + '.');
+        }
+        if (w && typeof w.t === 'number') {
+            L.push('- Weather: ' + Math.round(w.t) + '\u00b0C' + (typeof w.feels === 'number' ? ' (feels ' + Math.round(w.feels) + '\u00b0C)' : '') + ', ' + wxText(w.code) + (typeof w.hum === 'number' ? ', humidity ' + w.hum + '%' : '') + (typeof w.wind === 'number' ? ', wind ' + Math.round(w.wind) + ' km/h' : '') + '.');
+        }
+        L.push('Answer questions about his IP, location or the weather from these lines. If a value is missing, say the dashboard has not loaded it yet.');
+        return L.join('\n');
+    }
+
     /* V1.40.0: [[dash.note: 2026-11-13 | 15:00 | Call Sam | remind]] in an AI reply. Always stripped; filed straight into the calendar. */
     var NOTE_SRC = '\\[\\[dash\\.note:\\s*(\\d{4}-\\d{1,2}-\\d{1,2})\\s*\\|\\s*([^|\\]]*?)\\s*\\|\\s*((?:(?!\\]\\]|\\|\\s*(?:remind|alarm)\\s*\\]\\])[\\s\\S])*?)\\s*(?:\\|\\s*(remind|alarm)\\s*)?\\]\\]';
     function extract(raw) {
@@ -823,6 +839,6 @@
         else out.push('On your calendar today: ' + list.map(function (n) { return (/^\d\d:\d\d$/.test(n.t || '') ? 'at ' + n.t + ', ' : '') + clip(n.x, 120); }).join('. ') + '.');
         return out.join(' ');
     }
-    window.HorizonDash = { init: init, block: block, extract: extract, NOTE_SRC: NOTE_SRC, openCalendar: openCal, refresh: onOpen,
+    window.HorizonDash = { init: init, block: block, placeBlock: placeBlock, extract: extract, NOTE_SRC: NOTE_SRC, openCalendar: openCal, refresh: onOpen,
         wake: { get: wakeGet, set: wakeSet, apply: wakeApply, next: wakeNext }, briefText: briefText };
 })();

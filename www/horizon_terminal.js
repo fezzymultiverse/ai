@@ -1,4 +1,4 @@
-/* Unified Termux terminal. One prompt and shared execution owner; settings hold only Termux options. */
+/* V1.93.17: live status row (spinner, elapsed time, command, last output line, bytes, quiet-time hints, STOP, result). Unified Termux terminal. One prompt and shared execution owner; settings hold only Termux options. */
 (function () {
     'use strict';
     var MAXLINES = 1500;
@@ -43,6 +43,7 @@
             + '<button type="button" class="hzt-btn hzt-min" aria-label="Minimize terminal">\u2304</button>'
             + '<button type="button" class="hzt-btn hzt-exit" aria-label="Exit terminal">\u2715</button></header>'
             + '<div class="hzt-out" role="log" aria-live="polite"></div>'
+            + '<div class="hzt-run" hidden aria-live="off"><span class="hzt-run-sp" aria-hidden="true"></span><div class="hzt-run-tx"><b class="hzt-run-a"></b><span class="hzt-run-b"></span></div><button type="button" class="hzt-run-x" aria-label="Stop the running command">STOP</button></div>'
             + '<form class="hzt-in" autocomplete="off"><span class="hzt-ps"></span>'
             + '<input type="text" class="hzt-input" enterkeyhint="send" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Command"></form>'
             + '<div class="hzt-hint" hidden>CTRL is on. Tap a letter.</div>'
@@ -56,6 +57,8 @@
         o.querySelector('.hzt-controls').addEventListener('click', function () { setControls(!st.controls); });
         el.o = o; el.out = o.querySelector('.hzt-out'); el.ps = o.querySelector('.hzt-ps'); el.inp = o.querySelector('.hzt-input');
         el.form = o.querySelector('.hzt-in'); el.keys = o.querySelector('.hzt-keys'); el.hint = o.querySelector('.hzt-hint');
+        el.run = o.querySelector('.hzt-run'); el.runSp = o.querySelector('.hzt-run-sp'); el.runA = o.querySelector('.hzt-run-a'); el.runB = o.querySelector('.hzt-run-b');
+        o.querySelector('.hzt-run-x').addEventListener('click', function () { try { window.dispatchEvent(new Event('horizon-term-interrupt')); } catch (e) { /* ignore */ } if (window.HorizonBridges) window.HorizonBridges.kill(); });
 
         KEYS.forEach(function (row, ri) {
             var r = document.createElement('div'); r.className = 'hzt-row' + (ri >= 2 ? ' hzt-more' : ''); if (ri >= 2) r.hidden = true;
@@ -265,7 +268,7 @@
         else if (l === 'e') setVal(v);
         else if (l === 'b') setVal(v, Math.max(0, c - 1));
         else if (l === 'f') setVal(v, Math.min(v.length, c + 1));
-        else if (l === 'c') { if (st.running) { if (window.HorizonBridges && HorizonBridges.liveCapable()) { addLine('^C \u00B7 stopping the run\u2026', 'hzt-dim'); HorizonBridges.kill(); } else addLine('Ctrl+C cannot cancel a legacy Termux job. Stop it in Termux itself.', 'hzt-err'); } else { echo(v + '^C'); setVal(''); st.rsOn = false; } }
+        else if (l === 'c') { if (st.running) { if (window.HorizonBridges && HorizonBridges.liveCapable()) { addLine('^C \u00B7 stopping the run\u2026', 'hzt-dim'); try { window.dispatchEvent(new Event('horizon-term-interrupt')); } catch (e) { /* ignore */ } HorizonBridges.kill(); } else addLine('Ctrl+C cannot cancel a legacy Termux job. Stop it in Termux itself.', 'hzt-err'); } else { echo(v + '^C'); setVal(''); st.rsOn = false; try { window.dispatchEvent(new Event('horizon-term-interrupt')); } catch (e) { /* ignore */ } } }
         else if (l === 'd') { if (!v) exitTerm(); else if (c < v.length) setVal(v.slice(0, c) + v.slice(c + 1), c); }
         else if (l === 'k') { st.kill = v.slice(c); setVal(v.slice(0, c)); }
         else if (l === 'u') { st.kill = v.slice(0, c); setVal(v.slice(c), 0); }
@@ -325,9 +328,9 @@
         var d = e.detail || {}; build();
         if (!st.alive) { st.alive = true; el.out.textContent = ''; }
         skipTyping();
-        if (d.phase === 'start') { st.running = true; st.last = String(d.command || '').split('\n')[0]; addLine('[Termux · ' + (d.fromAI ? 'AI · approval required' : 'approval required') + '] ' + st.last, 'hzt-dim'); }
+        if (d.phase === 'start') { st.running = true; st.last = String(d.command || '').split('\n')[0]; runStart(d.command, d.fromAI); addLine('[Termux · ' + (d.fromAI ? 'AI · approval required' : 'approval required') + '] ' + st.last, 'hzt-dim'); }
         else if (d.phase === 'complete' || d.phase === 'recovered') {
-            st.running = false; var r = d.result || {}, out = String(r.stdout || ''), i = out.lastIndexOf('\n__HZCWD__');
+            st.running = false; runEnd((d.result || {}).exitCode, null, (d.result || {}).error); var r = d.result || {}, out = String(r.stdout || ''), i = out.lastIndexOf('\n__HZCWD__');
             if (i >= 0) { st.cwd = out.slice(i + 10).split('\n')[0].trim() || st.cwd; out = out.slice(0, i); }
             if (out) addText(out); if (r.stderr) addText(r.stderr, 'hzt-err');
             if (r.error) addText(r.error, 'hzt-err'); addLine('[exit ' + r.exitCode + ']', 'hzt-dim');
@@ -359,11 +362,48 @@
         });
         el.out.scrollTop = el.out.scrollHeight;
     }
+
+    /* ---- V1.93.17 live status row: you always see that something is running, for how long, what it last printed, and when it goes quiet ---- */
+    var rs = { on: false, t0: 0, tLast: 0, bytes: 0, lines: 0, cmd: '', ai: false, iv: 0, hide: 0, f: 0 };
+    var FR = ['\u280B', '\u2819', '\u2839', '\u2838', '\u283C', '\u2834', '\u2826', '\u2827', '\u2807', '\u280F'];
+    function mmss(ms) { var t = Math.max(0, Math.round(ms / 1000)), m = Math.floor(t / 60), x = t % 60; return (m < 10 ? '0' : '') + m + ':' + (x < 10 ? '0' : '') + x; }
+    function cut(t, n) { t = String(t || '').replace(/\s+/g, ' ').trim(); return t.length > n ? t.slice(0, n - 1) + '\u2026' : t; }
+    function kb(n) { return n < 1024 ? n + ' B' : (n / 1024).toFixed(1) + ' KB'; }
+    function runPaint() {
+        if (!el.run) return;
+        var now = Date.now(), quiet = now - rs.tLast, last = cut(live.cur || st.lastOut, 70);
+        el.runSp.textContent = FR[(rs.f++) % FR.length];
+        el.runA.textContent = (rs.ai ? 'AI RUNNING ' : 'RUNNING ') + mmss(now - rs.t0) + ' \u00B7 ' + cut(rs.cmd, 60);
+        var hint = '';
+        if (!rs.bytes && quiet > 3000) hint = ' \u00B7 waiting for the first output (' + Math.round(quiet / 1000) + 's)';
+        else if (quiet > 45000) hint = ' \u00B7 quiet ' + Math.round(quiet / 1000) + 's: may be waiting for input (no stdin) or the network. STOP kills it.';
+        else if (quiet > 8000) hint = ' \u00B7 quiet ' + Math.round(quiet / 1000) + 's, still running (installs print little)';
+        el.runB.textContent = (last ? 'last: ' + last + ' \u00B7 ' : '') + kb(rs.bytes) + ' \u00B7 ' + rs.lines + ' lines' + hint;
+        el.run.classList.toggle('hzt-run-quiet', quiet > 8000);
+    }
+    function runStart(cmd, ai) {
+        if (!el.run) return;
+        clearTimeout(rs.hide); clearInterval(rs.iv);
+        rs.on = true; rs.t0 = rs.tLast = Date.now(); rs.bytes = 0; rs.lines = 0; rs.cmd = String(cmd || '').split('\n')[0]; rs.ai = !!ai;
+        el.run.hidden = false; el.run.classList.remove('hzt-run-ok', 'hzt-run-bad', 'hzt-run-done');
+        runPaint(); rs.iv = setInterval(runPaint, 250);
+    }
+    function runChunk(text) { if (!rs.on) return; text = String(text || ''); rs.tLast = Date.now(); rs.bytes += text.length; rs.lines += (text.match(/\n/g) || []).length; }
+    function runEnd(code, ms, err) {
+        if (!el.run) return;
+        clearInterval(rs.iv); rs.on = false;
+        var ok = code === 0 && !err;
+        el.run.hidden = false; el.run.classList.add('hzt-run-done', ok ? 'hzt-run-ok' : 'hzt-run-bad'); el.run.classList.remove('hzt-run-quiet');
+        el.runSp.textContent = ok ? '\u2713' : '\u2717';
+        el.runA.textContent = (ok ? 'DONE' : (/^Stopped/.test(String(err || '')) ? 'STOPPED' : 'FAILED')) + ' \u00B7 exit ' + (code == null ? '?' : code) + ' \u00B7 ' + mmss(ms != null ? ms : Date.now() - rs.t0) + ' \u00B7 ' + cut(rs.cmd, 50);
+        el.runB.textContent = kb(rs.bytes) + ' \u00B7 ' + rs.lines + ' lines' + (err ? ' \u00B7 ' + cut(err, 80) : '');
+        clearTimeout(rs.hide); rs.hide = setTimeout(function () { if (!rs.on && el.run) el.run.hidden = true; }, 12000);
+    }
     function runEvent(e) {
         var d = e.detail || {}; build();
         if (d.phase === 'start') {
             if (!st.alive) { st.alive = true; el.out.textContent = ''; }
-            skipTyping(); st.running = true; st.last = String(d.command || '').split('\n')[0]; st.lastOut = '';
+            skipTyping(); st.running = true; st.last = String(d.command || '').split('\n')[0]; st.lastOut = ''; runStart(d.command, d.fromAI);
             if (d.fromAI && follow() === 'open' && !st.open) open();
         } else if (d.phase === 'run') {
             if (d.fromAI) {
@@ -373,7 +413,7 @@
             }
         } else if (d.phase === 'bash') addLine('[' + String(d.text || '').replace(/^\d+ /, 'bash ') + ']', 'hzt-dim');
         else if (d.phase === 'note') addLine(d.text, 'hzt-dim');
-        else if (d.phase === 'chunk') liveFeed(d.text || '');
+        else if (d.phase === 'chunk') { runChunk(d.text || ''); liveFeed(d.text || ''); }
         else if (d.phase === 'end') {
             if (live.cur || live.node) commitLive();
             var r = d.result || {}, ops = r.ops || [], n = { copied: 0, moved: 0, removed: 0, created: 0, linked: 0 };
@@ -382,9 +422,9 @@
             if (r.error) addLine(r.error, 'hzt-err');
             addLine((d.fromAI ? '└ ' : '') + '[exit ' + r.exitCode + ' · ' + ((r.ms || 0) / 1000).toFixed(1) + 's]', r.exitCode === 0 ? 'hzt-dim' : 'hzt-err');
             if (r.cwd) st.cwd = r.cwd;
-            st.running = false;
+            st.running = false; runEnd(r.exitCode, r.ms, r.error);
         } else if (d.phase === 'error' || d.phase === 'unknown') {
-            st.running = d.phase === 'unknown'; addText(d.error || 'Unknown command state', 'hzt-err');
+            st.running = d.phase === 'unknown'; addText(d.error || 'Unknown command state', 'hzt-err'); runEnd(-1, null, d.error || 'Unknown command state');
         }
         paintPs(); paintStrip();
     }

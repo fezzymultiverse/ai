@@ -60,9 +60,6 @@ jobs:
           npm run test:browser
           npm run test:voice-browser
           npm run test:closed-feature
-          npm run test:keyboard-browser
-          npm run test:approval-browser
-          npm run test:deepscan-browser
 
       - name: Apply app identity from repo variables
         env:

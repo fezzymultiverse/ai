@@ -78,11 +78,11 @@
   function emitCommand(detail) { if (typeof window.dispatchEvent === 'function' && typeof CustomEvent !== 'undefined') window.dispatchEvent(new CustomEvent('horizon-terminal-command', { detail: detail })); }
 
   /* V1.90.0 live runs: Termux streams merged output back over a one-shot localhost socket (HorizonTermuxPlugin.executeLive). */
-  var liveRuns = {}, early = {};
+  var liveRuns = {}, early = {}, forced = {};
   function emitRun(detail) { if (typeof window.dispatchEvent === 'function' && typeof CustomEvent !== 'undefined') window.dispatchEvent(new CustomEvent('horizon-run', { detail: detail })); }
   function liveResult(r) {
     var text = window.HorizonRunLog ? HorizonRunLog.flatten(r.raw) : r.raw;
-    return { status: 'complete', exitCode: r.exit, stdout: text.slice(-60000), stderr: '', error: r.timedOut ? 'Timed out after ' + Math.round(r.timeout / 1000) + 's and was killed' : '', live: true, cwd: r.cwd, bash: r.bash, ms: Date.now() - r.t0, ops: window.HorizonRunLog ? HorizonRunLog.ops(text) : [], jobId: r.id };
+    return { status: 'complete', exitCode: r.exit, stdout: text.slice(-60000), stderr: '', error: r.timedOut ? 'Timed out after ' + Math.round(r.timeout / 1000) + 's and was killed' : (r.stopped ? 'Stopped by you (Ctrl+C / STOP). Termux did not confirm; if the process is still alive, run: pkill -f "' + String(r.cmd || '').trim().split(/\s+/).slice(0, 2).join(' ').replace(/[^\w. -]/g, '') + '"' : ''), live: true, cwd: r.cwd, bash: r.bash, ms: Date.now() - r.t0, ops: window.HorizonRunLog ? HorizonRunLog.ops(text) : [], jobId: r.id };
   }
   function finishLive(r, res) {
     if (r.closed) return; r.closed = true; clearTimeout(r.timer); delete liveRuns[r.id];
@@ -99,7 +99,7 @@
   }
   window.addEventListener('horizon-termux-live', function (e) {
     var d = e.detail || {}, r = liveRuns[d.id], ev = d.ev || [];
-    if (!r) { (early[d.id] = early[d.id] || []).push.apply(early[d.id], ev); return; }
+    if (!r) { if (forced[d.id]) return; (early[d.id] = early[d.id] || []).push.apply(early[d.id], ev); return; }
     ev.forEach(function (x) { liveEvent(r, x); });
   });
   async function termuxLive(p, cmd, timeout, fromAI, opts) {
@@ -128,6 +128,15 @@
   async function liveKill() {
     var p = plugin('HorizonTermux'); var ids = Object.keys(liveRuns); if (!p || !ids.length) return false;
     for (var i = 0; i < ids.length; i++) { try { await p.liveKill({ jobId: ids[i] }); } catch (e) { notice(error(e), true); } }
+    /* V1.93.18: if Termux does not confirm the kill within 3 s (a child like apt/pkg keeps the pipe open), end the run here so the terminal is free again */
+    setTimeout(function () {
+      ids.forEach(function (id) {
+        var lr = liveRuns[id]; if (!lr || lr.closed) return;
+        lr.stopped = true; lr.exit = 130; forced[id] = true;
+        emitRun({ phase: 'note', id: id, text: '[stopped here: Termux did not confirm the kill]' });
+        finishLive(lr, liveResult(lr));
+      });
+    }, 3000);
     return true;
   }
   async function termux(cmd, timeout, fromAI, opts) {

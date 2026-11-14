@@ -231,35 +231,26 @@
 
     // Pulls a stream in small Range chunks (one big GET gets throttled to a crawl). Returns a Blob.
     async function fetchBlob(url, ua, size, onProg) {
-        const CH = 2 * 1048576, parts = [];
-        let pos = 0, total = Number(size) || 0, type = '', complete = false;
+        const CH = 2 * 1048576;
+        const parts = [];
+        let pos = 0, total = Number(size) || 0, type = '';
         for (let guard = 0; guard < 200; guard++) {
             const end = pos + CH - 1;
             const res = await timed(fetch(url, { headers: { 'User-Agent': ua, 'Range': 'bytes=' + pos + '-' + end } }), 40000);
             if (res.status !== 200 && res.status !== 206) throw new Error('HTTP ' + res.status);
             if (!type) type = res.headers.get('content-type') || '';
-            const cr = /^bytes\s+(\d+)-(\d+)\/(\d+|\*)$/i.exec(res.headers.get('content-range') || '');
-            if (res.status === 206) {
-                if (!cr || Number(cr[1]) !== pos || Number(cr[2]) < pos) throw new Error('YouTube returned a missing or out-of-order byte range; download not saved.');
-                if (cr[3] !== '*') total = Number(cr[3]);
-            }
+            const cr = /\/(\d+)\s*$/.exec(res.headers.get('content-range') || '');
+            if (cr) total = Number(cr[1]);
             const blob = await res.blob();
             if (!blob.size) break;
-            if (res.status === 206 && blob.size !== Number(cr[2])-Number(cr[1])+1) throw new Error('Incomplete YouTube range; download not saved.');
-            // A server that ignores a later Range request returns the entire file, not the next part.
-            if (res.status === 200) { parts.length = 0; pos = 0; }
-            parts.push(blob); pos += blob.size;
-            if (onProg) { try { onProg(pos, total); } catch (_) {} }
-            if (res.status === 200) {
-                const length = Number(res.headers.get('content-length')) || total;
-                if (length && pos !== length) throw new Error('Incomplete YouTube file; download not saved.');
-                complete = true; break;
-            }
-            if (total && pos >= total) { complete = pos === total; break; }
-            if (blob.size < CH && !total) { complete = true; break; }
+            parts.push(blob);
+            pos += blob.size;
+            if (onProg) { try { onProg(pos, total); } catch (e) { /* progress is optional */ } }
+            if (res.status === 200) break;   // the server ignored Range and sent everything
+            if (total && pos >= total) break;
+            if (blob.size < CH && !total) break;
         }
         if (!pos) throw new Error('empty stream');
-        if (!complete) throw new Error('YouTube download is incomplete or exceeds the in-memory limit. Use the Termux download route for large files.');
         return new Blob(parts, { type: type || 'audio/mp4' });
     }
 

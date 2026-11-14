@@ -98,7 +98,7 @@ sed -i -E "s/var VERSION = 'V[0-9.]+';/var VERSION = 'V${NEW}';/" "$ABOUT"
 sed -i -E "s/var release = '[0-9.]+';/var release = '${NEW}';/" "$RELEASE"
 sed -i -E "s/\?v=[0-9]+\.[0-9]+\.[0-9]+/?v=${NEW}/g" "$HTML"
 sed -i -E "1s#^/\* HORIZON [0-9.]+ #/* HORIZON ${NEW} #" "$CSS"
-sed -i -E "s/(Current source release: V)[0-9]+\.[0-9]+\.[0-9]+/\1${NEW}/" "$README"
+sed -i -E "1s/(Current source release: V)[0-9]+\.[0-9]+\.[0-9]+/\1${NEW}/" "$README"
 
 say "Stamped ${NEW}. Verifying:"
 if show_stamps "$NEW"; then

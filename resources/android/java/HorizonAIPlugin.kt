@@ -71,21 +71,8 @@ class HorizonAIPlugin : Plugin() {
     // V1.63.0: everything this plugin launches belongs to this scope and is cancelled with the plugin (structured concurrency).
     private val scope: CoroutineScope = HorizonScopes.child("horizon-ai-plugin", Dispatchers.IO)
 
-    private val activeRequests = java.util.concurrent.ConcurrentHashMap<String, HttpURLConnection>()
-    private val cancelledRequests = java.util.concurrent.ConcurrentHashMap<String, Long>()
-    @PluginMethod fun cancelRequest(call: PluginCall) {
-        val id = call.getString("requestId") ?: return call.reject("Missing request ID")
-        if (id.length > 120) return call.reject("Invalid request ID")
-        val now = System.currentTimeMillis()
-        cancelledRequests.entries.removeAll { now - it.value > 300000L }
-        cancelledRequests[id] = now
-        activeRequests.remove(id)?.disconnect()
-        call.resolve()
-    }
     override fun load() { instance = this }
     override fun handleOnDestroy() {
-        activeRequests.values.forEach { it.disconnect() }
-        activeRequests.clear(); cancelledRequests.clear()
         HorizonScopes.cancel(scope, "HorizonAIPlugin destroyed")
         if (instance === this) instance = null
         super.handleOnDestroy()
@@ -143,7 +130,6 @@ class HorizonAIPlugin : Plugin() {
             call.reject("Unsupported AI endpoint")
             return
         }
-        val requestId = call.getString("requestId")?.take(120) ?: ""
         val settled = AtomicBoolean(false)
         try {
             HorizonAIService.submit(context, onFail = { e ->
@@ -155,10 +141,6 @@ class HorizonAIPlugin : Plugin() {
                 var connection: HttpURLConnection? = null
                 try {
                     connection = URL(url).openConnection() as HttpURLConnection
-                    if (requestId.isNotEmpty()) {
-                        activeRequests[requestId] = connection
-                        if (cancelledRequests.containsKey(requestId)) throw IOException("AI request cancelled")
-                    }
                     connection.connectTimeout = 30000
                     connection.readTimeout = 240000
                     connection.instanceFollowRedirects = false // Never forward API keys to a redirect host.
@@ -183,11 +165,8 @@ class HorizonAIPlugin : Plugin() {
                     // V1.70.0: live streaming. Each "data:" line of the provider's stream is handed to the page as it arrives
                     // (event "horizon-ai-chunk") so Gemini and Groq reasoning can be shown while it is being thought.
                     // The page still gets the whole stream back at the end, so nothing is lost if the page was asleep.
-                    val contentType = connection.contentType ?: ""
-                    val streamed = wantStream && status in 200..299 && !contentType.contains("application/json", ignoreCase = true)
+                    val streamed = wantStream && status in 200..299
                     val streamText = StringBuilder()
-                    var streamFailed = false
-                    var streamComplete = false
                     val body: String
                     if (streamed) {
                         val sid = call.getString("streamId") ?: ""
@@ -204,47 +183,30 @@ class HorizonAIPlugin : Plugin() {
                         val reader = stream?.bufferedReader(Charsets.UTF_8)
                         if (reader != null) {
                             reader.use { r ->
-                                val eventData = StringBuilder()
-                                fun consumeEvent() {
-                                    if (eventData.isEmpty()) return
-                                    val payload = eventData.toString()
-                                    eventData.setLength(0)
-                                    if (payload == "[DONE]") return
+                                while (true) {
+                                    val l = r.readLine() ?: break
+                                    if (!l.startsWith("data:")) continue
+                                    val payload = l.substring(5).trim()
+                                    if (payload.isEmpty() || payload == "[DONE]") continue
                                     if (all.isNotEmpty()) all.append('\n')
-                                    all.append(payload.replace("\n", " ")) // one JSON payload per result line
+                                    all.append(payload)
                                     pend.put(payload)
                                     if (wantText) {
                                         try {
                                             val j = org.json.JSONObject(payload)
-                                            when (host) {
-                                                "generativelanguage.googleapis.com" -> {
-                                                    val parts = j.optJSONArray("candidates")?.optJSONObject(0)?.optJSONObject("content")?.optJSONArray("parts")
-                                                    for (i in 0 until (parts?.length() ?: 0)) {
-                                                        val pt = parts?.optJSONObject(i) ?: continue
-                                                        if (!pt.optBoolean("thought", false)) streamText.append(pt.optString("text", ""))
-                                                    }
+                                            if (host == "generativelanguage.googleapis.com") {
+                                                val parts = j.optJSONArray("candidates")?.optJSONObject(0)?.optJSONObject("content")?.optJSONArray("parts")
+                                                for (i in 0 until (parts?.length() ?: 0)) {
+                                                    val pt = parts?.optJSONObject(i) ?: continue
+                                                    if (!pt.optBoolean("thought", false)) streamText.append(pt.optString("text", ""))
                                                 }
-                                                "api.cohere.com" -> streamText.append(j.optJSONObject("delta")?.optJSONObject("message")?.optJSONObject("content")?.optString("text", "") ?: "")
-                                                "api.gonkarouter.io" -> if (j.optString("type") == "content_block_delta") streamText.append(j.optJSONObject("delta")?.optString("text", "") ?: "")
-                                                else -> streamText.append(j.optJSONArray("choices")?.optJSONObject(0)?.optJSONObject("delta")?.optString("content", "") ?: "")
+                                            } else {
+                                                streamText.append(j.optJSONArray("choices")?.optJSONObject(0)?.optJSONObject("delta")?.optString("content", "") ?: "")
                                             }
-                                            if (j.has("error") || j.optString("type") == "error") streamFailed = true
-                                            if (j.optJSONArray("choices")?.optJSONObject(0)?.isNull("finish_reason") == false ||
-                                                j.optJSONArray("candidates")?.optJSONObject(0)?.has("finishReason") == true ||
-                                                j.optString("type") in setOf("message-end", "message_stop")) streamComplete = true
-                                        } catch (_: Exception) { streamFailed = true }
+                                        } catch (_: Exception) { /* a chunk that is not JSON is skipped */ }
                                     }
                                     if (System.currentTimeMillis() - lastFlush >= 70) flushNow()
                                 }
-                                while (true) {
-                                    if (requestId.isNotEmpty() && cancelledRequests.containsKey(requestId)) throw IOException("AI request cancelled")
-                                    val l = r.readLine() ?: break
-                                    if (l.isEmpty()) { consumeEvent(); continue }
-                                    if (!l.startsWith("data:")) continue
-                                    if (eventData.isNotEmpty()) eventData.append('\n')
-                                    eventData.append(l.substring(5).removePrefix(" "))
-                                }
-                                consumeEvent()
                             }
                         }
                         flushNow()
@@ -255,12 +217,11 @@ class HorizonAIPlugin : Plugin() {
                     val result = JSObject()
                     result.put("status", status)
                     result.put("body", body)
-                    result.put("contentType", contentType)
                     // Notify from native I/O even if Android has suspended the WebView's JS timers.
-                    if (streamed && streamComplete && !streamFailed && (requestId.isEmpty() || !cancelledRequests.containsKey(requestId)) && call.getBoolean("notifyOnResponse", false) == true && !foreground) {
+                    if (streamed && call.getBoolean("notifyOnResponse", false) == true && !foreground) {
                         val text = streamText.toString()
                         if (text.isNotBlank() && !text.contains("[[") && !text.contains("<artifact")) publishReply(call.getString("chatId") ?: "", text)
-                    } else if (!streamed && status in 200..299 && (requestId.isEmpty() || !cancelledRequests.containsKey(requestId)) && call.getBoolean("notifyOnResponse", false) == true && !foreground) {
+                    } else if (!streamed && status in 200..299 && call.getBoolean("notifyOnResponse", false) == true && !foreground) {
                         try {
                             val data = org.json.JSONObject(body)
                             val text = when (host) {
@@ -288,10 +249,7 @@ class HorizonAIPlugin : Plugin() {
                     if (settled.compareAndSet(false, true)) call.resolve(result)
                 } catch (e: Exception) {
                     if (settled.compareAndSet(false, true)) call.reject("AI request failed: ${e.message}")
-                } finally {
-                    if (requestId.isNotEmpty()) { activeRequests.remove(requestId); cancelledRequests.remove(requestId) }
-                    connection?.disconnect()
-                }
+                } finally { connection?.disconnect() }
             }
         } catch (e: Exception) { call.reject("Could not start background AI job: ${e.message}") }
     }

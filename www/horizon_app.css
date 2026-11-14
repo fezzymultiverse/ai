@@ -1,4 +1,4 @@
-/* HORIZON 1.93.14 — canonical application stylesheet.
+/* HORIZON 1.93.8 — canonical application stylesheet.
    One bundled layout source. Section order preserves the existing cascade.
    Edit this file; obsolete individual patch stylesheets have been removed. */
 
@@ -4053,33 +4053,28 @@ html.hz-typing .typing-indicator span { animation-play-state: paused !important;
 .theme-opt[aria-disabled="true"]{opacity:.5}
 #hzSizeCard .theme-list,#hzRateCard .theme-list{margin-top:6px}
 
-/* V1.93.14: opt-in visual preferences; Original leaves all existing rules intact. */
-.hz-visual-prefs { padding:14px; }
-.hz-visual-prefs p { font-size:12px; opacity:.8; line-height:1.5; }
-.hz-visual-prefs fieldset { min-width:0; border:0; margin:12px 0 0; padding:0; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px; }
-.hz-visual-prefs legend { font-size:13px; font-weight:700; margin-bottom:8px; }
-.hz-visual-option { min-height:58px; min-width:0; border:1px solid rgba(var(--accent-rgb),.25); border-radius:10px; background:transparent; color:inherit; padding:8px; text-align:left; font:inherit; font-size:12px; cursor:pointer; }
-.hz-visual-option[aria-checked="true"] { border:2px solid var(--neon); padding:7px; background:rgba(var(--accent-rgb),.08); }
-.hz-visual-option:focus-visible { outline:2px solid var(--neon); outline-offset:2px; }
-.hz-visual-swatch { display:block; height:20px; margin-bottom:5px; border-radius:4px; background:rgba(var(--accent-rgb),.06); }
-[data-preview="surface-original"] { background-image:radial-gradient(rgba(var(--accent-rgb),.5) 1px,transparent 1px); background-size:8px 8px; }
-[data-preview="surface-grid"] { background-image:linear-gradient(rgba(var(--accent-rgb),.3) 1px,transparent 1px),linear-gradient(90deg,rgba(var(--accent-rgb),.3) 1px,transparent 1px); background-size:8px 8px; }
-[data-preview="surface-lines"] { background-image:repeating-linear-gradient(transparent 0 6px,rgba(var(--accent-rgb),.3) 6px 7px); }
-[data-preview="surface-halo"] { background-image:radial-gradient(ellipse,rgba(var(--accent-rgb),.5),transparent 70%); }
-[data-preview^="spacing-"] { background:repeating-linear-gradient(transparent 0 3px,rgba(var(--accent-rgb),.5) 3px 5px); background-size:100% 8px; }
-[data-preview="spacing-compact"] { background-size:100% 5px; }
-[data-preview="spacing-balanced"] { background-size:100% 9px; }
-[data-preview="spacing-roomy"] { background-size:100% 13px; }
-[data-preview="spacing-reading"] { background-size:100% 17px; }
-html[data-hz-surface="plain"] #chatScroll { background-image:none; }
-html[data-hz-surface="grid"] #chatScroll { background-image:linear-gradient(rgba(var(--accent-rgb),.08) 1px,transparent 1px),linear-gradient(90deg,rgba(var(--accent-rgb),.08) 1px,transparent 1px); background-size:26px 26px; }
-html[data-hz-surface="lines"] #chatScroll { background-image:repeating-linear-gradient(transparent 0 27px,rgba(var(--accent-rgb),.09) 27px 28px); background-size:auto; }
-html[data-hz-surface="halo"] #chatScroll { background-image:radial-gradient(ellipse at 50% 10%,rgba(var(--accent-rgb),.1),transparent 65%); background-size:100% 100%; }
-html[data-hz-spacing="compact"] #chatMessages > .message { margin-block:8px; }
-html[data-hz-spacing="compact"] #chatMessages .bubble { line-height:1.45; }
-html[data-hz-spacing="balanced"] #chatMessages > .message { margin-block:16px; }
-html[data-hz-spacing="balanced"] #chatMessages .bubble { line-height:1.6; }
-html[data-hz-spacing="roomy"] #chatMessages > .message { margin-block:24px; }
-html[data-hz-spacing="roomy"] #chatMessages .bubble { line-height:1.8; }
-html[data-hz-spacing="reading"] #chatMessages > .message { margin-block:32px; }
-html[data-hz-spacing="reading"] #chatMessages .bubble { line-height:2; }
+/* V1.93.15: Terminal AI provider picker, slow notice, reply tag */
+.hza-pkr{display:flex;gap:6px;padding:6px 8px;background:#0b0f14;border-bottom:1px solid #1b2330;flex:0 0 auto}
+.hza-pkr[hidden]{display:none}
+.hza-sel{flex:1;min-width:0;height:34px;border-radius:9px;border:1px solid #2a3442;background:#10161e;color:#e6edf3;font:600 12.5px system-ui,sans-serif;padding:0 6px}
+.hza-sel:disabled{opacity:.55}
+.hza-pkb.on{border-color:var(--accent-cyan,#00e5ff);box-shadow:0 0 8px rgba(var(--accent-rgb,0,229,255),.35)}
+.hza-tag{margin:0 0 2px;font-size:11px;font-weight:700;letter-spacing:.4px;color:var(--accent-cyan,#00e5ff);opacity:.85;word-break:break-word}
+.hza-wait{display:flex;align-items:center;gap:8px}
+.hza-wait span{flex:1;min-width:0}
+.hza-wait.hza-slow span{color:#ffb454}
+.hza-skip{min-width:56px;height:30px;border-radius:9px;border:1px solid #ff5a64;background:#1a0d10;color:#ff7b72;font:800 12px system-ui,sans-serif;cursor:pointer}
+.hza-skip[hidden]{display:none}
+
+/* V1.93.17: terminal live status row */
+.hzt-run{display:flex;align-items:center;gap:10px;padding:7px 10px;background:#0b0f14;border-top:1px solid #7c3aed;border-bottom:1px solid #1b2330;flex:0 0 auto;font-family:ui-monospace,Menlo,Consolas,monospace}
+.hzt-run[hidden]{display:none}
+.hzt-run-sp{font-size:20px;line-height:1;color:#c084fc;min-width:20px;text-align:center;text-shadow:0 0 8px rgba(192,132,252,.6)}
+.hzt-run-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.hzt-run-a{font-size:12.5px;font-weight:800;letter-spacing:.3px;color:#e9d5ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hzt-run-b{font-size:11.5px;color:#8a97a6;line-height:1.35;word-break:break-word;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.hzt-run-x{min-width:58px;height:34px;border-radius:9px;border:1px solid #ff3b5c;background:#1a0d12;color:#ff6b86;font:800 12.5px system-ui,sans-serif;cursor:pointer;flex:0 0 auto}
+.hzt-run-quiet{border-top-color:#ffb454}.hzt-run-quiet .hzt-run-sp,.hzt-run-quiet .hzt-run-b{color:#ffb454;text-shadow:none}
+.hzt-run-done .hzt-run-x{display:none}
+.hzt-run-ok{border-top-color:#22c55e}.hzt-run-ok .hzt-run-sp,.hzt-run-ok .hzt-run-a{color:#4ade80;text-shadow:none}
+.hzt-run-bad{border-top-color:#ff3b5c}.hzt-run-bad .hzt-run-sp,.hzt-run-bad .hzt-run-a{color:#ff6b86;text-shadow:none}
