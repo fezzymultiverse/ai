@@ -1,0 +1,16 @@
+{
+  "checks": [
+    "Business preview text is ready for the first AI request without opening Permissions",
+    "Real Groq send path waits for delayed native previews; outbound system prompt contains the permitted message",
+    "Missed hand popup is recoverable through Show captured previews and pins into the current chat",
+    "Disabling Business source blocks an already pinned preview from AI context",
+    "Pinned-only mode reads the pinned preview without requiring latest-preview sharing",
+    "Reconnect button invokes the native listener recovery method",
+    "Denied Android notification prompt opens system notification settings rather than silently doing nothing",
+    "Explicit Horizon notification tap opens and pins its preview even when toast popups are disabled",
+    "Resuming recovers unseen captured preview and its hand action without granting AI access",
+    "Recovered hand remains tappable at 320/412px; pinning does not bypass AI consent",
+    "Lock event removes preview UI and AI cache"
+  ],
+  "errors": []
+}

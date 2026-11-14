@@ -1,0 +1,93 @@
+
+> horizon@1.93.8 test:voice-dsp
+> node tests/voice-dsp.cjs
+
+PASS neutral bypasses DSP
+PASS NaN is neutral
+PASS infinity is neutral
+PASS native bounds enforced
+PASS neutral gain remains within 2 percent
+PASS low shelf boosts low frequencies
+PASS low shelf attenuates low frequencies
+PASS high shelf boosts high frequencies
+PASS presence bell boosts its centre frequency
+PASS envelope compressor reduces loud signal RMS
+PASS comb reverb creates a decaying tail
+PASS feedback delay creates a 190ms echo
+PASS ring modulation changes the signal without silence
+PASS pitch-snap does not invent sound from silence
+PASS voiced pitch-snap produces finite audible output
+PASS 225 Hz fixture snaps toward A3 (220 Hz), measured 220.0070703027437
+PASS all effects at maximum remain finite and peak-limited
+PASS short edge fades avoid abrupt clicks
+PASS character 1 audibly transforms finite PCM
+PASS character 1 remains controllable by downstream EQ
+PASS character 1 preserves silence
+PASS character 1 zero mix is neutral
+PASS character 2 audibly transforms finite PCM
+PASS character 2 remains controllable by downstream EQ
+PASS character 2 preserves silence
+PASS character 2 zero mix is neutral
+PASS character 3 audibly transforms finite PCM
+PASS character 3 remains controllable by downstream EQ
+PASS character 3 preserves silence
+PASS character 3 zero mix is neutral
+PASS character 4 audibly transforms finite PCM
+PASS character 4 remains controllable by downstream EQ
+PASS character 4 preserves silence
+PASS character 4 zero mix is neutral
+PASS character 5 audibly transforms finite PCM
+PASS character 5 remains controllable by downstream EQ
+PASS character 5 preserves silence
+PASS character 5 zero mix is neutral
+PASS character 6 audibly transforms finite PCM
+PASS character 6 remains controllable by downstream EQ
+PASS character 6 preserves silence
+PASS character 6 zero mix is neutral
+PASS character 7 audibly transforms finite PCM
+PASS character 7 remains controllable by downstream EQ
+PASS character 7 preserves silence
+PASS character 7 zero mix is neutral
+PASS character 8 audibly transforms finite PCM
+PASS character 8 remains controllable by downstream EQ
+PASS character 8 preserves silence
+PASS character 8 zero mix is neutral
+PASS character 9 audibly transforms finite PCM
+PASS character 9 remains controllable by downstream EQ
+PASS character 9 preserves silence
+PASS character 9 zero mix is neutral
+PASS character 10 audibly transforms finite PCM
+PASS character 10 remains controllable by downstream EQ
+PASS character 10 preserves silence
+PASS character 10 zero mix is neutral
+PASS hard limiter obeys 0.25 ceiling at 100 percent
+PASS normalize targets 0.9 peak
+PASS normalize never invents audio from silence
+PASS limiter ceiling survives normalization
+PASS humanize changes microtiming without losing speech energy
+PASS de-esser reduces strong high-frequency sibilance
+PASS de-esser preserves low-frequency speech body
+PASS noise gate attenuates sub-threshold noise
+PASS saturation adds bounded harmonic drive
+PASS new effects combined stable at 8000 Hz
+PASS new effects combined stable at 16000 Hz
+PASS new effects combined stable at 22050 Hz
+PASS new effects combined stable at 24000 Hz
+PASS new effects combined stable at 44100 Hz
+PASS new effects combined stable at 48000 Hz
+PASS WAV render includes reverb tail
+PASS output is a WAV container
+PASS stereo input downmixes to bounded mono PCM
+PASS malformed WAV rejected
+PASS overflow/truncated chunk length rejected
+PASS unsupported PCM encoding rejected with direct-speech escape route
+PASS overlong processing input rejected
+PASS oversized processing input rejected before allocating PCM
+PASS cancellation prevents processing
+PASS DSP stable at 8000 Hz
+PASS DSP stable at 16000 Hz
+PASS DSP stable at 22050 Hz
+PASS DSP stable at 24000 Hz
+PASS DSP stable at 44100 Hz
+PASS DSP stable at 48000 Hz
+RESULT 88 DSP tests passed

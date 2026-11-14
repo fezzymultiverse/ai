@@ -1,0 +1,162 @@
+{
+  "task": "WhatsApp notification capture, permission recovery, hand/pin flow and current AI preview context only",
+  "sourceArchive": "Horizon-V1_93_9-Panel-Presets (1).zip",
+  "sourceArchiveSHA256": "c9aad63e917a0862cb8910b493284e8c729e2a6dec17a70a0eab033d39936fe9",
+  "deliverable": "Patched source project ZIP. Not an installable APK.",
+  "runtimeFilesChanged": [
+    "resources/android/java/HorizonWhatsAppPlugin.kt",
+    "www/horizon_whatsapp_feature.js",
+    "www/index.html"
+  ],
+  "testFilesChanged": [
+    "tests/requested-fixes.test.cjs"
+  ],
+  "testFilesAdded": [
+    "tests/notification-context.test.cjs",
+    "tests/notification-recovery.browser.cjs"
+  ],
+  "scopePreservation": "All original project files not listed as changed are copied byte-for-byte from the uploaded archive. No UI redesign, new dependencies, provider registry changes, app identity changes, signing changes or unrelated runtime changes.",
+  "changes": [
+    "Serialize native settings reads behind migration; refresh and await the current sharing state plus newest preview data before every registered foreground provider call, including retries and regeneration.",
+    "Never report an unverified switch as OFF. A permitted but empty/failed preview result is distinguished from disabled sharing. Old assistant claims are not treated as current app state.",
+    "Recover current active selected-source notifications after Android listener connection and on explicit reconnect. Does not read WhatsApp databases or chat history.",
+    "Accept readable text notifications even without MessagingStyle or an inline reply action, while excluding ongoing service notifications, group summaries, calls, blank text and expired notifications.",
+    "Offer Show captured previews with explicit hand/pin actions, independent of AI permission. Recover missed popups when the app resumes.",
+    "An explicit tap on a Horizon preview notification opens and pins the corresponding local preview, even if in-app popup preference is off.",
+    "Denied notification runtime prompts fall back to Android notification settings. The separate Android listener permission is explained.",
+    "Maintain consent, source selection, lock, expiry, encrypted-storage bounds, draft-only behavior and disabled send endpoints."
+  ],
+  "validation": {
+    "nodeTests": {
+      "passed": 190,
+      "failed": 0,
+      "includesNewNotificationTests": 13
+    },
+    "notificationBrowser": {
+      "checks": [
+        "Business preview text is ready for the first AI request without opening Permissions",
+        "Real Groq send path waits for delayed native previews; outbound system prompt contains the permitted message",
+        "Missed hand popup is recoverable through Show captured previews and pins into the current chat",
+        "Disabling Business source blocks an already pinned preview from AI context",
+        "Pinned-only mode reads the pinned preview without requiring latest-preview sharing",
+        "Reconnect button invokes the native listener recovery method",
+        "Denied Android notification prompt opens system notification settings rather than silently doing nothing",
+        "Explicit Horizon notification tap opens and pins its preview even when toast popups are disabled",
+        "Resuming recovers unseen captured preview and its hand action without granting AI access",
+        "Recovered hand remains tappable at 320/412px; pinning does not bypass AI consent",
+        "Lock event removes preview UI and AI cache"
+      ],
+      "errors": []
+    },
+    "closedFeatureBrowser": {
+      "checks": [
+        "single cyan handle replaces old pills; nine actions in requested order",
+        "composer tools remain a 3 by 3 grid at 320, 412 and 768px",
+        "handle preserves editor focus, Escape closes the tools",
+        "Permissions contains matching toggle controls, no inbox, contacts or silent-send UI",
+        "message appears only in toast until explicit pin, no unpinned AI context",
+        "hand pins preview; editor has no send action, AI sharing remains gated",
+        "Generate cannot share when AI permission is off",
+        "draft queues natively with exact preview, instruction, selected provider and source chat",
+        "background result returns to editable draft without sending or leaving app",
+        "closing and reopening the editor preserves manual draft edits",
+        "only explicit confirmed Open WhatsApp can leave Horizon",
+        "clearing/unpinning removes AI context, disabled toast permission suppresses preview",
+        "all twenty-two sound presets have individual Test controls plus local effect/voice Test buttons"
+      ],
+      "errors": []
+    },
+    "appBrowserSmoke": {
+      "checks": [
+        "boot has no uncaught JavaScript errors",
+        "old layout and duplicate shell preferences removed without erasing data",
+        "all live DOM IDs are unique at startup",
+        "Termux controls are lazy, not built in Permissions at startup",
+        "four remaining right-panel app tiles share a single row at 320, 412 and 768px",
+        "Permissions owns Device/native check and independent WhatsApp sources, no shell or Termux controls",
+        "messy key paste is deduplicated, owner-checked, masked and never saved during extraction",
+        "503 verification failure does not save a key or erase pasted notes",
+        "verified key uses existing provider store; mixed/failed note is retained",
+        "big Terminal owns one prompt and Termux-only Controls/Options, no duplicate small shell",
+        "browser preview does not fake shell execution",
+        "manual and AI command routing both hit the same mocked native Termux bridge",
+        "reopening terminal/settings does not duplicate controls",
+        "removed WhatsApp Contacts messenger has no orphaned app launcher",
+        "Android-only voice studio has seventeen controls, twenty presets, functioning selection/reset and no cloud/model UI",
+        "retired WhatsApp send route is explicitly refused; no contacts messenger is loaded",
+        "new chat has no inherited pinned WhatsApp context",
+        "original Music extension still opens",
+        "original Group chat configuration still opens",
+        "late keyboard-hidden event preserves typed text and focus",
+        "all three lightweight chat visuals render on existing message DOM",
+        "Termux options fit narrow and wide layouts"
+      ],
+      "errors": [],
+      "missing": [],
+      "elapsedMs": 5362,
+      "androidDeviceTested": false,
+      "nativeCommandsMocked": true
+    },
+    "voiceDSP": {
+      "passed": 88
+    },
+    "voiceBrowser": {
+      "checks": [
+        "seventeen controls, twenty-two presets plus Custom, natural male/female pickers present, no old TTS provider or download UI",
+        "legacy engine and Cloud TTS key migrate safely",
+        "all twenty-two presets drive the native speech bridge and complete with real-start events (mock Android bridge)",
+        "Use male and Use female apply the natural presets, speak English through the native bridge and keep the preset list in sync",
+        "effects pause, resume and stop use native bridge without provider fallback",
+        "live EQ adjustment switches to Custom and persists",
+        "voice controls fit 320, 412 and 768px widths",
+        "reset clears every effect and returns to direct Android speech"
+      ],
+      "errors": [],
+      "androidDeviceTested": false,
+      "nativeSpeechMocked": true
+    },
+    "androidNativeCompilation": {
+      "result": "PASS",
+      "jdk": 17,
+      "compileSDK": 34,
+      "targets": [
+        ":app:compileDebugKotlin",
+        ":app:compileDebugJavaWithJavac"
+      ],
+      "nativeSourceMatchedPackage": true
+    },
+    "legacyRequestedFixesBrowser": {
+      "result": "KNOWN INHERITED FAILURE",
+      "reason": "HorizonBridges.inbox is not a function: the old harness references an already removed inbox API. Reproduced unchanged against the uploaded baseline. No unrelated runtime code altered to satisfy this obsolete test."
+    },
+    "physicalPhoneTested": false,
+    "realWhatsAppDeliveryTested": false,
+    "liveProviderInferenceTested": false,
+    "mocking": "Chromium uses mocked native Android bridge and intercepted provider HTTP. Test credentials are synthetic, and are never used for live inference."
+  },
+  "providers": {
+    "added": [],
+    "existingProvidersUnchanged": true,
+    "reason": "The optional two new no-billing providers were not added: no additional pair was verified for both recurring free availability and working authentication/inference. No unverified services were labelled as working.",
+    "checkedOfficialPages": [
+      "https://cloud.sambanova.ai/plans",
+      "https://inference-docs.cerebras.ai/models/overview"
+    ],
+    "findings": "The retrieved SambaNova plans page says to add a payment method and purchase credits. The retrieved Cerebras model catalog describes Free Trial and Pay as You Go tiers, not a guaranteed recurring free tier."
+  },
+  "installation": [
+    "Use the included existing Android build workflow and the same app ID and release signing key as the installed app. The ZIP itself cannot be installed.",
+    "Do not uninstall the existing app merely to bypass a signing mismatch; uninstalling can remove chats/settings. No signing key was provided or changed here.",
+    "After installing the rebuilt app, open Settings > Permissions > Notification reply drafts.",
+    "Enable Allow notifications, then separately use Grant notification access to enable Horizon WhatsApp access in Android.",
+    "Select Personal WhatsApp and/or WhatsApp Business; enable Allow toast pop-ups for the hand/pin popup and Allow background preview alerts for Horizon alerts while away.",
+    "Enable Allow AI to see pinned messages. Enable Let AI see my latest previews only if you also want unpinned previews shared with the selected AI provider.",
+    "Receive a new visible WhatsApp notification and tap the hand, or use Show captured previews. Check / reconnect reads listener health without enabling private sharing automatically."
+  ],
+  "limitations": [
+    "Cannot bypass Android restricted settings, notification access permission, OEM battery restrictions, hidden/redacted WhatsApp previews or WhatsApp notification settings.",
+    "No full chat-history access or automatic WhatsApp sending was added.",
+    "A provider response was exercised with mocked transport, not a real API key; all provider uptime/free-tier availability remains outside app control.",
+    "Unrelated original version metadata and existing release workflow are preserved."
+  ]
+}

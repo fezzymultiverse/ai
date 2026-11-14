@@ -4,6 +4,7 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.os.Build
@@ -81,11 +82,14 @@ class HorizonWhatsAppPlugin: Plugin() {
     override fun handleOnDestroy() { io.shutdown(); super.handleOnDestroy() }
     private fun unlocked(call: PluginCall): Boolean { if(Build.VERSION.SDK_INT<23){call.reject("Encrypted preview drafts require Android 6 or newer");return false};if(HorizonLockPlugin.locked){call.reject("Unlock Horizon first");return false};return true }
     @PluginMethod fun status(call: PluginCall) {
+        io.execute { try {
+        HorizonWhatsAppStore.migrate(context)
         val p=HorizonWhatsAppStore.prefs(context)
         val out=JSObject().put("access", NotificationManagerCompat.getEnabledListenerPackages(context).contains(context.packageName))
             .put("notifications", NotificationManagerCompat.from(context).areNotificationsEnabled()).put("connected", HorizonWhatsAppListener.connected)
         for(k in arrayOf("personal","business","toasts","aiSee","aiRecent","askDraft","alerts")) out.put(k,p.getBoolean(k,false))
         call.resolve(out)
+        } catch(e:Exception) { call.reject(e.message ?: "Could not read notification settings") } }
     }
     @PluginMethod fun configure(call: PluginCall) {
         if(!unlocked(call))return
@@ -97,11 +101,26 @@ class HorizonWhatsAppPlugin: Plugin() {
                 e.commit()
                 if(call.getBoolean("aiSee")==false || call.getBoolean("personal")==false || call.getBoolean("business")==false) HorizonWhatsAppStore.clear(context)
                 HorizonWhatsAppStore.save(context,HorizonWhatsAppStore.rows(context))
-                if(Build.VERSION.SDK_INT>=24&&!HorizonWhatsAppListener.connected) NotificationListenerService.requestRebind(android.content.ComponentName(context,HorizonWhatsAppListener::class.java))
+                if(NotificationManagerCompat.getEnabledListenerPackages(context).contains(context.packageName)) {
+                    if(Build.VERSION.SDK_INT>=24&&!HorizonWhatsAppListener.connected) NotificationListenerService.requestRebind(ComponentName(context,HorizonWhatsAppListener::class.java))
+                    HorizonWhatsAppListener.refreshActive()
+                }
                 call.resolve()
             }catch(e:Exception){call.reject(e.message?:"Could not update permissions")}
         }
     }
+    // Manual recovery; reads only currently displayed, selected-source notifications, not chat history.
+    @PluginMethod fun sync(call:PluginCall){if(!unlocked(call))return;io.execute{try{
+        if(!NotificationManagerCompat.getEnabledListenerPackages(context).contains(context.packageName)){call.reject("Grant Android notification access first");return@execute}
+        if(Build.VERSION.SDK_INT>=24&&!HorizonWhatsAppListener.connected)NotificationListenerService.requestRebind(ComponentName(context,HorizonWhatsAppListener::class.java))
+        HorizonWhatsAppListener.refreshActive();call.resolve()
+    }catch(e:Exception){call.reject(e.message ?: "Could not reconnect notification listener")}}}
+    // Local viewer access is separate from consent to send previews to an AI provider.
+    @PluginMethod fun previews(call:PluginCall){if(!unlocked(call))return;io.execute{try{
+        val a=HorizonWhatsAppStore.rows(context);val out=JSArray()
+        for(i in maxOf(0,a.length()-10) until a.length())out.put(a.getJSONObject(i))
+        call.resolve(JSObject().put("messages",out))
+    }catch(e:Exception){call.reject(e.message ?: "Could not read captured previews")}}}
     @PluginMethod fun openAccess(call:PluginCall){if(!unlocked(call))return;activity.runOnUiThread { try{activity.startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS));call.resolve()}catch(e:Exception){call.reject("Could not open Android notification access")} }}
     @PluginMethod fun consumeOpen(call:PluginCall){if(!unlocked(call))return;activity.runOnUiThread {
         val id=activity.intent?.getStringExtra("horizon_whatsapp_preview");activity.intent?.removeExtra("horizon_whatsapp_preview")
@@ -168,29 +187,34 @@ class HorizonWhatsAppPlugin: Plugin() {
 class HorizonWhatsAppListener: NotificationListenerService() {
     private val io=java.util.concurrent.ThreadPoolExecutor(1,1,0L,TimeUnit.MILLISECONDS,java.util.concurrent.ArrayBlockingQueue<Runnable>(32),java.util.concurrent.ThreadPoolExecutor.DiscardOldestPolicy())
     companion object {
+        @Volatile private var instance:HorizonWhatsAppListener?=null
         @Volatile var connected=false
         @JvmField @Volatile var uiVisible=false
-        fun refreshActive() { /* Captures only new notifications; never imports old history. */ }
+        fun refreshActive() {
+            val listener=instance ?: return
+            if(!connected)return
+            // Android only permits this after onListenerConnected. No WhatsApp app/database access.
+            try { listener.activeNotifications?.forEach { listener.onNotificationPosted(it) } } catch(_:Exception) { }
+        }
     }
-    override fun onListenerConnected(){connected=true;io.execute{HorizonWhatsAppStore.migrate(this)}}
-    override fun onListenerDisconnected(){connected=false}
-    override fun onDestroy(){connected=false;io.shutdown();super.onDestroy()}
+    override fun onListenerConnected(){super.onListenerConnected();instance=this;connected=true;io.execute{HorizonWhatsAppStore.migrate(this);refreshActive()}}
+    override fun onListenerDisconnected(){connected=false;instance=null;super.onListenerDisconnected()}
+    override fun onDestroy(){connected=false;if(instance===this)instance=null;io.shutdown();super.onDestroy()}
     override fun onNotificationPosted(sbn:StatusBarNotification){
         if(!HorizonWhatsAppStore.enabled(this,sbn.packageName))return
-        if(sbn.notification.flags and Notification.FLAG_GROUP_SUMMARY!=0||sbn.notification.category==Notification.CATEGORY_CALL)return
+        if(sbn.notification.flags and Notification.FLAG_GROUP_SUMMARY!=0||sbn.notification.flags and Notification.FLAG_ONGOING_EVENT!=0||sbn.notification.category==Notification.CATEGORY_CALL)return
         io.execute {
             var wake:PowerManager.WakeLock?=null
             try {
                 wake=(getSystemService(Context.POWER_SERVICE) as PowerManager).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,"Horizon:preview").apply{setReferenceCounted(false);acquire(10000)}
                 val n=sbn.notification;val style=NotificationCompat.MessagingStyle.extractMessagingStyleFromNotification(n)
                 val msg=style?.messages?.lastOrNull();val extras=n.extras?:return@execute
-                val hasReply=n.actions?.any{a->a.remoteInputs?.any{it.allowFreeFormInput}==true}==true
-                if(msg==null&&!hasReply)return@execute
+                // Readable previews do not require a reply action or MessagingStyle. OEMs may omit both.
                 val title=extras.getCharSequence(Notification.EXTRA_TITLE)?.toString()?:"WhatsApp"
                 val sender=msg?.person?.name?.toString()?:title
                 val text=msg?.text?.toString()?:(extras.getCharSequence(Notification.EXTRA_BIG_TEXT)?:extras.getCharSequence(Notification.EXTRA_TEXT))?.toString()?:""
-                if(text.isBlank())return@execute
-                val time=msg?.timestamp?:sbn.postTime
+                if(text.isBlank()||timeIsExpired(msg?.timestamp?:sbn.postTime))return@execute
+                val time=msg?.timestamp?.takeIf{it>0}?:sbn.postTime
                 val id=UUID.nameUUIDFromBytes("${sbn.key}|$sender|$time|$text".toByteArray()).toString()
                 val row=JSONObject().put("id",id).put("package",sbn.packageName).put("sender",sender.take(200)).put("conversation",title.take(200))
                     .put("text",text.take(8000)).put("time",time).put("business",sbn.packageName=="com.whatsapp.w4b")
@@ -202,6 +226,7 @@ class HorizonWhatsAppListener: NotificationListenerService() {
             finally{if(wake?.isHeld==true)wake.release()}
         }
     }
+    private fun timeIsExpired(time:Long):Boolean = time>0 && System.currentTimeMillis()-time>86400000L
     private fun showAlert(row:JSONObject){
         if(!NotificationManagerCompat.from(this).areNotificationsEnabled())return
         val nm=getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager

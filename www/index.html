@@ -1487,6 +1487,16 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         PROVIDERS.cloudflare.billingNote = 'Free allowance of 10,000 neurons a day, resets at 00:00 UTC. Fill in both boxes: your Cloudflare Account ID and an API token with Workers AI access.';
         // V1.93.3: SambaNova and NVIDIA NIM removed.
         const PROVIDER_IDS = Object.keys(PROVIDERS);
+        PROVIDER_IDS.forEach(id => {
+            const original = PROVIDERS[id].chat;
+            if (typeof original !== 'function') return;
+            PROVIDERS[id].chat = async function (...args) {
+                if (window.HorizonWhatsAppFeature && HorizonWhatsAppFeature.prepare) {
+                    await HorizonWhatsAppFeature.prepare();
+                }
+                return original.apply(this, args);
+            };
+        });
         // Public model catalogs are NOT proof that a secret belongs to this provider.
         PROVIDER_IDS.forEach(id => {
             if (PROVIDERS[id].keyless) return;
