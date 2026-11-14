@@ -20,7 +20,7 @@ const server = http.createServer((req, res) => {
     page.on('pageerror', e => errors.push(e.stack || e.message));
     page.on('dialog', d => d.accept());
     await page.route('**/*', r => r.request().url().startsWith('http://127.0.0.1:') ? r.continue() : r.abort());
-    const KEYS = { claude: 'sk-ant-api03-Ab3dEfGh1jKlMnOpQrStUvWxYz0123456789', openai: 'sk-proj-Ab3dEfGh1jKlMnOpQrStUvWxYz0123456789', deepseek: 'sk-' + '0123456789abcdef'.repeat(2), xai: 'xai-Ab3dEfGh1jKlMnOpQrStUvWxYz0123456789ab' };
+    const KEYS = { claude: 'sk-ant-' + 'test'.repeat(8), openai: 'sk-proj-' + 'test'.repeat(8), deepseek: 'sk-' + '0123456789abcdef'.repeat(2), xai: 'xai-' + 'test'.repeat(8) };
     await page.addInitScript(k => { try { for (const id in k) localStorage.setItem('horizon_key_' + id, k[id]); if (!localStorage.getItem('horizon_active_provider')) localStorage.setItem('horizon_active_provider', 'claude'); } catch (e) {} }, KEYS);
     const answer = (id, text) => ({ status: 200, contentType: 'application/json', body: JSON.stringify(id === 'claude' ? { content: [{ type: 'text', text }], stop_reason: 'end_turn' } : { choices: [{ message: { role: 'assistant', content: text }, finish_reason: 'stop' }] }) });
     for (const [id, pat] of [['claude', 'https://api.anthropic.com/v1/**'], ['openai', 'https://api.openai.com/v1/**'], ['deepseek', 'https://api.deepseek.com/**'], ['xai', 'https://api.x.ai/v1/**']]) {
@@ -63,9 +63,9 @@ const server = http.createServer((req, res) => {
       const rows = await page.evaluate(() => [...document.querySelectorAll('#pkList > *')].map(k => k.classList.contains('pk-sec') ? 'H:' + k.textContent : 'R:' + ((k.querySelector('.pk-name,b,strong') || {}).textContent || k.textContent.slice(0, 20)).trim()));
       const a = rows.indexOf('H:KEYLESS'), b = rows.indexOf('H:PAID TIER');
       assert.ok(a > 0 && a < b, 'Choose an AI needs a KEYLESS heading between FREE TIER and PAID TIER');
-      assert.equal(b - a - 1, 6, 'eight keyless rows');
+      assert.equal(b - a - 1, 8, 'eight keyless rows');
       const names = rows.slice(a + 1, b).map(x => x.replace(/^R:/, ''));
-      checks.push('Choose an AI: KEYLESS group of 6 rows between the tiers: ' + names.join(' | '));
+      checks.push('Choose an AI: KEYLESS group of 8 rows between the tiers: ' + names.join(' | '));
     }
     await page.keyboard.press('Escape'); await page.evaluate(() => { const o = document.querySelector('#pkSheet'); if (!o.hidden) document.querySelector('#pkClose, #pkSheet .pk-close')?.click(); });
     const want = { claude: 'https://api.anthropic.com/v1/messages', openai: 'https://api.openai.com/v1/chat/completions', deepseek: 'https://api.deepseek.com/chat/completions', xai: 'https://api.x.ai/v1/chat/completions' };
