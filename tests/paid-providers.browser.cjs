@@ -63,7 +63,7 @@ const server = http.createServer((req, res) => {
       const rows = await page.evaluate(() => [...document.querySelectorAll('#pkList > *')].map(k => k.classList.contains('pk-sec') ? 'H:' + k.textContent : 'R:' + ((k.querySelector('.pk-name,b,strong') || {}).textContent || k.textContent.slice(0, 20)).trim()));
       const a = rows.indexOf('H:KEYLESS'), b = rows.indexOf('H:PAID TIER');
       assert.ok(a > 0 && a < b, 'Choose an AI needs a KEYLESS heading between FREE TIER and PAID TIER');
-      assert.equal(b - a - 1, 6, 'six keyless rows');
+      assert.equal(b - a - 1, 6, 'eight keyless rows');
       const names = rows.slice(a + 1, b).map(x => x.replace(/^R:/, ''));
       checks.push('Choose an AI: KEYLESS group of 6 rows between the tiers: ' + names.join(' | '));
     }
