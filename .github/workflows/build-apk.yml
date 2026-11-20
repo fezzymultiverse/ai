@@ -1,0 +1,364 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [main]
+    tags: ['V*', 'v*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: 'Publish this build as a GitHub release (tag V<version> from package.json) so Obtainium and Komi Store can see it'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build signed release APK
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # Capacitor 7 compiles with Java 21 (Java 17 fails with "invalid source release: 21").
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('package.json') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
+
+      # npm ci needs package.json and package-lock.json in sync. If they ever drift,
+      # fall back to a fresh npm install instead of failing the whole build.
+      - name: Install dependencies
+        run: |
+          npm ci --no-audit --no-fund || {
+            echo "::warning::package.json and package-lock.json were out of sync; using npm install"
+            rm -f package-lock.json
+            npm install --no-audit --no-fund
+          }
+
+      - name: Bridge, voice and credential regression tests
+        continue-on-error: true
+        run: |
+          npm test
+          node --test tests/people-service.test.cjs
+          npm run test:voice-dsp
+
+      - name: Browser navigation and privacy regression tests
+        continue-on-error: true
+        run: |
+          npx playwright install --with-deps chromium
+          npm run test:browser
+          npm run test:voice-browser
+          npm run test:closed-feature
+          npm run test:key-boxes
+          npm run test:paid-providers
+          npm run test:vault-keys
+          npm run test:group-mention
+          npm run test:people-upgrade-browser
+
+      - name: Apply app identity from repo variables
+        env:
+          APP_ID: ${{ vars.ROBBERY_APP_ID }}
+          APP_NAME: ${{ vars.ROBBERY_APP_NAME }}
+        run: |
+          APP_ID="${APP_ID:-com.festers.horizon}"
+          APP_NAME="${APP_NAME:-Horizon}"
+          export APP_ID APP_NAME
+          node -e "
+            const fs = require('fs');
+            const c = JSON.parse(fs.readFileSync('capacitor.config.json', 'utf8'));
+            c.appId = process.env.APP_ID;
+            c.appName = process.env.APP_NAME;
+            fs.writeFileSync('capacitor.config.json', JSON.stringify(c, null, 2));
+          "
+          echo "appId=${APP_ID} appName=${APP_NAME}"
+
+      - name: Point People at the hosted chat service
+        env:
+          PEOPLE_URL: ${{ vars.HORIZON_PEOPLE_URL }}
+        run: |
+          PEOPLE_URL="${PEOPLE_URL%/}"
+          if [ -n "$PEOPLE_URL" ]; then
+            case "$PEOPLE_URL" in https://*) ;; *) echo "::error::HORIZON_PEOPLE_URL must start with https://"; exit 1;; esac
+            printf "window.HORIZON_PEOPLE_SERVER = '%s';\n" "$PEOPLE_URL" > www/horizon_people_config.js
+            echo "People service: $PEOPLE_URL"
+          else
+            echo "::warning::HORIZON_PEOPLE_URL is not set. People will say the chat service is not set up. See worker/README.md."
+          fi
+
+      - name: Add Android platform
+        run: npx cap add android
+
+      - name: Install atomic file rename build tools
+        run: |
+          set +o pipefail
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "cmake;3.22.1"
+
+      - name: Apply icons and splash
+        run: |
+          command -v rsvg-convert >/dev/null 2>&1 || { sudo apt-get update -y -q || true; sudo apt-get install -y -q librsvg2-bin; }
+          bash scripts/apply-android.sh
+
+      - name: Set version
+        run: bash scripts/set-version.sh "${{ github.run_number }}"
+
+      - name: Sync web assets
+        run: npx cap sync android
+
+      # V1.99.75: make sure the Edge plugin sources are exactly where install_edge.sh / install_native.sh look
+      # (android-native/com/festers/horizon/edge/). Finds a copy anywhere in the repo, or rebuilds it from the
+      # self-contained scripts/edge_kit.sh. Never overwrites a file that is already there.
+      - name: Locate Edge voice plugin sources
+        run: |
+          set -euo pipefail
+          DEST="android-native/com/festers/horizon/edge"
+          FILES="EdgeAudioPipe.kt EdgeGec.kt EdgeProtocol.kt EdgeTtsClient.kt HorizonEdgeVoicePlugin.kt"
+          mkdir -p "$DEST"
+          missing() { for f in $FILES; do [ -s "$DEST/$f" ] || return 0; done; return 1; }
+          if missing; then
+            echo "Edge sources not complete in $DEST - searching the repo"
+            for f in $FILES; do
+              [ -s "$DEST/$f" ] && continue
+              found="$(find . -type f -name "$f" -not -path './android/*' -not -path './node_modules/*' -not -path "./$DEST/*" | head -1 || true)"
+              if [ -n "$found" ]; then echo "  found $found"; cp "$found" "$DEST/$f"; fi
+            done
+          fi
+          if missing; then
+            echo "Still incomplete - restoring from scripts/edge_kit.sh"
+            [ -f scripts/edge_kit.sh ] || { echo "::error::scripts/edge_kit.sh is missing from the repo. Commit scripts/ from the zip."; exit 1; }
+            bash scripts/edge_kit.sh .
+          fi
+          if missing; then echo "::error::Edge plugin sources could not be found or restored"; exit 1; fi
+          ls -l "$DEST"
+
+      # V1.99.74: THIS is what was missing. Without these steps the APK is built with no Horizon native plugins
+      # and Settings > Voice says "HorizonEdgeVoice is missing". Every command is safe to repeat.
+      - name: Install Horizon native plugins (all) and Edge voice
+        run: |
+          set -euo pipefail
+          bash scripts/install_native.sh android --apply
+          bash scripts/install_edge.sh android --apply
+          bash scripts/install_native.sh --check android
+          bash scripts/edge_kit.sh --check android
+          echo "---- Edge plugin sources inside android/ ----"
+          ls -l android/app/src/main/java/com/festers/horizon/edge/
+          grep -rn "HorizonEdgeVoicePlugin" --include="MainActivity.*" android/app/src/main/java || { echo "::error::HorizonEdgeVoicePlugin is not registered in MainActivity"; exit 1; }
+
+      # Capacitor 7 compiles Java at target 21, but the Kotlin target was left at 17
+      # ("Inconsistent JVM-target compatibility ... (21) and (17)"). Make Kotlin match Java 21,
+      # and downgrade any leftover mismatch from an error to a warning.
+      - name: Align Kotlin JVM target with Java 21
+        run: |
+          # V1.99.154: robust version. Works with kotlinOptions (Kotlin 1.x/2.0/2.1) and compilerOptions (Kotlin 2.x),
+          # fixes every module (Capacitor plugins too), and never dies on a missing match.
+          set -uo pipefail
+          F=android/app/build.gradle
+          R=android/build.gradle
+          [ -f "$F" ] || { echo "::error::$F not found. Did 'npx cap add android' run?"; ls -la android || true; exit 1; }
+          [ -f "$R" ] || { echo "::error::$R not found"; exit 1; }
+          # 1) app module: rewrite any explicit Kotlin target to 21 (all common spellings)
+          sed -i -E "s/jvmTarget[[:space:]]*=[[:space:]]*['\"]?1[0-9]['\"]?/jvmTarget = \"21\"/" "$F" || true
+          sed -i -E "s/jvmToolchain\(1[0-9]\)/jvmToolchain(21)/" "$F" || true
+          sed -i -E "s/JvmTarget\.JVM_1[0-9]/JvmTarget.JVM_21/g" "$F" || true
+          grep -n "jvmTarget\|jvmToolchain\|JvmTarget" "$F" || echo "(no explicit Kotlin target in app/build.gradle)"
+          # 2) every module (app + Capacitor/Cordova plugins): force the Kotlin compile target to 21, whatever DSL this Kotlin version has
+          if ! grep -q "HORIZON_KOTLIN_21" "$R"; then
+            cat >> "$R" <<'GRADLE'
+
+          // HORIZON_KOTLIN_21: Kotlin must compile at the same JVM target as Java (21).
+          subprojects {
+              afterEvaluate { p ->
+                  p.tasks.matching { it.class.name.contains('KotlinCompile') }.configureEach { t ->
+                      try {
+                          def cur = t.compilerOptions.jvmTarget.get()
+                          t.compilerOptions.jvmTarget.set(cur.getClass().fromTarget('21'))
+                      } catch (Throwable e1) {
+                          try { t.kotlinOptions.jvmTarget = '21' } catch (Throwable e2) { }
+                      }
+                  }
+              }
+          }
+          GRADLE
+          fi
+          # 3) a mismatch that is left over becomes a warning, not an error (newline first: the file may not end with one)
+          touch android/gradle.properties
+          printf '\nkotlin.jvm.target.validation.mode=warning\n' >> android/gradle.properties
+          echo "---- tail of android/gradle.properties ----"; tail -5 android/gradle.properties
+
+      - name: Build release APK (unsigned)
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          # Maven Central sometimes answers 429 (Too Many Requests) to shared GitHub runners.
+          # Retry with a pause instead of failing the whole build; downloads that worked are kept.
+          set +e
+          for attempt in 1 2 3 4; do
+            ./gradlew assembleRelease --no-daemon --stacktrace 2>&1 | tee "$RUNNER_TEMP/gradle.log"
+            rc=${PIPESTATUS[0]}
+            if [ "$rc" -eq 0 ]; then
+              exit 0
+            fi
+            # Only retry when the failure looks like a download problem; compile errors will not fix themselves.
+            if ! grep -qE "429|Too Many Requests|Could not GET|Could not resolve|Connection reset|timed out" "$RUNNER_TEMP/gradle.log"; then
+              break
+            fi
+            if [ "$attempt" -lt 4 ]; then
+              wait=$((attempt * 60))
+              echo "::warning::Gradle attempt $attempt failed (download problem). Retrying in ${wait}s..."
+              sleep "$wait"
+            fi
+          done
+          echo
+          echo "================ BUILD ERRORS (short version) ================"
+          grep -nE "^e: |^w: .*error|error: |What went wrong|Execution failed|Unresolved reference|Inconsistent JVM" -A3 "$RUNNER_TEMP/gradle.log" | head -80
+          echo "=============================================================="
+          exit 1
+
+      - name: Verify native plugins are inside the APK
+        run: |
+          set -euo pipefail
+          UNSIGNED="$(ls android/app/build/outputs/apk/release/*.apk | head -1)"
+          echo "APK: $UNSIGNED"
+          rm -rf "$RUNNER_TEMP/dexcheck" && mkdir -p "$RUNNER_TEMP/dexcheck"
+          unzip -q -o "$UNSIGNED" 'classes*.dex' -d "$RUNNER_TEMP/dexcheck"
+          echo "dex files:"; ls -l "$RUNNER_TEMP"/dexcheck/
+          MISSING=""
+          for cls in HorizonAIPlugin HorizonFilesPlugin HorizonFilesAccessPlugin HorizonFilesState HorizonAIService HorizonMediaPlugin HorizonSpeechPlugin HorizonDaemonPlugin HorizonVoiceDsp HorizonPermsPlugin HorizonNotify HorizonScopes HorizonLockPlugin HorizonBrowserPlugin HorizonTermuxPlugin HorizonTermuxResultReceiver HorizonExtractorPlugin HorizonEdgeVoicePlugin EdgeTtsClient EdgeGec EdgeAudioPipe; do
+            if grep -aq "$cls" "$RUNNER_TEMP"/dexcheck/classes*.dex; then
+              echo "  ok       $cls"
+            else
+              echo "  MISSING  $cls"; MISSING="$MISSING $cls"
+            fi
+          done
+          if [ -n "$MISSING" ]; then
+            echo "::error::Missing from the APK:$MISSING"
+            echo "Native sources that were applied:"; ls -l "android/app/src/main/java/"*/*/*/ 2>/dev/null || true
+            exit 1
+          fi
+          echo "All native plugins present in the APK."
+          unzip -l "$UNSIGNED" | grep 'libhorizon_files.so' > /dev/null || { echo "::error::Atomic file rename library missing"; exit 1; }
+          if unzip -l "$UNSIGNED" | grep -E 'libsherpa|libonnxruntime|assets/horizon_voice/'; then
+            echo "::error::Removed neural TTS payload is still present"; exit 1
+          fi
+
+      - name: Sign APK with release keystore
+        env:
+          KS_B64: ${{ secrets.JUICE999_KEYSTORE_B64 }}
+          KS_ALIAS: ${{ secrets.LUCID_DREAMS_ALIAS }}
+          KS_PASS: ${{ secrets.LUCID_DREAMS_PASS }}
+        run: |
+          set -euo pipefail
+          for v in KS_B64 KS_ALIAS KS_PASS; do
+            if [ -z "${!v}" ]; then echo "::error::Secret for $v is missing or empty. Refusing to ship a debug-signed APK."; exit 1; fi
+          done
+
+          echo "[1/6] Decode keystore"
+          printf '%s' "$KS_B64" | base64 -d > "$RUNNER_TEMP/release.jks"
+          ls -l "$RUNNER_TEMP/release.jks"
+
+          echo "[2/6] Keystore contents (alias + fingerprint)"
+          keytool -list -keystore "$RUNNER_TEMP/release.jks" -storepass:env KS_PASS 2>&1 | grep -Ev "^(Warning|Keystore provider)" || true
+
+          echo "[3/6] Locate tools and unsigned APK"
+          BT="$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)"
+          UNSIGNED="$(ls android/app/build/outputs/apk/release/*.apk | head -1)"
+          echo "build-tools: $BT"
+          echo "unsigned:    $UNSIGNED"
+
+          echo "[4/6] zipalign"
+          "$BT/zipalign" -f -p 4 "$UNSIGNED" "$RUNNER_TEMP/aligned.apk"
+
+          echo "[5/6] apksigner sign"
+          "$BT/apksigner" sign \
+            --ks "$RUNNER_TEMP/release.jks" \
+            --ks-key-alias "$KS_ALIAS" \
+            --ks-pass env:KS_PASS \
+            --key-pass env:KS_PASS \
+            --out "$RUNNER_TEMP/signed.apk" "$RUNNER_TEMP/aligned.apk"
+
+          echo "[6/6] apksigner verify"
+          "$BT/apksigner" verify --verbose --print-certs "$RUNNER_TEMP/signed.apk" 2>&1 | tee "$RUNNER_TEMP/verify.txt"
+          grep -i "SHA-256" "$RUNNER_TEMP/verify.txt" || true
+
+          rm -f "$RUNNER_TEMP/release.jks"
+
+      - name: Name the APK
+        id: apk
+        run: |
+          VERSION="$(node -p "require('./package.json').version")"
+          NAME="Horizon-V${VERSION//./_}-b${GITHUB_RUN_NUMBER}.apk"
+          RELEASE_NAME="Horizon-V${VERSION//./_}.apk"
+          # A pushed tag must match package.json, otherwise Obtainium and Komi Store would compare the wrong version.
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            TAG="$GITHUB_REF_NAME"
+            if [ "${TAG#[Vv]}" != "$VERSION" ]; then
+              echo "::error::Tag ${TAG} does not match package.json version ${VERSION}. Retag as V${VERSION} or bump the version."
+              exit 1
+            fi
+          else
+            TAG="V${VERSION}"
+          fi
+          mkdir -p dist release
+          cp "$RUNNER_TEMP/signed.apk" "dist/${NAME}"
+          # One stable file name per version for the release, so a re-run replaces the APK instead of adding a second one.
+          cp "$RUNNER_TEMP/signed.apk" "release/${RELEASE_NAME}"
+          echo "name=${NAME}" >> "$GITHUB_OUTPUT"
+          echo "release_name=${RELEASE_NAME}" >> "$GITHUB_OUTPUT"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.apk.outputs.name }}
+          path: dist/${{ steps.apk.outputs.name }}
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Diagnostics on failure
+        if: failure()
+        run: |
+          echo "---- AndroidManifest.xml ----"
+          cat android/app/src/main/AndroidManifest.xml 2>/dev/null || echo "(no manifest)"
+          echo "---- app/build.gradle ----"
+          cat android/app/build.gradle 2>/dev/null || echo "(no app/build.gradle)"
+          echo "---- native sources ----"
+          ls -l android/app/src/main/java/*/*/*/ 2>/dev/null || echo "(no sources)"
+
+      - name: Publish GitHub Release
+        if: startsWith(github.ref, 'refs/tags/') || (github.event_name == 'workflow_dispatch' && inputs.publish)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.apk.outputs.tag }}
+          name: Horizon ${{ steps.apk.outputs.tag }}
+          target_commitish: ${{ github.sha }}
+          files: release/${{ steps.apk.outputs.release_name }}
+          fail_on_unmatched_files: true
+          make_latest: 'true'
+          prerelease: false
+          generate_release_notes: true

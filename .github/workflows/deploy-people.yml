@@ -1,0 +1,51 @@
+name: Deploy Horizon People service
+
+# One-time setup (about 3 minutes, free, no card):
+#  1. Make a free Cloudflare account.
+#  2. Cloudflare dashboard > My Profile > API Tokens > Create Token > "Edit Cloudflare Workers" template.
+#  3. GitHub repo > Settings > Secrets and variables > Actions:
+#       secret  CLOUDFLARE_API_TOKEN   (the token)
+#       secret  CLOUDFLARE_ACCOUNT_ID  (Cloudflare dashboard > Workers & Pages, right side)
+#  4. Run this workflow once (Actions > Deploy Horizon People service > Run workflow).
+#  5. Copy the URL printed at the end into a repo VARIABLE named HORIZON_PEOPLE_URL, then build the APK.
+# The service creates its own private PIN secret on first start. Optional: set a PIN_PEPPER secret in Cloudflare to supply your own.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['worker/**', '.github/workflows/deploy-people.yml']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-people
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Service tests
+        run: node --test tests/people-service.test.cjs tests/people-invites.test.cjs tests/people-upgrade.test.cjs
+      - name: Deploy to Cloudflare
+        id: deploy
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: worker
+          command: deploy
+      - name: Show the service address
+        run: |
+          echo "Service address: ${{ steps.deploy.outputs.deployment-url }}"
+          echo "Set repo variable HORIZON_PEOPLE_URL to that address (no trailing slash)."
+          echo "### Horizon People is live" >> "$GITHUB_STEP_SUMMARY"
+          echo "Address: \`${{ steps.deploy.outputs.deployment-url }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "Put it in repo variable **HORIZON_PEOPLE_URL**, then build the APK." >> "$GITHUB_STEP_SUMMARY"
