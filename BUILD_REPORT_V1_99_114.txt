@@ -1,0 +1,142 @@
+HORIZON V1.99.114 — AI FILE ACCESS BUILD REPORT
+S.O.I. × Bojack Security · Strategy Over Impulse · 999
+Base: the supplied horizon-V1_99_113-plusfix.zip. Output: horizon-V1_99_114.zip.
+VERIFIED means source/static or explicitly identified host verification only. All Android/device acceptance behavior is UNTESTED. No APK, device run or signed-release claim is made.
+
+1. FILES CHANGED / ADDED
+  CHANGED .github/workflows/build-apk.yml — Add CMake prerequisite, new native classes and atomic rename library presence check; retain existing checks/signing steps.
+  CHANGED android-native/app/MainActivity.java — Register HorizonFilesPlugin and HorizonFilesAccessPlugin alongside HorizonAIPlugin.
+  CHANGED android-native/manifest/permissions.txt — Add MANAGE_EXTERNAL_STORAGE; preserve all previous permissions.
+  CHANGED android-native/manifest/queries.xml — Add both folder-view MIME queries; preserve previous queries.
+  CHANGED package-lock.json — Bump root and package metadata to 1.99.114; dependency versions unchanged.
+  CHANGED package.json — Version metadata only: 1.99.114.
+  CHANGED scaffold/package.json — Version metadata only: 1.99.114.
+  CHANGED scripts/install_native.sh — Add file plugin verification/installation, folder queries, EXIF dependency, CMake/JNI wiring and JNI preservation rule; keep every original guard.
+  CHANGED tests/ground-v99.test.cjs — Update five release-version assertions to 1.99.114; no test removed or relaxed.
+  CHANGED www/horizon_about.js — Version constant ONLY (V1.99.114); About menu, changelog, layout and behavior unchanged.
+  CHANGED www/horizon_dash.js — Route files.* through the existing Maps parser/dispatcher; use balanced JSON scanning; Maps implementation unchanged.
+  CHANGED www/horizon_model_inventory.js — Version property ONLY; every provider/model entry unchanged.
+  CHANGED www/horizon_release.js — Release identity constant ONLY (1.99.114).
+  CHANGED www/horizon_toolpolicy.js — Add file-admin prompt only while its native permission is enabled; shared by full/lite providers.
+  CHANGED www/index.html — Load new module/styles, connect File access row, bind user-message scope lifecycle, use existing tool results, wire typed Retreat/Stop, and add native diagnostics; web version constant updated.
+  ADDED android-native/app/HorizonFilesAccessPlugin.java — Permission lifecycle, scope binding, Retreat flag, local History, folder-manager discovery and folder-only viewing.
+  ADDED android-native/app/HorizonFilesPlugin.java — Exactly seven metadata/administration methods with guarded sequential execution, write-ahead log and Undo.
+  ADDED android-native/app/HorizonFilesState.java — Native scope/protected-path/exclusion policy, same-volume no-clobber JNI calls, atomic private JSON journal and crash recovery.
+  ADDED android-native/files-native/CMakeLists.txt — Build tiny no-overwrite rename JNI library, with 16KB-compatible ELF page alignment.
+  ADDED android-native/files-native/horizon_files.c — Kernel renameat2(RENAME_NOREPLACE), UTF-8 path bytes; no content access, deletion or copy fallback.
+  ADDED capacitor.config.json — Restore missing root build configuration from the supplied scaffold copy, byte-for-byte.
+  ADDED scripts/apply-android.sh — Add missing CI entry point with source/config guards and mandatory original native installer checks.
+  ADDED scripts/set-version.sh — Add missing CI version setter with validated versionName/versionCode.
+  ADDED tests/files-v114.browser.cjs — One mocked-Android browser verification for UI, plans, History, Undo, Retreat and Maps-path integration.
+  ADDED tests/files-v114.test.cjs — Nine host/static feature checks for protocol, permission gating, scope data, methods and build wiring.
+  ADDED www/horizon_files.css — New components only; inherit Horizon styles without modifying themes.
+  ADDED www/horizon_files.js — Permissions, badge, manager picker, plan card, Apply/Cancel, Retreat, live History/Undo and tag/prompt support.
+  ADDED BUILD_REPORT_V1_99_114.txt — this report, including requirement status and the device checklist.
+  Original files preserved: 336; changed: 15; unchanged byte-for-byte: 321; deleted: 0.
+  Generated android/ and node_modules/ used for host verification are NOT bundled: CI creates android/ with npx cap add android and installs locked dependencies. No host stubs, verification jars, binaries, caches or secrets are bundled.
+
+2. FILES / AREAS NOT TOUCHED
+  VERIFIED — every supplied README.md is byte-identical; no README created or rewritten.
+  VERIFIED — theme definitions/assets, music/player, lyrics, group/People modules, TTS/voice, API-key/provider implementations, Termux bridge, Maps implementation/styles and native alarms are byte-identical.
+  VERIFIED — existing Maps tag regex and Maps dispatch line are retained verbatim; files.* joins the same HorizonDash parser/runner and index.html result loop.
+  VERSION-ONLY EXCEPTIONS — horizon_about.js VERSION and horizon_model_inventory.js version were bumped to satisfy the release-version requirement. About menu/layout/changelog and provider inventory entries are otherwise byte-identical. These two files are not claimed wholly untouched.
+  SHARED-HOST EXCEPTIONS — index.html, horizon_dash.js, horizon_toolpolicy.js, MainActivity and build/manifest files have the integration changes listed above; no unrelated feature behavior was intentionally changed.
+
+3. SECTION 3–8 REQUIREMENT STATUS
+  3.1 — VERIFIED (source/static): HorizonFiles exposes list, stat, makeFolder, move, rename, moveToTrash and undo only. No delete/copy/content-read/open/execute/pixel API. Permission/folder-view UI controls are isolated in HorizonFilesAccess.
+  3.1 list — VERIFIED (source/static): Nonrecursive default; optional recursive; lazy directory traversal hard-capped at 2000 inspected entries with truncated result. Protected/excluded entries are filtered. Metadata only.
+  3.1 mutations — VERIFIED (source/static): Folders/parents via mkdirs. Moves/renames use same-volume kernel no-replace rename, never copy-delete. Unsafe/unavailable kernel primitive fails closed.
+  3.2 scope — VERIFIED (source/static): Each operation carries latest userMessage, native-bound messageId and scopeRoots. Roots must name existing folders present in that user message. New message/chat boundary invalidates scope; canonical/lexical paths and traversal checked natively.
+  3.2 protected — VERIFIED (source/static): Vault, Termux and app-private policy enforced; excluded subtrees enforced; Android/data and Android/obb ALWAYS blocked. Directory transfers inspect descendants and reject symlinks/over-cap trees.
+  3.3 — VERIFIED (source/static): stat outputs filename/extension/MIME/size/modified plus image EXIF fields. GPS stays local and is converted through Geocoder to locality/subadmin/admin area; unresolved fallback is location: present, unresolved. No raw GPS key, bitmap, thumbnail or OCR output.
+  3.4 — VERIFIED (source/static): Fixed primary shared-storage Documents/Trash destination, created as needed; symlink aliases rejected; no deletion exists.
+  3.5 — VERIFIED (source/static): Existing names produce extension-preserving (1), (2), … suffixes. Kernel RENAME_NOREPLACE prevents an external name-clash race from overwriting anything.
+  3.6 — VERIFIED (source/static): Operation/control bridge catches Exception and returns ok/code/message. Permission, scope, protection, missing paths, names/UTF-8, volume, I/O and Retreat errors covered; missing native library returns a controlled error.
+  3.7 — VERIFIED (source/static): Required reasons for changing plans and native moves/renames/Trash. Private AtomicFile JSON journal, write-ahead move records, identity-based recovery, 2000-entry cap. Only the private journal is read/written as content.
+  3.8 — VERIFIED (source/static): Undo reverses completed logged move/rename/Trash entry, suffixes occupied original path and marks original undone. Missing/already-undone/nonreversible entries rejected. Latest named scope is still mandatory; only exact logged Trash source is excepted.
+  4.1 — VERIFIED (source/static): Native enabled preference defaults OFF. Existing File access row connected to it; exact metadata/privacy helper visible under toggle; no timer.
+  4.2 — VERIFIED (source/static): MANAGE_EXTERNAL_STORAGE plus Android settings intent; pending grant resolves on resume, denial keeps OFF, revocation clears enabled state. Actual Android grant flow is UNTESTED.
+  4.3 — VERIFIED (source/static): FILE ACCESS ON badge is visible only when native enabled+granted state is confirmed.
+  4.4 — VERIFIED (source/static): Both folder MIME queries and package visibility entries; default Conduint by installed label (no package guessed), otherwise Android chooser; selected-package launch tries both MIME types then chooser fallback. Comment explains discovery is best effort.
+  4.5 — VERIFIED (source/static): File activity card in Settings > Permissions; newest-first live native journal display.
+  5 plan — VERIFIED (source/static): One pending plan, native-accepted scope line, operations/path/reason list, Apply/Cancel; metadata calls run immediately, mutations only after Apply. JSON cannot override native context.
+  5 Retreat — VERIFIED (source/static): Sequential execution with progress and visible Retreat. JS abort/native flag checked between operations; remaining results RETREATED, completed results remain. Typed Retreat intercepts send before busy/Stop guards; Stop also cancels pending file work. Existing tool loop receives retreat result.
+  6 — VERIFIED (source/static): History includes time/action/from/to/reason/status and one-tap Undo for completed reversible operations. Comment distinguishes stated AI reason from hidden internals. No Undo for listing/stat or mkdir because deletion is prohibited.
+  7 — VERIFIED (source/static): files.scope/list/stat/plan run through existing Maps dispatcher and TOOL RESULT loop. Balanced JSON-aware scanning handles nested JSON, arrays and ]] inside strings. OFF rejects every file tag with PERMISSION_DENIED before file operations.
+  8 — VERIFIED (source/static): File-admin prompt injected only while native File access is ON, in shared full/lite contract. Includes metadata-only limits, current-message scope, required reasons, one-plan behavior, no overwrite, Retreat and honest error reporting. Android/data/obb always-blocked wording resolves the source prompt contradiction in favor of native hard rule.
+  3–8 Android behavior — UNTESTED on a phone, including permission screens, actual storage operations, EXIF/Geocoder, file-manager compatibility, app-kill recovery and APK runtime registration.
+
+4. BUILD / REGISTRATION CHECKS (SECTION 9)
+  Input discrepancy: scripts/apply-android.sh, scripts/set-version.sh and root capacitor.config.json were absent from the supplied ZIP. Therefore no preexisting apply-android.sh checks could be read or preserved. No such file was silently replaced. New entry points were added; all original install_native.sh guard expressions were retained.
+  PASS / VERIFIED — Root capacitor.config.json is nonempty
+  PASS / VERIFIED — Generated Android manifest exists before apply
+  PASS / VERIFIED — Three new Java sources and C/CMake files exist
+  PASS / VERIFIED — Original installer input folder, manifest, app/root Gradle, source and namespace guards
+  PASS / VERIFIED — Every app Java/Kotlin source copied into namespace package
+  PASS / VERIFIED — Stats and Edge Kotlin source presence
+  PASS / VERIFIED — network_security_config.xml presence and manifest attribute
+  PASS / VERIFIED — Every supplied manifest permission, including new All files access
+  PASS / VERIFIED — Every supplied native manifest component
+  PASS / VERIFIED — Existing queries block plus new folder MIME visibility
+  PASS / VERIFIED — Every original MainActivity plugin registration plus both new plugins
+  PASS / VERIFIED — Root Kotlin plugin, JitPack and app Kotlin/JVM target configuration
+  PASS / VERIFIED — All original dependency checks: desugaring, coroutines, WorkManager, biometric, OkHttp, Media3, NewPipe and desugar_jdk_libs_nio
+  PASS / VERIFIED — New ExifInterface dependency, externalNativeBuild, C and CMake files, JNI keep rule
+  PASS / VERIFIED — No duplicate Capacitor plugin name
+  PASS / VERIFIED — Installer repeatability (a subsequent apply reported 0 changes)
+  PASS / VERIFIED — Version setter writes versionName 1.99.114 and validated versionCode into generated Gradle
+  PASS / VERIFIED by source; APK DEX check UNTESTED — CI class list contains HorizonFilesPlugin, HorizonFilesAccessPlugin and HorizonFilesState
+  PASS / VERIFIED by source; Android NDK/APK build UNTESTED — CI checks libhorizon_files.so exists in APK
+  UNTESTED — CI actual compilation, zipalign, release signing and device installation
+
+5. VERIFICATION EVIDENCE
+  VERIFIED — npm ci completed with lockfile; dependencies were not upgraded.
+  VERIFIED — all scripts/*.sh shell syntax and www/*.js standalone syntax; all four inline application scripts parse.
+  VERIFIED — new feature host/static suite: 9/9 checks; mocked-Android browser flow: 1/1 check. These do not prove Android runtime behavior.
+  VERIFIED — isolated compilation of three new Java sources against Android 14 API, real ExifInterface 1.3.7 and Capacitor JSON/annotation types; Plugin/PluginCall are minimal host signatures. This is NOT full Capacitor/Gradle compilation. Six nonfatal annotation/deprecation warnings were recorded.
+  VERIFIED — JNI C host compilation with warnings-as-errors; host policy probe confirmed name matching/exclusions, traversal and long/invalid-name rejection, Unicode rename, suffix selection and kernel refusal to overwrite an existing target. This is NOT Android NDK/device verification.
+  VERIFIED — final npm test: 287 checks, 284 pass, 3 fail. All three failures were reproduced in the untouched input via the targeted baseline run. No unrelated checks were removed, skipped or made nonblocking.
+  BASELINE FAILURE — tests/edge-kit-v54.test.cjs: embedded Edge kit differs from supplied www/horizon_edge_tts.js. Voice assets were not changed.
+  BASELINE FAILURE — tests/manual-routing-v87.test.cjs: check-in provider/source expectation is stale against supplied implementation. Provider/check-in behavior was not changed.
+  BASELINE FAILURE — tests/openrouter-v94.test.cjs: OpenRouter default/fallback expectation differs from supplied provider configuration. API/provider code was not changed.
+  New feature checks remain separate from these inherited failures. The existing predeliver gate will still report NOT READY until the three unrelated baseline discrepancies are addressed; this archive is not claimed to pass the entire project suite.
+
+6. KNOWN LIMITS / LEFT UNDONE
+  UNTESTED — full Gradle/NDK APK build and all device acceptance checks. No Android SDK/device or release signing key was used here. The existing CI still requires its normal repository signing secrets; none have been invented or embedded.
+  Build now needs CMake 3.22.1 and the Android NDK for the tiny atomic-rename library; CI installs CMake and Gradle handles the NDK. Native/kernel lack of renameat2 fails closed, never copies or overwrites.
+  Folder viewer currently supports primary shared storage document URIs. Secondary/removable volume folder viewing returns a clear OUT_OF_SCOPE result; same-volume native administration can operate in named accessible roots. OEM/file-manager URI support is UNTESTED.
+  Exclusions are native mechanical matching for explicit English directives such as leave Screenshots alone, except Folder, skip Folder, do not touch Folder and keep Folder unchanged. Recognized ambiguous negative language fails closed. Arbitrary natural-language interpretation, other languages and unusual phrasing are not guaranteed: use explicit folder names/paths.
+  Undo cannot silently reuse/expand old scope. After a new user message, chat switch or restart, name the original folder and declare scope again before Undo. A Retreat button does not erase the already-accepted scope for a deliberate Undo of completed work.
+  Listings cap at 2000 inspected entries; transfers of directory trees exceeding the 2000-entry safety inspection cap are rejected. Directory transfers containing symlinks are rejected conservatively.
+  A concurrent external filename collision after suffix selection returns a controlled error without overwriting; a fresh attempt selects the new suffix. External apps moving/changing filesystem paths during a run can still cause failures.
+  EXIF support depends on format/header availability; unavailable dimensions may be zero and unsupported headers carry a metadata-status message. Geocoder may be unavailable or slow; unresolved GPS never exposes coordinates.
+  Metadata cannot prove equal file content. The prompt explicitly prohibits claiming duplicates are content-identical on metadata alone.
+  makeFolder is logged but not reversible: deleting folders would violate the no-delete requirement. Only completed move/rename/Trash rows offer Undo.
+  The source prompt included conflicting Android/data wording. The implementation always blocks Android/data and Android/obb, even when named. This preserves Section 3.2 rather than the weaker sample prompt sentence.
+  Historical release notes/comments/cache-key versions remain historical. Current package, release identity, About version constant, web diagnostics and inventory version are 1.99.114; no historical changelog was rewritten.
+
+7. USER DEVICE ACCEPTANCE CHECKLIST (ALL UNTESTED)
+  1. UNTESTED — Toggle starts OFF and badge is hidden; turn ON, grant Android All files access, return and confirm badge appears. Deny once and verify it stays OFF.
+  2. UNTESTED — Ask: sort Pictures into Places, leave Screenshots alone. Confirm native-accepted scope is Pictures only and plan contains no Screenshots paths.
+  3. UNTESTED — Attempt a path outside the named roots; expect OUT_OF_SCOPE. Verify ../ paths and outward symlinks are rejected.
+  4. UNTESTED — Ask to delete: there is no delete operation. Only a reviewed moveToTrash plan may move items to Documents/Trash.
+  5. UNTESTED — Move/rename onto an existing name; confirm suffix and unchanged original target.
+  6. UNTESTED — Apply a multi-operation plan and press Retreat during it; confirm completed work remains in History with Undo and remaining results are RETREATED. Repeat using typed retreat.
+  7. UNTESTED — Undo a completed move; confirm original path or suffix if occupied. Repeat for a Trash move and an already-undone entry.
+  8. UNTESTED — Open Trash/results with Conduint, another detected manager and chooser fallback; uninstall selected manager and verify fallback does not crash.
+  9. UNTESTED — Inspect provider-bound tool results: metadata only, no pixels/contents or raw latitude/longitude.
+  10. UNTESTED — Turn File access OFF or revoke Android access on resume; confirm badge hidden and file tags return PERMISSION_DENIED.
+  11. UNTESTED — Interrupt the app during a move/log boundary; reopen File activity and inspect identity-based journal recovery before retrying.
+  12. UNTESTED — Run the existing CI to compile/sign the APK; inspect DEX and native-library checks before installing.
+
+8. PRE-PHASE-A FINDINGS (TEN LINES)
+  1. www/index.html owns the AI request/tool loop in runTurn.
+  2. Tags use [[namespace.action: argument]].
+  3. www/horizon_dash.js parses Maps through HorizonDash.parse.
+  4. HorizonDash.run forwards map.* to HorizonMaps.run.
+  5. www/horizon_maps.js implements Maps and its prompt/schema helpers.
+  6. Tools return {text: ...} to the existing loop.
+  7. Results re-enter AI requests as [TOOL RESULT · ...] blocks.
+  8. File tags join that same parser, dispatcher and result loop; no second runner was created.
+  9. Native registration/verification lives in MainActivity, install_native.sh and CI APK-class checks.
+  10. The supplied ZIP lacked apply-android.sh, set-version.sh and root Capacitor config; added build entry points are documented above.

@@ -1,0 +1,19 @@
+PASS Full application boots with existing layout
+PASS Main key: real save handler validates a text response and persists key
+PASS Green check activation revalidates, rotates selected backup to main and retains old main
+PASS 401 rejects new key without overwriting working main
+PASS 429 preserves backup as UNVERIFIED, never a green check
+PASS Verified key indicator survives reload
+PASS Existing provider endpoints use exact-host native validation transport without redirects
+PASS Local Library file decodes and plays through actual audio element
+PASS YouTube audio streaming player path plays real media fixture
+PASS Worldwide radio tool search + actual playback with South Africa/Japan directory fixtures
+PASS Video decodes actual frames in left panel and no idle screen covers it
+PASS Subtitle switch ON/OFF works without stopping video
+PASS Close video cleans up source and display
+PASS Official player fallback waits for PLAYING event and supports caption API toggle (stubbed)
+PASS File plan makes no changes before Apply
+PASS Rename executes bridge call and final reply is generated from actual receipt, not model claims
+PASS Delete and moveToTrash rejected before any mutation bridge call
+PASS Hallucinated completion without a receipt cannot become final file-operation reply
+PASS No uncaught browser errors during requested-feature scenarios

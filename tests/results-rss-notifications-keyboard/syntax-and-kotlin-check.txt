@@ -1,0 +1,3 @@
+node --check passed for 96 shipped JS modules and 4 inline script blocks.
+Shell syntax and git diff --check passed.
+Kotlin 1.9.25/JVM21 isolated compilation: both new Kotlin files passed against Android 14 API + real Capacitor JS types and compile-only bridge signature fixtures. No full Gradle build or device integration test performed.

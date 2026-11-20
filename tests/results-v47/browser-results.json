@@ -1,0 +1,22 @@
+[
+  {
+    "test": "Full app boots without JavaScript runtime errors",
+    "pass": true
+  },
+  {
+    "test": "Full and lite prompts contain complete native tool contracts",
+    "pass": true,
+    "liteChars": 10886,
+    "fullChars": 45372
+  },
+  {
+    "test": "Provider gemini sends native contract in actual request payload",
+    "pass": true
+  },
+  {
+    "test": "Browser integration",
+    "pass": false,
+    "error": "Error: groq: Groq: choose a verified free model manually. No request was sent and nothing was switched.\n    at /home/claude/w/tests/native-first.browser.cjs:58:31",
+    "runtimeErrors": []
+  }
+]

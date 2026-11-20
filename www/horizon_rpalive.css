@@ -1,0 +1,51 @@
+/* V1.99.104 · right panel "alive" pass. ADDITIVE ONLY: icon chip + live status pill on the Menu rows, a staggered
+   entrance and a press state. Home stays no-scroll: the chip (30px) fits the 40px min row height and no row geometry
+   is changed. Motion is transform/opacity only and is off under prefers-reduced-motion. */
+#rightPanel #settingsHome .set-row.rpa{--rpa-c:var(--accent-cyan)}
+#rightPanel #settingsHome .set-row[data-rpa="chats"]{--rpa-c:#00e5ff}
+#rightPanel #settingsHome .set-row[data-rpa="promptmem"]{--rpa-c:#ff9f1c}
+#rightPanel #settingsHome .set-row[data-rpa="archive"]{--rpa-c:#2bff88}
+#rightPanel #settingsHome .set-row[data-rpa="providers"]{--rpa-c:#00e5ff}
+#rightPanel #settingsHome .set-row[data-rpa="web"]{--rpa-c:#4dabff}
+#rightPanel #settingsHome .set-row[data-rpa="permissions"]{--rpa-c:#ffd23f}
+#rightPanel #settingsHome .set-row[data-rpa="personalisation"]{--rpa-c:#ff7ad9}
+#rightPanel #settingsHome .set-row[data-rpa="vault"]{--rpa-c:#f97316}
+#rightPanel #settingsHome .set-row[data-rpa="security"]{--rpa-c:#ff3b30}
+#rightPanel #settingsHome .set-row[data-rpa="github"]{--rpa-c:#b388ff}
+#rightPanel #settingsHome .set-row[data-rpa="about"]{--rpa-c:#00e5ff}
+html[data-theme="grey"] #rightPanel #settingsHome .set-row[data-rpa="chats"],html[data-theme="grey"] #rightPanel #settingsHome .set-row[data-rpa="providers"],html[data-theme="grey"] #rightPanel #settingsHome .set-row[data-rpa="about"]{--rpa-c:#0e7490}
+html[data-theme="grey"] #rightPanel #settingsHome .set-row[data-rpa="promptmem"]{--rpa-c:#b45309}
+html[data-theme="grey"] #rightPanel #settingsHome .set-row[data-rpa="archive"]{--rpa-c:#15803d}
+html[data-theme="grey"] #rightPanel #settingsHome .set-row[data-rpa="web"]{--rpa-c:#1d4ed8}
+html[data-theme="grey"] #rightPanel #settingsHome .set-row[data-rpa="permissions"]{--rpa-c:#a16207}
+html[data-theme="grey"] #rightPanel #settingsHome .set-row[data-rpa="personalisation"]{--rpa-c:#be185d}
+html[data-theme="grey"] #rightPanel #settingsHome .set-row[data-rpa="vault"]{--rpa-c:#c2410c}
+html[data-theme="grey"] #rightPanel #settingsHome .set-row[data-rpa="security"]{--rpa-c:#c01f16}
+html[data-theme="grey"] #rightPanel #settingsHome .set-row[data-rpa="github"]{--rpa-c:#7c4dff}
+
+#rightPanel #settingsHome .set-row.rpa{gap:12px}
+#rightPanel #settingsHome .set-row.rpa > .set-ic{display:none}
+#rightPanel #settingsHome .set-row.rpa .set-text h3{color:var(--rpa-c);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rpa-chip{flex:0 0 auto;width:30px;height:30px;border-radius:10px;display:grid;place-items:center;color:var(--rpa-c);background:color-mix(in srgb,var(--rpa-c) 15%,transparent);box-shadow:0 0 12px color-mix(in srgb,var(--rpa-c) 26%,transparent)}
+.rpa-chip .ic{width:17px;height:17px;font-size:17px}
+html[data-theme="grey"] .rpa-chip{box-shadow:none;background:color-mix(in srgb,var(--rpa-c) 12%,transparent)}
+
+.rpa-st{flex:0 0 auto;display:inline-flex;align-items:center;gap:5px;font-size:10.5px;line-height:1;padding:4px 8px;border-radius:999px;color:var(--rpa-c);background:color-mix(in srgb,var(--rpa-c) 14%,transparent);white-space:nowrap}
+.rpa-st[hidden]{display:none}
+.rpa-st::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;flex:0 0 auto}
+.rpa-st.is-off{color:var(--text-muted);background:color-mix(in srgb,var(--text-muted) 14%,transparent)}
+.rpa-st.is-live::before{animation:rpa-pulse 1.8s ease-in-out infinite}
+
+#rightPanel #settingsHome .set-row.rpa{transition:transform .15s ease}
+#rightPanel #settingsHome .set-row.rpa:active{transform:scale(.985);box-shadow:inset 3px 0 0 var(--rpa-c)}
+#rightPanel #settingsHome .set-row.rpa .set-chev{transition:transform .15s ease}
+#rightPanel #settingsHome .set-row.rpa:active .set-chev{transform:translateX(4px)}
+#rightPanel.open #settingsHome:not([hidden]) .set-row.rpa{animation:rpa-in .4s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--rpa-i,0)*38ms)}
+@keyframes rpa-in{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:none}}
+@keyframes rpa-pulse{50%{opacity:.35;transform:scale(.7)}}
+@media (prefers-reduced-motion:reduce){#rightPanel #settingsHome .set-row.rpa,.rpa-st::before{animation:none!important;transition:none!important}}
+@media (max-width:380px){
+  #rightPanel #settingsHome .set-row.rpa{gap:10px}
+  #rightPanel #settingsHome .set-row.rpa .set-text h3{font-size:13.5px;letter-spacing:0}
+  .rpa-st{font-size:10px;padding:3px 6px;gap:4px}
+}

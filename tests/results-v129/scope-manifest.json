@@ -1,0 +1,31 @@
+{
+  "modified_original_files": [
+    "www/horizon_people.js",
+    "www/horizon_rpidle.js",
+    "www/horizon_lyrics.js",
+    "www/horizon_ground.js",
+    "www/index.html",
+    "www/horizon_perf.js",
+    "www/horizon_music.js",
+    "www/horizon_htmlview.js",
+    "www/horizon_about.js",
+    "www/horizon_docview.js",
+    "www/horizon_mdview.js",
+    "www/horizon_viz.js",
+    "package-lock.json",
+    "tests/keyless-v57.test.cjs",
+    "tests/maps-v61.test.cjs",
+    "package.json"
+  ],
+  "unchanged_original_files": 414,
+  "new_files_before_report": [
+    "www/horizon_studio.js",
+    "www/horizon_studio.css",
+    "www/horizon_studio_worker.js",
+    "tests/studio-v129.test.cjs",
+    "tests/studio-performance-v129.browser.cjs",
+    "tests/studio-v129.browser.cjs"
+  ],
+  "native_sources_unchanged": true,
+  "logo_unchanged": true
+}

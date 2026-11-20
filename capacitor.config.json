@@ -1,0 +1,8 @@
+{
+  "appId": "com.festers.horizon",
+  "appName": "Horizon",
+  "webDir": "www",
+  "plugins": {
+    "CapacitorHttp": { "enabled": true }
+  }
+}

@@ -1,0 +1,82 @@
+TAP version 13
+# Subtest: validation transport accepts all existing credential-provider hosts with scoped paths only
+ok 1 - validation transport accepts all existing credential-provider hosts with scoped paths only
+  ---
+  duration_ms: 24.252289
+  type: 'test'
+  ...
+# Subtest: Mistral credential probing has a real endpoint after configure
+ok 2 - Mistral credential probing has a real endpoint after configure
+  ---
+  duration_ms: 1.449986
+  type: 'test'
+  ...
+# Subtest: key-save discovery stops after first verified response, explicit refresh still audits catalogue
+ok 3 - key-save discovery stops after first verified response, explicit refresh still audits catalogue
+  ---
+  duration_ms: 2.757665
+  type: 'test'
+  ...
+# Subtest: a missing models endpoint does not reject credentials when a documented model responds
+ok 4 - a missing models endpoint does not reject credentials when a documented model responds
+  ---
+  duration_ms: 1.162877
+  type: 'test'
+  ...
+# Subtest: model-specific forbidden access is not classified as an invalid secret
+ok 5 - model-specific forbidden access is not classified as an invalid secret
+  ---
+  duration_ms: 0.89352
+  type: 'test'
+  ...
+# Subtest: OpenRouter positive health requires an authenticated key record, not arbitrary HTTP 200
+ok 6 - OpenRouter positive health requires an authenticated key record, not arbitrary HTTP 200
+  ---
+  duration_ms: 1.037125
+  type: 'test'
+  ...
+# Subtest: positive verification persists as a fingerprint, expires, and is overridden by failure
+ok 7 - positive verification persists as a fingerprint, expires, and is overridden by failure
+  ---
+  duration_ms: 1.572082
+  type: 'test'
+  ...
+# Subtest: opaque base64 tokens are not rejected before the provider can validate them
+ok 8 - opaque base64 tokens are not rejected before the provider can validate them
+  ---
+  duration_ms: 1.294169
+  type: 'test'
+  ...
+# Subtest: AI cannot delete or trash through plan schema OR generic bridge dispatch
+ok 9 - AI cannot delete or trash through plan schema OR generic bridge dispatch
+  ---
+  duration_ms: 1.938765
+  type: 'test'
+  ...
+# Subtest: file-completion guard does not hijack unrelated PDF/music generation
+ok 10 - file-completion guard does not hijack unrelated PDF/music generation
+  ---
+  duration_ms: 2.452591
+  type: 'test'
+  ...
+# Subtest: native file bridge blocks trash and checks move postconditions without changing overwrite policy
+ok 11 - native file bridge blocks trash and checks move postconditions without changing overwrite policy
+  ---
+  duration_ms: 0.374855
+  type: 'test'
+  ...
+# Subtest: empty-library music.play reaches the existing YouTube fallback contract
+ok 12 - empty-library music.play reaches the existing YouTube fallback contract
+  ---
+  duration_ms: 0.488227
+  type: 'test'
+  ...
+1..12
+# tests 12
+# suites 0
+# pass 12
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 99.908454

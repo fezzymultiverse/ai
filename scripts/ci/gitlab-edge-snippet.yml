@@ -1,0 +1,24 @@
+# Horizon V1.99.49 - paste these lines into your existing APK build job's script:, in this order.
+# They go AFTER the android/ folder exists and BEFORE ./gradlew assembleDebug (or assembleRelease).
+#
+#   - npm ci
+#   - npx cap add android || true        # skip this line if android/ is committed in your repo
+#   - npx cap sync android
+#   - bash scripts/install_edge.sh android --apply
+#   - cd android && ./gradlew assembleDebug
+#
+# Optional variables (Settings -> CI/CD -> Variables, or a variables: block):
+#   KOTLIN_VERSION: "1.9.25"     # change only if Gradle complains about the Kotlin version
+#   JVM_TARGET: "21"             # normally read from android/app/capacitor.build.gradle
+#
+# Example job:
+build-apk:
+  script:
+    - npm ci
+    - npx cap add android || true
+    - npx cap sync android
+    - bash scripts/install_edge.sh android --apply
+    - cd android && ./gradlew assembleDebug
+  artifacts:
+    paths:
+      - android/app/build/outputs/apk/debug/*.apk

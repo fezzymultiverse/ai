@@ -1,0 +1,75 @@
+HORIZON — REQUESTED REPAIRS / TEST SCOPE
+Base: horizon-V1_99_119-choose-folder.zip
+Version and unrelated features intentionally preserved.
+
+DELIVERABLE
+Full project source ZIP, not an APK. Use the project's existing Android build workflow to rebuild/install an APK. The native trash guard requires a rebuild; replacing web assets alone does not install Java changes.
+
+REQUESTED CHANGES
+API key settings:
+- Added scoped native validation transport for the EXISTING credential providers (exact hosts/paths, no credential redirects).
+- Fixed missing Mistral validation chat endpoint.
+- Short key-saving audit stops after a real responding model; explicit model refresh still audits the catalogue.
+- Opaque base64/JWT-style token characters accepted; known wrong-provider prefix checks remain.
+- Backups with temporary verification failures are saved explicitly UNVERIFIED, not discarded and not shown as valid.
+- A recent verified backup has green check / Use. Activation re-checks the provider, makes that key the main key, and keeps the former main as a backup. No automatic provider/model switching added.
+
+Music / video:
+- Empty-Library music.play now reaches the existing YouTube fallback instead of blocking streaming.
+- Existing Library playback and worldwide radio tools retained, not rewritten.
+- Active video is recognized by the shared media face/status/idle screensaver logic.
+- Added persistent CC ON/OFF toggle, native video cancellation cleanup, and official YouTube player fallback when extracted stream links fail.
+- No playback-success claim until a real media/YouTube PLAYING event. Errors stay visible.
+- YouTube captions/embedding still depend on the video owner, region, network and Android WebView. No missing subtitles are invented and provider restrictions are not bypassed.
+
+AI file manager:
+- Refreshed selected folders before file-tool prompt use.
+- Move/rename/makeFolder remain native operations, inside existing chosen-folder permissions and no-overwrite protections.
+- Plans still wait for Apply. Cancel/Retreat require a new request before another plan.
+- Mutation completion replies are generated from returned execution receipts; an AI's unsupported 'done' is not accepted as completion.
+- Native move/rename postconditions checked before marking completion.
+- AI delete and moveToTrash blocked in plan schema, generic JS bridge call and native trash entry point. Old logged trash operations may still be restored with existing Undo.
+- Existing metadata-only privacy boundary retained; no arbitrary file-content read/write or shell powers added.
+
+VERIFIED HERE
+12/12 new unit checks passed.
+19/19 requested-feature browser checks passed, zero uncaught browser errors.
+Existing file-management browser regression passed (permission gating, sequential Apply, live activity, Undo, Cancel, Retreat and scope).
+Full unit suite: 306/310 passed. EXACTLY the same four failures already existed in the untouched upload (baseline 294/298).
+Inline JavaScript: all 4 inline scripts parsed. All 9 modified external JavaScript files parsed.
+Real WAV/MP4 test files decoded and played by Chromium; screenshots are captures of the actual application.
+API responses, radio directory responses, official YouTube API events and Android file bridge responses are controlled fixtures in these host-browser tests.
+
+NOT VERIFIED / NOT CLAIMED
+No physical Android phone, emulator, APK build/install, real user API key, live YouTube extraction/embedding, or live radio-station directory was verified here.
+The test-fixture video is NOT evidence that a particular live YouTube video works on your phone.
+The mocked Android bridge is NOT evidence of actual on-device moves. Rebuild and verify on your selected folder before bulk use.
+I cannot honestly call this fully device-tested or guarantee every key/station/video.
+
+INHERITED FAILURES LEFT UNTOUCHED TO RESPECT SCOPE
+- restore into an empty folder is byte-identical to the repo copies and never overwrites without --force
+- paid APIs and paid-only providers are gone from the app while daily Aion allowance stays explicit
+- native check-ins reject router aliases, paid-only providers and model substitution
+- index.html OpenRouter seed matches and starts on Llama 3.3 70B free
+
+INTEGRITY
+Original files: 367
+Modified original files: 14
+Byte-identical original files: 353
+Original files removed: 0
+Detailed per-file before/after SHA-256 hashes: tests/requested-repair-evidence/change-manifest.json
+Only requested-feature source files and their affected tests differ. Dependencies, provider inventory/list, version, branding and unrelated assets/features were not changed.
+
+REPRODUCE
+npm ci
+npx playwright install --with-deps chromium
+npm test
+python3 scripts/check_inline_js.py
+# In a separate terminal, serve project root on 127.0.0.1:8134:
+python3 -m http.server 8134
+# With server running:
+node tests/repair-requested.browser.cjs
+node --test tests/files-v114.browser.cjs
+node --test tests/requested-repair.test.cjs
+
+Evidence screenshots, exact test logs, generated media fixtures and browser test scripts are included.

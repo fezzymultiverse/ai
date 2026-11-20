@@ -1,0 +1,35 @@
+/* Horizon V1.99.114: new components inherit Horizon's existing controls and theme. */
+.hzf-badge{display:inline-flex;align-items:center;border:1px solid var(--accent,#00e5ff);border-radius:6px;padding:4px 7px;color:var(--accent,#00e5ff);font-size:10px;font-weight:800;letter-spacing:.06em;max-width:150px}
+.hzf-badge[hidden],.hzf-plan button[hidden]{display:none!important}
+.hzf-controls{display:grid;gap:10px}.hzf-controls h3{font-size:12px}.hzf-controls select{width:100%;min-height:42px;border:1px solid var(--accent,#00e5ff);border-radius:8px;background:var(--panel,#0b1720);color:var(--text,#e4f9fc);padding:9px}
+.hzf-plan{margin:12px 8px;max-width:100%;border:1px solid var(--accent,#00e5ff);border-radius:12px;padding:14px;background:var(--panel,#0b1720);color:var(--text,#e4f9fc)}
+.hzf-scope{color:var(--accent,#00e5ff);overflow-wrap:anywhere;font-size:12px}.hzf-operations{padding-left:23px;max-height:45vh;overflow:auto}.hzf-operations li{padding:10px 0;border-bottom:1px solid #00e5ff26}.hzf-operations p{margin:5px 0;overflow-wrap:anywhere}.hzf-outcome{display:block;overflow-wrap:anywhere;font-size:12px;color:var(--accent,#00e5ff);margin:8px 0}
+.hzf-history{max-height:55vh;overflow:auto}.hzf-history-row{padding:12px 0;border-bottom:1px solid #00e5ff26;overflow-wrap:anywhere}.hzf-history-row p{margin:6px 0;font-size:12px}.hzf-history-row button{margin-right:8px}.hzf-plan .card-actions{display:flex;flex-wrap:wrap;gap:9px}.hzf-privacy{font-size:11px;line-height:1.5;opacity:.8;margin:7px 0}
+
+.hzf-folders{display:grid;gap:8px}.hzf-folder{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid #00e5ff40;border-radius:8px;padding:8px 10px}.hzf-folder-name{overflow-wrap:anywhere;font-size:13px;min-width:0}.hzf-folder button{flex:none}
+
+/* V1.99.138: presentable file plan card, progress bar, Delete confirmation */
+.hzf-plan{background:linear-gradient(160deg,rgba(var(--accent-rgb,0,229,255),.10),var(--panel,#0b1720) 55%)}
+.hzf-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px;justify-content:space-between}
+.hzf-chips{display:flex;flex-wrap:wrap;gap:6px}
+.hzf-chip{font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px;border:1px solid currentColor}
+.hzf-chip.mk,.hzf-badge2.mk{color:#5ec8ff}.hzf-chip.mv,.hzf-badge2.mv{color:#3ddc84}.hzf-chip.rn,.hzf-badge2.rn{color:#ffb020}.hzf-chip.rm,.hzf-badge2.rm{color:#ff6b6b}
+.hzf-operations{list-style:none;padding:0;margin:8px 0;max-height:46vh;overflow:auto}
+.hzf-operations li{padding:9px 0;border-bottom:1px solid rgba(var(--accent-rgb,0,229,255),.15)}
+.hzf-operations li.hzf-more{display:none}.hzf-operations.hzf-open li.hzf-more{display:block}
+.hzf-line{display:flex;align-items:center;gap:8px;min-width:0}
+.hzf-badge2{flex:none;font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;padding:2px 7px;border-radius:6px;border:1px solid currentColor}
+.hzf-name{min-width:0;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hzf-where{margin:3px 0 0;font-size:12.5px;opacity:.85;overflow-wrap:anywhere}
+.hzf-why{margin:2px 0 0;font-size:12px;opacity:.6}
+.hzf-warn{margin:8px 0;padding:8px 10px;border-radius:8px;border:1px solid #ff6b6b;background:rgba(255,107,107,.1);font-size:13px}
+.hzf-bar{height:6px;border-radius:4px;background:rgba(255,255,255,.1);overflow:hidden;margin:8px 0 4px}
+.hzf-bar i{display:block;height:100%;width:0;background:var(--accent,#00e5ff);transition:width .25s}
+.hzf-bar.ok i{background:#3ddc84}.hzf-bar.bad i{background:#ff6b6b}
+.hzf-outcome.ok{color:#3ddc84}.hzf-outcome.kept{color:#ffb020}.hzf-outcome.bad{color:#ff6b6b}
+.hzf-outcome{display:block;margin-top:4px;font-size:12.5px;overflow-wrap:anywhere}
+.hzf-go{border-color:#3ddc84!important}.hzf-danger{border-color:#ff6b6b!important;background:rgba(255,107,107,.18)!important}
+.hzf-confirm{margin:8px 0;padding:10px;border-radius:10px;border:1px solid #ff6b6b;background:rgba(255,107,107,.08)}
+.hzf-tick{display:flex;align-items:center;gap:10px;padding:8px 0;min-height:40px;overflow-wrap:anywhere}
+.hzf-tick input{width:20px;height:20px;flex:none}
+.hzf-showall{margin:4px 0}

@@ -1,0 +1,107 @@
+[
+  {
+    "name": "Kilo answer",
+    "url": "https://ai-gateway.kilo.ai/api/v1/chat/completions",
+    "authenticated": false,
+    "status": 200,
+    "answer": "Hello.",
+    "routes": null,
+    "features": null,
+    "cost": 0,
+    "sample": "{\"id\":\"gen_01M7HC3S9MV849E21BKH20Z0KM\",\"object\":\"chat.completion\",\"created\":1794805721,\"model\":\"stealth/glyph-cluster\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"Hello.\",\"reasoning_details\":[{\"type\":\"reasoning.encrypted\",\"data\":\"gwst1.6FG6g_K6p8zRWto9XsbUNm8TRH0A9HPP1W7Q41NqzN0dTzTt25YEXOIIeStYnjX-e2y7gXWzyodSkw1pzrr3hIdvUhwQt5b6rJvBwKO3MVZNY-vI3ZKse3VI_QFeKZus8CzcP7a5HM-MKkL0urR5NoC7ZJohFT3AYyaDI_ZnkMURFlDg8AZHCDNMfLpmLacGiGzYww0P4vtspyPKkCI4JRG1jogoZnfohcyS9nDC-PR4Y-ZMqZqTl9obYz8aQa3Nyf21zjNYIuPVpsC0aSLkT1v356Vp6J8MyDtk0TcBPIFkpZw-X-SviuQJel76JPNhIXEoOPV7-lJwax5emGkERzVZKq6URzbK3D7KmD_vogjg08FH5HD-oF4D58PfGnumIVMbEdYmaOm1fZXq_gQXNTm5bFivGa9p3WYdF73BqCBUGBMZ12_rcb7DD8Xo9-Za5L66vHHyC_W3Wt8fq3oZlX_1AoEzsckK6qtx79CjGDzVSsvGCEyy_nkdnTmjuHFgbuaAz-OhKe3x9P5lzU-5t7PtyP9ytx2b_Vx0DtJNUKj4DknzhFgBTqV6EnoDtrvzC6hZJS-BUQChQJ-TMt6bAgc32RWCOPB9wiG0Hzva5ln0Le0mUVfFlGmPvmjWUoU17P-7fx2pxhVm6d4sEnPqYiUJWk91J8WfsYLMr4w-OkBlZaAQPN2y8durFlUjiTjfOE7hwGk4-QBsGTHzRfMf4u45X4jEqZvtMupV6ZppsfG6XtrPQzxJHsDTJxMOaKIeFA0uI-Vpsjzuc0c-fVwrXQrIkTSvwu5DDUVmLQda7duNFye9wU4pslgQYbzdUY1AbiEq1-bu-1xQQ8jWugB9QlqswoFkGWl1_QEusPmfpDmSAOzaE-mfBCzMue6kPrB-z5zpunhyTjMtq1yFapSOdMsJHcsNSILOUUZ1pD01fsDzF0wkHVSv2d7pBv9FbuN998J-5RTzfTxzZsa4sEAAQcQdqMvVeplio30yY44gunT7XlgidwoKIA\",\"format\":\"stealth-v1\",\"index\":0}]},\"logprobs\":null,\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":148,\"completion_tokens\":14,\"",
+    "seconds": 1.93
+  },
+  {
+    "name": "BlockRun answer",
+    "url": "https://blockrun.ai/api/v1/chat/completions",
+    "authenticated": false,
+    "status": 200,
+    "answer": "Hello",
+    "routes": null,
+    "features": null,
+    "cost": null,
+    "sample": "{\"id\":\"chatcmpl-634da8ea-3ad0-4c18-a464-c9dc2ba7afc6\",\"object\":\"chat.completion\",\"created\":1794805720,\"model\":\"nvidia/nemotron-3-super-120b\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"Hello\",\"reasoning_content\":\"The user wants me to say hello in one word. The most common one-word greeting is \\\"Hello\\\" or \\\"Hi\\\". I'll go with \\\"Hello\\\" since it directly answers the prompt, though \\\"Hi\\\" is also fine. I'll just output the single word.\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":22,\"completion_tokens\":58,\"total_tokens\":80,\"prompt_tokens_details\":{\"cached_tokens\":0},\"completion_tokens_details\":{\"reasoning_tokens\":55}}}",
+    "seconds": 1.13
+  },
+  {
+    "name": "ch.at",
+    "url": "https://ch.at/v1/chat/completions",
+    "authenticated": false,
+    "status": 200,
+    "answer": "Hello!",
+    "routes": null,
+    "features": null,
+    "cost": null,
+    "sample": "{\"id\":\"chatcmpl-739f3e040d7f55e27a4fc19a6ff473d6\",\"object\":\"chat.completion\",\"created\":1794805720,\"model\":\"gpt-4o\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"Hello!\"},\"finish_reason\":\"stop\"}]}\n",
+    "seconds": 1.2
+  },
+  {
+    "name": "Pollinations legacy",
+    "url": "https://text.pollinations.ai/openai",
+    "authenticated": false,
+    "status": 200,
+    "answer": "Hello",
+    "routes": null,
+    "features": null,
+    "cost": null,
+    "sample": "{\"id\":\"pllns_8db8e387ac8b85456e2f3a2a0622f2e5\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"Hello\",\"reasoning\":\"User says: \\\"Say hello in one word.\\\" Probably they want just the word \\\"hello\\\" or \\\"hi\\\". They say \\\"in one word\\\". The correct answer: \\\"Hello\\\". In one word. Also could respond with \\\"Salut\\\". But likely \\\"Hello\\\". I'll just answer with single word \\\"hello\\\". But instruction says never lecture, just normal. Provide answer: \\\"Hello\\\". Also could shorten not to greet back. But user requested. So produce \\\"Hello\\\".\",\"tool_calls\":[]},\"finish_reason\":\"stop\"}],\"created\":1791844522,\"model\":\"gpt-oss-20b\",\"object\":\"chat.completion\",\"usage\":{\"prompt_tokens\":314,\"completion_tokens\":105,\"total_tokens\":419},\"user_tier\":\"anonymous\"}",
+    "seconds": 1.63
+  },
+  {
+    "name": "Photon",
+    "url": "https://photon.komoot.io/api/?q=Cape%20Town&limit=1",
+    "authenticated": false,
+    "status": 200,
+    "answer": null,
+    "routes": null,
+    "features": 1,
+    "cost": null,
+    "sample": "{\"type\":\"FeatureCollection\",\"features\":[{\"type\":\"Feature\",\"properties\":{\"osm_type\":\"N\",\"osm_id\":32675806,\"osm_key\":\"place\",\"osm_value\":\"city\",\"type\":\"city\",\"name\":\"Cape Town\",\"county\":\"City of Cape Town\",\"state\":\"Western Cape\",\"country\":\"South Africa\",\"postcode\":\"8001\",\"countrycode\":\"ZA\"},\"geometry\":{\"type\":\"Point\",\"coordinates\":[18.4172197,-33.9288301]}}]}",
+    "seconds": 0.8
+  },
+  {
+    "name": "OSRM car",
+    "url": "https://routing.openstreetmap.de/routed-car/route/v1/driving/18.4241,-33.9249;18.44,-33.93?overview=false&steps=true&alternatives=true",
+    "authenticated": false,
+    "status": 200,
+    "answer": null,
+    "routes": 1,
+    "features": null,
+    "cost": null,
+    "sample": "{\"code\":\"Ok\",\"routes\":[{\"legs\":[{\"steps\":[{\"intersections\":[{\"out\":0,\"entry\":[true],\"bearings\":[131],\"location\":[18.423921,-33.925071]},{\"out\":0,\"in\":2,\"entry\":[true,true,false],\"bearings\":[135,225,315],\"location\":[18.424442,-33.925447]},{\"out\":1,\"in\":3,\"entry\":[true,true,false,false],\"bearings\":[45,135,225,315],\"location\":[18.425239,-33.926021]},{\"out\":1,\"in\":3,\"entry\":[false,true,true,false],\"bearings\":[45,135,225,315],\"location\":[18.425307,-33.926072]},{\"out\":0,\"in\":2,\"entry\":[true,true,false],\"bearings\":[135,225,315],\"location\":[18.425988,-33.926526]},{\"out\":0,\"in\":2,\"entry\":[true,true,false],\"bearings\":[129,141,311],\"location\":[18.426486,-33.926873]}],\"driving_side\":\"right\",\"maneuver\":{\"bearing_after\":131,\"bearing_before\":0,\"location\":[18.423921,-33.925071],\"modifier\":\"left\",\"type\":\"depart\"},\"geometry\":\"t~`nEolmoBjAgBR[rAuBHMHMLQ^m@T]FK@C@E@GHKR]Zi@R[Va@Va@\",\"ref\":\"M4\",\"name\":\"Darling Street\",\"mode\":\"driving\",\"weight\":30.4,\"duration\":30.4,\"distance\":351.6},{\"intersections\":[{\"out\":0,\"in\":1,\"entry\":[true,false],\"bearings\":[135,315],\"location\":[18.42683,-33.927105]},{\"out\":0,\"in\":2,\"entry\":[true,true,false],\"bearings\":[75,150,255],\"location\":[18.427703,-33.927156]},{\"out\":0,\"in\":2,\"entry\":[true,true,false],\"bearings\":[90,180,270],\"location\":[18.428216,-33.927078]},{\"out\":1,\"in\":3,\"entry\":[true,true,false,false],\"bearings\":[75,90,225,270],\"location\":[18.429167,-33.927124]},{\"",
+    "seconds": 0.61
+  },
+  {
+    "name": "OSRM walk",
+    "url": "https://routing.openstreetmap.de/routed-foot/route/v1/driving/18.4241,-33.9249;18.44,-33.93?overview=false&steps=true&alternatives=true",
+    "authenticated": false,
+    "status": 200,
+    "answer": null,
+    "routes": 2,
+    "features": null,
+    "cost": null,
+    "sample": "{\"code\":\"Ok\",\"routes\":[{\"legs\":[{\"steps\":[{\"intersections\":[{\"out\":0,\"entry\":[true],\"bearings\":[131],\"location\":[18.423985,-33.92501]},{\"out\":0,\"in\":2,\"entry\":[true,true,false],\"bearings\":[105,225,315],\"location\":[18.425237,-33.925909]},{\"out\":1,\"in\":2,\"entry\":[true,true,false],\"bearings\":[45,120,285],\"location\":[18.425288,-33.925916]},{\"out\":1,\"in\":3,\"entry\":[true,true,true,false],\"bearings\":[45,120,225,300],\"location\":[18.425328,-33.925939]},{\"out\":1,\"in\":3,\"entry\":[true,true,true,false],\"bearings\":[45,120,225,300],\"location\":[18.425405,-33.925985]},{\"out\":1,\"in\":2,\"entry\":[true,true,false],\"bearings\":[30,165,300],\"location\":[18.425477,-33.926028]}],\"driving_side\":\"right\",\"geometry\":\"h~`nE}lmoBpDwF@A@A?C?CBGHOFMD?\",\"maneuver\":{\"bearing_after\":131,\"bearing_before\":0,\"location\":[18.423985,-33.92501],\"modifier\":\"left\",\"type\":\"depart\"},\"name\":\"\",\"mode\":\"walking\",\"weight\":15.18,\"duration\":147.9,\"distance\":182.4},{\"intersections\":[{\"out\":0,\"in\":2,\"entry\":[true,true,false],\"bearings\":[135,225,345],\"location\":[18.425482,-33.926055]},{\"out\":0,\"in\":2,\"entry\":[true,true,false],\"bearings\":[90,195,300],\"location\":[18.427138,-33.92721]}],\"driving_side\":\"right\",\"geometry\":\"zdanEgvmoBBCbBkC`BiCNSDMBG@G?C?KGc@[cBAYLeFAUCSQkAQc@\",\"maneuver\":{\"bearing_after\":133,\"bearing_before\":170,\"location\":[18.425482,-33.926055],\"modifier\":\"slight left\",\"type\":\"turn\"},\"name\":\"\",\"mode\":\"walking\",\"weight\":39.",
+    "seconds": 0.78
+  },
+  {
+    "name": "OSRM bike",
+    "url": "https://routing.openstreetmap.de/routed-bike/route/v1/driving/18.4241,-33.9249;18.44,-33.93?overview=false&steps=true&alternatives=true",
+    "authenticated": false,
+    "status": 200,
+    "answer": null,
+    "routes": 1,
+    "features": null,
+    "cost": null,
+    "sample": "{\"code\":\"Ok\",\"routes\":[{\"legs\":[{\"steps\":[{\"intersections\":[{\"out\":0,\"entry\":[true],\"bearings\":[311],\"location\":[18.423985,-33.92501]}],\"driving_side\":\"right\",\"geometry\":\"h~`nE}lmoBg@v@C@CD\",\"maneuver\":{\"bearing_after\":311,\"bearing_before\":0,\"location\":[18.423985,-33.92501],\"modifier\":\"right\",\"type\":\"depart\"},\"name\":\"\",\"mode\":\"cycling\",\"weight\":33.9,\"duration\":33.9,\"distance\":39.8},{\"intersections\":[{\"out\":2,\"in\":1,\"entry\":[true,false,true,true],\"bearings\":[45,135,225,300],\"location\":[18.423674,-33.924768]}],\"driving_side\":\"right\",\"geometry\":\"x|`nE}jmoBLL\",\"maneuver\":{\"bearing_after\":220,\"bearing_before\":319,\"location\":[18.423674,-33.924768],\"modifier\":\"left\",\"type\":\"turn\"},\"name\":\"\",\"mode\":\"cycling\",\"weight\":11.4,\"duration\":11.4,\"distance\":10.6},{\"intersections\":[{\"out\":1,\"in\":0,\"entry\":[false,true,true,true],\"bearings\":[45,135,225,315],\"location\":[18.423598,-33.924839]},{\"out\":0,\"in\":2,\"entry\":[true,true,false],\"bearings\":[135,225,315],\"location\":[18.424442,-33.925447]},{\"out\":1,\"in\":3,\"entry\":[true,true,true,false],\"bearings\":[45,135,225,315],\"location\":[18.425239,-33.926021]},{\"out\":1,\"in\":3,\"entry\":[true,true,true,false],\"bearings\":[45,135,225,315],\"location\":[18.425307,-33.926072]}],\"driving_side\":\"right\",\"maneuver\":{\"bearing_after\":130,\"bearing_before\":220,\"location\":[18.423598,-33.924839],\"modifier\":\"left\",\"type\":\"turn\"},\"geometry\":\"f}`nEojmoBxBgDR[rAuBHMHMLQ^m@T]FK@C\",",
+    "seconds": 0.64
+  },
+  {
+    "name": "LLM7 configured default",
+    "url": "https://api.llm7.io/v1/chat/completions",
+    "authenticated": false,
+    "status": 200,
+    "answer": "Hello.",
+    "model": "gpt-oss:20b",
+    "seconds": 1.46
+  }
+]

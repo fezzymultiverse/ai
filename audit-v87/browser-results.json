@@ -1,0 +1,77 @@
+{
+  "ok": true,
+  "checks": [
+    "All seeded providers use one request and the exact manually selected model",
+    "429, 403, 402 and keyless failure never contact another provider/model/key",
+    "Cloudflare sends Account ID in URL and API token only in Authorization",
+    "Cohere uses v2 chat messages array",
+    "Paid-only providers, router aliases and unknown models are blocked before network I/O",
+    "Groq image request cannot silently switch a text model to a vision model",
+    "Provider-reported model substitution is rejected",
+    "Failures and legacy migrations preserve saved provider and model selections",
+    "Voice transcription never falls back to another provider",
+    "Every TTS group stacks vertically; Edge selectors and Test buttons are full-width and stacked",
+    "Original chat/header/composer geometry preserved at 360px",
+    "Original chat/header/composer geometry preserved at 412px",
+    "No uncaught JavaScript errors"
+  ],
+  "geometry": [
+    {
+      "id": "ttsEdgeGroup",
+      "x": 21,
+      "y": 281.0625,
+      "width": 371,
+      "height": 4184
+    },
+    {
+      "id": "ttsAndroidGroup",
+      "x": 21,
+      "y": 4477.0625,
+      "width": 371,
+      "height": 625
+    },
+    {
+      "id": "ttsTimingGroup",
+      "x": 21,
+      "y": 5114.0625,
+      "width": 371,
+      "height": 329
+    },
+    {
+      "id": "ttsNaturalGroup",
+      "x": 21,
+      "y": 5455.0625,
+      "width": 371,
+      "height": 474
+    },
+    {
+      "id": "ttsCharacterGroup",
+      "x": 21,
+      "y": 5941.0625,
+      "width": 371,
+      "height": 1442.5
+    },
+    {
+      "id": "ttsEqGroup",
+      "x": 21,
+      "y": 7395.5625,
+      "width": 371,
+      "height": 399
+    },
+    {
+      "id": "ttsDynamicsGroup",
+      "x": 21,
+      "y": 7806.5625,
+      "width": 371,
+      "height": 851
+    },
+    {
+      "id": "ttsCreativeGroup",
+      "x": 21,
+      "y": 8669.5625,
+      "width": 371,
+      "height": 512
+    }
+  ],
+  "inferenceRequestCount": 20
+}

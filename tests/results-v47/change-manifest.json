@@ -1,0 +1,103 @@
+{
+  "base": "horizon-V1_99_46.zip",
+  "release": "V1.99.47",
+  "changed_files": [
+    {
+      "file": "TEST_REPORT.html",
+      "change": "modified",
+      "bytes": 9274,
+      "sha256": "b3b91fbb4af0765e64da4ce0caf3c8610516f2531973b8592d147eca8a8cc04f"
+    },
+    {
+      "file": "tests/native-first.browser.cjs",
+      "change": "added",
+      "bytes": 9220,
+      "sha256": "f4c443319003e9c8565a3398ced35c01e3d9f9fc04df80265be6322e1590656e"
+    },
+    {
+      "file": "tests/native-first.test.cjs",
+      "change": "added",
+      "bytes": 12776,
+      "sha256": "3a472141a6ccfed3f607dfdeba01e8bebdde4ccaafdd86ea88f5b17233c373c6"
+    },
+    {
+      "file": "tests/results-v47/browser-results.json",
+      "change": "added",
+      "bytes": 1949,
+      "sha256": "12ebaedb88ed8f849a2488f7449402108385844c9a20166526eb1eab1f17264f"
+    },
+    {
+      "file": "tests/results-v47/python-tests.txt",
+      "change": "added",
+      "bytes": 103,
+      "sha256": "3e14b7437ac6bb9dea83e1182381e29343fd79b4cfc4703ee7c180a781f633a8"
+    },
+    {
+      "file": "tests/results-v47/summary.json",
+      "change": "added",
+      "bytes": 695,
+      "sha256": "1526ab59f0e3cdd9b36f114461e177bccab0b6a0d79926bccf94e6c09ca91fb2"
+    },
+    {
+      "file": "tests/results-v47/syntax-checks.json",
+      "change": "added",
+      "bytes": 5677,
+      "sha256": "65cb3a62833bb40057b75d0b658eefd55a8fd73f4fba24c4dfd4ab8f5f53ea14"
+    },
+    {
+      "file": "tests/results-v47/unit-tests.tap",
+      "change": "added",
+      "bytes": 30179,
+      "sha256": "6b5db3d2a0d7362baf4cd8ab8e36608a087972a6acbbe4ecf457579a3d17a209"
+    },
+    {
+      "file": "www/horizon_about.js",
+      "change": "modified",
+      "bytes": 103088,
+      "sha256": "cd01d1b8ab9636a6ce0a3043b28e6d50f07602e92324eb97dfa71c917fec1b12"
+    },
+    {
+      "file": "www/horizon_bridges.js",
+      "change": "modified",
+      "bytes": 16057,
+      "sha256": "706e00222e4fb5e41c9bb88923c73564fbc0b1335914fda3401765ac8f310afc"
+    },
+    {
+      "file": "www/horizon_dash.js",
+      "change": "modified",
+      "bytes": 64374,
+      "sha256": "b9472651e7438582a3958895b8741f0ec4a28219a555e252e77efe1658c88003"
+    },
+    {
+      "file": "www/horizon_music.js",
+      "change": "modified",
+      "bytes": 69904,
+      "sha256": "5b5815bba5e97d8ab5a31cf89b6e4c2d518b2e3fbef9a83b5ed30516c3600581"
+    },
+    {
+      "file": "www/horizon_runlog.js",
+      "change": "modified",
+      "bytes": 5769,
+      "sha256": "bafec0b618ba8f76e06545683afd9f9d52e868f5683a8abd887b297f6864a8aa"
+    },
+    {
+      "file": "www/horizon_termai.js",
+      "change": "modified",
+      "bytes": 17000,
+      "sha256": "c88489dd8a5aeec9a7083233cf33095bd639c57ba3c922385bf657e3e6eeadd7"
+    },
+    {
+      "file": "www/horizon_toolpolicy.js",
+      "change": "added",
+      "bytes": 11232,
+      "sha256": "f0b999ef5221691b4395a7dee6ed53fe8b4e0d187ed8b5efc59a6e5c26217330"
+    },
+    {
+      "file": "www/index.html",
+      "change": "modified",
+      "bytes": 617658,
+      "sha256": "b18f82a02d386af171e43c15dea559b6c95ec9d6b87743613493951905f93c99"
+    }
+  ],
+  "deleted_original_files": []
+}

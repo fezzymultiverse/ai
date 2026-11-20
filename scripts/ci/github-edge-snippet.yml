@@ -1,0 +1,39 @@
+# Horizon V1.99.54 - GitHub Actions: put these steps in your existing APK build job, in this order.
+# They go AFTER actions/checkout, Node and Java are set up, and BEFORE the gradle build step.
+# If android/ is committed in your repo, delete the "cap add" line.
+#
+#      - run: npm ci
+#      - run: npx cap add android || true
+#      - run: npx cap sync android
+#      - run: bash scripts/install_edge.sh android --apply
+#      - run: bash scripts/edge_kit.sh --check android
+#      - run: cd android && ./gradlew assembleDebug
+#
+# The --check step FAILS the build with a plain reason when the Edge plugin is not really inside android/,
+# so you never again get an APK that says "HorizonEdgeVoice is missing".
+#
+# Example job:
+name: build-apk
+on: [push, workflow_dispatch]
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: npm ci
+      - run: npx cap add android || true
+      - run: npx cap sync android
+      - run: bash scripts/install_edge.sh android --apply
+      - run: bash scripts/edge_kit.sh --check android
+      - run: cd android && ./gradlew assembleDebug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: horizon-apk
+          path: android/app/build/outputs/apk/debug/*.apk

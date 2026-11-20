@@ -1,0 +1,83 @@
+{
+  "rows": [
+    {
+      "theme": "dark",
+      "width": 320,
+      "result": "pass",
+      "checks": [
+        "five tiles, downloads opens",
+        "20 stat icons, four controls, no overflow",
+        "real browser WAV playback pulses header; pause stops; lyric-state fixture also pulses",
+        "cyan title-only left navigation",
+        "calendar above panel, save and dismiss",
+        "contact and AI checkbox rail aligned"
+      ]
+    },
+    {
+      "theme": "dark",
+      "width": 393,
+      "result": "pass",
+      "checks": [
+        "five tiles, downloads opens",
+        "20 stat icons, four controls, no overflow",
+        "real browser WAV playback pulses header; pause stops; lyric-state fixture also pulses",
+        "cyan title-only left navigation",
+        "calendar above panel, save and dismiss",
+        "contact and AI checkbox rail aligned"
+      ]
+    },
+    {
+      "theme": "dark",
+      "width": 768,
+      "result": "pass",
+      "checks": [
+        "five tiles, downloads opens",
+        "20 stat icons, four controls, no overflow",
+        "real browser WAV playback pulses header; pause stops; lyric-state fixture also pulses",
+        "cyan title-only left navigation",
+        "calendar above panel, save and dismiss",
+        "contact and AI checkbox rail aligned"
+      ]
+    },
+    {
+      "theme": "grey",
+      "width": 320,
+      "result": "pass",
+      "checks": [
+        "five tiles, downloads opens",
+        "20 stat icons, four controls, no overflow",
+        "real browser WAV playback pulses header; pause stops; lyric-state fixture also pulses",
+        "cyan title-only left navigation",
+        "calendar above panel, save and dismiss",
+        "contact and AI checkbox rail aligned"
+      ]
+    },
+    {
+      "theme": "grey",
+      "width": 393,
+      "result": "pass",
+      "checks": [
+        "five tiles, downloads opens",
+        "20 stat icons, four controls, no overflow",
+        "real browser WAV playback pulses header; pause stops; lyric-state fixture also pulses",
+        "cyan title-only left navigation",
+        "calendar above panel, save and dismiss",
+        "contact and AI checkbox rail aligned"
+      ]
+    },
+    {
+      "theme": "grey",
+      "width": 768,
+      "result": "pass",
+      "checks": [
+        "five tiles, downloads opens",
+        "20 stat icons, four controls, no overflow",
+        "real browser WAV playback pulses header; pause stops; lyric-state fixture also pulses",
+        "cyan title-only left navigation",
+        "calendar above panel, save and dismiss",
+        "contact and AI checkbox rail aligned"
+      ]
+    }
+  ],
+  "errors": []
+}

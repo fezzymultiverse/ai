@@ -1,0 +1,146 @@
+[
+  {
+    "path": "Horizon-preview.html",
+    "status": "modified",
+    "sha256": "731b8919a4d3221e39319b07c3078d82d6eef710898494ba7123878a4150600e",
+    "bytes": 481
+  },
+  {
+    "path": "PATCH_REPORT.html",
+    "status": "added",
+    "sha256": "55dcb627e6846ba1477c72bfc9712d9717934ca63547e518abfaef06710799ac",
+    "bytes": 14872
+  },
+  {
+    "path": "scripts/apply_repair_v62.py",
+    "status": "added",
+    "sha256": "f408a05c8cac3ddc316d3a59e9323cebc8d78f0d342ce67a5589b48d442e48aa",
+    "bytes": 3606
+  },
+  {
+    "path": "tests/chatbox-v55.test.cjs",
+    "status": "modified",
+    "sha256": "485ff37f24b9ea7056c35faa810cd1dfba02c95938ebd1e0de1f9e2c170ece61",
+    "bytes": 2533
+  },
+  {
+    "path": "tests/docview-v56.test.cjs",
+    "status": "modified",
+    "sha256": "071708beec6cf77f906882fa5877bc0ea544aa392ae23cae1b6b4387f676b48b",
+    "bytes": 5880
+  },
+  {
+    "path": "tests/keyless-v57.test.cjs",
+    "status": "modified",
+    "sha256": "c3a2c8bb49a451545b88fe61dd2cfac3ae5a773082c9d9d4f9583ffba03a5937",
+    "bytes": 4633
+  },
+  {
+    "path": "tests/maps-v61.test.cjs",
+    "status": "modified",
+    "sha256": "0e0752fa069552a764e597d0843f96abaa5e2a2a952d6a3a8dc3a62e4f9f1cf7",
+    "bytes": 4729
+  },
+  {
+    "path": "tests/repair-v62.browser.cjs",
+    "status": "added",
+    "sha256": "f1c1d5747ee9a537a39669bd222096ac0e147775e2bf456ff2fda6380e33ea1a",
+    "bytes": 10956
+  },
+  {
+    "path": "tests/repair-v62.test.cjs",
+    "status": "added",
+    "sha256": "56829c2860d706b79ca6a56456da48f547c2369032fbf052ba1d77ec6d2287ee",
+    "bytes": 5646
+  },
+  {
+    "path": "tests/ytmatch-v54.test.cjs",
+    "status": "modified",
+    "sha256": "4a0ca154289ac342da63ff8ab20ce8f08e108fd726db2e1599e130464356e82c",
+    "bytes": 7097
+  },
+  {
+    "path": "www/horizon_about.js",
+    "status": "modified",
+    "sha256": "bdd6cb433c5ca5508e90210677d4ca27cd330780889e48cd3d91d75ec9f8db26",
+    "bytes": 110498
+  },
+  {
+    "path": "www/horizon_addons.js",
+    "status": "modified",
+    "sha256": "1641471f367d3ea34fffb700cc8c116c230098e415df2180262df1b665793a97",
+    "bytes": 5830
+  },
+  {
+    "path": "www/horizon_browser.js",
+    "status": "modified",
+    "sha256": "c5dbf2c1e5a78258adbb8a1ffe481c9b1431df7a3edcf174adb859adeb07dd7b",
+    "bytes": 62848
+  },
+  {
+    "path": "www/horizon_dash.js",
+    "status": "modified",
+    "sha256": "ea6ccd50248df0fe684de8010401440452d427d8b022415ac30382cd558e6a1f",
+    "bytes": 65276
+  },
+  {
+    "path": "www/horizon_maps.css",
+    "status": "modified",
+    "sha256": "32f793f7320271f7563c2bf4aee6585c090808a305f5cf86b304f7a76f4b3b03",
+    "bytes": 4944
+  },
+  {
+    "path": "www/horizon_maps.js",
+    "status": "modified",
+    "sha256": "08ffea6335eb43d713e90301cff1dd96603fd8e9b26705f132911d9f16be97f0",
+    "bytes": 55584
+  },
+  {
+    "path": "www/horizon_net.js",
+    "status": "added",
+    "sha256": "1f9b9f2c1c09f9552f78173b74d35bc96f9363cb493eb87aa9e7876fa8021737",
+    "bytes": 3911
+  },
+  {
+    "path": "www/horizon_release.js",
+    "status": "modified",
+    "sha256": "0d2ab375a4086d11e8f56ffd3fc878af355718dc01742c1f88e2b61605c49d80",
+    "bytes": 2106
+  },
+  {
+    "path": "www/horizon_rss.js",
+    "status": "modified",
+    "sha256": "0f60be53be74ef8041e8cf81305ea2510d22821bbbf7f6eff9545e26e8713741",
+    "bytes": 50968
+  },
+  {
+    "path": "www/horizon_toolpolicy.js",
+    "status": "modified",
+    "sha256": "6ca9f11b09d12b8fd53a0fc1ce3d1508942f620f63c82b9c41190c7aa1e86200",
+    "bytes": 12405
+  },
+  {
+    "path": "www/index.html",
+    "status": "modified",
+    "sha256": "016ce5849403010271c351a310f1094dd65582ab391784b82af25e499877461e",
+    "bytes": 661550
+  },
+  {
+    "path": "www/vendor/leaflet/LICENSE",
+    "status": "added",
+    "sha256": "53e8dc25862014e4324741ca18fbe3611e11d42ef69f59f86ea8c5389647d4cb",
+    "bytes": 1395
+  },
+  {
+    "path": "www/vendor/leaflet/leaflet.css",
+    "status": "added",
+    "sha256": "a7837102824184820dfa198d1ebcd109ff6d0ff9a2672a074b9a1b4d147d04c6",
+    "bytes": 14806
+  },
+  {
+    "path": "www/vendor/leaflet/leaflet.js",
+    "status": "added",
+    "sha256": "db49d009c841f5ca34a888c96511ae936fd9f5533e90d8b2c4d57596f4e5641a",
+    "bytes": 147552
+  }
+]

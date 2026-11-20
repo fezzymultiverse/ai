@@ -1,0 +1,12 @@
+test_01_original_quoting_unicode_multiline (__main__.RuntimeTests.test_01_original_quoting_unicode_multiline) ... ok
+test_02_exit_codes_not_wrapper_exit_one (__main__.RuntimeTests.test_02_exit_codes_not_wrapper_exit_one) ... ok
+test_03_large_output_not_cut_off (__main__.RuntimeTests.test_03_large_output_not_cut_off) ... ok
+test_04_input_and_hidden_password (__main__.RuntimeTests.test_04_input_and_hidden_password) ... ok
+test_05_cwd_and_interrupt (__main__.RuntimeTests.test_05_cwd_and_interrupt) ... ok
+test_06_actual_download_and_upload (__main__.RuntimeTests.test_06_actual_download_and_upload) ... ok
+test_07_actual_git_push (__main__.RuntimeTests.test_07_actual_git_push) ... ok
+
+----------------------------------------------------------------------
+Ran 7 tests in 1.115s
+
+OK

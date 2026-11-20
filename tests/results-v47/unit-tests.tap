@@ -1,0 +1,832 @@
+TAP version 13
+# Subtest: voice names are sanitised and fall back per provider, then to the default
+ok 1 - voice names are sanitised and fall back per provider, then to the default
+  ---
+  duration_ms: 4.674162
+  type: 'test'
+  ...
+# Subtest: Speed slider maps to a percent rate, clamped
+ok 2 - Speed slider maps to a percent rate, clamped
+  ---
+  duration_ms: 1.401559
+  type: 'test'
+  ...
+# Subtest: wants(): needs the native plugin, the switch, and honours the failure cooldown
+ok 3 - wants(): needs the native plugin, the switch, and honours the failure cooldown
+  ---
+  duration_ms: 2.661337
+  type: 'test'
+  ...
+# Subtest: play(): one speak() call with all chunks, playing then ended resolves true
+ok 4 - play(): one speak() call with all chunks, playing then ended resolves true
+  ---
+  duration_ms: 7.859221
+  type: 'test'
+  ...
+# Subtest: play(): provider voice is used when the job has none; events of other ids are ignored
+ok 5 - play(): provider voice is used when the job has none; events of other ids are ignored
+  ---
+  duration_ms: 1.68581
+  type: 'test'
+  ...
+# Subtest: play(): failure before any sound rejects (HorizonTTS then uses the Android voice)
+ok 6 - play(): failure before any sound rejects (HorizonTTS then uses the Android voice)
+  ---
+  duration_ms: 3.104615
+  type: 'test'
+  ...
+# Subtest: play(): failure after sound started ends quietly (no second read) and starts the cooldown
+ok 7 - play(): failure after sound started ends quietly (no second read) and starts the cooldown
+  ---
+  duration_ms: 1.56921
+  type: 'test'
+  ...
+# Subtest: play(): speak() rejection (plugin not registered natively) rejects
+ok 8 - play(): speak() rejection (plugin not registered natively) rejects
+  ---
+  duration_ms: 1.38283
+  type: 'test'
+  ...
+# Subtest: stop() resolves play() false and stops the plugin; pause/resume are forwarded
+ok 9 - stop() resolves play() false and stops the plugin; pause/resume are forwarded
+  ---
+  duration_ms: 2.09046
+  type: 'test'
+  ...
+# Subtest: HorizonTTS routes to Edge when it wants the reply, and reports playing then idle
+ok 10 - HorizonTTS routes to Edge when it wants the reply, and reports playing then idle
+  ---
+  duration_ms: 2.483951
+  type: 'test'
+  ...
+# Subtest: HorizonTTS falls through to the Android voice when Edge fails (never silent, never stuck)
+ok 11 - HorizonTTS falls through to the Android voice when Edge fails (never silent, never stuck)
+  ---
+  duration_ms: 1.486705
+  type: 'test'
+  ...
+# Subtest: Edge off or not wanted: HorizonTTS behaves exactly as before
+ok 12 - Edge off or not wanted: HorizonTTS behaves exactly as before
+  ---
+  duration_ms: 1.058881
+  type: 'test'
+  ...
+# Subtest: Termux is gone from the Edge path (JS, Kotlin, scripts)
+ok 13 - Termux is gone from the Edge path (JS, Kotlin, scripts)
+  ---
+  duration_ms: 0.676248
+  type: 'test'
+  ...
+# Subtest: Kotlin side: real Edge endpoint + protocol markers, streamed from memory, no files
+ok 14 - Kotlin side: real Edge endpoint + protocol markers, streamed from memory, no files
+  ---
+  duration_ms: 0.685689
+  type: 'test'
+  ...
+# Subtest: Kotlin side: balanced braces and parentheses in every file (cheap syntax tripwire, no kotlinc here)
+ok 15 - Kotlin side: balanced braces and parentheses in every file (cheap syntax tripwire, no kotlinc here)
+  ---
+  duration_ms: 0.759836
+  type: 'test'
+  ...
+# Subtest: wiring: script tag, provider passed from speaker button and auto-read
+ok 16 - wiring: script tag, provider passed from speaker button and auto-read
+  ---
+  duration_ms: 3.235685
+  type: 'test'
+  ...
+# Subtest: front script is loaded after horizon_v2.js and is syntactically safe to bail out
+ok 17 - front script is loaded after horizon_v2.js and is syntactically safe to bail out
+  ---
+  duration_ms: 1.720916
+  type: 'test'
+  ...
+# Subtest: tiles are in the asked order and open the existing handlers
+ok 18 - tiles are in the asked order and open the existing handlers
+  ---
+  duration_ms: 0.259119
+  type: 'test'
+  ...
+# Subtest: right panel: GitHub row, Vault row and Music tile are hidden, not deleted
+ok 19 - right panel: GitHub row, Vault row and Music tile are hidden, not deleted
+  ---
+  duration_ms: 0.318118
+  type: 'test'
+  ...
+# Subtest: header is a pinned three-row grid and the stylesheet is cache-busted
+ok 20 - header is a pinned three-row grid and the stylesheet is cache-busted
+  ---
+  duration_ms: 0.270745
+  type: 'test'
+  ...
+# Subtest: grey theme defines --text (dark text) and --bg (light header)
+ok 21 - grey theme defines --text (dark text) and --bg (light header)
+  ---
+  duration_ms: 1.401743
+  type: 'test'
+  ...
+# Subtest: grey theme: the 5 header tiles and the group dropdown have readable text
+ok 22 - grey theme: the 5 header tiles and the group dropdown have readable text
+  ---
+  duration_ms: 0.476197
+  type: 'test'
+  ...
+# Subtest: dark theme is untouched: --text / --bg only defined under grey
+ok 23 - dark theme is untouched: --text / --bg only defined under grey
+  ---
+  duration_ms: 0.597883
+  type: 'test'
+  ...
+# Subtest: LRC: stamps, multiple stamps, offset, metadata, enhanced word stamps, gaps
+ok 24 - LRC: stamps, multiple stamps, offset, metadata, enhanced word stamps, gaps
+  ---
+  duration_ms: 4.337127
+  type: 'test'
+  ...
+# Subtest: isSynced needs real lines and a real time span
+ok 25 - isSynced needs real lines and a real time span
+  ---
+  duration_ms: 0.914101
+  type: 'test'
+  ...
+# Subtest: activeIndex: last line at or before the clock
+ok 26 - activeIndex: last line at or before the clock
+  ---
+  duration_ms: 1.713379
+  type: 'test'
+  ...
+# Subtest: title cleaning: noise, feat, Artist - Title, unknown artist
+ok 27 - title cleaning: noise, feat, Artist - Title, unknown artist
+  ---
+  duration_ms: 2.674816
+  type: 'test'
+  ...
+# Subtest: plain lyrics: lyrics.ovh header removed, blank runs collapsed
+ok 28 - plain lyrics: lyrics.ovh header removed, blank runs collapsed
+  ---
+  duration_ms: 1.038373
+  type: 'test'
+  ...
+# Subtest: tool grammar: show / hide only, capped, nothing else matches
+ok 29 - tool grammar: show / hide only, capped, nothing else matches
+  ---
+  duration_ms: 1.209843
+  type: 'test'
+  ...
+# Subtest: "show lyrics" / "play lyrics" trigger, and what must not trigger
+ok 30 - "show lyrics" / "play lyrics" trigger, and what must not trigger
+  ---
+  duration_ms: 1.652606
+  type: 'test'
+  ...
+# Subtest: LRCLIB synced result wins, with no key and only the two keyless hosts
+ok 31 - LRCLIB synced result wins, with no key and only the two keyless hosts
+  ---
+  duration_ms: 11.062303
+  type: 'test'
+  ...
+# Subtest: falls back to lyrics.ovh (plain) when LRCLIB has nothing
+ok 32 - falls back to lyrics.ovh (plain) when LRCLIB has nothing
+  ---
+  duration_ms: 2.638971
+  type: 'test'
+  ...
+# Subtest: a time-stamped version for a very different length is used as plain text, never mis-synced
+ok 33 - a time-stamped version for a very different length is used as plain text, never mis-synced
+  ---
+  duration_ms: 3.389406
+  type: 'test'
+  ...
+# Subtest: both services down: quiet error with Retry, no throw, player untouched
+ok 34 - both services down: quiet error with Retry, no throw, player untouched
+  ---
+  duration_ms: 3.365511
+  type: 'test'
+  ...
+# Subtest: both services answer "not found": says so (not a network error)
+ok 35 - both services answer "not found": says so (not a network error)
+  ---
+  duration_ms: 1.696793
+  type: 'test'
+  ...
+# Subtest: garbage responses (HTML, null, wrong shape) are survived
+ok 36 - garbage responses (HTML, null, wrong shape) are survived
+  ---
+  duration_ms: 7.685142
+  type: 'test'
+  ...
+# Subtest: Retry after a failure loads again and a repeat song comes from the cache with no network
+ok 37 - Retry after a failure loads again and a repeat song comes from the cache with no network
+  ---
+  duration_ms: 224.143049
+  type: 'test'
+  ...
+# Subtest: nothing playing: friendly note, then the lyrics arrive when a song starts
+ok 38 - nothing playing: friendly note, then the lyrics arrive when a song starts
+  ---
+  duration_ms: 3.092145
+  type: 'test'
+  ...
+# Subtest: works without the music module at all (no crash, empty state)
+ok 39 - works without the music module at all (no crash, empty state)
+  ---
+  duration_ms: 1.045719
+  type: 'test'
+  ...
+# Subtest: synced lines light up and scroll with the player clock; a new song reloads on its own
+ok 40 - synced lines light up and scroll with the player clock; a new song reloads on its own
+  ---
+  duration_ms: 2.753981
+  type: 'test'
+  ...
+# Subtest: plain lyrics glide with progress (seek moves it, no jumps)
+ok 41 - plain lyrics glide with progress (seek moves it, no jumps)
+  ---
+  duration_ms: 2.999966
+  type: 'test'
+  ...
+# Subtest: X closes the box, stops the loop, and reopening works
+ok 42 - X closes the box, stops the loop, and reopening works
+  ---
+  duration_ms: 225.122385
+  type: 'test'
+  ...
+# Subtest: typing "show lyrics" no longer opens the widget: only the AI can open it
+ok 43 - typing "show lyrics" no longer opens the widget: only the AI can open it
+  ---
+  duration_ms: 0.971177
+  type: 'test'
+  ...
+# Subtest: club lights + glass are in the stylesheet (blur, three colours, keyframes, reduced motion, lite mode)
+ok 44 - club lights + glass are in the stylesheet (blur, three colours, keyframes, reduced motion, lite mode)
+  ---
+  duration_ms: 1.386924
+  type: 'test'
+  ...
+# Subtest: the box is hidden from the Screen reader and built with textContent only (no innerHTML)
+ok 45 - the box is hidden from the Screen reader and built with textContent only (no innerHTML)
+  ---
+  duration_ms: 1.782314
+  type: 'test'
+  ...
+# Subtest: AI block: closed is tiny; ready carries the line on screen and the lyrics; V1.99.13: the music eye no longer hides it
+ok 46 - AI block: closed is tiny; ready carries the line on screen and the lyrics; V1.99.13: the music eye no longer hides it
+  ---
+  duration_ms: 3.015235
+  type: 'test'
+  ...
+# Subtest: lyrics can never fire a tool: [[ ]] and fences are defused, Termux tags included
+ok 47 - lyrics can never fire a tool: [[ ]] and fences are defused, Termux tags included
+  ---
+  duration_ms: 1.952321
+  type: 'test'
+  ...
+# Subtest: long songs hand the AI a bounded window around the live line
+ok 48 - long songs hand the AI a bounded window around the live line
+  ---
+  duration_ms: 7.903055
+  type: 'test'
+  ...
+# Subtest: run(): show returns lyrics, hide closes, and failures come back as ERROR text, never a throw
+ok 49 - run(): show returns lyrics, hide closes, and failures come back as ERROR text, never a throw
+  ---
+  duration_ms: 1.920757
+  type: 'test'
+  ...
+# Subtest: index.html wiring: script after the player, prompt block, tool loop, tag strip, user trigger
+ok 50 - index.html wiring: script after the player, prompt block, tool loop, tag strip, user trigger
+  ---
+  duration_ms: 1.294007
+  type: 'test'
+  ...
+# Subtest: the Music Player is only READ: nowInfo has no play, pause, seek or assignment
+ok 51 - the Music Player is only READ: nowInfo has no play, pause, seek or assignment
+  ---
+  duration_ms: 0.477374
+  type: 'test'
+  ...
+# Subtest: the Termux bridge is not touched or referenced by the lyric module
+ok 52 - the Termux bridge is not touched or referenced by the lyric module
+  ---
+  duration_ms: 3.335623
+  type: 'test'
+  ...
+# Subtest: no API key anywhere: only keyless hosts, no Authorization header
+ok 53 - no API key anywhere: only keyless hosts, no Authorization header
+  ---
+  duration_ms: 0.322353
+  type: 'test'
+  ...
+# Subtest: V1.97.2: "Artist • Title [unreleased]" uses the title artist, not the uploader channel
+ok 54 - V1.97.2: "Artist • Title [unreleased]" uses the title artist, not the uploader channel
+  ---
+  duration_ms: 1.325038
+  type: 'test'
+  ...
+# Subtest: V1.97.2: a lookalike song is rejected, never shown
+ok 55 - V1.97.2: a lookalike song is rejected, never shown
+  ---
+  duration_ms: 2.956622
+  type: 'test'
+  ...
+# Subtest: V1.97.2: Genius scrape is used when LRCLIB has nothing
+ok 56 - V1.97.2: Genius scrape is used when LRCLIB has nothing
+  ---
+  duration_ms: 2.275324
+  type: 'test'
+  ...
+# Subtest: V1.97.2: box is a compact strip with a saved S/M/L size button
+ok 57 - V1.97.2: box is a compact strip with a saved S/M/L size button
+  ---
+  duration_ms: 0.1732
+  type: 'test'
+  ...
+# Subtest: native-first contract is complete (full)
+ok 58 - native-first contract is complete (full)
+  ---
+  duration_ms: 3.422675
+  type: 'test'
+  ...
+# Subtest: native-first contract is complete (lite/keyless)
+ok 59 - native-first contract is complete (lite/keyless)
+  ---
+  duration_ms: 1.015734
+  type: 'test'
+  ...
+# Subtest: disabled tool schemas are not advertised as live; native permissions independent of Web
+ok 60 - disabled tool schemas are not advertised as live; native permissions independent of Web
+  ---
+  duration_ms: 0.947549
+  type: 'test'
+  ...
+# Subtest: only real Web operations are advertised to lite models
+ok 61 - only real Web operations are advertised to lite models
+  ---
+  duration_ms: 1.1453
+  type: 'test'
+  ...
+# Subtest: shared full/lite prompt builders inject the contract without truncating schemas
+ok 62 - shared full/lite prompt builders inject the contract without truncating schemas
+  ---
+  duration_ms: 3.054606
+  type: 'test'
+  ...
+# Subtest: all provider protocols retain shared prompts; gateway model walk recomputes the prompt
+ok 63 - all provider protocols retain shared prompts; gateway model walk recomputes the prompt
+  ---
+  duration_ms: 0.499519
+  type: 'test'
+  ...
+# Subtest: native-action Web guard blocks actions, not research or scraper programming
+ok 64 - native-action Web guard blocks actions, not research or scraper programming
+  ---
+  duration_ms: 2.196446
+  type: 'test'
+  ...
+# Subtest: NewPipe search uses native first and never silently starts Termux
+ok 65 - NewPipe search uses native first and never silently starts Termux
+  ---
+  duration_ms: 3.739907
+  type: 'test'
+  ...
+# Subtest: old automatic Termux fallback implementations were removed, not duplicated
+ok 66 - old automatic Termux fallback implementations were removed, not duplicated
+  ---
+  duration_ms: 0.650776
+  type: 'test'
+  ...
+# Subtest: native queue appends without playing, and uses the existing player
+ok 67 - native queue appends without playing, and uses the existing player
+  ---
+  duration_ms: 3.656241
+  type: 'test'
+  ...
+# Subtest: alarm.set and calendar.add parse correctly; fenced examples do not execute
+ok 68 - alarm.set and calendar.add parse correctly; fenced examples do not execute
+  ---
+  duration_ms: 2.433588
+  type: 'test'
+  ...
+# Subtest: wake alarm waits for native confirmation and returns exact local date/time
+ok 69 - wake alarm waits for native confirmation and returns exact local date/time
+  ---
+  duration_ms: 2.245858
+  type: 'test'
+  ...
+# Subtest: calendar reminders use remind mode, plain events do not schedule a native notification
+ok 70 - calendar reminders use remind mode, plain events do not schedule a native notification
+  ---
+  duration_ms: 1.21024
+  type: 'test'
+  ...
+# Subtest: retry is idempotent: same calendar row and Android id
+ok 71 - retry is idempotent: same calendar row and Android id
+  ---
+  duration_ms: 1.205125
+  type: 'test'
+  ...
+# Subtest: calendar/alarm mode conflict is reported instead of pretending an existing note is an alarm
+ok 72 - calendar/alarm mode conflict is reported instead of pretending an existing note is an alarm
+  ---
+  duration_ms: 0.849451
+  type: 'test'
+  ...
+# Subtest: invalid alarm is not persisted: 2099-02-30 | 07:30 | Wake
+ok 73 - invalid alarm is not persisted: 2099-02-30 | 07:30 | Wake
+  ---
+  duration_ms: 0.819945
+  type: 'test'
+  ...
+# Subtest: invalid alarm is not persisted: 2099-04-12 | 25:00 | Wake
+ok 74 - invalid alarm is not persisted: 2099-04-12 | 25:00 | Wake
+  ---
+  duration_ms: 0.825158
+  type: 'test'
+  ...
+# Subtest: invalid alarm is not persisted: 2099-04-12 | - | Wake
+ok 75 - invalid alarm is not persisted: 2099-04-12 | - | Wake
+  ---
+  duration_ms: 0.765179
+  type: 'test'
+  ...
+# Subtest: invalid alarm is not persisted: 2099-04-12 | 07:30 |
+ok 76 - invalid alarm is not persisted: 2099-04-12 | 07:30 |
+  ---
+  duration_ms: 1.285982
+  type: 'test'
+  ...
+# Subtest: invalid alarm is not persisted: 2020-01-01 | 07:30 | Wake
+ok 77 - invalid alarm is not persisted: 2020-01-01 | 07:30 | Wake
+  ---
+  duration_ms: 0.686496
+  type: 'test'
+  ...
+# Subtest: invalid alarm is not persisted: 2099-04-12 | 07:30 | Wake | alarm
+ok 78 - invalid alarm is not persisted: 2099-04-12 | 07:30 | Wake | alarm
+  ---
+  duration_ms: 0.68561
+  type: 'test'
+  ...
+# Subtest: native refusal, missing native service, and inexact timing are never fake success
+ok 79 - native refusal, missing native service, and inexact timing are never fake success
+  ---
+  duration_ms: 2.496162
+  type: 'test'
+  ...
+# Subtest: notification-only fallback is explicitly labelled, never a native wake alarm
+ok 80 - notification-only fallback is explicitly labelled, never a native wake alarm
+  ---
+  duration_ms: 1.003976
+  type: 'test'
+  ...
+# Subtest: blocked storage cannot claim scheduling success
+ok 81 - blocked storage cannot claim scheduling success
+  ---
+  duration_ms: 1.424892
+  type: 'test'
+  ...
+# Subtest: main and terminal chat use manual RUN controls and real results
+ok 82 - main and terminal chat use manual RUN controls and real results
+  ---
+  duration_ms: 0.477187
+  type: 'test'
+  ...
+# Subtest: real Termux results are scoped to one chat and labelled reference-only
+ok 83 - real Termux results are scoped to one chat and labelled reference-only
+  ---
+  duration_ms: 0.796544
+  type: 'test'
+  ...
+# Subtest: failed native alarms are not advertised as active in upcoming prompt state
+ok 84 - failed native alarms are not advertised as active in upcoming prompt state
+  ---
+  duration_ms: 1.906993
+  type: 'test'
+  ...
+# Subtest: hub: two tabs, invites under add, preferences below, defaults to reply after everyone sent
+ok 85 - hub: two tabs, invites under add, preferences below, defaults to reply after everyone sent
+  ---
+  duration_ms: 29.093518
+  type: 'test'
+  ...
+# Subtest: synced contacts: ticks stay, group pill follows, actions per contact
+ok 86 - synced contacts: ticks stay, group pill follows, actions per contact
+  ---
+  duration_ms: 5.284929
+  type: 'test'
+  ...
+# Subtest: group pill: dropdown is cards (icons, no emoji), x takes someone out, tick on the right, tap name opens chat
+ok 87 - group pill: dropdown is cards (icons, no emoji), x takes someone out, tick on the right, tap name opens chat
+  ---
+  duration_ms: 3.206774
+  type: 'test'
+  ...
+# Subtest: i sheet: AI reply box (was Hold AI), Pause AI, reply after each message; no AI label under a person
+ok 88 - i sheet: AI reply box (was Hold AI), Pause AI, reply after each message; no AI label under a person
+  ---
+  duration_ms: 7.624204
+  type: 'test'
+  ...
+# Subtest: v1.99.3: contact cards show status, AI rows have icon left and tick right, status saves through profile
+ok 89 - v1.99.3: contact cards show status, AI rows have icon left and tick right, status saves through profile
+  ---
+  duration_ms: 12.533207
+  type: 'test'
+  ...
+# Subtest: v1.99.5 (layout per V1.99.21): People is first on the bottom row, then Horizon ID, with Options at the right end; contact tools moved to Synced contacts
+ok 90 - v1.99.5 (layout per V1.99.21): People is first on the bottom row, then Horizon ID, with Options at the right end; contact tools moved to Synced contacts
+  ---
+  duration_ms: 5.770093
+  type: 'test'
+  ...
+# Subtest: v1.99.6: green i, one-to-one live bar, empty card, day dividers, two AI reply modes, whole-round prompt
+ok 91 - v1.99.6: green i, one-to-one live bar, empty card, day dividers, two AI reply modes, whole-round prompt
+  ---
+  duration_ms: 10.362333
+  type: 'test'
+  ...
+# Subtest: v1.99.7: @tag makes a guest for one reply (aware, introduces itself), Ask AI green in groups, Retry in the strip
+ok 92 - v1.99.7: @tag makes a guest for one reply (aware, introduces itself), Ask AI green in groups, Retry in the strip
+  ---
+  duration_ms: 3408.357094
+  type: 'test'
+  ...
+# Subtest: v1.99.8: People pill has a multicolour circling pulse (reduced motion respected)
+ok 93 - v1.99.8: People pill has a multicolour circling pulse (reduced motion respected)
+  ---
+  duration_ms: 0.664373
+  type: 'test'
+  ...
+# Subtest: v1.99.9: i pushed to the right edge, People pill pulled down onto the chat box
+ok 94 - v1.99.9: i pushed to the right edge, People pill pulled down onto the chat box
+  ---
+  duration_ms: 0.48742
+  type: 'test'
+  ...
+# Subtest: v1.99.10: i sheet always shows both reply cards, picking one turns Auto-reply on, Save preferences closes the sheet, real provider logos
+ok 95 - v1.99.10: i sheet always shows both reply cards, picking one turns Auto-reply on, Save preferences closes the sheet, real provider logos
+  ---
+  duration_ms: 3.949214
+  type: 'test'
+  ...
+# Subtest: v1.99.10: "after each message" answers every message, in order
+ok 96 - v1.99.10: "after each message" answers every message, in order
+  ---
+  duration_ms: 9.757966
+  type: 'test'
+  ...
+# Subtest: v1.99.11: every AI gets the full transcript, old @tags are defused, @tag of my provider answers by itself, Resend button
+ok 97 - v1.99.11: every AI gets the full transcript, old @tags are defused, @tag of my provider answers by itself, Resend button
+  ---
+  duration_ms: 62.779594
+  type: 'test'
+  ...
+# Subtest: v1.99.22: AI group i becomes the same cyan Options pill; people Options pushed to the right
+ok 98 - v1.99.22: AI group i becomes the same cyan Options pill; people Options pushed to the right
+  ---
+  duration_ms: 1.32607
+  type: 'test'
+  ...
+# Subtest: v1.99.22: peer-to-peer box says Message Peer to Peer; Options and People row sits lower on the chat box
+ok 99 - v1.99.22: peer-to-peer box says Message Peer to Peer; Options and People row sits lower on the chat box
+  ---
+  duration_ms: 1.001194
+  type: 'test'
+  ...
+# Subtest: v1.99.22: AI provider rows are short, checkbox sits beside the name, a ticked row glows cyan
+ok 100 - v1.99.22: AI provider rows are short, checkbox sits beside the name, a ticked row glows cyan
+  ---
+  duration_ms: 1.037348
+  type: 'test'
+  ...
+# Subtest: pill: idle shows the model in the middle, busy keeps the live step
+ok 101 - pill: idle shows the model in the middle, busy keeps the live step
+  ---
+  duration_ms: 1.41581
+  type: 'test'
+  ...
+# Subtest: group chat: the pill names the next speaker in the rotation, or the live one
+ok 102 - group chat: the pill names the next speaker in the rotation, or the live one
+  ---
+  duration_ms: 0.177167
+  type: 'test'
+  ...
+# Subtest: rotation logic: next after the last speaker wraps around
+ok 103 - rotation logic: next after the last speaker wraps around
+  ---
+  duration_ms: 0.235212
+  type: 'test'
+  ...
+# Subtest: V36: testing each provider explicitly forwards its selected voice
+ok 104 - V36: testing each provider explicitly forwards its selected voice
+  ---
+  duration_ms: 3.008706
+  type: 'test'
+  ...
+# Subtest: V36: explicit voice crosses HorizonTTS wrapper unchanged
+ok 105 - V36: explicit voice crosses HorizonTTS wrapper unchanged
+  ---
+  duration_ms: 3.983956
+  type: 'test'
+  ...
+# Subtest: V36: slow Edge startup stops native audio and rejects for Android fallback
+ok 106 - V36: slow Edge startup stops native audio and rejects for Android fallback
+  ---
+  duration_ms: 6.639104
+  type: 'test'
+  ...
+# Subtest: V36: native catalogue is validated, deduplicated and retains array identity
+ok 107 - V36: native catalogue is validated, deduplicated and retains array identity
+  ---
+  duration_ms: 7.948752
+  type: 'test'
+  ...
+# Subtest: V36: catalogue failure preserves built-in voices
+ok 108 - V36: catalogue failure preserves built-in voices
+  ---
+  duration_ms: 1.086745
+  type: 'test'
+  ...
+# Subtest: V36: native speech source uses prompt stream preparation and bounded catalogue requests
+ok 109 - V36: native speech source uses prompt stream preparation and bounded catalogue requests
+  ---
+  duration_ms: 0.311846
+  type: 'test'
+  ...
+# Subtest: V36: cleanup never uses localStorage.clear or external filesystem deletion
+ok 110 - V36: cleanup never uses localStorage.clear or external filesystem deletion
+  ---
+  duration_ms: 0.560854
+  type: 'test'
+  ...
+# Subtest: V36: event timeline labels observations, not fabricated private thoughts
+ok 111 - V36: event timeline labels observations, not fabricated private thoughts
+  ---
+  duration_ms: 3.653454
+  type: 'test'
+  ...
+# Subtest: V37: overlay containers leave the clipped chat layout and use a viewport
+ok 112 - V37: overlay containers leave the clipped chat layout and use a viewport
+  ---
+  duration_ms: 6.873561
+  type: 'test'
+  ...
+# Subtest: V37: queued People context reaches provider history rather than being a decorative label
+ok 113 - V37: queued People context reaches provider history rather than being a decorative label
+  ---
+  duration_ms: 4.561532
+  type: 'test'
+  ...
+# Subtest: V37: room context is not silently cut to 700 characters or 40 messages
+ok 114 - V37: room context is not silently cut to 700 characters or 40 messages
+  ---
+  duration_ms: 1.196553
+  type: 'test'
+  ...
+# Subtest: V37: one reply-first decision per group round
+ok 115 - V37: one reply-first decision per group round
+  ---
+  duration_ms: 3.708196
+  type: 'test'
+  ...
+# Subtest: V37: pause, permission state, full snapshot and sample table are actual controls
+ok 116 - V37: pause, permission state, full snapshot and sample table are actual controls
+  ---
+  duration_ms: 0.502447
+  type: 'test'
+  ...
+# Subtest: V37: native cleanup is locked, token checked and restricted to a canonical transient directory
+ok 117 - V37: native cleanup is locked, token checked and restricted to a canonical transient directory
+  ---
+  duration_ms: 0.252461
+  type: 'test'
+  ...
+# Subtest: V37: regression gate no longer makes tests non-blocking
+ok 118 - V37: regression gate no longer makes tests non-blocking
+  ---
+  duration_ms: 0.235183
+  type: 'test'
+  ...
+# Subtest: V42: unbundled Capacitor bridge can synthesize through nativePromise without registerPlugin
+ok 119 - V42: unbundled Capacitor bridge can synthesize through nativePromise without registerPlugin
+  ---
+  duration_ms: 7.902292
+  type: 'test'
+  ...
+# Subtest: V42: unbundled native catalogue works and retains voice IDs
+ok 120 - V42: unbundled native catalogue works and retains voice IDs
+  ---
+  duration_ms: 1.283076
+  type: 'test'
+  ...
+# Subtest: V42: stalled event listener times out instead of hanging speech forever
+ok 121 - V42: stalled event listener times out instead of hanging speech forever
+  ---
+  duration_ms: 3.177697
+  type: 'test'
+  ...
+# Subtest: V42: stalled voice catalogue times out and keeps built-in voices
+ok 122 - V42: stalled voice catalogue times out and keeps built-in voices
+  ---
+  duration_ms: 1.084681
+  type: 'test'
+  ...
+# Subtest: V42: missing Android plugin is explicit, not a silently blocked browser fetch
+ok 123 - V42: missing Android plugin is explicit, not a silently blocked browser fetch
+  ---
+  duration_ms: 0.929872
+  type: 'test'
+  ...
+# Subtest: V42: visible media tile observes playback instead of treating idle lyrics as playing
+ok 124 - V42: visible media tile observes playback instead of treating idle lyrics as playing
+  ---
+  duration_ms: 0.277961
+  type: 'test'
+  ...
+# Subtest: V42: native catalogue clock retry, readiness method and modal stacking fix are present
+ok 125 - V42: native catalogue clock retry, readiness method and modal stacking fix are present
+  ---
+  duration_ms: 2.115646
+  type: 'test'
+  ...
+# Subtest: V42: Edge installer dry-run, registration, backups and idempotence (java)
+ok 126 - V42: Edge installer dry-run, registration, backups and idempotence (java)
+  ---
+  duration_ms: 110.157842
+  type: 'test'
+  ...
+# Subtest: V42: Edge installer dry-run, registration, backups and idempotence (kt)
+ok 127 - V42: Edge installer dry-run, registration, backups and idempotence (kt)
+  ---
+  duration_ms: 106.352456
+  type: 'test'
+  ...
+# Subtest: Tools header no longer says "Purple is on, black is off"
+ok 128 - Tools header no longer says "Purple is on, black is off"
+  ---
+  duration_ms: 1.254646
+  type: 'test'
+  ...
+# Subtest: Tools strip: hint pill replaced by a People dock with left and right slots
+ok 129 - Tools strip: hint pill replaced by a People dock with left and right slots
+  ---
+  duration_ms: 0.212043
+  type: 'test'
+  ...
+# Subtest: People mounts into the dock, keeps a fallback, and adds Add chat
+ok 130 - People mounts into the dock, keeps a fallback, and adds Add chat
+  ---
+  duration_ms: 0.359749
+  type: 'test'
+  ...
+# Subtest: multicolour ring is applied to People and Add chat inside the dock
+ok 131 - multicolour ring is applied to People and Add chat inside the dock
+  ---
+  duration_ms: 0.231666
+  type: 'test'
+  ...
+# Subtest: Options: white pill, black text, cyan outline, dropped lower
+ok 132 - Options: white pill, black text, cyan outline, dropped lower
+  ---
+  duration_ms: 0.203642
+  type: 'test'
+  ...
+# Subtest: header: Settings tile same size as Menu with the sliders icon; provider pill smaller
+ok 133 - header: Settings tile same size as Menu with the sliders icon; provider pill smaller
+  ---
+  duration_ms: 0.463831
+  type: 'test'
+  ...
+# Subtest: tool tiles: on = black with green dot, off = white with red dot
+ok 134 - tool tiles: on = black with green dot, off = white with red dot
+  ---
+  duration_ms: 1.764781
+  type: 'test'
+  ...
+# Subtest: Make PDF is gone from the dock row (V1.99.34)
+ok 135 - Make PDF is gone from the dock row (V1.99.34)
+  ---
+  duration_ms: 0.546346
+  type: 'test'
+  ...
+# Subtest: header tiles: Browser blue, Group pink, Vault yellow, Music dark green; GitHub untouched
+ok 136 - header tiles: Browser blue, Group pink, Vault yellow, Music dark green; GitHub untouched
+  ---
+  duration_ms: 0.776362
+  type: 'test'
+  ...
+# Subtest: Leave group: clears the group, hides the pill, and adding anyone brings it back
+ok 137 - Leave group: clears the group, hides the pill, and adding anyone brings it back
+  ---
+  duration_ms: 0.249176
+  type: 'test'
+  ...
+1..137
+# tests 137
+# suites 0
+# pass 137
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 43447.195253

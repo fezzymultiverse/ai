@@ -1,0 +1,15 @@
+Full unit test suite: 342 tests, 332 passed, 10 failed.
+Original uploaded source baseline: 330 tests, 320 passed, 10 failed.
+The same ten pre-existing failure titles remain; no new unit failure titles.
+
+Remaining pre-existing failures:
+- stylesheet is cache-busted and the version is bumped
+- viewer wiring: script tag, css, sandboxed render, save formats, history, forge Open button
+- restore into an empty folder is byte-identical to the repo copies and never overwrites without --force
+- header is a pinned three-row grid and the stylesheet is cache-busted
+- wiring: index.html loads, parses, runs, strips; tool contract carries the block; versions agree
+- paid APIs and paid-only providers are gone from the app while daily Aion allowance stays explicit
+- native check-ins reject router aliases, paid-only providers and model substitution
+- shared full/lite prompt builders inject the contract without truncating schemas
+- index.html OpenRouter seed matches and starts on Llama 3.3 70B free
+- V120: viewer uses full area, native controls and honest in-picture captions

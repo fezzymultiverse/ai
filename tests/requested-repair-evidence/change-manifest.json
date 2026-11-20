@@ -1,0 +1,88 @@
+{
+  "scope": "Requested API key/backup-key, media playback/subtitles, and AI file-operation repairs only",
+  "original_files": 367,
+  "modified_original_files": [
+    {
+      "file": "android-native/app/HorizonFilesPlugin.java",
+      "before_sha256": "623b467f558face507088faafd94574b6c0676337232c9c344f3c44cbebb29b9",
+      "after_sha256": "6bbafbad970d2644951b3719a9d6fa854a5fb79d8d66d758f1f3ef8956d29866"
+    },
+    {
+      "file": "www/index.html",
+      "before_sha256": "7b176cc0fee84c1ce93902d20fbda2bcc862408d45c852c87fab72287046d802",
+      "after_sha256": "bf18123800d51e9fb4a64ba0f038cdfe8d7b33d86383ef54e4c09bba83ad60e2"
+    },
+    {
+      "file": "www/horizon_unit.js",
+      "before_sha256": "1f7c4a2ab4b35b31c35215880b4d265e2d0825277cce1a323dcb1823efeaefb2",
+      "after_sha256": "0bef10e0c1cb867904d197f1ed0d8697fbae17ed961da77c8f32a2101efcac32"
+    },
+    {
+      "file": "www/horizon_model_policy.js",
+      "before_sha256": "252523812b709a2666addc25e0f4905ecd89b49de9ba794e75d451f9b9334b1b",
+      "after_sha256": "40dd3b23342785bca3ca0ad23ea1de5ac4a73c68a0137705399073dc59d60855"
+    },
+    {
+      "file": "www/horizon_layout.css",
+      "before_sha256": "d400e6e74fcb951989e1dfe814288dd7e27a169ec8c1c4e315d162ccc54706fd",
+      "after_sha256": "67b0bbdbcf10bdbd7834f1775f1795944271d8c8952956b3a32c1f2ebd923a80"
+    },
+    {
+      "file": "www/horizon_files.js",
+      "before_sha256": "d9c9f71175997489cee4e4c60a32e3b2a8b6b9e9d1f5a685db3d00dada376228",
+      "after_sha256": "e5b8ed68c23ab080879afe1e694cfd20e4f62abcaebe384c99945421159880f5"
+    },
+    {
+      "file": "www/horizon_music.js",
+      "before_sha256": "bbc17cf880e0bbaf901502ce279a84df005b052675e85959d882adcb6393eae0",
+      "after_sha256": "3625f70a410e9f480e86741846024f7e7199ad5e087d222a62af4ffa6354ac32"
+    },
+    {
+      "file": "www/horizon_watch.js",
+      "before_sha256": "7a027cfe031110ca2a1e32df34f02e88c6704976161c9be065d7100e3cc544e6",
+      "after_sha256": "45e7626c8c73c2781ba39e7a134cbda73cee9244e1f63b4270eeea8aec38e301"
+    },
+    {
+      "file": "www/horizon_key_import.js",
+      "before_sha256": "491f8eff86830a0b93970c6f8c1e41d0b046288aedd2380b4743819d31275ebe",
+      "after_sha256": "c5ec687eb330e4f173b2e9c115e744ae2b2b2bf7f2b36025cfb8729226525788"
+    },
+    {
+      "file": "www/horizon_rpmedia.js",
+      "before_sha256": "bec8f0e17e735f51a75accbf954709cc21d727c24024a96817a3ceeab0a6b6fa",
+      "after_sha256": "311f86fa058b49186d0ccf02470ee15c4c2e1edc31f9a7b4ef9e7a70fa0c7c03"
+    },
+    {
+      "file": "www/horizon_keyhealth.js",
+      "before_sha256": "5de641ead42ee919a9118bbd7b4202f0083c10cd171a97e95c98f6e73a836b35",
+      "after_sha256": "9cde736ba2f2bc89a467ea47b18fc9e37453c6d66c11e8af47ad7adb53855fc0"
+    },
+    {
+      "file": "www/horizon_net.js",
+      "before_sha256": "8588d99721595befa967a00bdfbf005ae97b06e0a3822900fd2ec0e04107bc87",
+      "after_sha256": "1830cb3826742f9977a64e5812d0c78226e14c7dd76903ed1bb0ad31a0c9bf5b"
+    },
+    {
+      "file": "tests/watch-v118.test.cjs",
+      "before_sha256": "99fd1bd107d72fea7c14d42f95454f1a5751caf499504756be4737f877e0c9b5",
+      "after_sha256": "87f42ce8af9339d60c0a4d9099794934151e8d3d16bc5de33de783bacca7ff43"
+    },
+    {
+      "file": "tests/files-v114.browser.cjs",
+      "before_sha256": "76e10658514397b7c45da289b6238f6ea6a5d3de55eb342286ec24c0fb7ae683",
+      "after_sha256": "981ce4cb6d5b704a2be4f0b44a41e4d3a23b01f61aa9182f59535c50015f1fb6"
+    }
+  ],
+  "unchanged_original_files": 353,
+  "removed_original_files": [],
+  "inherited_unit_test_failures": [
+    "restore into an empty folder is byte-identical to the repo copies and never overwrites without --force",
+    "paid APIs and paid-only providers are gone from the app while daily Aion allowance stays explicit",
+    "native check-ins reject router aliases, paid-only providers and model substitution",
+    "index.html OpenRouter seed matches and starts on Llama 3.3 70B free"
+  ],
+  "new_unit_checks_passed": 12,
+  "browser_checks_passed": 19,
+  "android_device_tested": false,
+  "live_credentials_or_youtube_or_station_directory_tested": false
+}

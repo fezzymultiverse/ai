@@ -1,0 +1,75 @@
+PASS complete app initializes studio, chat, bridge and About without runtime errors
+PASS About keeps original logo and developer and replaces changelog with capabilities
+PASS studio fits a phone viewport and renders safe editable fields
+PASS playlists persist with ordered tracks, reject duplicate names and do not touch provider selection
+PASS one playlist tool creates a complete saved list and quoted code never executes
+PASS playlist playback starts once and queues later tracks in exact order
+PASS failed and ambiguous track resolutions stop without claiming a complete playlist
+PASS playlist export preserves real references and requires saver acknowledgement
+WORKER {"size":441044,"type":"audio/wav","magic":"RIFF","wave":"WAVE","rate":44100,"seconds":5,"ticks":39,"peak":17120,"elapsed":151.4000000001397}
+PASS local music renders valid non-silent bounded WAV in a Web Worker without network
+PASS UI Compose creates a playable WAV reference without forcing autoplay and enables Save
+PASS podcast drafts are only opened, not silently synthesized or exported
+PASS podcast playback uses offline native voices and splits long scripts safely
+PASS podcast refuses network-only voice engines instead of silently using a cloud service
+PASS DuckDuckGo keyless summary uses encoded query and reports empty answers honestly
+PASS typing keeps composer focus and text while decorations yield
+PASS new capability tools produce no runtime exceptions
+Browser checks passed: 16
+PASS waveform runs before focus, stops while editing, resumes after blur {"first":13,"before":13,"after":13,"resumed":22}
+PASS clock/streaming text triggers no global code scans; new code blocks still decorate
+Focused performance checks passed: 2
+TAP version 13
+# Subtest: requested fixes: real chat commands, in-chat call lifecycle, contacts row and native artifact downloads
+ok 1 - requested fixes: real chat commands, in-chat call lifecycle, contacts row and native artifact downloads
+  ---
+  duration_ms: 3013.313197
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3019.66429
+PASS native RSS discovers website, YouTube, Reddit and GitHub by name
+PASS invalid advertised feed cannot discard a valid alternate
+PASS HTTP 200 HTML at /feed continues probing instead of rejecting the search
+PASS JSON Feed native object responses and relative item URLs work
+PASS independent website directory is used when Feedly has no results
+PASS invalid protocols are rejected and feed text cannot execute
+PASS browser RSS fallback omits native User-Agent and private credentials
+PASS notification context defaults off
+PASS notification snapshot includes every exposed app and treats content as data
+PASS People chats make no native reads and retain no private notification context
+PASS disable and turn cleanup immediately clear transient notification text
+PASS large notification snapshots report context truncation honestly
+PASS revoked notification permission clears an existing AI snapshot
+PASS a delayed native read cannot restore context after turn cancellation
+PASS RSS and notification JavaScript create no idle polling interval
+PASS lag diagnostics register no expensive observers until explicitly opened
+PASS full app boots without script errors and notification permission row is wired
+PASS layout CSS cleanup preserves every computed dock/media property in both themes
+PASS IME composition preserves text and does not resize mid-composition
+PASS rapid typing/backspace retains focus, spelling support and exact text
+PASS native notification files, registration and consent/permission gates are present
+Completed 21 focused browser checks.
+TAP version 13
+# Subtest: V1.99.127: "for me" is stripped, "any contact" opens the list, Back closes the contacts box and the quick-add box
+ok 1 - V1.99.127: "for me" is stripped, "any contact" opens the list, Back closes the contacts box and the quick-add box
+  ---
+  duration_ms: 1377.372351
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1382.587662

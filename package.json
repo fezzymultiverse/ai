@@ -1,0 +1,20 @@
+{
+  "name": "horizon",
+  "version": "1.99.159",
+  "private": true,
+  "scripts": {
+    "test": "node --test tests/*.test.cjs",
+    "test:browser": "node --test tests/*.browser.cjs"
+  },
+  "description": "Horizon (Capacitor 7 Android app).",
+  "dependencies": {
+    "@capacitor/android": "^7.0.0",
+    "@capacitor/core": "^7.0.0",
+    "@capacitor/filesystem": "^7.0.0",
+    "@capacitor/local-notifications": "^7.0.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.0.0",
+    "playwright": "^1.65.0"
+  }
+}

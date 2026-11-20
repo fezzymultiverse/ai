@@ -1,0 +1,16 @@
+/* V1.99.104 · idle screen in the left Widgets panel: one continuous scene instead of two boxes, and a clear band for the text.
+   Only the idle state (#hzRpMedia.is-idle) is touched; playing / lyrics layouts are unchanged. */
+#leftPanel #hzRpMedia.is-idle{gap:0;position:relative;overflow:hidden;border-radius:16px;border:1px solid rgba(var(--accent-rgb,0,229,255),.28);background:linear-gradient(180deg,#04070d 0%,#0a1020 40%,#10091c 100%)}
+html[data-theme="grey"] #leftPanel #hzRpMedia.is-idle{background:linear-gradient(180deg,#eef2f6,#cfd6de);border-color:rgba(0,0,0,.14)}
+#leftPanel #hzRpMedia.is-idle > #hzRpIdle{border:0;border-radius:0;background:transparent}
+#leftPanel #hzRpMedia.is-idle > #hzRpIdle .hz-rpi-cv{-webkit-mask-image:linear-gradient(180deg,#000 60%,transparent 100%);mask-image:linear-gradient(180deg,#000 60%,transparent 100%)}
+#leftPanel #hzRpMedia.is-idle > #hzRpLyrics{border:0;border-radius:0;background:transparent;box-shadow:none}
+#leftPanel #hzRpMedia.is-idle .hzle{background:transparent!important}
+#leftPanel #hzRpMedia.is-idle .hzle-c.c1,#leftPanel #hzRpMedia.is-idle .hzle-c.c2{opacity:0}
+#leftPanel #hzRpMedia.is-idle .hzle-c.c3,#leftPanel #hzRpMedia.is-idle .hzle-c.c4{opacity:.5}
+#leftPanel #hzRpMedia.is-idle .hzle-lines u{opacity:.8}
+/* clear band: the brand, the time and the invite sit on a soft scrim above the wave, not on top of it */
+#leftPanel .hz-rpi-tag{padding-bottom:14px;background:linear-gradient(180deg,rgba(4,7,13,.8),rgba(4,7,13,.5) 62%,transparent)}
+#leftPanel .hz-rpi-tag em{color:rgba(255,255,255,.82)}
+html[data-theme="grey"] #leftPanel .hz-rpi-tag{background:linear-gradient(180deg,rgba(238,242,246,.88),rgba(238,242,246,.55) 62%,transparent)}
+html[data-theme="grey"] #leftPanel .hz-rpi-tag em{color:#2c343c}

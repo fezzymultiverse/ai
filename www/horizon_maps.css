@@ -1,0 +1,65 @@
+/* Horizon V1.99.61: Maps card + Maps app. Scoped to .hzm-* so nothing else changes. */
+.hzm-wrap{margin:10px 0}
+/* V1.99.73: the chat map card is back to how it was before V1.99.68 (full width, 230px map). */
+.hzm-card{--m-line:var(--border-highlight,#d8dce1);--m-card:var(--surface,#fff);--m-text:var(--text-main,#17202b);--m-acc:var(--accent-cyan,#00a8c4);
+  background:var(--m-card);color:var(--m-text);border:1px solid var(--m-line);border-radius:16px;overflow:hidden;box-shadow:0 2px 14px rgba(0,0,0,.14)}
+.hzm-card button{font:inherit;color:inherit}
+.hzm-top{padding:10px 12px 4px}
+.hzm-title{font-weight:700;font-size:14px;line-height:1.3;word-break:break-word}
+.hzm-modes{display:flex;gap:6px;padding:6px 10px 8px;overflow-x:auto;scrollbar-width:none}
+.hzm-modes[hidden]{display:none}
+.hzm-modes::-webkit-scrollbar{display:none}
+.hzm-mode{flex:0 0 auto;display:flex;align-items:center;gap:5px;padding:7px 11px;min-height:36px;border-radius:999px;border:1px solid var(--m-line);background:transparent;cursor:pointer;font-size:13px}
+.hzm-mode.on{border-color:var(--m-acc);background:rgba(0,229,255,.14);font-weight:700;box-shadow:0 0 0 1px var(--m-acc) inset}
+.hzm-map{height:230px;width:100%;background:#cfd8dc;position:relative;z-index:0}
+.hzm-card.full .hzm-map{height:50vh}
+.hzm-card.busy .hzm-map{opacity:.65}
+.hzm-sum{display:flex;flex-wrap:wrap;gap:6px;padding:9px 12px 2px;align-items:center;min-height:26px;font-size:13px}
+.hzm-chip{padding:4px 10px;border-radius:999px;border:1px solid var(--m-line);font-size:12.5px}
+.hzm-chip.big{font-size:15px;font-weight:800;border-color:var(--m-acc)}
+.hzm-chip.dim{opacity:.7}
+.hzm-note{display:none;padding:2px 12px 4px;font-size:12px;opacity:.8;line-height:1.35}
+.hzm-note.on{display:block}
+.hzm-act{display:flex;flex-wrap:wrap;gap:6px;padding:6px 10px 10px}
+.hzm-btn{padding:8px 13px;min-height:38px;border-radius:10px;border:1px solid var(--m-line,#999);background:transparent;cursor:pointer;font-size:13px}
+.hzm-btn.pri{background:#00e5ff;color:#000;border-color:#00e5ff;font-weight:800}
+.hzm-det{padding:0 12px 10px;border-top:1px solid var(--m-line)}
+.hzm-det summary{cursor:pointer;padding:9px 0;font-size:13px;font-weight:700}
+.hzm-ol{margin:0;padding:0 0 0 20px;font-size:13px;line-height:1.4;max-height:260px;overflow:auto}
+.hzm-ol li{padding:4px 0}
+.hzm-st{display:inline}
+.hzm-sd{margin-left:8px;opacity:.6;font-size:12px;white-space:nowrap}
+.hzm-ico{background:none!important;border:none!important}
+.hzm-pin{display:flex;align-items:center;justify-content:center;width:12px;height:12px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 5px rgba(0,0,0,.5);color:#fff;font:800 12px/1 system-ui,sans-serif;box-sizing:border-box}
+.hzm-pin.big{width:26px;height:26px}
+/* Full-screen app */
+#hzMapsView{padding:10px 10px 24px;max-width:760px;margin:0 auto}
+.hzm-head{display:flex;justify-content:flex-end;padding:0 2px 8px}
+.hzm-sw{display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer}
+.hzm-sw input{width:20px;height:20px}
+.hzm-form{display:flex;flex-direction:column;gap:8px;margin-bottom:10px;position:relative}
+.hzm-in{width:100%;box-sizing:border-box;padding:12px 14px;border-radius:12px;border:1px solid var(--border-highlight,#c7ccd1);background:var(--surface,#fff);color:var(--text-main,#111);font:inherit;font-size:15px}
+.hzm-row{display:flex;gap:8px}
+.hzm-sug{display:flex;flex-direction:column;border:1px solid var(--border-highlight,#c7ccd1);border-radius:12px;overflow:hidden;background:var(--surface,#fff)}
+.hzm-sug[hidden]{display:none}
+.hzm-sg{text-align:left;padding:11px 14px;border:0;border-bottom:1px solid var(--border-highlight,#e0e3e6);background:transparent;color:var(--text-main,#111);font:inherit;font-size:14px;cursor:pointer}
+.hzm-sg:last-child{border-bottom:0}
+.hzm-recent{margin-top:12px;display:flex;flex-direction:column;gap:6px}
+.hzm-rt{font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;opacity:.7}
+.hzm-rc{text-align:left;padding:10px 12px;border-radius:10px;border:1px solid var(--border-highlight,#c7ccd1);background:transparent;color:var(--text-main,#111);font:inherit;font-size:13px;cursor:pointer}
+@media (prefers-reduced-motion:reduce){.hzm-card *{transition:none!important}}
+
+/* V1.99.62 navigation */
+.hzm-alternatives,.hzm-pois{display:flex;gap:8px;overflow:auto;padding:8px;align-items:center}.hzm-alternatives:empty,.hzm-nav:empty{display:none}.hzm-alternatives button{white-space:nowrap}.hzm-alternatives [aria-pressed="true"]{background:#006779;color:#fff;border:2px solid #00e5ff}.hzm-nav{padding:14px;background:#06394a;color:#fff;border-radius:14px;font-size:18px;line-height:1.4;position:sticky;top:0;z-index:5}.hzm-current{background:#075669;color:#fff;border-left:4px solid #00e5ff;padding:10px!important}.hzm-pois select{min-width:0;max-width:60%;padding:10px;border-radius:10px;background:var(--surface,#10252b);color:inherit}.hzm-act{flex-wrap:wrap}.hzm-full .hzm-map{height:48vh;min-height:270px}.hzm-leaflet .leaflet-control-attribution{font-size:10px}
+
+/* Dark themes: invert the keyless OSM tiles instead of using a keyed dark basemap. */
+.hzm-dark-tiles .hzm-osm-tiles { filter: invert(1) hue-rotate(180deg) brightness(.95) contrast(.9); }
+
+/* V1.99.113 · in-place Maximise / Minimise for the chat map card */
+.hzm-top{position:relative;padding-right:54px}
+.hzm-max{position:absolute;top:6px;right:8px;width:40px;height:40px;border-radius:12px;border:1px solid var(--m-line,#999);background:var(--m-card,#fff);color:var(--m-text,#17202b);font-size:20px;line-height:1;cursor:pointer;display:grid;place-items:center;padding:0}
+.hzm-card.max{position:fixed;inset:0;z-index:9500;border-radius:0;border:0;overflow-y:auto;overscroll-behavior:contain;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);box-shadow:none;max-height:none}
+.hzm-card.max .hzm-top{position:sticky;top:0;z-index:6;background:var(--m-card,#fff)}
+.hzm-card.max .hzm-map{height:58vh;min-height:280px}
+.hzm-card.max .hzm-ol{max-height:none}
+body.hzm-maxed{overflow:hidden}

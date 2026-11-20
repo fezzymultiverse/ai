@@ -1,0 +1,11 @@
+{
+  "ok": true,
+  "tests": [
+    "dry run leaves target unchanged",
+    "copies only scoped repair assets",
+    "backs up originals",
+    "enables CapacitorHttp in JSON",
+    "preserves unrelated plugin configuration"
+  ],
+  "androidBuildPerformed": false
+}

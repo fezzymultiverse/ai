@@ -1,0 +1,321 @@
+{
+  "standalone": [
+    {
+      "file": "www/cordova.js",
+      "pass": true
+    },
+    {
+      "file": "www/cordova_plugins.js",
+      "pass": true
+    },
+    {
+      "file": "www/ember_artbox.js",
+      "pass": true
+    },
+    {
+      "file": "www/ember_document_engine.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_about.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_addons.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_archive.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_attach.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_autoread.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_bojack.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_bridges.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_browser.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_checkin.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_chips.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_creator.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_daemon.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_dash.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_display.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_door.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_downloads.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_dtsel.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_edge_tts.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_fab.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_fold.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_forge.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_front.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_geo.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_github.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_group.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_hdr2.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_header.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_hold.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_htmlview.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_hub.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_ind.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_key_import.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_laser.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_lens.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_lift.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_lock.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_lyrics.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_mdview.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_msgmenu.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_music.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_native_audio.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_operator.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_pdf.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_people.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_people_config.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_perf.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_plus.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_release.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_round.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_rpidle.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_rpmedia.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_runlog.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_screen.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_setai.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_slash.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_speakwave.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_stats.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_termai.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_terminal.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_termlive.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_times.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_toast.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_tones.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_toolgrid.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_toolpolicy.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_tts.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_typing.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_usage.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_v2.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_vault.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_vis.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_viz.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_voice.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_youtube.js",
+      "pass": true
+    },
+    {
+      "file": "www/horizon_ytdirect.js",
+      "pass": true
+    }
+  ],
+  "inline": "Inline JavaScript syntax: 4 scripts passed"
+}

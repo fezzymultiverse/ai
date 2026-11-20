@@ -1,0 +1,5 @@
+{
+  "scope": "Host browser; mocked API/directory/Android responses. Media decoder uses generated real WAV/MP4.",
+  "results": [],
+  "errors": []
+}

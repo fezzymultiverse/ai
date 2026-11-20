@@ -1,0 +1,71 @@
+{
+  "passed": 0,
+  "failed": 13,
+  "results": [
+    {
+      "name": "320px grey: header, model and Stats layout",
+      "pass": false,
+      "error": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:8765/\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:8765/\", waiting until \"load\"\u001b[22m\n"
+    },
+    {
+      "name": "320px neon: header, model and Stats layout",
+      "pass": false,
+      "error": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:8765/\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:8765/\", waiting until \"load\"\u001b[22m\n"
+    },
+    {
+      "name": "390px grey: header, model and Stats layout",
+      "pass": false,
+      "error": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:8765/\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:8765/\", waiting until \"load\"\u001b[22m\n"
+    },
+    {
+      "name": "390px neon: header, model and Stats layout",
+      "pass": false,
+      "error": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:8765/\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:8765/\", waiting until \"load\"\u001b[22m\n"
+    },
+    {
+      "name": "430px grey: header, model and Stats layout",
+      "pass": false,
+      "error": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:8765/\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:8765/\", waiting until \"load\"\u001b[22m\n"
+    },
+    {
+      "name": "430px neon: header, model and Stats layout",
+      "pass": false,
+      "error": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:8765/\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:8765/\", waiting until \"load\"\u001b[22m\n"
+    },
+    {
+      "name": "1280px grey: header, model and Stats layout",
+      "pass": false,
+      "error": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:8765/\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:8765/\", waiting until \"load\"\u001b[22m\n"
+    },
+    {
+      "name": "1280px neon: header, model and Stats layout",
+      "pass": false,
+      "error": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:8765/\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:8765/\", waiting until \"load\"\u001b[22m\n"
+    },
+    {
+      "name": "group pill: active model, live tokens, next speaker, rate limits and wrap",
+      "pass": false,
+      "error": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:8765/\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:8765/\", waiting until \"load\"\u001b[22m\n"
+    },
+    {
+      "name": "Stats opt-in public-IP lookup and GPS display",
+      "pass": false,
+      "error": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:8765/\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:8765/\", waiting until \"load\"\u001b[22m\n"
+    },
+    {
+      "name": "Stats cache scan/confirm deletes only dedicated transient buckets",
+      "pass": false,
+      "error": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:8765/\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:8765/\", waiting until \"load\"\u001b[22m\n"
+    },
+    {
+      "name": "Stats native-bridge fixture maps sensor fields without changing providers",
+      "pass": false,
+      "error": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:8765/\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:8765/\", waiting until \"load\"\u001b[22m\n"
+    },
+    {
+      "name": "Edge settings: per-provider Test buttons and searchable fresh catalogue",
+      "pass": false,
+      "error": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:8765/\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:8765/\", waiting until \"load\"\u001b[22m\n"
+    }
+  ]
+}

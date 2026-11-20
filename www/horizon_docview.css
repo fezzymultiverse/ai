@@ -1,0 +1,21 @@
+/* Horizon V1.99.56 document viewer. Scoped to dv-* and .hf-open; reuses the existing hv-bar / hv-btn / hv-sheet look. */
+.dv-ov { position: fixed; inset: 0; z-index: 100000; display: flex; flex-direction: column; background: var(--bg, var(--card-bg, #fff)); color: var(--text-main, #000); }
+.dv-tools { flex: 0 0 auto; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 6px 12px; border-bottom: 1px solid var(--border-color, rgba(128,128,128,.25)); background: var(--card-bg, #fff); }
+.dv-seg { display: inline-flex; border: 1px solid var(--border-color, rgba(128,128,128,.35)); border-radius: 9px; overflow: hidden; }
+.dv-s { min-height: 34px; padding: 0 12px; border: 0; background: var(--card-bg, #fff); color: var(--text-muted, #667); font-size: 14px; font-weight: 700; cursor: pointer; }
+.dv-s.on { background: var(--accent-cyan, #00e5ff); color: #000; }
+.dv-zoom { margin-left: auto; display: inline-flex; gap: 6px; }
+.dv-zoom .hv-btn { min-width: 40px; padding: 0 10px; }
+.dv-stage { position: relative; flex: 1 1 auto; min-height: 0; overflow: hidden; touch-action: none; background: #fff; cursor: grab; }
+.dv-stage.dark { background: #0d1117; }
+.dv-stage[hidden], .dv-src[hidden], .dv-msg[hidden] { display: none; }
+.dv-pan { position: absolute; left: 0; top: 0; transform-origin: 0 0; will-change: transform; }
+.dv-pan img { display: block; max-width: none; user-select: none; -webkit-user-drag: none; pointer-events: none; }
+.dv-msg { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 20px; text-align: center; color: #334155; font-size: 15px; line-height: 1.5; }
+.dv-stage.dark .dv-msg { color: #cbd5e1; }
+.dv-msg.bad { color: #dc2626; }
+.dv-src { flex: 1 1 auto; min-height: 0; margin: 0; padding: 12px 14px; overflow: auto; white-space: pre-wrap; word-break: break-word; font: 13.5px/1.55 var(--mono, ui-monospace, monospace); background: var(--code-bg, #0b0f14); color: var(--text-main, #e8eef5); }
+.dv-foot { flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 12px calc(8px + env(safe-area-inset-bottom, 0px)); border-top: 1px solid var(--border-color, rgba(128,128,128,.25)); background: var(--card-bg, #fff); }
+.dv-hint { font-size: 12.5px; color: var(--text-muted, #667); min-width: 0; }
+.dv-formats { flex-wrap: wrap; }
+.hf-card .hf-open { min-height: 36px; padding: 0 12px; margin: 0 0 0 auto; }

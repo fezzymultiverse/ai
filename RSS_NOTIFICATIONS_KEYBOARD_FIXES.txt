@@ -1,0 +1,80 @@
+HORIZON RSS / NOTIFICATIONS / KEYBOARD PATCH
+
+Scope: RSS fetching/discovery, opt-in Kotlin notification reading, and focused keyboard/loading cleanup. Existing app identity/version, chats, keys, Vault, audio, layouts and unrelated features are retained. The layout cleanup removes redundant overridden declarations; it is not a redesign.
+
+RSS
+- Explicit CapacitorHttp native GET on Android for all HTTP(S) feed domains; the AI endpoint allowlist is not used. No public CORS proxy added.
+- Search combines GitHub, YouTube, Reddit and independent website directories (Feedly and WordPress). Candidate feeds are checked, not invented.
+- RSS 2.0, RDF/RSS 1.0, Atom, JSON Feed 1/1.1 and relative article URLs supported.
+- A broken advertised alternate no longer rejects valid alternates. An HTML page returned with HTTP 200 at /feed no longer aborts the remaining probe paths. Also probes directory-local feeds.
+- At most 3 logical requests at once; native connection/read timeouts, overall JS deadlines, body-size validation, safe-link validation and cached feeds remain.
+- Limitations: no reader can extract an RSS feed from every website. Sites without feeds, authentication requirements, blocks, rate limits and outages remain real constraints. Browser preview remains subject to CORS; test cross-origin feeds in the Android build.
+
+NOTIFICATIONS: ENABLE AFTER REBUILD
+1. Rebuild using the project's existing Android/GitHub Actions workflow. Copying only www files does not install Kotlin plugins.
+2. Open Settings > Permissions > Read notifications with AI.
+3. Read the disclosure and choose Agree and continue, then allow Horizon in Android Notification access and return to the app.
+4. Send a private AI chat message. Horizon reads an on-demand snapshot of active notification titles/text exposed by Android and shares it with the selected provider. There is no polling and no stored notification history.
+5. Turn that permission row off to stop AI sharing immediately. To revoke device-level access too, switch Horizon off in Android Notification access settings.
+
+The existing permission to post notifications is separate and is labelled accordingly. Both Android listener permission and the explicit AI-sharing preference must be enabled before a read. The default is off. People chats are excluded. Notification text is untrusted data, not instructions. Snapshots are cleared on turn completion, disabling, app backgrounding/resume and cancellation; delayed reads cannot restore cancelled snapshots.
+
+This is access to current active notifications, NOT all historical notifications or all messages inside other apps. Android may redact sensitive/OTP content or exclude work-profile data. Very long notification bodies and AI context are bounded, with truncation labelled. No notification text is written to local storage, a database, or logs by this reader. If the AI repeats notification content in a reply, the existing chat history may of course retain that reply.
+
+KEYBOARD / LOADING
+- Expensive lag-diagnostic PerformanceObservers now start only when /lag is explicitly opened, and disconnect when it closes.
+- Backspace textarea collapse/read/expand is debounced instead of repeated for every deletion; IME composition protection and native keyboard settling remain.
+- Reply-fold height measurements defer during typing/keyboard motion and do not measure detached replies.
+- Media status polling skips work while an editor/keyboard is active. Playback engines are unchanged.
+- Removed replaced duplicate Browser/Group header nodes after the current header is successfully installed, redundant unconditional layout declarations, and verified dead local variables. Hidden bridge elements that are still referenced are intentionally kept.
+- Scoped asset cache busting prevents stale changed scripts/styles. No dependency additions or global fetch override.
+
+VERIFICATION
+- 21 targeted real-Chromium checks passed: all RSS source types with native transport fixtures, independent directories, invalid alternate recovery, continued probing, JSON feeds, URL safety, browser fallback, notification default/disable/revoke/cancellation/People privacy gates, context limits, no idle notification polling, diagnostic observer lifecycle, full app startup, layout computed-style equivalence in cyan and grey themes, IME composition and exact typing/backspace/focus.
+- The layout-baseline.css fixture is TEST-ONLY; the app never loads the old stylesheet.
+- Existing unit suite: 313 total, 308 passed, 5 failed, exactly matching the original uploaded ZIP. No additional failures. Existing failures are listed below, left untouched to avoid changing unrelated features.
+- Existing native installer regression passed; installer --check includes new plugin registration/components. Shell syntax and git diff whitespace checks passed.
+- All shipped www JavaScript modules and inline index scripts passed node --check.
+- Both added Kotlin files passed an ISOLATED compiler check with Kotlin 1.9.25 / JVM target 21 against Android 14 APIs, real Capacitor JSObject/JSArray/annotations, and minimal compile-only Plugin/PluginCall/AppCompat bridge signature fixtures. This is NOT a complete Gradle/APK build or Android integration test.
+- Not verified on a physical Android device: actual notification permission/service delivery, OEM restrictions and subjective keyboard frame pacing. No signed APK is included, and no measured on-device speedup is claimed.
+
+Re-run focused browser checks from the repo root with a local server serving port 8134:
+  npm ci
+  npx playwright install --with-deps chromium
+  python3 -m http.server 8134
+  node tests/rss-notifications-performance.browser.cjs
+The server runs separately. HORIZON_URL can override the app URL.
+
+EXISTING FAILURES (also present before this patch)
+- restore into an empty folder is byte-identical to the repo copies and never overwrites without --force
+- paid APIs and paid-only providers are gone from the app while daily Aion allowance stays explicit
+- native check-ins reject router aliases, paid-only providers and model substitution
+- index.html OpenRouter seed matches and starts on Llama 3.3 70B free
+- V120: viewer uses full area, native controls and honest in-picture captions
+
+PRODUCTION FILES MODIFIED
+android-native/app/MainActivity.java
+android-native/manifest/components.xml
+scripts/install_native.sh
+www/horizon_fold.js
+www/horizon_front.js
+www/horizon_layout.css
+www/horizon_lift.js
+www/horizon_perf.js
+www/horizon_rss.js
+www/horizon_unit.js
+www/horizon_v2.js
+www/index.html
+
+NEW FILES
+android-native/app/HorizonNotificationListener.kt
+android-native/app/HorizonNotificationsPlugin.kt
+www/horizon_notifications.js
+tests/rss-notifications-performance.browser.cjs
+tests/fixtures/layout-baseline.css
+
+API REFERENCES CHECKED
+https://capacitorjs.com/docs/apis/http
+https://developer.android.com/reference/android/service/notification/NotificationListenerService
+https://developer.wordpress.com/docs/api/1.1/get/read/feed/
+WordPress subscribe_URL was also checked against a live unauthenticated API response.

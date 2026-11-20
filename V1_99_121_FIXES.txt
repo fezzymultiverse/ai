@@ -1,0 +1,13 @@
+HORIZON V1.99.121 - RADIO LOOK REMOVED, VIDEO EXPAND REMOVED
+Based on horizon-V1_99_120-media-terminal-fixes.zip. Nothing else touched.
+
+1. Radio tuner/widget removed from the media unit (horizon_unit.js, horizon_layout.css).
+   The unit is back to one screen: header, track/station info, waveform, lyrics/ON AIR, AI line.
+   Radio and music still play on that shared screen and the AI still starts both.
+   Radio engine (horizon_radio.js) untouched. The ON AIR card note is back to its old text.
+2. Video player: expand/fullscreen removed (native control hidden, YouTube fs:0, no allowfullscreen).
+   Video play/stream logic untouched. The full-screen arrows on the music widget are untouched.
+
+V1.99.122 (same zip name updated)
+- Video fills the whole widget (object-fit: cover). Still no expand arrows. To show the whole frame again with black bars, change cover to contain in horizon_layout.css (#hzRpVideo video).
+- Music waveform rotates/moves about 2x faster while music plays (horizon_swirl.js live speed 1.7 -> 3.4). Idle screensaver speed unchanged.

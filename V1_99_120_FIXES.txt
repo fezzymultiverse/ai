@@ -1,0 +1,175 @@
+HORIZON V1.99.120 - MEDIA / ORIGINAL TERMUX BRIDGE FIXES
+Based on the uploaded horizon-V1_99_119-requested-fixes.zip.
+
+DELIVERABLE STATUS
+This is updated SOURCE CODE, not a compiled or signed APK. No Android SDK build,
+physical Android/Termux test, live worldwide-station audit or real YouTube playback
+verification was performed here. Browser tests mock YouTube and Android APIs.
+The original signed-build workflow has NOT been bypassed or weakened.
+
+MEDIA CHANGES
+- On loading a local song, Horizon requests fresh embedded title, artist, album
+  and duration from Android MediaMetadataRetriever in a worker thread. Stale tag
+  results cannot replace a newer track. If Android cannot read a URI, cached tags remain.
+- Lyrics automatically open/follow the playing song and refresh when its metadata
+  changes. Existing strict-match checks and stale-network-result guards are retained.
+  Lyrics availability depends on the existing lyric providers. Nothing is invented.
+  Browser file imports still fall back to filename-based tags (Android tag reading
+  only applies to accessible local file/content URIs in the installed app).
+- Left media unit: radio tuner ABOVE now-playing metadata/waveform; station details
+  or music/lyrics BELOW. Existing worldwide country/city/station directory search
+  is retained and another Radio Browser entry point added. Unavailable stations,
+  unsupported codecs, HTTP-only streams and network restrictions can still fail.
+  Radio station metadata is not assumed to identify the individual song on air;
+  this patch does not claim automatic ICY song recognition for every station.
+- YouTube watch now prefers the official adaptive player instead of waiting for
+  extracted URLs and whole-file buffering first. Direct extraction remains a fallback.
+- Video owns the entire MEDIA area (not the whole app). Radio tuner, music, lyrics,
+  idle screen and separate subtitle placeholder are hidden in video mode. Native
+  controls/fullscreen are enabled; available captions appear INSIDE the video.
+- Native fallback captions are WebVTT overlays. Whole-video RAM download fallback
+  is opt-in, no longer an automatic playback step.
+- Video quality is adaptive, not forcibly pinned to an unsupported quality level.
+  Zero buffering, HD availability, autoplay, embedded-video permission, WebView
+  fullscreen support and accepted YouTube referrers cannot be guaranteed here.
+
+TERMINAL CHANGES
+Root defect: the supplied native plugin requested res/raw/horizon_live, but the ZIP
+contained no matching runtime and the installer did not copy or verify one.
+- Added android-native/res/raw/horizon_live.sh and installer copy/integrity checks.
+- Runs the actual Termux bash executable through Python's standard-library PTY.
+  This is not an emulated command interpreter. Requires Python installed in Termux.
+- Commands travel as argument data, not interpolated shell source. Multiline paste
+  and original quoting are preserved; native command trimming was removed.
+  Enter executes; Shift+Enter adds a line.
+- Added live stdin API. While running, Enter sends input to that process; it is
+  visually masked and not added to command history. PTY echo is off by default.
+  Programs can choose to enable their own echo. Never print secrets in commands.
+- Ctrl+C/STOP signals the actual process group and escalates an unresponsive process.
+  Ctrl+D sends EOF. A second command cannot race an unconfirmed stopped job.
+- Split UTF-8/ANSI chunks, carriage-return progress and backspaces are handled.
+  DOM text is updated per chunk rather than per character. Trace is off by default
+  for fresh settings; an existing explicit Trace preference is respected.
+- Actual command exit status is preserved, including explicit nonzero statuses.
+  Real failing commands still return exit 1; the terminal does not fake success.
+- Full raw stdout/stderr is saved in Termux at
+    ~/.cache/horizon-terminal/jobs/<job-id>.log
+  The terminal prints the exact log path at job start. Logs are private (0600,
+  job directory 0700). Output can contain sensitive data; remove old logs yourself.
+- Live UI/history are bounded to protect the phone (10,000 rows; bounded bridge
+  history; native live display limit). The COMPLETE output remains in the log.
+- Manually started live commands no longer have a default ten-minute kill timer.
+  AI jobs retain their timeout. Android/battery optimization may still kill Termux.
+- Result polling recovers missed completion events and failed Python bootstrap.
+- Added Controls: Install terminal runtime (uses legacy RUN_COMMAND so it works
+  before Python is installed) and Open original Termux.
+- cwd persists between jobs. Exported variables, aliases and functions created in
+  one job do NOT persist to the next. Combine dependent operations in one multiline
+  command. Shell startup files still follow actual Termux login-bash behavior.
+- The Horizon log display is NOT a full VT terminal emulator. Use Open original
+  Termux for vim/nano/top, full-screen TUI, rich readline/completion or a persistent
+  interactive shell. It is not claimed to replace the original Termux interface.
+
+ONE-TIME PHONE SETUP
+1. Build/install this updated app with the existing Android build process. An old
+   APK will not acquire the new native methods just by replacing web JavaScript.
+2. Install standard Termux and launch it once to initialize its environment.
+3. In Termux install the tools you need:
+     pkg install -y python git curl wget openssh
+   Optional shared Downloads access:
+     termux-setup-storage
+4. In ~/.termux/termux.properties set the existing allow-external-apps property to
+     allow-external-apps=true
+   Do not duplicate conflicting properties. Horizon cannot edit Termux private files.
+5. In Horizon Terminal > Controls / Options enable Bridge and grant Android's
+   Run commands permission. Use Test. Install terminal runtime is also available
+   here after external-app access and the bridge permission are configured.
+6. Configure Git remote and SSH key / access token in Termux before git push.
+   Real external uploads require a server/account that authorizes uploads.
+7. Consider exempting both apps from battery optimization for long transfers.
+
+EXAMPLE ORIGINAL TERMUX COMMANDS (replace URLs/paths with your own)
+  git -C /path/to/repository push
+  curl -fL --retry 3 -o "$HOME/file.zip" 'https://your-host/file.zip'
+  curl --fail --upload-file "$HOME/file.zip" 'https://your-upload-server/path'
+These examples are not real endpoints and no remote account was accessed here.
+Use ~/storage/downloads only after Termux has its own storage permission.
+
+VERIFICATION
+- Original supplied ZIP: npm test = 306 passed / 4 failed (310 total).
+- Updated source: npm test = 309 passed / SAME 4 inherited failures (313 total).
+  No additional failing regression tests. New bridge tests and native installer
+  shipping/missing/outdated runtime tests passed. Release assertions and the old
+  no-fullscreen assertion were updated to match the requested new behavior;
+  tests were not disabled and CI's blocking checks were not weakened.
+- Browser verification: 3/3 passed in Chromium. Full app startup had no page errors;
+  radio above music, full-area video with in-picture captions contract, automatic
+  tag/lyric update, masked stdin, chunked ANSI/Unicode were covered with mocks.
+- Real shipped PTY runtime on the Linux host: 7/7 passed. Includes original quoting,
+  Unicode, explicit exit codes, syntax error status, 1.2 MB output and trailing bytes,
+  password stdin, cwd, Ctrl+C, actual local HTTP download/upload (byte-checked),
+  and an actual Git push into a temporary local bare repository.
+  These are host process tests, NOT an assertion of phone/network-account success.
+- Syntax: all standalone web JavaScript, 4 inline scripts, native runtime shell,
+  and native installer shell passed their syntax checks.
+- Native installer tested against a generated Android-shaped fixture, including
+  refusing a missing or altered runtime. This is not a Gradle compilation.
+
+INHERITED FAILURES STILL BLOCKING A FULL GREEN BUILD
+1. edge-kit-v54: embedded restore-kit payload differs from existing source.
+2. manual-routing-v87: paid-provider catalogue assertion.
+3. manual-routing-v87: native check-in provider/model policy assertion.
+4. openrouter-v94: OpenRouter seed model assertion.
+Exact current test names and error output are in tests/results-v120/regression-tests.txt;
+original results are alongside them. These unrelated areas were not silently rewritten
+or tests suppressed. The existing CI may therefore stop at regression checks until
+these inherited issues are separately resolved. Do not treat this as a signed or
+production-verified release.
+
+RE-RUN THE NEW CHECKS
+  node --test tests/terminal-bridge-v120.test.cjs tests/termux-installer-v120.test.cjs
+  python3 tests/terminal-v120.py
+  node --test tests/media-terminal-v120.browser.cjs
+Browser checks require Playwright and installed Chromium/system dependencies.
+Existing full suite: npm test
+
+REFERENCE CONTRACTS CONSULTED
+https://github.com/termux/termux-app/wiki/RUN_COMMAND-Intent
+https://developers.google.com/youtube/iframe_api_reference
+
+CHANGED / ADDED FILES
+  Horizon-preview.html
+  V1_99_120_CHANGES.patch
+  V1_99_120_FIXES.txt
+  android-native/app/HorizonMediaPlugin.java
+  android-native/app/HorizonTermuxPlugin.kt
+  android-native/res/raw/horizon_live.sh
+  package-lock.json
+  package.json
+  scaffold/package.json
+  scripts/install_native.sh
+  tests/ground-v99.test.cjs
+  tests/media-terminal-v120.browser.cjs
+  tests/results-v120/browser-tests.txt
+  tests/results-v120/full-video-layout.png
+  tests/results-v120/original-zip-regression-tests.txt
+  tests/results-v120/radio-above-music.png
+  tests/results-v120/regression-tests.txt
+  tests/results-v120/shell-and-transfer-tests.txt
+  tests/terminal-bridge-v120.test.cjs
+  tests/terminal-v120.py
+  tests/termux-installer-v120.test.cjs
+  tests/watch-v117.test.cjs
+  www/horizon_about.js
+  www/horizon_bridges.js
+  www/horizon_hub.js
+  www/horizon_layout.css
+  www/horizon_lyrics.js
+  www/horizon_music.js
+  www/horizon_onair.js
+  www/horizon_radio.js
+  www/horizon_release.js
+  www/horizon_terminal.js
+  www/horizon_unit.js
+  www/horizon_watch.js
+  www/index.html

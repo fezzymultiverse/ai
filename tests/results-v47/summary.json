@@ -1,0 +1,25 @@
+{
+  "release": "V1.99.47",
+  "base": "horizon-V1_99_46.zip",
+  "kind": "source update, not an APK",
+  "node_tests": {
+    "pass": 137,
+    "fail": 0
+  },
+  "browser_checks": {
+    "pass": 18,
+    "fail": 0,
+    "native_services": "mocked",
+    "providers": "mocked request/response payloads, not live credentials"
+  },
+  "python_installer_tests": {
+    "pass": 5,
+    "fail": 0
+  },
+  "javascript_syntax": {
+    "standalone_files": 79,
+    "inline_scripts": 4,
+    "pass": true
+  },
+  "phone_verification": "Not performed. Rebuild in existing Android host and verify NewPipe playback/download, next-track streaming, Termux approval/RUN, synced lyrics and alarm timing/Doze behavior on device."
+}

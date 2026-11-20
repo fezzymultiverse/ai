@@ -1,0 +1,1 @@
+PASS people-chatfirst: 5 steps, 3 mocked API calls, 0 page errors

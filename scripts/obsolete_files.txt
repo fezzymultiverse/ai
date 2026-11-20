@@ -1,0 +1,9 @@
+# Files removed in earlier versions. predeliver.sh deletes them if an unzip left them behind.
+scripts/horizon_edge_tts.sh
+last_voice
+
+# V1.99.37: failing regression tests must block release.
+scripts/ci_bypass_tests.sh
+
+# V1.99.66: in-progress handoff replaced by V1_99_66_NOTES.md.
+HANDOFF_V1_99_66.md

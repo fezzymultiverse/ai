@@ -1,0 +1,101 @@
+/* Horizon V1.99.50: RSS FEEDS. Follows the theme variables, so it matches Dark, Neon and Grey. */
+#hzRssView{--rx-line:var(--border-highlight,#d8dce1);--rx-card:var(--surface,#fff);--rx-text:var(--text-main,#17202b);--rx-acc:var(--accent-cyan,#0096b4);--rx-bad:#d64545;max-width:760px;margin:0 auto;color:var(--rx-text)}
+#hzRssView button,#hzRssView input,#hzRssView select{font:inherit;color:inherit}
+.rx-bar{display:flex;gap:8px;align-items:center;position:sticky;top:-14px;z-index:3;padding:10px 0 8px;margin-top:-14px;background:var(--bg-color,var(--surface,#fff))}
+.rx-tabs{flex:1;min-width:0;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}.rx-tabs::-webkit-scrollbar{display:none}
+.rx-chip{flex:0 0 auto;min-height:36px;padding:0 13px;border:1px solid var(--rx-line);background:var(--rx-card);border-radius:999px;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap}
+.rx-chip[aria-pressed=true]{background:var(--rx-acc);border-color:var(--rx-acc);color:#fff}
+.rx-acts{flex:0 0 auto;display:flex;gap:6px}
+.rx-acts .rx-btn{min-width:40px;padding:0 10px;font-size:16px}
+.rx-btn{min-height:36px;padding:0 13px;border:1px solid var(--rx-line);background:var(--rx-card);border-radius:10px;font-size:13.5px;font-weight:800;cursor:pointer}
+.rx-btn.pri,.rx-btn.on{border-color:var(--rx-acc);color:var(--rx-acc)}
+.rx-btn.bad{border-color:rgba(214,69,69,.5);color:var(--rx-bad)}
+.rx-btn:disabled{opacity:.45}
+.rx-btn:active{transform:scale(.97)}
+.rx-icons{display:flex;gap:12px;overflow-x:auto;padding:6px 2px 12px;scrollbar-width:none}.rx-icons::-webkit-scrollbar{display:none}
+.rx-ic{flex:0 0 auto;width:62px;display:flex;flex-direction:column;align-items:center;gap:5px;background:none;border:0;padding:0;cursor:pointer}
+.rx-circle{position:relative;width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:21px;font-weight:800;color:#fff;background:var(--rx-c,var(--rx-acc));border:2px solid transparent;box-shadow:0 0 0 1px rgba(0,0,0,.15)}
+.rx-ic[aria-pressed=true] .rx-circle{border-color:var(--rx-text);box-shadow:0 0 0 2px var(--rx-acc)}
+.rx-circle.load{animation:rxPulse 1s ease-in-out infinite}
+@keyframes rxPulse{50%{opacity:.45}}
+.rx-err{position:absolute;right:-1px;top:-1px;width:13px;height:13px;border-radius:50%;background:var(--rx-bad);border:2px solid var(--bg-color,#fff)}
+.rx-ic small{font-size:11.5px;max-width:62px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;opacity:.85}
+.rx-note{margin:0 0 10px;padding:8px 10px;border:1px solid var(--rx-line);border-radius:10px;font-size:13px;line-height:1.4;overflow-wrap:anywhere}
+.rx-note.bad{border-color:rgba(214,69,69,.5)}
+.rx-hint{font-size:13.5px;opacity:.7;line-height:1.45;margin:8px 0}
+.rx-list{display:flex;flex-direction:column;gap:8px}
+.rx-item{display:block;width:100%;text-align:left;padding:10px 12px 10px 14px;border:1px solid var(--rx-line);border-left:4px solid var(--rx-c,var(--rx-acc));border-radius:12px;background:var(--rx-card);cursor:pointer}
+.rx-item.nolink{cursor:default}
+.rx-item strong{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;font-size:15.5px;line-height:1.3;overflow-wrap:anywhere}
+.rx-item small{display:block;opacity:.7;font-size:12.5px;margin-top:3px}
+.rx-desc{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:13.5px;opacity:.78;margin-top:4px;line-height:1.35;overflow-wrap:anywhere}
+.rx-item.seen strong{opacity:.55;font-weight:600}
+.rx-item:active{transform:scale(.99)}
+.rx-panel{padding:12px;border:1px solid var(--rx-line);border-radius:14px;background:var(--rx-card);margin-bottom:12px}
+.rx-panel h3{margin:0 0 10px;font-size:16px}
+.rx-panel h4{margin:14px 0 6px;font-size:13px;opacity:.7;text-transform:uppercase;letter-spacing:.8px}
+.rx-line{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.rx-in{flex:1;min-width:0;width:100%;min-height:40px;padding:0 10px;border:1px solid var(--rx-line);border-radius:10px;background:var(--bg-color,#fff);font-size:15px}
+.rx-in:focus{outline:2px solid var(--rx-acc);outline-offset:0}
+.rx-two{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.rx-field{display:block;min-width:0}
+.rx-field span{display:block;font-size:12px;opacity:.7;margin-bottom:3px}
+.rx-swatches{display:flex;gap:10px;margin:4px 0 6px;flex-wrap:wrap}
+.rx-sw{width:32px;height:32px;border-radius:50%;border:2px solid transparent;cursor:pointer;box-shadow:0 0 0 1px rgba(0,0,0,.2)}
+.rx-sw[aria-checked=true]{border-color:var(--rx-text);box-shadow:0 0 0 2px var(--rx-acc)}
+.rx-res{display:flex;flex-direction:column;gap:6px}
+.rx-resrow{display:flex;gap:8px;align-items:center;padding:8px 10px;border:1px solid var(--rx-line);border-radius:10px}
+.rx-resinfo{flex:1;min-width:0}
+.rx-resinfo strong{display:block;font-size:14.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rx-resinfo small{display:block;opacity:.65;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rx-erow{padding:10px 0;border-top:1px solid var(--rx-line)}
+.rx-erow.off{opacity:.6}
+.rx-dot{flex:0 0 28px;width:28px;height:28px;border-radius:50%;border:2px solid transparent;box-shadow:0 0 0 1px rgba(0,0,0,.2);cursor:pointer}
+.rx-eacts{display:flex;gap:6px;flex-wrap:wrap}
+.rx-url{display:block;margin-top:6px;opacity:.55;font-size:11.5px;overflow-wrap:anywhere}
+/* Horizon V1.99.52: real service icons + search-by-name source chips */
+.rx-circle{overflow:hidden}
+.rx-circle.sm{width:36px;height:36px;font-size:16px;flex:0 0 36px}
+.rx-circle.svc{padding:0}
+.rx-circle.svc-youtube{background:#fff}
+.rx-circle.svc-github{background:#24292f;color:#fff}
+.rx-svg{width:62%;height:62%;display:block;fill:currentColor}
+.rx-circle.svc-youtube .rx-svg{width:76%;height:76%}
+.rx-img{position:absolute;inset:0;margin:auto;width:62%;height:62%;object-fit:contain;opacity:0}
+.rx-circle.img{background:#fff;color:transparent}
+.rx-circle.img .rx-img{opacity:1}
+.rx-srcs{flex:none;margin:0 0 8px;padding-bottom:2px}
+.rx-srcs .rx-chip{min-height:32px;padding:0 11px;font-size:13px}
+
+/* Horizon V1.99.69: "Your Feed" layout. Big title, + and ... (becomes a minus), labelled icon row, flat rows with a small thumbnail. */
+.rx-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:6px 2px 8px}
+.rx-title{margin:0;font-size:34px;line-height:1.1;font-weight:700;letter-spacing:.2px}
+.rx-last{font-size:13px;opacity:.7;margin-top:4px}
+.rx-headr{display:flex;gap:10px;flex:0 0 auto}
+.rx-btn.rx-round{width:52px;height:52px;min-height:52px;padding:0;border:0;border-radius:16px;background:rgba(127,127,127,.22);font-size:26px;font-weight:700;display:flex;align-items:center;justify-content:center;line-height:1}
+.rx-btn.rx-round.on{background:var(--rx-acc);color:#fff}
+.rx-tabrow{margin:0 0 8px}
+.rx-tools{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px}
+.rx-btn.rx-tool{min-height:32px;padding:0 11px;border-radius:999px;font-size:12.5px;font-weight:700;background:transparent;opacity:.85}
+.rx-btn.rx-tool.on{border-color:var(--rx-acc);color:var(--rx-acc)}
+.rx-icons{gap:14px;padding:10px 4px 14px}
+.rx-icw{position:relative;flex:0 0 auto}
+.rx-icons .rx-ic{width:76px}
+.rx-icons .rx-circle{width:64px;height:64px;font-size:26px}
+.rx-icons .rx-ic small{font-size:13px;max-width:76px;opacity:.9}
+.rx-minus{position:absolute;top:-6px;left:-2px;z-index:3;width:28px;height:28px;padding:0;border-radius:50%;border:2px solid var(--bg-color,#fff);background:var(--rx-bad);color:#fff;font-size:20px;font-weight:800;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.35)}
+.rx-minus:active{transform:scale(.92)}
+.rx-icons.rm .rx-ic{animation:rxWig .5s ease-in-out infinite}
+@keyframes rxWig{0%,100%{transform:rotate(-1.4deg)}50%{transform:rotate(1.4deg)}}
+@media (prefers-reduced-motion:reduce){.rx-icons.rm .rx-ic{animation:none}}
+.rx-rmhint{margin:0 0 10px;font-size:12.5px}
+.rx-undo{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.rx-list{gap:0}
+.rx-item{padding:16px 2px 15px;border:0;border-left:0;border-bottom:1px solid var(--rx-line);border-radius:0;background:transparent}
+.rx-src{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:14px;opacity:.78}
+.rx-sname{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rx-date{flex:0 0 auto;font-size:13.5px}
+.rx-circle.xs{width:20px;height:20px;flex:0 0 20px;font-size:11px;border:0}
+.rx-main{display:flex;align-items:flex-start;gap:12px}
+.rx-main strong{flex:1;min-width:0;font-size:19px;line-height:1.3;font-weight:600}
+.rx-thumb{flex:0 0 auto;width:92px;height:58px;object-fit:cover;border-radius:8px;background:rgba(127,127,127,.2)}

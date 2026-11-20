@@ -1,0 +1,8 @@
+{
+  "ok": false,
+  "results": [],
+  "errors": [
+    "Failed to read the 'localStorage' property from 'Window': Access is denied for this document."
+  ],
+  "error": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:8134/www/index.html\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:8134/www/index.html\", waiting until \"load\"\u001b[22m\n\n    at /home/claude/w/tests/repair-v62.browser.cjs:39:14"
+}

@@ -1,0 +1,14 @@
+PASS 320px grey: header, model and Stats layout
+PASS 320px neon: header, model and Stats layout
+PASS 390px grey: header, model and Stats layout
+PASS 390px neon: header, model and Stats layout
+PASS 430px grey: header, model and Stats layout
+PASS 430px neon: header, model and Stats layout
+PASS 1280px grey: header, model and Stats layout
+PASS 1280px neon: header, model and Stats layout
+PASS group pill: active model, live tokens, next speaker, rate limits and wrap
+PASS Stats opt-in public-IP lookup and GPS display
+PASS Stats cache scan/confirm deletes only dedicated transient buckets
+PASS Stats native-bridge fixture maps sensor fields without changing providers
+PASS Edge settings: per-provider Test buttons and searchable fresh catalogue
+13/13 browser scenarios passed

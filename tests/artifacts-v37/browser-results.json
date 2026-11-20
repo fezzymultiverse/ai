@@ -1,0 +1,98 @@
+{
+  "passed": 8,
+  "failed": 12,
+  "results": [
+    {
+      "name": "320px grey: full-height side panels, tools, single-row dock and readable states",
+      "pass": false,
+      "error": "AssertionError [ERR_ASSERTION]: Dock tiles share one row\n    at /tmp/claude-0/-home-claude/9e15f1ef-0704-5de5-8123-bdeedaa2f3ed/scratchpad/hz/tests/requested-v37.browser.cjs:71:141\n    at async check (/tmp/claude-0/-home-claude/9e15f1ef-0704-5de5-8123-bdeedaa2f3ed/scratchpad/hz/tests/requested-v37.browser.cjs:8:100)\n    at async /tmp/claude-0/-home-claude/9e15f1ef-0704-5de5-8123-bdeedaa2f3ed/scratchpad/hz/tests/requested-v37.browser.cjs:67:75"
+    },
+    {
+      "name": "320px neon: full-height side panels, tools, single-row dock and readable states",
+      "pass": false,
+      "error": "AssertionError [ERR_ASSERTION]: Dock tiles share one row\n    at /tmp/claude-0/-home-claude/9e15f1ef-0704-5de5-8123-bdeedaa2f3ed/scratchpad/hz/tests/requested-v37.browser.cjs:71:141\n    at async check (/tmp/claude-0/-home-claude/9e15f1ef-0704-5de5-8123-bdeedaa2f3ed/scratchpad/hz/tests/requested-v37.browser.cjs:8:100)\n    at async /tmp/claude-0/-home-claude/9e15f1ef-0704-5de5-8123-bdeedaa2f3ed/scratchpad/hz/tests/requested-v37.browser.cjs:67:75"
+    },
+    {
+      "name": "390px grey: full-height side panels, tools, single-row dock and readable states",
+      "pass": false,
+      "error": "AssertionError [ERR_ASSERTION]: Dock tiles share one row\n    at /tmp/claude-0/-home-claude/9e15f1ef-0704-5de5-8123-bdeedaa2f3ed/scratchpad/hz/tests/requested-v37.browser.cjs:71:141\n    at async check (/tmp/claude-0/-home-claude/9e15f1ef-0704-5de5-8123-bdeedaa2f3ed/scratchpad/hz/tests/requested-v37.browser.cjs:8:100)\n    at async /tmp/claude-0/-home-claude/9e15f1ef-0704-5de5-8123-bdeedaa2f3ed/scratchpad/hz/tests/requested-v37.browser.cjs:67:75"
+    },
+    {
+      "name": "390px neon: full-height side panels, tools, single-row dock and readable states",
+      "pass": false,
+      "error": "AssertionError [ERR_ASSERTION]: Dock tiles share one row\n    at /tmp/claude-0/-home-claude/9e15f1ef-0704-5de5-8123-bdeedaa2f3ed/scratchpad/hz/tests/requested-v37.browser.cjs:71:141\n    at async check (/tmp/claude-0/-home-claude/9e15f1ef-0704-5de5-8123-bdeedaa2f3ed/scratchpad/hz/tests/requested-v37.browser.cjs:8:100)\n    at async /tmp/claude-0/-home-claude/9e15f1ef-0704-5de5-8123-bdeedaa2f3ed/scratchpad/hz/tests/requested-v37.browser.cjs:67:75"
+    },
+    {
+      "name": "430px grey: full-height side panels, tools, single-row dock and readable states",
+      "pass": false,
+      "error": "AssertionError [ERR_ASSERTION]: Dock tiles share one row\n    at /tmp/claude-0/-home-claude/9e15f1ef-0704-5de5-8123-bdeedaa2f3ed/scratchpad/hz/tests/requested-v37.browser.cjs:71:141\n    at async check (/tmp/claude-0/-home-claude/9e15f1ef-0704-5de5-8123-bdeedaa2f3ed/scratchpad/hz/tests/requested-v37.browser.cjs:8:100)\n    at async /tmp/claude-0/-home-claude/9e15f1ef-0704-5de5-8123-bdeedaa2f3ed/scratchpad/hz/tests/requested-v37.browser.cjs:67:75"
+    },
+    {
+      "name": "430px neon: full-height side panels, tools, single-row dock and readable states",
+      "pass": false,
+      "error": "AssertionError [ERR_ASSERTION]: Dock tiles share one row\n    at /tmp/claude-0/-home-claude/9e15f1ef-0704-5de5-8123-bdeedaa2f3ed/scratchpad/hz/tests/requested-v37.browser.cjs:71:141\n    at async check (/tmp/claude-0/-home-claude/9e15f1ef-0704-5de5-8123-bdeedaa2f3ed/scratchpad/hz/tests/requested-v37.browser.cjs:8:100)\n    at async /tmp/claude-0/-home-claude/9e15f1ef-0704-5de5-8123-bdeedaa2f3ed/scratchpad/hz/tests/requested-v37.browser.cjs:67:75"
+    },
+    {
+      "name": "768px grey: full-height side panels, tools, single-row dock and readable states",
+      "pass": false,
+      "error": "AssertionError [ERR_ASSERTION]: Dock tiles share one row\n    at /tmp/claude-0/-home-claude/9e15f1ef-0704-5de5-8123-bdeedaa2f3ed/scratchpad/hz/tests/requested-v37.browser.cjs:71:141\n    at async check (/tmp/claude-0/-home-claude/9e15f1ef-0704-5de5-8123-bdeedaa2f3ed/scratchpad/hz/tests/requested-v37.browser.cjs:8:100)\n    at async /tmp/claude-0/-home-claude/9e15f1ef-0704-5de5-8123-bdeedaa2f3ed/scratchpad/hz/tests/requested-v37.browser.cjs:67:75"
+    },
+    {
+      "name": "768px neon: full-height side panels, tools, single-row dock and readable states",
+      "pass": false,
+      "error": "AssertionError [ERR_ASSERTION]: Dock tiles share one row\n    at /tmp/claude-0/-home-claude/9e15f1ef-0704-5de5-8123-bdeedaa2f3ed/scratchpad/hz/tests/requested-v37.browser.cjs:71:141\n    at async check (/tmp/claude-0/-home-claude/9e15f1ef-0704-5de5-8123-bdeedaa2f3ed/scratchpad/hz/tests/requested-v37.browser.cjs:8:100)\n    at async /tmp/claude-0/-home-claude/9e15f1ef-0704-5de5-8123-bdeedaa2f3ed/scratchpad/hz/tests/requested-v37.browser.cjs:67:75"
+    },
+    {
+      "name": "1280px grey: full-height side panels, tools, single-row dock and readable states",
+      "pass": false,
+      "error": "AssertionError [ERR_ASSERTION]: Dock tiles share one row\n    at /tmp/claude-0/-home-claude/9e15f1ef-0704-5de5-8123-bdeedaa2f3ed/scratchpad/hz/tests/requested-v37.browser.cjs:71:141\n    at async check (/tmp/claude-0/-home-claude/9e15f1ef-0704-5de5-8123-bdeedaa2f3ed/scratchpad/hz/tests/requested-v37.browser.cjs:8:100)\n    at async /tmp/claude-0/-home-claude/9e15f1ef-0704-5de5-8123-bdeedaa2f3ed/scratchpad/hz/tests/requested-v37.browser.cjs:67:75"
+    },
+    {
+      "name": "1280px neon: full-height side panels, tools, single-row dock and readable states",
+      "pass": false,
+      "error": "AssertionError [ERR_ASSERTION]: Dock tiles share one row\n    at /tmp/claude-0/-home-claude/9e15f1ef-0704-5de5-8123-bdeedaa2f3ed/scratchpad/hz/tests/requested-v37.browser.cjs:71:141\n    at async check (/tmp/claude-0/-home-claude/9e15f1ef-0704-5de5-8123-bdeedaa2f3ed/scratchpad/hz/tests/requested-v37.browser.cjs:8:100)\n    at async /tmp/claude-0/-home-claude/9e15f1ef-0704-5de5-8123-bdeedaa2f3ed/scratchpad/hz/tests/requested-v37.browser.cjs:67:75"
+    },
+    {
+      "name": "Peer to peer: independent compact Options inside top-right of chat box",
+      "pass": false,
+      "error": "AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\n\n  assert.ok(pill.y>=box.y&&pill.y<box.y+15&&pill.x+pill.width<=box.x+box.width&&pill.x+pill.width>box.x+box.width-20)\n\n    at /tmp/claude-0/-home-claude/9e15f1ef-0704-5de5-8123-bdeedaa2f3ed/scratchpad/hz/tests/requested-v37.browser.cjs:92:141\n    at async check (/tmp/claude-0/-home-claude/9e15f1ef-0704-5de5-8123-bdeedaa2f3ed/scratchpad/hz/tests/requested-v37.browser.cjs:8:100)\n    at async /tmp/claude-0/-home-claude/9e15f1ef-0704-5de5-8123-bdeedaa2f3ed/scratchpad/hz/tests/requested-v37.browser.cjs:88:103"
+    },
+    {
+      "name": "Group AI: independent compact Options inside top-right of chat box",
+      "pass": false,
+      "error": "AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\n\n  assert.ok(pill.y>=box.y&&pill.y<box.y+15&&pill.x+pill.width<=box.x+box.width&&pill.x+pill.width>box.x+box.width-20)\n\n    at /tmp/claude-0/-home-claude/9e15f1ef-0704-5de5-8123-bdeedaa2f3ed/scratchpad/hz/tests/requested-v37.browser.cjs:92:141\n    at async check (/tmp/claude-0/-home-claude/9e15f1ef-0704-5de5-8123-bdeedaa2f3ed/scratchpad/hz/tests/requested-v37.browser.cjs:8:100)\n    at async /tmp/claude-0/-home-claude/9e15f1ef-0704-5de5-8123-bdeedaa2f3ed/scratchpad/hz/tests/requested-v37.browser.cjs:88:103"
+    },
+    {
+      "name": "Stats: all ten additions operational, native fixture charts and privacy export",
+      "pass": true
+    },
+    {
+      "name": "Stats: browser unknowns, privacy cancellation and safe cleanup boundaries",
+      "pass": true
+    },
+    {
+      "name": "Peer tags: one shot only, no auto follow-up, next tag works, restored even after failure",
+      "pass": true
+    },
+    {
+      "name": "Each-message mode: remote and local messages queue FIFO while provider is busy",
+      "pass": true
+    },
+    {
+      "name": "All-users mode: wait for distinct members, one answer per round, repeated sync is idempotent",
+      "pass": true
+    },
+    {
+      "name": "Tagged turn does not count toward all-users auto round; unkeyed tag never calls fallback AI",
+      "pass": true
+    },
+    {
+      "name": "Real request pipeline: tagged prompt reaches provider and AI reply reaches relay",
+      "pass": true
+    },
+    {
+      "name": "Real request pipeline: send while provider is busy, no overwrite, each exact prompt retained",
+      "pass": true
+    }
+  ]
+}

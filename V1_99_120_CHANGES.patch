@@ -1,0 +1,1168 @@
+--- a/Horizon-preview.html
++++ b/Horizon-preview.html
+@@ -1 +1 @@
+-<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Horizon preview</title><h1>Horizon V1.99.87</h1><p><a href="www/index.html">Open the updated web interface</a></p><p>For browser UI preview only: native plugins, location permissions and CORS behavior differ from an installed Android APK.</p><p><a href="AUDIT_V1_99_87.html">Read the V1.99.87 audit and Android integration requirements first</a></p></html>+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Horizon preview</title><h1>Horizon V1.99.120</h1><p><a href="www/index.html">Open the updated web interface</a></p><p>For browser UI preview only: native plugins, location permissions and CORS behavior differ from an installed Android APK.</p><p>See V1_99_120_FIXES.txt for setup, changes, test evidence and device-verification limits.</p></html>--- a/android-native/app/HorizonMediaPlugin.java
++++ b/android-native/app/HorizonMediaPlugin.java
+@@ -66,6 +66,23 @@
+             call.resolve(o);
+         }).start();
+     }
++    /** Read embedded tags on a worker; never block playback or scan remote URLs. */
++    @PluginMethod public void metadata(PluginCall call) {
++        final String source = call.getString("source", "");
++        if (!source.startsWith("file://") && !source.startsWith("content://")) { call.reject("A local file or content URI is required"); return; }
++        new Thread(() -> {
++            android.media.MediaMetadataRetriever r = new android.media.MediaMetadataRetriever();
++            try {
++                r.setDataSource(getContext(), android.net.Uri.parse(source));
++                JSObject o = new JSObject();
++                int[] keys = {android.media.MediaMetadataRetriever.METADATA_KEY_TITLE, android.media.MediaMetadataRetriever.METADATA_KEY_ARTIST, android.media.MediaMetadataRetriever.METADATA_KEY_ALBUM, android.media.MediaMetadataRetriever.METADATA_KEY_DURATION};
++                String[] names = {"title", "artist", "album", "durationMs"};
++                for (int i = 0; i < keys.length; i++) { String value = r.extractMetadata(keys[i]); if (value != null && !value.trim().isEmpty()) o.put(names[i], value); }
++                call.resolve(o);
++            } catch (Exception e) { call.reject("Cannot read audio tags: " + e.getMessage()); }
++            finally { try { r.release(); } catch (Exception ignored) {} }
++        }, "Horizon-audio-tags").start();
++    }
+     @PluginMethod public void pause(PluginCall call) { getActivity().runOnUiThread(() -> { if (HorizonMediaService.instance != null) HorizonMediaService.instance.pause(); call.resolve(); }); }
+     @PluginMethod public void seek(PluginCall call) { getActivity().runOnUiThread(() -> { if (HorizonMediaService.instance != null) HorizonMediaService.instance.seek((long)(call.getDouble("position",0.0)*1000)); call.resolve(); }); }
+     @PluginMethod public void state(PluginCall call) { getActivity().runOnUiThread(() -> { call.resolve(HorizonMediaService.instance == null ? new JSObject() : HorizonMediaService.instance.state("state")); }); }
+--- a/android-native/app/HorizonTermuxPlugin.kt
++++ b/android-native/app/HorizonTermuxPlugin.kt
+@@ -134,8 +134,8 @@
+         if (call.getBoolean("fromAI", false) == true && !prefs(context).getBoolean("aiEnabled", false)) { call.reject("AI commands are off in Terminal Controls"); return }
+         if (!prefs(context).getBoolean("enabled", false)) { call.reject("Termux bridge is off in Terminal Controls"); return }
+         if (ContextCompat.checkSelfPermission(context, PERMISSION) != PackageManager.PERMISSION_GRANTED) { call.reject("Grant the Termux Run commands permission first"); return }
+-        val cmd = call.getString("cmd")?.trim() ?: ""
+-        if (cmd.isEmpty() || cmd.length > 8000 || cmd.contains('\u0000')) { call.reject("Command must contain 1–8000 characters"); return }
++        val cmd = call.getString("cmd") ?: ""
++        if (cmd.isBlank() || cmd.length > 8000 || cmd.contains('\u0000')) { call.reject("Command must contain 1–8000 characters"); return }
+         approveInPage(call, cmd, "Run in your Termux", "Runs with Termux's file and network access. Android's Run commands permission is still required.") { submit(call, cmd) }
+     }
+ 
+@@ -147,9 +147,9 @@
+         if (fromAI && !p.getBoolean("aiEnabled", false)) { call.reject("AI commands are off in Terminal Controls"); return }
+         if (!p.getBoolean("enabled", false)) { call.reject("Termux bridge is off in Terminal Controls"); return }
+         if (ContextCompat.checkSelfPermission(context, PERMISSION) != PackageManager.PERMISSION_GRANTED) { call.reject("Grant the Termux Run commands permission first"); return }
+-        val cmd = call.getString("cmd")?.trim() ?: ""
+-        if (cmd.isEmpty() || cmd.length > 64000 || cmd.contains('\u0000')) { call.reject("Command must contain 1–64000 characters"); return }
+-        val trace = call.getBoolean("trace", true) == true
++        val cmd = call.getString("cmd") ?: ""
++        if (cmd.isBlank() || cmd.length > 64000 || cmd.contains('\u0000')) { call.reject("Command must contain 1–64000 characters"); return }
++        val trace = call.getBoolean("trace", false) == true
+         val cwd = call.getString("cwd") ?: ""
+         val reason = guardReason(cmd)
+         val auto = reason == null && ((fromAI && p.getBoolean("aiAuto", false)) || (!fromAI && p.getBoolean("manualAuto", false)))
+@@ -165,6 +165,7 @@
+         val id = UUID.randomUUID().toString()
+         try {
+             if (HorizonLockPlugin.locked) throw IllegalStateException("Unlock Horizon to run commands")
++            if (ContextCompat.checkSelfPermission(context, PERMISSION) != PackageManager.PERMISSION_GRANTED) throw IllegalStateException("Termux Run commands permission was revoked")
+             val p = prefs(context)
+             if (fromAI && !p.getBoolean("aiEnabled", false)) throw IllegalStateException("AI command permission was revoked")
+             if (!p.getBoolean("enabled", false)) throw IllegalStateException("Termux bridge was switched off")
+@@ -201,6 +202,18 @@
+             prefs(context).edit().remove("job:$id").apply()
+             call.reject("Termux refused the command: ${e.message}. Check its Run commands permission and allow-external-apps setting.")
+         }
++    }
++    @PluginMethod fun liveInput(call: PluginCall) {
++        if (HorizonLockPlugin.locked || !prefs(context).getBoolean("enabled", false)) { call.reject("Unlock Horizon and enable the bridge first"); return }
++        val job = live[call.getString("jobId") ?: ""]
++        val out = job?.out
++        val text = call.getString("text") ?: ""
++        if (out == null || text.length > 65536) { call.reject("No connected live input channel, or input is too long"); return }
++        val encoded = android.util.Base64.encodeToString(text.toByteArray(Charsets.UTF_8), android.util.Base64.NO_WRAP)
++        Thread {
++            try { synchronized(out) { out.write(("I " + encoded + "\n").toByteArray()); out.flush() }; call.resolve() }
++            catch (e: Exception) { call.reject("Input channel closed: " + e.message) }
++        }.start()
+     }
+     @PluginMethod fun liveKill(call: PluginCall) {
+         val job = live[call.getString("jobId") ?: ""]
+@@ -245,6 +258,7 @@
+                         pos = nl + 1
+                         if (hdr.size != 2) return
+                         type = hdr[0]; need = hdr[1].toIntOrNull() ?: return
++                        if (need < 0 || need > 1048576) return
+                     }
+                     if (data.size - pos < need) break
+                     val payload = data.copyOfRange(pos, pos + need); pos += need; need = -1
+@@ -254,7 +268,7 @@
+                     }
+                     if (type == "O") {
+                         val txt = utf.feed(payload); total += txt.length
+-                        if (total <= 4_000_000) add("O", txt) else if (!capped) { capped = true; add("N", "[output cap reached, the rest is not shown live]") }
++                        if (total <= 16_000_000) add("O", txt) else if (!capped) { capped = true; add("N", "[live display limit reached; complete output is saved in the Termux job log shown above]") }
+                     } else add(type, String(payload))
+                     if (type == "C" || type == "X" || batchChars > 24000) flush()
+                 }
+@@ -275,6 +289,7 @@
+         val id = UUID.randomUUID().toString()
+         try {
+             if (HorizonLockPlugin.locked) throw IllegalStateException("Unlock Horizon to run commands")
++            if (ContextCompat.checkSelfPermission(context, PERMISSION) != PackageManager.PERMISSION_GRANTED) throw IllegalStateException("Termux Run commands permission was revoked")
+             if (call.getBoolean("fromAI", false) == true && !prefs(context).getBoolean("aiEnabled", false)) throw IllegalStateException("AI command permission was revoked")
+             if (!prefs(context).getBoolean("enabled", false)) throw IllegalStateException("Termux bridge was switched off")
+             val callback = Intent(context, HorizonTermuxResultReceiver::class.java).apply {
+--- /dev/null
++++ b/android-native/res/raw/horizon_live.sh
+@@ -0,0 +1,106 @@
++#!/data/data/com.termux/files/usr/bin/bash
++# Real Termux bash + PTY. Arguments are passed verbatim, never interpolated into code.
++# Python is the only extra dependency: pkg install python
++if ! command -v python >/dev/null 2>&1; then
++  printf '%s\n' 'Horizon live terminal needs Python in Termux. Open Termux and run: pkg install python' >&2
++  exit 127
++fi
++exec python - "$@" <<'HORIZON_PY'
++import base64, errno, fcntl, json, os, pty, select, signal, socket, struct, sys, tempfile, termios, time
++port, token, job, trace, cwd, command = sys.argv[1:7]
++if not job.replace('-', '').isalnum():
++    sys.exit(125)
++sock = socket.create_connection(('127.0.0.1', int(port)), timeout=20)
++sock.settimeout(None)
++def frame(kind, payload):
++    if not isinstance(payload, bytes): payload = str(payload).encode('utf-8')
++    sock.sendall(kind.encode('ascii') + b' ' + str(len(payload)).encode('ascii') + b'\n' + payload)
++frame('H', token + ' ' + job)
++base = os.path.join(os.path.expanduser('~'), '.cache', 'horizon-terminal', 'jobs')
++os.makedirs(base, mode=0o700, exist_ok=True)
++os.chmod(base, 0o700)
++logpath = os.path.join(base, job + '.log')
++metapath = os.path.join(base, job + '.json')
++cwdpath = os.path.join(base, job + '.cwd')
++log = open(logpath, 'wb'); os.chmod(logpath, 0o600)
++frame('N', 'Full output log: ' + logpath + '\nPlain terminal mode; full-screen editors are best opened in Termux itself.')
++shell = os.environ.get('PREFIX', '/data/data/com.termux/files/usr') + '/bin/bash'
++if not os.path.isfile(shell): shell = '/bin/bash'  # Test host only; Android uses PREFIX.
++frame('B', shell)
++# A private EXIT trap captures cd without adding markers to command stdout or altering its exit status.
++script = "trap '__hz_status=$?; builtin pwd -P > \"$HZ_CWD_FILE\"; exit \"$__hz_status\"' EXIT\n" + command + '\n'
++pid, master = pty.fork()
++if pid == 0:
++    try:
++        os.chdir(os.path.expanduser(cwd) if cwd else os.path.expanduser('~'))
++        env = os.environ.copy()
++        env.update({'TERM': 'dumb', 'NO_COLOR': '1', 'CLICOLOR': '0', 'HZ_CWD_FILE': cwdpath})
++        # The UI does not echo submitted input, and the PTY does not echo passwords.
++        attrs = termios.tcgetattr(0); attrs[3] &= ~termios.ECHO; termios.tcsetattr(0, termios.TCSANOW, attrs)
++        args = [shell, '-l', '-c', script]
++        if trace == '1': args = [shell, '-l', '-x', '-c', script]
++        os.execve(shell, args, env)
++    except BaseException as exc:
++        os.write(2, (str(exc) + '\n').encode('utf-8')); os._exit(126)
++fcntl.ioctl(master, termios.TIOCSWINSZ, struct.pack('HHHH', 32, 100, 0, 0))
++control = b''; child_status = None; ended_at = None; interrupted_at = None; pty_open = True
++try:
++    while True:
++        watch = [sock] + ([master] if pty_open else [])
++        ready, _, _ = select.select(watch, [], [], 0.08)
++        if master in ready:
++            try: data = os.read(master, 32768)
++            except OSError as exc:
++                if exc.errno == errno.EIO: data = b''
++                else: raise
++            if data:
++                log.write(data); log.flush(); frame('O', data)
++            else: pty_open = False
++        if sock in ready:
++            data = sock.recv(8192)
++            if not data: raise ConnectionError('Horizon disconnected')
++            control += data
++            if len(control) > 1000000: raise ValueError('Input frame too long')
++            while b'\n' in control:
++                row, control = control.split(b'\n', 1)
++                if row == b'K':
++                    interrupted_at = time.monotonic()
++                    try: os.killpg(pid, signal.SIGINT)
++                    except ProcessLookupError: pass
++                elif row.startswith(b'I '):
++                    text = base64.b64decode(row[2:], validate=True)
++                    if len(text) <= 262144 and pty_open:
++                        view = memoryview(text)
++                        while view:
++                            n = os.write(master, view); view = view[n:]
++        if child_status is None:
++            got, status = os.waitpid(pid, os.WNOHANG)
++            if got:
++                child_status = os.waitstatus_to_exitcode(status)
++                ended_at = time.monotonic()
++        if interrupted_at and time.monotonic() - interrupted_at > 2 and child_status is None:
++            try: os.killpg(pid, signal.SIGKILL)
++            except ProcessLookupError: pass
++        # Drain the PTY BEFORE X, so completion cannot drop trailing output.
++        if child_status is not None and (not pty_open or time.monotonic() - ended_at > 2): break
++    code = child_status if child_status >= 0 else 128 - child_status
++    final_cwd = cwd or os.path.expanduser('~')
++    try:
++        with open(cwdpath) as f: final_cwd = f.read().rstrip('\n') or final_cwd
++        os.remove(cwdpath)
++    except OSError: pass
++    with open(metapath, 'w') as f: json.dump({'exitCode': code, 'cwd': final_cwd, 'log': logpath}, f)
++    os.chmod(metapath, 0o600)
++    frame('C', final_cwd); frame('X', code)
++except BaseException as exc:
++    try: os.killpg(pid, signal.SIGKILL)
++    except ProcessLookupError: pass
++    try: os.waitpid(pid, 0)
++    except ChildProcessError: pass
++    code = 125
++    try: frame('N', 'Terminal transport failed: ' + str(exc)); frame('X', code)
++    except OSError: pass
++finally:
++    log.close(); os.close(master); sock.close()
++sys.exit(code & 255)
++HORIZON_PY
+--- a/package-lock.json
++++ b/package-lock.json
+@@ -1,12 +1,12 @@
+ {
+   "name": "horizon",
+-  "version": "1.99.119",
++  "version": "1.99.120",
+   "lockfileVersion": 3,
+   "requires": true,
+   "packages": {
+     "": {
+       "name": "horizon",
+-      "version": "1.99.119",
++      "version": "1.99.120",
+       "dependencies": {
+         "@capacitor/android": "^7.0.0",
+         "@capacitor/core": "^7.0.0",
+--- a/package.json
++++ b/package.json
+@@ -1,6 +1,6 @@
+ {
+   "name": "horizon",
+-  "version": "1.99.119",
++  "version": "1.99.120",
+   "private": true,
+   "scripts": {
+     "test": "node --test tests/*.test.cjs",
+--- a/scaffold/package.json
++++ b/scaffold/package.json
+@@ -1,6 +1,6 @@
+ {
+   "name": "horizon",
+-  "version": "1.99.119",
++  "version": "1.99.120",
+   "private": true,
+   "scripts": {
+     "test": "node --test tests/*.test.cjs",
+--- a/scripts/install_native.sh
++++ b/scripts/install_native.sh
+@@ -115,6 +115,8 @@
+     [ -f "$MAIN/java/com/festers/horizon/${f#"$SRC_KT"/}" ] || bad "source ${f#"$SRC_KT"/} is not inside android/"
+   done
+   [ -f "$MAIN/res/xml/network_security_config.xml" ] || bad "res/xml/network_security_config.xml"
++  [ -s "$MAIN/res/raw/horizon_live.sh" ] || bad "res/raw/horizon_live.sh (Termux live transport)"
++  if [ -f "$MAIN/res/raw/horizon_live.sh" ]; then cmp -s "$REPO/android-native/res/raw/horizon_live.sh" "$MAIN/res/raw/horizon_live.sh" || bad "outdated Termux live transport"; fi
+   [[ "$X" == *"android:networkSecurityConfig"* ]] || bad "android:networkSecurityConfig in the manifest"
+   while IFS= read -r line; do
+     [ -n "$line" ] || continue
+@@ -177,6 +179,7 @@
+ 
+ # ---- 2. network security config ----
+ put_file "$SRC_RES" "$MAIN/res/xml/network_security_config.xml"
++put_file "$REPO/android-native/res/raw/horizon_live.sh" "$MAIN/res/raw/horizon_live.sh"
+ 
+ # ---- 3. manifest ----
+ X="$(cat "$MANIFEST"; printf x)"; X="${X%x}"
+--- a/tests/ground-v99.test.cjs
++++ b/tests/ground-v99.test.cjs
+@@ -193,9 +193,9 @@
+   assert.match(lite, /FACT CHECK/);
+   assert.ok(sb.HorizonGround.block(true).length < 700, 'lite block stays small for tiny-context models');
+   const pkg = JSON.parse(read('package.json')).version;
+-  assert.strictEqual(pkg, '1.99.119');
+-  assert.match(read('www/horizon_release.js'), /release = '1\.99\.119'/);
+-  assert.match(read('www/horizon_about.js'), /VERSION = 'V1\.99\.119'/);
+-  assert.strictEqual(JSON.parse(read('scaffold/package.json')).version, '1.99.119');
++  assert.strictEqual(pkg, '1.99.120');
++  assert.match(read('www/horizon_release.js'), /release = '1\.99\.120'/);
++  assert.match(read('www/horizon_about.js'), /VERSION = 'V1\.99\.120'/);
++  assert.strictEqual(JSON.parse(read('scaffold/package.json')).version, '1.99.120');
+   assert.strictEqual(JSON.parse(read('www/horizon_model_inventory.js').replace(/^[\s\S]*?(\{)/, '$1').replace(/[;\s]*\)?[;\s]*$/, '')).version, '1.99.119');
+ });
+--- /dev/null
++++ b/tests/media-terminal-v120.browser.cjs
+@@ -0,0 +1,54 @@
++'use strict';
++// Deterministic host-browser tests. Native Android APIs and YouTube transport are MOCKS.
++const test=require('node:test'), assert=require('node:assert/strict'), fs=require('node:fs'), path=require('node:path'), http=require('node:http');
++const {chromium}=require('playwright');
++const root=path.resolve(__dirname,'../www'), evidence=path.join(__dirname,'results-v120');
++let server,browser,origin;
++test.before(async()=>{
++ fs.mkdirSync(evidence,{recursive:true});
++ server=http.createServer((req,res)=>{const file=path.resolve(root,'.'+new URL(req.url,'http://localhost').pathname);if(!file.startsWith(root+path.sep)&&file!==root){res.writeHead(403).end();return;}let f=file===root+path.sep||file===root?path.join(root,'index.html'):file;try{res.setHeader('Content-Type',f.endsWith('.js')?'text/javascript':f.endsWith('.css')?'text/css':f.endsWith('.png')?'image/png':'text/html');res.end(fs.readFileSync(f));}catch{res.writeHead(404).end();}}).listen(0,'127.0.0.1');await new Promise(r=>server.on('listening',r));origin='http://127.0.0.1:'+server.address().port;
++ browser=await chromium.launch({headless:true,args:['--no-sandbox']});
++});
++test.after(async()=>{await browser?.close();await new Promise(r=>server?.close(r));});
++async function page(){const p=await browser.newPage({viewport:{width:430,height:932}});await p.route('**/*',r=>r.request().url().startsWith(origin)?r.continue():r.abort());return p;}
++async function js(p,f){await p.addScriptTag({path:path.join(root,f)});}
++test('full app opens; radio is above metadata/music and video owns the entire media area',async()=>{
++ const p=await page(),errors=[];p.on('pageerror',e=>errors.push(e.message));
++ await p.goto(origin,{waitUntil:'domcontentloaded'});await p.waitForTimeout(1200);
++ await p.evaluate(()=>{document.getElementById('leftPanel').classList.add('open');document.getElementById('hzWidgets').hidden=false;});await p.waitForTimeout(500);
++ const initial=await p.evaluate(()=>{const t=document.querySelector('[data-face="radio"]').getBoundingClientRect(),m=document.querySelector('[data-face="music"]').getBoundingClientRect();return {tuner:getComputedStyle(document.querySelector('[data-face="radio"]')).display,above:t.bottom<=m.top+2,radio:!!window.HorizonRadio};});
++ assert.equal(initial.radio,true);assert.notEqual(initial.tuner,'none');assert.equal(initial.above,true);
++ await p.screenshot({path:path.join(evidence,'radio-above-music.png')});
++ await p.evaluate(()=>{
++   window.YT={Player:function(node,o){const iframe=document.createElement('iframe');node.replaceWith(iframe);this.getIframe=()=>iframe;this.getPlayerState=()=>1;this.loadModule=()=>{};this.unloadModule=()=>{};this.destroy=()=>iframe.remove();this.playVideo=()=>o.events.onStateChange({data:1});this.pauseVideo=()=>{};window.testYtOptions=o;queueMicrotask(()=>o.events.onReady({target:this}));}};
++ });
++ const result=await p.evaluate(()=>HorizonWatch.embed({id:'abcdefghijk',title:'Video layout test'}));assert.equal(result.ok,true);await p.waitForTimeout(850);
++ const video=await p.evaluate(()=>{const media=document.getElementById('hzRpMedia'),v=document.getElementById('hzRpVideo');return {lyr:getComputedStyle(document.getElementById('hzRpLyrics')).display,subs:getComputedStyle(document.getElementById('hzRpSubs')).display,tuner:document.querySelector('[data-face="radio"]').hidden,media:media.getBoundingClientRect().height,video:v.getBoundingClientRect().height,controls:testYtOptions.playerVars.controls,fullscreen:testYtOptions.playerVars.fs,allow:v.querySelector('iframe').getAttribute('allow')};});
++ assert.equal(video.lyr,'none');assert.equal(video.subs,'none');assert.equal(video.tuner,true);assert.ok(video.video>=video.media-3,JSON.stringify(video));assert.equal(video.controls,1);assert.equal(video.fullscreen,1);assert.match(video.allow,/fullscreen/);
++ await p.screenshot({path:path.join(evidence,'full-video-layout.png')});await p.evaluate(()=>HorizonWatch.stop());await p.waitForTimeout(850);assert.equal(await p.locator('[data-face="radio"]').evaluate(n=>n.hidden),false);assert.deepEqual(errors,[]);await p.close();
++});
++test('local playback refreshes actual metadata and automatically opens matched lyrics',async()=>{
++ const p=await page();await p.goto(origin+'/cordova.js');
++ await p.setContent('<html><head></head><body><div id="mpMini"></div><section class="panel open"><div id="hzRpLyrics"></div></section></body></html>');
++ await p.evaluate(()=>{
++  window.metaCalls=0;window.lyricUrls=[];
++  window.Capacitor={Plugins:{HorizonMedia:{metadata:async()=>{window.metaCalls++;return {title:'Refreshed Song',artist:'Correct Artist',album:'Actual Album',durationMs:'120000'};}}}};
++  window.HorizonAudio=()=>{const a=new EventTarget();a.paused=true;a.currentTime=0;a.duration=120;a.play=()=>{a.paused=false;queueMicrotask(()=>{a.dispatchEvent(new Event('play'));a.currentTime=.3;a.dispatchEvent(new Event('timeupdate'));});return Promise.resolve();};a.pause=()=>{a.paused=true;a.dispatchEvent(new Event('pause'));};return a;};
++  window.fetch=async(url)=>{lyricUrls.push(String(url));return {ok:true,status:200,json:async()=>[{artistName:'Correct Artist',trackName:'Refreshed Song',duration:120,syncedLyrics:'[00:00.00]Test opening line\n[00:03.00]Another test line\n[00:06.00]A third line\n[00:10.00]Fourth line'}]};};
++ });
++ await js(p,'horizon_music.js');await js(p,'horizon_lyrics.js');
++ await p.evaluate(async()=>{await HorizonMusic.init({lsGet:()=>null,lsSet(){},notice(){},onChange(){},nativeScan:async()=>({tracks:[{id:123,title:'Old Name',artist:'Unknown artist',path:'/music/test.mp3',music:true,duration:120000}]}),srcFor:p=>p});await HorizonMusic.scan();await HorizonMusic.run('music.play','m123');});
++ await p.waitForFunction(()=>HorizonMusic.nowInfo()?.title==='Refreshed Song'&&HorizonLyrics.isOpen());await p.waitForTimeout(300);
++ const state=await p.evaluate(()=>({info:HorizonMusic.nowInfo(),metaCalls,urls:lyricUrls,visible:!document.querySelector('.hzly-box').hidden,text:document.querySelector('.hzly-box').textContent}));assert.equal(state.metaCalls,1);assert.equal(state.info.artist,'Correct Artist');assert.equal(state.info.album,'Actual Album');assert.equal(state.visible,true);assert.ok(state.urls.some(x=>/Refreshed|Refreshed%20Song/.test(x)));assert.match(state.text,/Test opening line/);await p.close();
++});
++test('terminal preserves chunked ANSI/UTF-8 and sends hidden stdin instead of starting another command',async()=>{
++ const p=await page();await p.goto(origin+'/cordova.js');await p.setContent('<html><head></head><body></body></html>');
++ await p.evaluate(()=>{window.sentInput=[];window.HorizonBridges={busy:()=>true,liveCapable:()=>true,input:async t=>sentInput.push(t),refresh:async()=>{},kill:async()=>true};});await js(p,'horizon_runlog.js');await js(p,'horizon_terminal.js');await p.evaluate(()=>HorizonTerminal.open());
++ await p.evaluate(()=>{
++  const e=d=>window.dispatchEvent(new CustomEvent('horizon-run',{detail:d}));e({phase:'start',command:'read -r value'});e({phase:'chunk',text:'\x1b[3'});e({phase:'chunk',text:'1m日本語 🎵\x1b[0m\n12345\rOK\x1b[K\n'});
++ });
++ await p.locator('.hzt-input').fill('private password');await p.locator('.hzt-in').evaluate(f=>f.dispatchEvent(new Event('submit',{cancelable:true,bubbles:true})));assert.deepEqual(await p.evaluate(()=>sentInput),['private password\n']);
++ assert.equal(await p.locator('.hzt-input').getAttribute('data-input-hidden'),'true');
++ let text=await p.locator('.hzt-out').innerText();assert.match(text,/日本語 🎵/);assert.match(text,/\nOK(?:\n|$)/);assert.doesNotMatch(text,/private password|\[31m/);
++ await p.evaluate(()=>window.dispatchEvent(new CustomEvent('horizon-run',{detail:{phase:'end',result:{exitCode:0,ms:100,cwd:'/tmp'}}})));assert.equal(await p.locator('.hzt-input').getAttribute('data-input-hidden'),'false');await p.close();
++});
+--- /dev/null
++++ b/tests/terminal-bridge-v120.test.cjs
+@@ -0,0 +1,26 @@
++'use strict';
++const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
++const code=fs.readFileSync(path.join(__dirname,'../www/horizon_bridges.js'),'utf8');
++function fixture(){
++ const bus=new EventTarget(),events=[],inputs=[],scheduled=[],intervals=[];
++ const plugin={status:async()=>({enabled:true,installed:true,permission:true}),executeLive:async o=>{events.push(o);return {jobId:'test-job'};},liveInput:async d=>{inputs.push(d);},liveKill:async()=>{},result:async()=>({status:'submitted'})};
++ const c={console,Date,Promise,JSON,Math,CustomEvent,Event,localStorage:{getItem:()=>null},Capacitor:{isNativePlatform:()=>true,Plugins:{HorizonTermux:plugin}},document:{hidden:false,readyState:'loading',addEventListener(){},getElementById(){return null;}},addEventListener:bus.addEventListener.bind(bus),dispatchEvent:bus.dispatchEvent.bind(bus),setTimeout:(fn,ms)=>{scheduled.push({fn,ms});return scheduled.length;},clearTimeout(){},setInterval:(fn,ms)=>{intervals.push({fn,ms});return intervals.length;},clearInterval(){}};
++ c.window=c;vm.createContext(c);vm.runInContext(code,c);
++ const send=(id,ev)=>bus.dispatchEvent(new CustomEvent('horizon-termux-live',{detail:{id,ev}}));
++ return {c,plugin,events,inputs,scheduled,intervals,send};
++}
++const tick=()=>new Promise(r=>setImmediate(r));
++test('bridge preserves original multiline command and sends stdin; manual runs have no forced cutoff',async()=>{
++ const f=fixture(),command="printf '%s\\n' 'a b'\n# exact paste\ntrue\n";
++ const pending=f.c.HorizonBridges.termux(command,600000,false,{cwd:'/real folder'});await tick();
++ assert.equal(f.events[0].cmd,command);assert.equal(f.events[0].cwd,'/real folder');assert.equal(f.events[0].trace,false);assert.equal(f.scheduled.some(x=>x.ms===600000),false);
++ await f.c.HorizonBridges.input('日本語 secret\n');assert.equal(f.inputs[0].text,'日本語 secret\n');
++ f.send('test-job',[{t:'O',d:'X'.repeat(100000)+'TAIL'},{t:'C',d:'/next folder'},{t:'X',d:'7'}]);const result=await pending;
++ assert.equal(result.exitCode,7);assert.equal(result.cwd,'/next folder');assert.equal(result.stdout.length,100004);assert.equal(f.c.HorizonBridges.busy(),false);
++});
++test('early live frames are retained until executeLive resolves; concurrent commands are refused',async()=>{
++ const f=fixture();let release;f.plugin.executeLive=()=>new Promise(r=>{release=r;});const pending=f.c.HorizonBridges.termux('echo early');
++ await assert.rejects(f.c.HorizonBridges.termux('echo second'),/still pending/);
++ f.send('early-job',[{t:'O',d:'early bytes\n'},{t:'C',d:'/cwd'},{t:'X',d:'0'}]);release({jobId:'early-job'});
++ const result=await pending;assert.equal(result.stdout,'early bytes\n');assert.equal(result.exitCode,0);assert.equal(f.c.HorizonBridges.busy(),false);
++});
+--- /dev/null
++++ b/tests/terminal-v120.py
+@@ -0,0 +1,71 @@
++#!/usr/bin/env python3
++"""Host verification of the actual shipped Termux PTY transport, not an Android device test."""
++import base64, hashlib, http.server, json, os, pathlib, shutil, socket, subprocess, tempfile, threading, time, unittest, uuid
++SCRIPT = pathlib.Path(__file__).resolve().parents[1] / 'android-native/res/raw/horizon_live.sh'
++class RuntimeTests(unittest.TestCase):
++    def setUp(self):
++        self.tmp = tempfile.TemporaryDirectory(); self.home = pathlib.Path(self.tmp.name)
++    def tearDown(self): self.tmp.cleanup()
++    def run_job(self, command, input_after=None, interrupt=False):
++        listener=socket.socket(); listener.bind(('127.0.0.1',0)); listener.listen(1); listener.settimeout(15)
++        job=str(uuid.uuid4()); token=uuid.uuid4().hex
++        env=dict(os.environ,HOME=str(self.home),PREFIX='/usr')
++        proc=subprocess.Popen(['bash',str(SCRIPT),str(listener.getsockname()[1]),token,job,'0',str(self.home),command],env=env,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
++        connection,_=listener.accept(); connection.settimeout(20); stream=connection.makefile('rb'); frames=[]; output=b''; sent=False
++        try:
++            while True:
++                line=stream.readline()
++                if not line: break
++                kind,size=line.decode('ascii').strip().split(' '); data=stream.read(int(size)); frames.append((kind,data))
++                if len(frames)==1: self.assertEqual((kind,data),('H',(token+' '+job).encode()))
++                if kind=='O':
++                    output+=data
++                    if not sent and input_after and input_after[0] in output:
++                        connection.sendall(b'I '+base64.b64encode(input_after[1])+b'\n');sent=True
++                    if interrupt and not sent and b'READY' in output: connection.sendall(b'K\n');sent=True
++                if kind=='X': break
++            rc=proc.wait(timeout=10)
++            self.assertTrue(any(k=='X' for k,d in frames),str(frames)+str(proc.stderr.read()))
++            code=int([d for k,d in frames if k=='X'][-1]); self.assertEqual(rc,code)
++            log=(self.home/'.cache/horizon-terminal/jobs'/f'{job}.log').read_bytes();self.assertEqual(log,output)
++            self.assertEqual(frames[-1][0],'X','Exit must follow all drained output')
++            return code,output.decode('utf-8'),[d.decode() for k,d in frames if k=='C'][-1]
++        finally:
++            stream.close();connection.close();listener.close()
++            if proc.poll() is None: proc.kill();proc.wait()
++            proc.stdout.close();proc.stderr.close()
++    def test_01_original_quoting_unicode_multiline(self):
++        code,out,cwd=self.run_job("printf '%s\\n' 'quotes: \"a b\" $HOME `literal`' '日本語 🎵 café'; printf 'line2\\n'")
++        self.assertEqual(code,0);self.assertIn('日本語 🎵 café',out);self.assertIn('$HOME `literal`',out)
++    def test_02_exit_codes_not_wrapper_exit_one(self):
++        for command,code in [('true',0),('false',1),('exit 7',7),('printf \"x\\n\"; exit 23',23),('if then',2)]:
++            with self.subTest(command=command): self.assertEqual(self.run_job(command)[0],code)
++    def test_03_large_output_not_cut_off(self):
++        code,out,_=self.run_job("python -c \"import sys; sys.stdout.write('A'*1200000+'THE_END\\n')\"")
++        self.assertEqual(code,0);self.assertIn('THE_END',out);self.assertGreater(len(out),1200000)
++    def test_04_input_and_hidden_password(self):
++        code,out,_=self.run_job("printf 'PASSWORD: '; read -r secret; [ \"$secret\" = 'sensitive value' ] && printf '\\nAUTH_OK\\n'",(b'PASSWORD:',b'sensitive value\n'))
++        self.assertEqual(code,0);self.assertIn('AUTH_OK',out);self.assertNotIn('sensitive value',out)
++    def test_05_cwd_and_interrupt(self):
++        (self.home/'sub folder').mkdir();code,out,cwd=self.run_job("cd 'sub folder'; pwd")
++        self.assertEqual(code,0);self.assertEqual(cwd,str(self.home/'sub folder'))
++        code,out,_=self.run_job("printf 'READY\\n'; sleep 60",interrupt=True);self.assertEqual(code,130)
++    def test_06_actual_download_and_upload(self):
++        if not shutil.which('curl'): self.skipTest('curl unavailable')
++        payload=os.urandom(250000);received=[]
++        class Handler(http.server.BaseHTTPRequestHandler):
++            def do_GET(s): s.send_response(200);s.send_header('Content-Length',str(len(payload)));s.end_headers();s.wfile.write(payload)
++            def do_PUT(s): received.append(s.rfile.read(int(s.headers['Content-Length'])));s.send_response(200);s.end_headers();s.wfile.write(b'UPLOADED')
++            def log_message(*args): pass
++        server=http.server.ThreadingHTTPServer(('127.0.0.1',0),Handler);t=threading.Thread(target=server.serve_forever,daemon=True);t.start()
++        try:
++            base=f'http://127.0.0.1:{server.server_port}'
++            code,out,_=self.run_job(f'curl --fail -sS -o downloaded.bin {base}/file && curl --fail -sS --upload-file downloaded.bin {base}/upload')
++            self.assertEqual(code,0);self.assertEqual((self.home/'downloaded.bin').read_bytes(),payload);self.assertEqual(received,[payload]);self.assertIn('UPLOADED',out)
++        finally: server.shutdown();server.server_close()
++    def test_07_actual_git_push(self):
++        if not shutil.which('git'): self.skipTest('git unavailable')
++        command='git init -q --bare remote.git && git init -q work && cd work && git config user.name HorizonTest && git config user.email test@example.invalid && printf test > file.txt && git add file.txt && git commit -qm Initial && git remote add origin ../remote.git && git push -u origin HEAD'
++        code,out,_=self.run_job(command);self.assertEqual(code,0);self.assertIn('new branch',out)
++        self.assertTrue(any((self.home/'remote.git/refs/heads').iterdir()))
++if __name__=='__main__': unittest.main(verbosity=2)
+--- /dev/null
++++ b/tests/termux-installer-v120.test.cjs
+@@ -0,0 +1,19 @@
++'use strict';
++const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path'),cp=require('node:child_process');
++const root=path.resolve(__dirname,'..');
++test('native installer ships the missing PTY runtime and refuses missing or outdated runtime',()=>{
++ const tmp=fs.mkdtempSync(path.join(os.tmpdir(),'hz-v120-'));
++ function put(f,text){const p=path.join(tmp,f);fs.mkdirSync(path.dirname(p),{recursive:true});fs.writeFileSync(p,text);}
++ function run(...args){return cp.spawnSync('bash',[path.join(root,'scripts/install_native.sh'),...args],{encoding:'utf8',timeout:30000});}
++ try{
++  put('build.gradle',"buildscript {\n repositories { google(); mavenCentral() }\n dependencies {\n classpath 'com.android.tools.build:gradle:8.7.2'\n }\n}\nallprojects { repositories { google(); mavenCentral() } }\n");
++  put('app/build.gradle',"apply plugin: 'com.android.application'\nandroid {\n namespace 'com.example.horizon'\n compileSdk 35\n defaultConfig { minSdk 24 }\n}\ndependencies {\n implementation project(':capacitor-android')\n}\n");
++  put('app/capacitor.build.gradle','android { compileOptions { sourceCompatibility JavaVersion.VERSION_21; targetCompatibility JavaVersion.VERSION_21 } }\n');
++  put('app/src/main/AndroidManifest.xml','<?xml version="1.0"?><manifest xmlns:android="http://schemas.android.com/apk/res/android">\n<application android:label="Test">\n</application>\n</manifest>\n');
++  const install=run(tmp,'--apply');assert.equal(install.status,0,install.stdout+install.stderr);
++  const runtime=path.join(tmp,'app/src/main/res/raw/horizon_live.sh');assert.deepEqual(fs.readFileSync(runtime),fs.readFileSync(path.join(root,'android-native/res/raw/horizon_live.sh')));
++  const check=run('--check',tmp);assert.equal(check.status,0,check.stdout+check.stderr);
++  fs.appendFileSync(runtime,'\n# changed\n');const stale=run('--check',tmp);assert.notEqual(stale.status,0);assert.match(stale.stderr,/outdated Termux live transport/);
++  fs.unlinkSync(runtime);const missing=run('--check',tmp);assert.notEqual(missing.status,0);assert.match(missing.stderr,/Termux live transport/);
++ }finally{fs.rmSync(tmp,{recursive:true,force:true});}
++});
+--- a/tests/watch-v117.test.cjs
++++ b/tests/watch-v117.test.cjs
+@@ -19,9 +19,12 @@
+   assert.ok(W('horizon_toolpolicy.js').includes('yt.watch'), 'tool policy');
+   assert.ok(W('horizon_layout.css').includes('#hzRpMedia.is-watch'), 'layout rules');
+ });
+-test('viewer is view only: no fullscreen, no download, never invents subtitles', () => {
++test('V120: viewer uses full area, native controls and honest in-picture captions', () => {
+   const w = W('horizon_watch.js');
+-  assert.ok(w.includes('nofullscreen'));
+-  assert.ok(!/requestFullscreen/.test(w));
++  assert.ok(w.includes('<video controls playsinline'));
++  assert.ok(w.includes('controls:1,fs:1'));
++  assert.ok(w.includes("scard.hidden = true"));
++  assert.ok(w.includes("object-fit:contain") || W('horizon_layout.css').includes('object-fit:contain'));
++  assert.ok(!w.includes('controlslist="nofullscreen')); 
+   assert.ok(w.includes('No subtitles for this video'));
+ });
+--- a/www/horizon_about.js
++++ b/www/horizon_about.js
+@@ -1,7 +1,7 @@
+ /* Horizon V1.26.0: ABOUT & UPDATES page: version, release check, backup export/import, changelog, privacy awareness + reminder switch. */
+ (function () {
+     'use strict';
+-    var VERSION = 'V1.99.119';
++    var VERSION = 'V1.99.120';
+     var LSK = 'horizon_privacy_notice';
+     var REPO_API = 'https://api.github.com/repos/fezzymultiverse/ai';
+     var LOG = [
+--- a/www/horizon_bridges.js
++++ b/www/horizon_bridges.js
+@@ -58,7 +58,17 @@
+   });
+   window.addEventListener('horizon-termux-result', function (e) {
+     var r = e.detail || {};
+-    var lr = liveRuns[r.id]; if (lr && !lr.closed) { setTimeout(function () { if (lr.closed) return; lr.exit = typeof r.exitCode === 'number' ? r.exitCode : -1; if (!lr.raw) lr.raw = String(r.stdout || '') + (r.stderr ? '\n' + r.stderr : ''); finishLive(lr, liveResult(lr)); }, 1500); } if (activeJob && activeJob.id === r.id && activeJob.unknown && (r.status === 'complete' || typeof r.exitCode === 'number')) { activeJob = null; emitCommand({ phase: 'recovered', result: r }); } notice('Termux job ' + r.id + ': ' + (r.exitCode === 0 && !r.error ? 'complete' : 'failed'), r.exitCode !== 0 || !!r.error);
++    var lr = liveRuns[r.id]; if (lr && !lr.closed) {
++      lr.sawResult = true;
++      var deliverFinal = function () {
++        if (lr.closed) return;
++        if (lr.lastLive && Date.now() - lr.lastLive < 5000) { setTimeout(deliverFinal, 1000); return; }
++        lr.exit = typeof r.exitCode === 'number' ? r.exitCode : -1; lr.transportError = r.error || '';
++        if (!lr.raw) lr.raw = String(r.stdout || '') + (r.stderr ? '\n' + r.stderr : '');
++        finishLive(lr, liveResult(lr));
++      };
++      setTimeout(deliverFinal, 1500);
++    } if (activeJob && activeJob.id === r.id && activeJob.unknown && (r.status === 'complete' || typeof r.exitCode === 'number')) { activeJob = null; emitCommand({ phase: 'recovered', result: r }); } notice('Termux job ' + r.id + ': ' + (r.exitCode === 0 && !r.error ? 'complete' : 'failed'), r.exitCode !== 0 || !!r.error);
+     var out = document.getElementById('hzTermuxStatus'); if (out) out.textContent = 'Last job: ' + r.id + ' · exit ' + r.exitCode;
+   });
+   document.addEventListener('visibilitychange', function () { if (document.hidden && approvalToken) closeApproval(false); });
+@@ -82,16 +92,17 @@
+   function emitRun(detail) { if (typeof window.dispatchEvent === 'function' && typeof CustomEvent !== 'undefined') window.dispatchEvent(new CustomEvent('horizon-run', { detail: detail })); }
+   function liveResult(r) {
+     var text = window.HorizonRunLog ? HorizonRunLog.flatten(r.raw) : r.raw;
+-    return { status: 'complete', exitCode: r.exit, stdout: text.slice(-60000), stderr: '', error: r.timedOut ? 'Timed out after ' + Math.round(r.timeout / 1000) + 's and was killed' : (r.stopped ? 'Stopped by you (Ctrl+C / STOP). Termux did not confirm; if the process is still alive, run: pkill -f "' + String(r.cmd || '').trim().split(/\s+/).slice(0, 2).join(' ').replace(/[^\w. -]/g, '') + '"' : ''), live: true, cwd: r.cwd, bash: r.bash, ms: Date.now() - r.t0, ops: window.HorizonRunLog ? HorizonRunLog.ops(text) : [], jobId: r.id };
++    return { status: 'complete', exitCode: r.exit, stdout: text, stderr: '', error: r.transportError || (r.timedOut ? 'Timed out after ' + Math.round(r.timeout / 1000) + 's and was killed' : (r.stopped ? 'Stopped by you (Ctrl+C / STOP). Termux did not confirm; if the process is still alive, run: pkill -f "' + String(r.cmd || '').trim().split(/\s+/).slice(0, 2).join(' ').replace(/[^\w. -]/g, '') + '"' : '')), live: true, cwd: r.cwd, bash: r.bash, ms: Date.now() - r.t0, ops: window.HorizonRunLog ? HorizonRunLog.ops(text) : [], jobId: r.id };
+   }
+   function finishLive(r, res) {
+     if (r.closed) return; r.closed = true; clearTimeout(r.timer); delete liveRuns[r.id];
+-    if (activeJob === r.job) activeJob = null;
++    if (activeJob === r.job) activeJob = null; clearInterval(r.poll);
+     emitRun({ phase: 'end', id: r.id, fromAI: r.ai, command: r.cmd, result: res });
+     r.resolve(res);
+   }
+   function liveEvent(r, e) {
+-    if (e.t === 'O') { r.raw += e.d; if (r.raw.length > 400000) r.raw = r.raw.slice(-300000); emitRun({ phase: 'chunk', id: r.id, text: e.d }); }
++    if (r.closed) return; r.lastLive = Date.now();
++    if (e.t === 'O') { r.raw += e.d; if (r.raw.length > 4000000) {r.raw = r.raw.slice(-3000000); if(!r.trimNoted) {r.trimNoted=true; emitRun({phase:'note',id:r.id,text:'Earlier output remains in the full Termux log; the live history is bounded.'});}} emitRun({ phase: 'chunk', id: r.id, text: e.d }); }
+     else if (e.t === 'N') emitRun({ phase: 'note', id: r.id, text: e.d });
+     else if (e.t === 'B') { r.bash = e.d; emitRun({ phase: 'bash', id: r.id, text: e.d }); }
+     else if (e.t === 'C') r.cwd = e.d;
+@@ -105,38 +116,45 @@
+   async function termuxLive(p, cmd, timeout, fromAI, opts) {
+     var job = { id: '', cmd: cmd, ai: !!fromAI, live: true }; activeJob = job;
+     var cwd = (opts && opts.cwd) || (window.HorizonTerminal && window.HorizonTerminal.cwd && window.HorizonTerminal.cwd()) || '';
+-    var trace = (function () { try { return localStorage.getItem('hzTermTrace') !== '0'; } catch (e) { return true; } })();
++    var trace = (function () { try { return localStorage.getItem('hzTermTrace') === '1'; } catch (e) { return false; } })();
+     emitRun({ phase: 'start', command: cmd, fromAI: !!fromAI });
+     var start;
+     try { start = await p.executeLive({ cmd: cmd, fromAI: !!fromAI, trace: trace, cwd: cwd }); }
+     catch (e) { activeJob = null; emitRun({ phase: 'error', command: cmd, error: error(e) }); throw e; }
+     job.id = start.jobId;
+     return new Promise(function (resolve, reject) {
+-      var r = { id: start.jobId, cmd: cmd, ai: !!fromAI, job: job, raw: '', exit: null, cwd: cwd, bash: '', t0: Date.now(), timeout: timeout || 600000, resolve: resolve, closed: false };
++      var r = { id: start.jobId, cmd: cmd, ai: !!fromAI, job: job, raw: '', exit: null, cwd: cwd, bash: '', t0: Date.now(), timeout: fromAI ? (timeout || 600000) : ((opts && opts.timeoutMs) || 0), resolve: resolve, closed: false };
+       liveRuns[r.id] = r; emitRun({ phase: 'run', id: r.id, command: cmd, fromAI: !!fromAI });
+-      r.timer = setTimeout(function () {
++      if (r.timeout > 0) r.timer = setTimeout(function () {
+         r.timedOut = true; try { p.liveKill({ jobId: r.id }); } catch (e) { /* ignore */ }
+-        r.timer = setTimeout(function () {
++        if (r.timeout > 0) r.timer = setTimeout(function () {
+           if (r.closed) return; r.closed = true; delete liveRuns[r.id]; job.unknown = true;
+           emitRun({ phase: 'unknown', id: r.id, command: cmd, error: 'No answer after the kill request. The job may still be running; check Recent jobs before repeating it.' });
+           reject(new Error('No Termux result after timeout. Job: ' + r.id + '. Check Recent jobs / results before repeating.'));
+         }, 8000);
+       }, r.timeout);
++      r.poll = setInterval(function () {
++        if (r.closed || !p.result || r.polling) return;
++        r.polling = true;
++        p.result({jobId:r.id}).then(function(result) {
++          if (!r.closed && result.status === 'complete' && !r.sawResult) {
++            r.sawResult = true;
++            window.dispatchEvent(new CustomEvent('horizon-termux-result', {detail:result}));
++          }
++        }).catch(function() {}).finally(function() {r.polling=false;});
++      }, 2500);
+       var pre = early[r.id]; delete early[r.id]; if (pre) pre.forEach(function (x) { liveEvent(r, x); });
+     });
+   }
+   async function liveKill() {
+     var p = plugin('HorizonTermux'); var ids = Object.keys(liveRuns); if (!p || !ids.length) return false;
+     for (var i = 0; i < ids.length; i++) { try { await p.liveKill({ jobId: ids[i] }); } catch (e) { notice(error(e), true); } }
+-    /* V1.93.18: if Termux does not confirm the kill within 3 s (a child like apt/pkg keeps the pipe open), end the run here so the terminal is free again */
+     setTimeout(function () {
+-      ids.forEach(function (id) {
+-        var lr = liveRuns[id]; if (!lr || lr.closed) return;
+-        lr.stopped = true; lr.exit = 130; forced[id] = true;
+-        emitRun({ phase: 'note', id: id, text: '[stopped here: Termux did not confirm the kill]' });
+-        finishLive(lr, liveResult(lr));
++      ids.forEach(function(id) {
++        var lr=liveRuns[id]; if(!lr || lr.closed) return;
++        emitRun({phase:'note',id:id,text:'Stop sent; waiting for Termux to confirm exit. Open Termux if the process does not respond.'});
+       });
+-    }, 3000);
++    }, 3500);
+     return true;
+   }
+   async function termux(cmd, timeout, fromAI, opts) {
+@@ -194,6 +212,6 @@
+   document.addEventListener('visibilitychange', function () { if (!document.hidden) refresh(); });
+   window.addEventListener('horizon-resume', refresh);
+   window.addEventListener('horizon-reply', refresh);
+-  window.HorizonBridges = { liveCapable: function () { var p = plugin('HorizonTermux'); return !!(p && typeof p.executeLive === 'function'); }, kill: liveKill, plugin: plugin, notice: notice, installCommand: installCommand, resultText: resultText, configure: async function (o) { var p = plugin('HorizonTermux'); if (!p) throw new Error('Android app required'); await p.configure(o); await refresh(); }, SRC: SRC, parse: parse, block: block, run: run, refresh: refresh, mountTermux: mountTermux, busy: function () { return !!activeJob; },  termux: termux, torrent: torrent, quote: quote, state: function () { return states; } };
++  window.HorizonBridges = { liveCapable: function () { var p = plugin('HorizonTermux'); return !!(p && typeof p.executeLive === 'function'); }, input: async function(text) {var p=plugin('HorizonTermux'), ids=Object.keys(liveRuns); if(!p || !p.liveInput || ids.length!==1) throw new Error('No connected input channel'); return p.liveInput({jobId:ids[0],text:String(text)});}, kill: liveKill, plugin: plugin, notice: notice, installCommand: installCommand, resultText: resultText, configure: async function (o) { var p = plugin('HorizonTermux'); if (!p) throw new Error('Android app required'); await p.configure(o); await refresh(); }, SRC: SRC, parse: parse, block: block, run: run, refresh: refresh, mountTermux: mountTermux, busy: function () { return !!activeJob; },  termux: termux, torrent: torrent, quote: quote, state: function () { return states; } };
+   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mount); else mount();
+ })();
+--- a/www/horizon_hub.js
++++ b/www/horizon_hub.js
+@@ -62,13 +62,15 @@
+     var view = n('div', 'hzh-sec', 'LIVE VIEW');
+     var chips = n('div', 'hzh-chips');
+     el.cFollow = chip('', 'follow', async function () { lw('hzTermFollow', ls('hzTermFollow', 'open') === 'open' ? 'strip' : 'open'); });
+-    el.cTrace = chip('', 'trace', async function () { lw('hzTermTrace', ls('hzTermTrace', '1') === '0' ? '1' : '0'); });
++    el.cTrace = chip('', 'trace', async function () { lw('hzTermTrace', ls('hzTermTrace', '0') === '0' ? '1' : '0'); });
+     el.cManual = chip('', 'manual', async function () { await B().configure({ manualAuto: !T().manualAuto }); });
+     [el.cFollow, el.cTrace, el.cManual].forEach(function (c) { chips.appendChild(c); });
+ 
+     var belt = n('div', 'hzh-sec', 'TOOLBELT');
+     var grid = n('div', 'hzh-grid');
+     grid.append(
++      tile('⚙', 'Install terminal runtime', 'Python PTY + transfer tools', function () { return B().termux('pkg install -y python git curl wget openssh', 1200000, false, {legacy:true}); }),
++      tile('↗', 'Open original Termux', 'full terminal / editors', async function () { var p=B().plugin('HorizonTermux'); if(!p) throw new Error('Android app required'); await p.openTermux(); }),
+       tile('⌕', 'Scan box', 'what is installed', async function () { var r = await run(SCAN, 60000); if (r && r.exitCode === 0) { lw('hzBoxFacts', String(r.stdout || '').trim().slice(0, 1500)); } }),
+       tile('⚒', 'Dev tools', 'git python node', function () { return run(DEV, 900000); }),
+       tile('↓', 'Download tools', 'yt-dlp ffmpeg aria2', function () { return run(B().installCommand(), 900000); }),
+@@ -103,7 +105,7 @@
+     el.modeTxt.textContent = MODES.filter(function (x) { return x[0] === m; })[0][2];
+     function setChip(c, on, label) { c.textContent = (on ? '● ' : '○ ') + label; c.classList.toggle('on', on); c.setAttribute('aria-pressed', String(on)); }
+     setChip(el.cFollow, ls('hzTermFollow', 'open') === 'open', 'Open terminal when AI runs');
+-    setChip(el.cTrace, ls('hzTermTrace', '1') !== '0', 'Trace each command');
++    setChip(el.cTrace, ls('hzTermTrace', '0') !== '0', 'Trace each command');
+     setChip(el.cManual, !!t.manualAuto, 'My typing runs without popup');
+     el.facts.textContent = ls('hzBoxFacts', '') || 'Not scanned yet. Tap Scan box so the AI knows what is installed.';
+   }
+--- a/www/horizon_layout.css
++++ b/www/horizon_layout.css
+@@ -382,3 +382,34 @@
+ #hzRpVideo .hzw-ti {right:100px;pointer-events:none;}
+ #hzRpMedia.is-watch {min-height:200px;}
+ #hzRpMedia.is-watch > #hzRpIdle {display:none !important;}
++
++/* V1.99.120: radio tuner -> now-playing metadata/wave -> station or lyrics.
++   Video owns the WHOLE media screen; captions stay inside the picture. */
++#leftPanel #hzWidgets > #hzUnit { display:flex; flex-direction:column; }
++#hzUnit > .hz-unit-bar { order:0; }
++#hzUnit > [data-face="radio"] { order:1; }
++#hzUnit > [data-face="music"] { order:2; }
++#hzUnit > .hz-unit-ai { order:3; }
++#leftPanel #hzWidgets > #hzUnit #hzRpMedia.is-watch > #hzRpPlayer,
++#leftPanel #hzWidgets > #hzUnit #hzRpMedia.is-watch > #hzRpLyrics,
++#leftPanel #hzWidgets > #hzUnit #hzRpMedia.is-watch > #hzRpSubs,
++#leftPanel #hzWidgets > #hzUnit #hzRpMedia.is-watch > #hzRpIdle { display:none !important; }
++#leftPanel #hzWidgets > #hzUnit #hzRpMedia.is-watch { min-height:240px; height:clamp(240px,52dvh,520px); display:flex; }
++#leftPanel #hzWidgets > #hzUnit #hzRpMedia.is-watch > #hzRpVideo { flex:1 1 auto; max-height:none !important; height:100%; min-height:200px; aspect-ratio:auto; margin:0; padding:0; }
++#hzRpVideo video { object-fit:contain; pointer-events:auto; }
++#hzRpVideo .hzw-x { z-index:5; }
++#hzRpVideo .hzw-bar { pointer-events:none; }
++#hzRpVideo:fullscreen { width:100vw; height:100dvh; border-radius:0; background:#000; }
++#hzRpMedia.is-radio #mpMini { display:none !important; }
++#hzRpMedia.is-radio .hzly-box, #hzRpMedia.is-radio #hzRpLyrEmpty { display:none !important; }
++#hzRpMedia.is-radio .hz-onair-card { display:block !important; }
++.hzt-out { overflow:auto; }
++.hzt-l { white-space:pre-wrap; overflow-wrap:anywhere; min-height:1em; }
++
++#leftPanel #hzWidgets > #hzUnit > [data-face="radio"]:not([hidden]) { flex:0 0 auto !important; max-height:235px; overflow:auto; margin-bottom:8px; }
++#leftPanel #hzWidgets > #hzUnit > [data-face="music"]:not([hidden]) { flex:1 1 auto !important; min-height:260px; }
++#leftPanel #hzWidgets > #hzUnit #hzRadio { max-height:235px; overflow:auto; }
++#leftPanel #hzWidgets > #hzUnit #hzRpMedia.is-watch { min-height:240px !important; }
++
++.hzt-input { resize:vertical; min-height:30px; max-height:160px; line-height:1.4; }
++.hzt-input.hzt-secret-input { -webkit-text-security:disc; }
+--- a/www/horizon_lyrics.js
++++ b/www/horizon_lyrics.js
+@@ -616,7 +616,7 @@
+             paintEq(false);
+             return;
+         }
+-        if (info.id !== watchId) { watchId = info.id; startLoad(info, false); }   // the next song started: its lyrics follow
++        if (info.id !== watchId || (st.info && (info.title !== st.info.title || info.artist !== st.info.artist))) { watchId = info.id; startLoad(info, false); }   // the next song started: its lyrics follow
+         paintEq(!info.paused);
+         if (st.status !== 'ready') return;
+         const pos = position(info, now);
+@@ -638,6 +638,18 @@
+     }
+     function watch() { if (!raf && st.open) raf = requestAnimationFrame(loop); }
+     try { document.addEventListener('visibilitychange', () => { if (st.open && !document.hidden) watch(); }); } catch (_) { /* no document events */ }
++
++    let autoSongKey = '';
++    function autoFollowSong() {
++        const info = nowInfo();
++        if (!info || info.paused) return;
++        const key = [info.id, info.title, info.artist].join('|');
++        if (key === autoSongKey) return;
++        autoSongKey = key;
++        open({ force: false });
++    }
++    window.addEventListener('horizon-song-change', autoFollowSong);
++    if (typeof setInterval === 'function') setInterval(autoFollowSong, 750);
+ 
+     // ---------- open / close ----------
+     function open(opts) {
+@@ -695,7 +707,7 @@
+         return 'State: open.';
+     }
+     function block() {
+-        const out = ['LYRIC BOX (its own tool, separate from the music player: it opens with or without music playing; club-style lyric widget in the right Settings panel, empty until YOU open it with [[lyrics.show]]; only you can start it, Fezzy cannot; he sees it when he opens that panel and the Settings button pulses while it is live; keyless lyrics from LRCLIB, Genius and lyrics.ovh)'];
++        const out = ['LYRIC BOX (its own tool, separate from the music player: it opens with or without music playing; club-style lyric widget in the right Settings panel, automatically follows songs as they play; [[lyrics.show]] reopens it after closing; he sees it when he opens that panel and the Settings button pulses while it is live; keyless lyrics from LRCLIB, Genius and lyrics.ovh)'];
+         out.push(stateLine());
+         out.push('TOOLS (tag alone in your reply, the result comes back to you): [[lyrics.show]] opens the box and loads the lyrics of the song playing right now. [[lyrics.hide]] closes it. When Fezzy says "show lyrics" or "play lyrics", reply with ONLY [[lyrics.show]], then say one short line once the result is back.');
+         if (st.open && st.status === 'ready') {
+--- a/www/horizon_music.js
++++ b/www/horizon_music.js
+@@ -40,7 +40,7 @@
+     }
+     let errRun = 0, seeking = false, loadedId = '';
+     const au = window.HorizonAudio ? window.HorizonAudio() : new Audio();
+-    au.preload = 'metadata';
++    au.preload = 'auto';
+ 
+     const $ = id => document.getElementById(id);
+     const jget = (k, d) => { try { const v = JSON.parse(host.lsGet(k)); return v == null ? d : v; } catch (e) { return d; } };
+@@ -146,8 +146,28 @@
+             navigator.mediaSession.playbackState = au.paused ? 'paused' : 'playing';
+         } catch (e) { /* not supported on this WebView */ }
+     }
++    let tagSerial = 0;
++    function announceTrack() {
++        if (cur) window.dispatchEvent(new CustomEvent('horizon-song-change', { detail: nowInfo() }));
++    }
++    async function refreshTags(t) {
++        const mine = ++tagSerial;
++        announceTrack();
++        if (!t || t.remote || !t.path) return;
++        try {
++            const cap = window.Capacitor, p = cap && cap.Plugins && cap.Plugins.HorizonMedia;
++            if (!p || typeof p.metadata !== 'function') return;
++            const source = /^(file|content):\/\//.test(t.path) ? t.path : 'file://' + t.path;
++            const tags = await p.metadata({ source });
++            if (mine !== tagSerial || cur !== t) return;
++            ['title', 'artist', 'album'].forEach(k => { if (tags[k] && String(tags[k]).trim()) t[k] = String(tags[k]).trim(); });
++            if (Number(tags.durationMs) > 0) t.dur = Number(tags.durationMs) / 1000;
++            mediaSession(); paintAll(); host.onChange(); announceTrack();
++        } catch (_) { /* Cached tags remain usable when Android cannot read this URI. */ }
++    }
+     function load(t, autoplay) {
+         cur = t;
++        refreshTags(t);
+         au.track = t;
+         if (loadedId !== t.id) { au.src = t.src; loadedId = t.id; }
+         host.lsSet(LS.last, t.id);
+--- a/www/horizon_onair.js
++++ b/www/horizon_onair.js
+@@ -51,7 +51,7 @@
+     if (lyr && !card) {
+       card = el('div', 'hz-onair-card'); card.hidden = true;
+       card.appendChild(el('b', 'hz-onair-k', 'ON AIR'));
+-      cTitle = el('div', 'hz-onair-t', ''); cMeta = el('div', 'hz-onair-m', ''); cNote = el('div', 'hz-onair-n', 'Live radio has no lyrics. They come back when a song plays.');
++      cTitle = el('div', 'hz-onair-t', ''); cMeta = el('div', 'hz-onair-m', ''); cNote = el('div', 'hz-onair-n', 'Live station details. Song titles and lyrics appear only when identified; station metadata is not a song identification.');
+       card.appendChild(cTitle); card.appendChild(cMeta); card.appendChild(cNote); lyr.appendChild(card);
+     }
+   }
+--- a/www/horizon_radio.js
++++ b/www/horizon_radio.js
+@@ -13,7 +13,7 @@
+     'use strict';
+ 
+     var KEY = 'horizon_radio_v1';
+-    var SERVERS = ['https://de1.api.radio-browser.info', 'https://at1.api.radio-browser.info', 'https://nl1.api.radio-browser.info', 'https://fi1.api.radio-browser.info'];
++    var SERVERS = ['https://all.api.radio-browser.info', 'https://de1.api.radio-browser.info', 'https://at1.api.radio-browser.info', 'https://nl1.api.radio-browser.info', 'https://fi1.api.radio-browser.info'];
+     var GEO = 'https://geocoding-api.open-meteo.com/v1/search';
+     var H = null;
+     var root = null, sheet = null;
+--- a/www/horizon_release.js
++++ b/www/horizon_release.js
+@@ -1,7 +1,7 @@
+ /* Release migration: obsolete layout preferences only. Chats, keys, Vault and audio stay intact. */
+ (function () {
+   'use strict';
+-  var release = '1.99.119';
++  var release = '1.99.120';
+   window.HorizonRelease = release;
+   try {
+     ['horizon_door', 'hzShellOn', 'horizon_yt_instances', 'horizon_yt_discovered', 'horizon_yt_good'].forEach(function (key) { localStorage.removeItem(key); });
+--- a/www/horizon_terminal.js
++++ b/www/horizon_terminal.js
+@@ -1,7 +1,7 @@
+ /* V1.93.17: live status row (spinner, elapsed time, command, last output line, bytes, quiet-time hints, STOP, result). Unified Termux terminal. One prompt and shared execution owner; settings hold only Termux options. */
+ (function () {
+     'use strict';
+-    var MAXLINES = 1500;
++    var MAXLINES = 10000;
+     var WELCOME = [
+         '\u2566 \u2566\u2554\u2550\u2557\u2566\u2550\u2557\u2566\u2554\u2550\u2557\u2554\u2550\u2557\u2554\u2557\u2554',
+         '\u2560\u2550\u2563\u2551 \u2551\u2560\u2566\u255D\u2551\u2554\u2550\u255D\u2551 \u2551\u2551\u2551\u2551',
+@@ -45,7 +45,7 @@
+             + '<div class="hzt-out" role="log" aria-live="polite"></div>'
+             + '<div class="hzt-run" hidden aria-live="off"><span class="hzt-run-sp" aria-hidden="true"></span><div class="hzt-run-tx"><b class="hzt-run-a"></b><span class="hzt-run-b"></span></div><button type="button" class="hzt-run-x" aria-label="Stop the running command">STOP</button></div>'
+             + '<form class="hzt-in" autocomplete="off"><span class="hzt-ps"></span>'
+-            + '<input type="text" class="hzt-input" enterkeyhint="send" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Command"></form>'
++            + '<textarea rows="1" class="hzt-input" enterkeyhint="send" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Command; Shift Enter for a new line"></textarea></form>'
+             + '<div class="hzt-hint" hidden>CTRL is on. Tap a letter.</div>'
+             + '<div class="hzt-keys"></div>';
+         document.body.appendChild(o);
+@@ -80,6 +80,7 @@
+             if (/[a-z]/.test(ch)) { e.preventDefault(); setCtrl(false); ctrlAct(ch); }
+         });
+         el.inp.addEventListener('keydown', function (e) {
++            if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {e.preventDefault();el.form.requestSubmit();return;}
+             if (e.ctrlKey && !e.altKey && !e.metaKey && e.key && e.key.length === 1 && /[a-z]/i.test(e.key)) {
+                 var l = e.key.toLowerCase();
+                 if (l === 'c' || l === 'd' || l === 'l' || l === 'a' || l === 'e' || l === 'k' || l === 'u' || l === 'w' || l === 'y' || l === 'r' || l === 'n' || l === 'p' || l === 'b' || l === 'f') { e.preventDefault(); ctrlAct(l); }
+@@ -264,6 +265,7 @@
+     }
+     function ctrlAct(l) {
+         var v = el.inp.value, c = caret();
++        if (st.running && l === 'd' && !v && window.HorizonBridges && HorizonBridges.input) { HorizonBridges.input('\x04').catch(function(e) {addLine(e.message,'hzt-err');}); return; }
+         if (l === 'a') setVal(v, 0);
+         else if (l === 'e') setVal(v);
+         else if (l === 'b') setVal(v, Math.max(0, c - 1));
+@@ -290,14 +292,18 @@
+ 
+     /* ---- TAB completion (file names in the current folder) ---- */
+     function complete() {
+-        // No second hidden shell for tab completion. This bridge has no interactive stdin/PTY.
+-        addLine('TAB completion requires an interactive PTY. Use the Termux app for interactive programs.', 'hzt-dim');
++        if (st.running && window.HorizonBridges && HorizonBridges.input) {HorizonBridges.input(el.inp.value + '\t').catch(function(e) {addLine(e.message,'hzt-err');}); setVal(''); return;}
++        addLine('Type the original Termux command here. For shell completion and full-screen editors use Controls → Open Termux.', 'hzt-dim');
+     }
+ 
+     /* ---- running commands ---- */
+     function submit(line) {
+         skipTyping();
+-        var cmd = String(line || '').replace(/\s+$/, '');
++        var cmd = String(line == null ? '' : line);
++        if (st.running) {
++            if (window.HorizonBridges && HorizonBridges.input) HorizonBridges.input(cmd + '\n').catch(function(e) {addLine(e.message, 'hzt-err');});
++            return;
++        }
+         echo(cmd);
+         if (!cmd.trim()) return;
+         if (st.hist[st.hist.length - 1] !== cmd) st.hist.push(cmd);
+@@ -313,7 +319,11 @@
+         addText('One unified TERMINAL runs real commands in your installed Termux, with native confirmation.\n'
+             + 'Controls / Options: enable bridge, grant Run commands, enable AI (optional), test, install tools, inspect recent jobs.\n'
+             + 'Downloads: yt-dlp + FFmpeg for supported music/video; aria2c and curl for other files. Install required packages first.\n'
+-            + 'Output streams live. Every run is checked with bash -n first and traced (\u276F lines). cp -v / mv -v / rm -v / mkdir -pv show each file operation. Ctrl+C stops the run. cd persists; variables and aliases do not; no PTY or stdin.\n'
++            + 'Pasted multi-line commands stay intact (Shift+Enter adds a line; Enter runs). Original command text runs in Termux bash through a PTY; output streams live and a full log is saved in ~/.cache/horizon-terminal/jobs/. Enter sends input to the running command without recording passwords. Ctrl+C stops; Ctrl+D sends EOF. cd persists; exports/aliases do not persist between commands. Use Termux for full-screen editors.\n'
++            + 'Download: curl -fL --retry 3 -o file.zip https://example.com/file.zip\n'
++            + 'Upload: curl --fail --upload-file ./file.zip https://YOUR-SERVER/upload\n'
++            + 'Git push: git -C /path/to/repo push (configure your SSH key or token in Termux first).\n'
++            + 'Setup in Termux: pkg install python git curl wget openssh; termux-setup-storage for shared Downloads.\n'
+             + 'help, clear, exit are local. Unknown completion is not cancelled; do not repeat it. No root.', 'hzt-dim');
+     }
+     function exec(cmd, timeout) {
+@@ -348,19 +358,36 @@
+         if (t.trim()) st.lastOut = t.trim();
+         live.node = null; live.cur = ''; live.cr = false; paintStrip();
+     }
++    var ansi = '', liveCursor = 0;
+     function liveFeed(text) {
+-        var s = window.HorizonRunLog ? HorizonRunLog.stripAnsi(text) : text;
+-        s.split(/(\r\n|\n|\r)/).forEach(function (seg) {
+-            if (seg === '\n' || seg === '\r\n') commitLive();
+-            else if (seg === '\r') live.cr = true;
+-            else if (seg) {
+-                if (live.cr) { live.cur = ''; live.cr = false; }
+-                live.cur += seg;
+-                if (!live.node) live.node = addLine('');
+-                live.node.textContent = live.cur;
++        for (var ch of String(text)) {
++            if (ansi) {
++                ansi += ch;
++                if (ansi === '\x1b[' || ansi === '\x1b]') continue;
++                if (ansi.startsWith('\x1b[')) {
++                    if (/[\x40-\x7e]/.test(ch)) {
++                        if (ch === 'K') live.cur = live.cur.slice(0, liveCursor);
++                        else if (ch === 'G') liveCursor = Math.max(0,(parseInt(ansi.slice(2),10)||1)-1);
++                        ansi = '';
++                    }
++                } else if (ansi.startsWith('\x1b]')) {if(ch === '\x07' || ansi.endsWith('\x1b\\')) ansi='';}
++                else ansi='';
++                if(ansi.length>4096) ansi='';
++                continue;
+             }
+-        });
+-        el.out.scrollTop = el.out.scrollHeight;
++            if (ch === '\x1b') {ansi=ch;continue;}
++            if (ch === '\r') {liveCursor=0;continue;}
++            if (ch === '\n') {commitLive();liveCursor=0;continue;}
++            if (ch === '\b') {liveCursor=Math.max(0,liveCursor-1);continue;}
++            if (ch < ' ' && ch !== '\t') continue;
++            if (liveCursor > live.cur.length) live.cur += ' '.repeat(Math.min(1000,liveCursor-live.cur.length));
++            if (liveCursor === live.cur.length) live.cur += ch;
++            else live.cur = live.cur.slice(0,liveCursor) + ch + live.cur.slice(liveCursor+ch.length);
++            liveCursor+=ch.length;
++        }
++        // One DOM write per chunk, not per character (large downloads/logs must not freeze the UI).
++        if (live.cur || live.node) { if(!live.node) live.node=addLine(''); live.node.textContent=live.cur; }
++        el.out.scrollTop=el.out.scrollHeight;
+     }
+ 
+     /* ---- V1.93.17 live status row: you always see that something is running, for how long, what it last printed, and when it goes quiet ---- */
+@@ -376,7 +403,7 @@
+         el.runA.textContent = (rs.ai ? 'AI RUNNING ' : 'RUNNING ') + mmss(now - rs.t0) + ' \u00B7 ' + cut(rs.cmd, 60);
+         var hint = '';
+         if (!rs.bytes && quiet > 3000) hint = ' \u00B7 waiting for the first output (' + Math.round(quiet / 1000) + 's)';
+-        else if (quiet > 45000) hint = ' \u00B7 quiet ' + Math.round(quiet / 1000) + 's: may be waiting for input (no stdin) or the network. STOP kills it.';
++        else if (quiet > 45000) hint = ' \u00B7 quiet ' + Math.round(quiet / 1000) + 's: may be waiting for input (type it and press Enter) or the network. STOP kills it.';
+         else if (quiet > 8000) hint = ' \u00B7 quiet ' + Math.round(quiet / 1000) + 's, still running (installs print little)';
+         el.runB.textContent = (last ? 'last: ' + last + ' \u00B7 ' : '') + kb(rs.bytes) + ' \u00B7 ' + rs.lines + ' lines' + hint;
+         el.run.classList.toggle('hzt-run-quiet', quiet > 8000);
+@@ -403,7 +430,7 @@
+         var d = e.detail || {}; build();
+         if (d.phase === 'start') {
+             if (!st.alive) { st.alive = true; el.out.textContent = ''; }
+-            skipTyping(); st.running = true; st.last = String(d.command || '').split('\n')[0]; st.lastOut = ''; runStart(d.command, d.fromAI);
++            skipTyping(); live = {node:null,cur:'',cr:false}; ansi=''; liveCursor=0; st.running = true; st.last = String(d.command || '').split('\n')[0]; st.lastOut = ''; runStart(d.command, d.fromAI);
+             if (d.fromAI && follow() === 'open' && !st.open) open();
+         } else if (d.phase === 'run') {
+             if (d.fromAI) {
+@@ -426,6 +453,9 @@
+         } else if (d.phase === 'error' || d.phase === 'unknown') {
+             st.running = d.phase === 'unknown'; addText(d.error || 'Unknown command state', 'hzt-err'); runEnd(-1, null, d.error || 'Unknown command state');
+         }
++        el.inp.classList.toggle('hzt-secret-input', st.running);
++        el.inp.setAttribute('data-input-hidden', String(st.running));
++        el.inp.placeholder = st.running ? 'Input to running command (hidden)' : 'Termux command';
+         paintPs(); paintStrip();
+     }
+     window.addEventListener('horizon-run', runEvent);
+--- a/www/horizon_unit.js
++++ b/www/horizon_unit.js
+@@ -26,7 +26,8 @@
+       var on = btns[i].getAttribute('data-face-btn') === f;
+       btns[i].classList.toggle('on', on); btns[i].setAttribute('aria-selected', on ? 'true' : 'false');
+     }
+-    for (var j = 0; j < faces.length; j++) faces[j].hidden = faces[j].getAttribute('data-face') !== f;
++    for (var j = 0; j < faces.length; j++) faces[j].hidden = false;
++    unit.setAttribute('data-selected-face', f);
+     if (save !== false) ls(KEY, f);
+     try { window.dispatchEvent(new Event('resize')); } catch (e) { /* old webview */ }   // radio + waveform re-measure
+   }
+@@ -52,6 +53,7 @@
+   function tick() {
+     if (document.hidden) return;
+     var p = mpPlaying(), r = radioState(), rp = !!(r && r.status === 'playing'), video = !!(window.HorizonWatch && HorizonWatch.active());
++    var tuner = unit.querySelector('[data-face="radio"]'); if (tuner) tuner.hidden = video;
+     if (video && face !== 'music') setFace('music', false);
+     if (rp && !lastR) setFace('music', false);   // V1.99.101: radio plays on the shared screen; the RADIO tab is the tuner
+     else if (p && !lastP) setFace('music', false);
+--- a/www/horizon_watch.js
++++ b/www/horizon_watch.js
+@@ -8,7 +8,7 @@
+   var media = document.getElementById('hzRpMedia');
+   if (!media || document.getElementById('hzRpVideo')) return;
+   var vcard = document.createElement('div'); vcard.className = 'hz-rpm-card'; vcard.id = 'hzRpVideo'; vcard.hidden = true;
+-  vcard.innerHTML = '<video playsinline webkit-playsinline preload="auto" disablepictureinpicture controlslist="nofullscreen nodownload noremoteplayback"></video>' +
++  vcard.innerHTML = '<video controls playsinline webkit-playsinline preload="auto"></video>' +
+     '<div class="hzw-ti"></div><button type="button" class="hzw-x" aria-label="Close video">\u2715</button><i class="hzw-bar"><b></b></i><span class="hzw-st"></span>' +
+     '<button type="button" class="hzw-retry" hidden>RETRY</button><button type="button" class="hzw-cc" aria-label="Toggle subtitles" aria-pressed="true">CC ON</button>';
+   var scard = document.createElement('div'); scard.className = 'hz-rpm-card'; scard.id = 'hzRpSubs'; scard.hidden = true;
+@@ -22,7 +22,8 @@
+   try { subtitles = localStorage.getItem('horizon_watch_subtitles') !== '0'; } catch (_) {}
+   function paintCC() {
+     cc.textContent = subtitles ? 'CC ON' : 'CC OFF'; cc.setAttribute('aria-pressed', subtitles ? 'true' : 'false');
+-    scard.hidden = vcard.hidden || !subtitles;
++    scard.hidden = true;
++    for (var i=0; v.textTracks && i<v.textTracks.length; i++) v.textTracks[i].mode = subtitles ? 'showing' : 'hidden';
+     if (embedded && embedMode) { try { if (subtitles) embedded.loadModule('captions'); else embedded.unloadModule('captions'); } catch (_) {} }
+   }
+   cc.addEventListener('click', function(e) { e.stopPropagation(); subtitles = !subtitles; try {localStorage.setItem('horizon_watch_subtitles', subtitles ? '1' : '0');} catch (_) {} paintCC(); });
+@@ -84,7 +85,7 @@
+     if (fn) { try { var p = fn(); if (p && p.catch) p.catch(function () {}); } catch (err) { /* shown by the next attempt */ } }
+   });
+   vcard.addEventListener('click', function (e) {
+-    if (e.target.closest('.hzw-x') || e.target.closest('.hzw-retry') || e.target.closest('.hzw-cc') || embedMode) return;
++    if (e.target === v || e.target.closest('.hzw-x') || e.target.closest('.hzw-retry') || e.target.closest('.hzw-cc') || embedMode) return;
+     if (!on) return;
+     if (v.paused) { var p = v.play(); if (p && p.catch) p.catch(function () {}); } else v.pause();
+   });
+@@ -94,10 +95,10 @@
+     try {
+       if (!on || !('mediaSession' in navigator) || typeof MediaMetadata === 'undefined') return;
+       navigator.mediaSession.metadata = new MediaMetadata({ title: ti.textContent || 'Video', artist: 'Horizon Watch', album: 'YouTube' });
+-      navigator.mediaSession.setActionHandler('play', function () { var p = v.play(); if (p && p.catch) p.catch(function () {}); });
+-      navigator.mediaSession.setActionHandler('pause', function () { v.pause(); });
++      navigator.mediaSession.setActionHandler('play', function () { if(embedMode && embedded) {embedded.playVideo();return;} var p = v.play(); if (p && p.catch) p.catch(function () {}); });
++      navigator.mediaSession.setActionHandler('pause', function () { if(embedMode && embedded) embedded.pauseVideo(); else v.pause(); });
+       navigator.mediaSession.setActionHandler('stop', stop);
+-      navigator.mediaSession.playbackState = v.paused ? 'paused' : 'playing';
++      navigator.mediaSession.playbackState = embedMode && embedded ? (embedded.getPlayerState() === 1 ? 'playing' : 'paused') : (v.paused ? 'paused' : 'playing');
+     } catch (e) { /* optional */ }
+   }
+   function quietOthers() {
+@@ -126,6 +127,17 @@
+       var p = v.play(); if (p && p.catch) p.catch(function (e) { if (e && e.name === 'NotAllowedError') fin(false, 'Android wants a tap first: tap the picture to play'); });
+     });
+   }
++  var captionsUrl = '';
++  function installCaptions() {
++    if (v.querySelectorAll) v.querySelectorAll('track').forEach(function(t) {t.remove();});
++    if (captionsUrl) URL.revokeObjectURL(captionsUrl); captionsUrl = '';
++    if (!cues.length) return;
++    function stamp(t) {return new Date(Math.max(0, Number(t)||0)*1000).toISOString().slice(11,23);}
++    var text = 'WEBVTT\n\n' + cues.map(function(c) {return stamp(c.s)+' --> '+stamp(c.e)+'\n'+String(c.t).replace(/-->/g,'→').replace(/</g,'&lt;')+'\n';}).join('\n');
++    captionsUrl = URL.createObjectURL(new Blob([text], {type:'text/vtt'}));
++    var track = document.createElement('track'); track.kind='subtitles'; track.label='Subtitles'; track.srclang='en'; track.src=captionsUrl; track.default=subtitles; v.appendChild(track);
++    track.addEventListener('load', paintCC);
++  }
+   function clearBlob() { if (blobUrl) { try { URL.revokeObjectURL(blobUrl); } catch (e) { /* ignore */ } blobUrl = ''; } }
+ 
+   function stop() {
+@@ -133,7 +145,7 @@
+     try { v.pause(); v.removeAttribute('src'); v.load(); } catch (e) { /* ignore */ }
+     clearBlob();
+     vcard.hidden = true; scard.hidden = true; media.classList.remove('is-watch'); vcard.classList.remove('is-playing');
+-    cues = []; idx = -2; lines.replaceChildren(); bar.style.width = '0%'; setStatus('');
++    cues = []; installCaptions(); idx = -2; lines.replaceChildren(); bar.style.width = '0%'; setStatus('');
+   }
+ 
+   /* o: { id, title, artist, url, ua, size, cues, lang, auto, why, via, retry }
+@@ -147,12 +159,13 @@
+     ti.textContent = (o.artist ? o.artist + ' · ' : '') + (o.title || o.id || 'Video');
+     langEl.textContent = cues.length ? ((o.lang || '').toUpperCase() + (o.auto ? ' · AUTO' : '')) : '';
+     if (cues.length) note('♪'); else note(o.why ? 'No subtitles for this video (' + o.why + ')' : 'No subtitles for this video');
++    installCaptions();
+     reveal(); setStatus('Loading…');
+     var route = o.via || o.client || 'route';
+     var r = await start(o.url);
+     if (mine !== serial) return {ok:false,why:'cancelled'};
+     mark(route + ' direct: ' + (r.ok ? 'ok' : r.why));
+-    if (!r.ok && o.ua && window.HzYtDirect && HzYtDirect.fetchBlob && !/tap the picture/.test(r.why)) {
++    if (!r.ok && o.allowBlobFallback === true && o.ua && window.HzYtDirect && HzYtDirect.fetchBlob && !/tap the picture/.test(r.why)) {
+       try {
+         setStatus('Loading… (second route)');
+         var blob = await HzYtDirect.fetchBlob(o.url, o.ua, o.size);
+@@ -199,9 +212,9 @@
+       var timer=setTimeout(function(){if(mine!==serial)return finish({ok:false,why:'cancelled'});setStatus('Tap the video to play. YouTube restrictions or errors will be shown here.');finish({ok:false,pending:true,why:'YouTube is waiting for playback; tap the video'});},15000);
+       try {
+         embedded=new YT.Player(embedNode, {width:'100%',height:'100%',videoId:o.id,
+-          host:'https://www.youtube.com',playerVars:{autoplay:1,playsinline:1,controls:1,fs:0,rel:0,cc_load_policy:subtitles?1:0,origin:location.origin},
+-          events:{onReady:function(e){if(mine!==serial)return;var frame=e.target.getIframe();frame.classList.add('hzw-embed');frame.setAttribute('referrerpolicy','strict-origin-when-cross-origin');frame.setAttribute('allow','autoplay; encrypted-media');setStatus('Tap the video to play');e.target.playVideo();},
+-            onStateChange:function(e){if(mine!==serial)return;if(e.data===1){on=true;setStatus('');vcard.classList.add('is-playing');watchOthers();finish({ok:true,embedded:true,subs:0});}else if(e.data===2){vcard.classList.remove('is-playing');}else if(e.data===0){vcard.classList.remove('is-playing');}},
++          host:'https://www.youtube.com',playerVars:{autoplay:1,playsinline:1,controls:1,fs:1,rel:0,cc_load_policy:subtitles?1:0,origin:location.origin},
++          events:{onReady:function(e){if(mine!==serial)return;var frame=e.target.getIframe();frame.classList.add('hzw-embed');frame.setAttribute('referrerpolicy','strict-origin-when-cross-origin');frame.setAttribute('allow','autoplay; encrypted-media; picture-in-picture; fullscreen');frame.setAttribute('allowfullscreen','');setStatus('Tap the video to play');e.target.playVideo();},
++            onStateChange:function(e){if(mine!==serial)return;if(e.data===1){on=true;setStatus('');vcard.classList.add('is-playing');watchOthers();meta();finish({ok:true,embedded:true,subs:0});}else if(e.data===3){setStatus('Buffering… YouTube is adapting quality');}else if(e.data===2){setStatus('Paused');vcard.classList.remove('is-playing');}else if(e.data===0){vcard.classList.remove('is-playing');}},
+             onApiChange:function(){if(mine===serial)paintCC();},
+             onError:function(e){if(mine!==serial)return;var why='YouTube player error '+e.data+(e.data===101||e.data===150?' — the owner disabled embedding':e.data===153?' — this WebView did not provide an accepted referrer':'');showFail(why);finish({ok:false,why:why});}
+           }});
+--- a/www/index.html
++++ b/www/index.html
+@@ -17,11 +17,11 @@
+     <script>(function(){var d=document.documentElement;d.classList.add('hz-boot');setTimeout(function(){d.classList.remove('hz-boot');},4000);})();</script>
+     <link rel="stylesheet" href="horizon_app.css?v=1.99.99">
+     <link rel="stylesheet" href="horizon_radio.css?v=1.99.48">
+-    <link rel="stylesheet" href="horizon_layout.css?v=1.99.119">
++    <link rel="stylesheet" href="horizon_layout.css?v=1.99.120">
+     <link rel="stylesheet" href="horizon_rpalive.css?v=1.99.104">
+     <link rel="stylesheet" href="horizon_swirl.css?v=1.99.104">
+     <link rel="stylesheet" href="horizon_maps.css?v=1.99.73">
+-    <link rel="stylesheet" href="horizon_files.css?v=1.99.119">
++    <link rel="stylesheet" href="horizon_files.css?v=1.99.120">
+     <link rel="stylesheet" href="horizon_rss.css?v=1.99.52">
+ </head>
+ <body>
+@@ -719,12 +719,12 @@
+     <script src="horizon_edge_tts.js?v=1.99.46"></script>
+     <script src="horizon_github.js?v=1.97.2"></script>
+     <script src="horizon_native_audio.js?v=1.97.2"></script>
+-    <script src="horizon_music.js?v=1.99.119"></script>
+-    <script src="horizon_lyrics.js?v=1.99.104"></script>
++    <script src="horizon_music.js?v=1.99.120"></script>
++    <script src="horizon_lyrics.js?v=1.99.120"></script>
+     <script src="horizon_runlog.js?v=1.99.47"></script>
+     <script src="horizon_display.js?v=1.97.2"></script>
+-    <script src="horizon_bridges.js?v=1.99.47"></script>
+-    <script src="horizon_hub.js?v=1.97.2"></script>
++    <script src="horizon_bridges.js?v=1.99.120"></script>
++    <script src="horizon_hub.js?v=1.99.120"></script>
+     <script src="horizon_hold.js?v=1.97.2"></script>
+     <script src="horizon_group.js?v=1.99.37"></script>
+     <script src="horizon_people_config.js?v=1.97.2"></script>
+@@ -742,11 +742,11 @@
+     <script src="horizon_slash.js?v=1.97.2"></script>
+     <script src="horizon_geo.js?v=1.97.2"></script>
+     <script src="horizon_locate.js?v=1.99.75"></script>
+-    <script src="horizon_radio.js?v=1.99.119"></script>
++    <script src="horizon_radio.js?v=1.99.120"></script>
+     <script src="horizon_maps.js?v=1.99.73"></script>
+-    <script src="horizon_files.js?v=1.99.119"></script>
++    <script src="horizon_files.js?v=1.99.120"></script>
+     <script src="horizon_ground.js?v=1.99.99"></script>
+-    <script src="horizon_dash.js?v=1.99.119"></script>
++    <script src="horizon_dash.js?v=1.99.120"></script>
+     <script src="horizon_browser.js?v=1.99.67"></script>
+     <script>
+     (() => {
+@@ -7282,10 +7282,19 @@
+                 if (!ytSure(sr.ranked, true)) return { text: `NEEDS CHOICE: nothing matches "${q}" closely enough, so no video was opened. Ask Fezzy which one in one short sentence.\n${ytCandLines(sr.ranked)}` };
+                 vid = sr.ranked[0].it.id; hint = sr.ranked[0].it.title; via = ` Matched "${hint}" for "${q}".`;
+             }
+-            // V1.99.119: same patience as yt.play. If the player refuses a link, ask a different YouTube route (up to 3) before giving up.
++            // V1.99.120: same patience as yt.play. If the player refuses a link, ask a different YouTube route (up to 3) before giving up.
+             let st = null, caps = { cues: [], why: 'subtitle lookup unavailable' }, r = { ok: false, why: 'not tried' };
+             const skip = [], routes = [];
+             const again = () => ytWatchTool(vid + (hint ? ' | ' + hint : ''));
++            if (HorizonWatch.embed) {
++                try {
++                    const official = await HorizonWatch.embed({id:vid,title:hint || vid,retry:again});
++                    if (official.why === 'cancelled') return {text:'Video cancelled. Nothing was started.'};
++                    if (official.ok) return {text:'Started: ' + (hint || vid) + ' in the full media screen. YouTube adapts quality to the connection; captions are inside the picture.'};
++                    if (official.pending) return {text:'Video loaded but playback needs a tap. Tap Play in the video; do not claim it has started.'};
++                    routes.push('official player: ' + official.why);
++                } catch(e) { routes.push('official player: ' + String(e && e.message || e)); }
++            }
+             for (let attempt = 0; attempt < 3; attempt++) {
+                 try {
+                     const both = await Promise.all([
+@@ -7305,7 +7314,7 @@
+                 routes.push('route ' + (attempt + 1) + ' (' + via + '): ' + shortTxt(r.why || 'refused', 90));
+                 skip.push(via);
+             }
+-            if (!r.ok && !/tap the picture/.test(r.why || '') && HorizonWatch.embed) {
++            if (!r.ok && !routes.some(x => x.indexOf('official player:') === 0) && !/tap the picture/.test(r.why || '') && HorizonWatch.embed) {
+                 const fallback = await HorizonWatch.embed({id:vid,title:hint || (st && st.title) || vid,retry:again});
+                 if (fallback.why === 'cancelled') return {text:'Video cancelled. Nothing was started.'};
+                 if (fallback.ok) return {text:'Started: ' + (hint || vid) + ' in the official YouTube video player. Use CC to toggle subtitles when YouTube provides them. Nothing saved.'};
+@@ -7313,7 +7322,7 @@
+             }
+             if (!st && !r.ok && routes.length) return { text: 'ERROR: no video stream for ' + vid + ' (' + routes.join(' ; ') + '). Tell Fezzy in one short sentence; offer the audio with yt.play or a download.' };
+             if (!r.ok) return { text: 'ERROR: the video would not start (' + routes.join(' ; ') + '). The viewer is showing the reason with a RETRY button. Tell Fezzy in one short sentence. Do not claim it played.' };
+-            return { text: `Started: ${st.title || hint || vid} in the video viewer (Widgets panel, view only, nothing saved). ` + (r.subs ? `Subtitles: ${(r.lang || '').toUpperCase() || 'found'}${r.auto ? ' (auto-generated by YouTube, may contain mistakes)' : ''}, ${r.subs} lines, shown on the lyrics screen.` : `No subtitles were available for this video (${shortTxt(caps.why || 'none listed', 100)}). Say so; do not make any up.`) + via };
++            return { text: `Started: ${st.title || hint || vid} in the video viewer (Widgets panel, view only, nothing saved). ` + (r.subs ? `Subtitles: ${(r.lang || '').toUpperCase() || 'found'}${r.auto ? ' (auto-generated by YouTube, may contain mistakes)' : ''}, ${r.subs} lines, shown inside the video.` : `No subtitles were available for this video (${shortTxt(caps.why || 'none listed', 100)}). Say so; do not make any up.`) + via };
+         }
+ 
+         // V1.78.0: image search for the chat AI. Openverse first (openly licensed), Wikimedia Commons as the backup.
+@@ -8640,11 +8649,11 @@
+     </script>
+     <script src="horizon_downloads.js?v=1.97.2"></script>
+     <script src="horizon_rss.js?v=1.99.67"></script>
+-    <script src="horizon_ytdirect.js?v=1.99.119"></script>
++    <script src="horizon_ytdirect.js?v=1.99.120"></script>
+     <script src="horizon_youtube.js?v=1.97.2"></script>
+     <script src="horizon_stats.js?v=1.99.46"></script>
+     <script src="horizon_addons.js?v=1.99.67"></script>
+-    <script src="horizon_terminal.js?v=1.97.2"></script>
++    <script src="horizon_terminal.js?v=1.99.120"></script>
+     <script src="horizon_termai.js?v=1.99.47"></script>
+     <script src="horizon_typing.js?v=1.97.2"></script>
+     <script src="horizon_perf.js?v=1.97.2"></script>
+@@ -8653,12 +8662,12 @@
+     <script src="horizon_toolgrid.js?v=1.99.36"></script>
+     <script src="horizon_bojack.js?v=1.99.41"></script>
+     <script src="horizon_rpmedia.js?v=1.99.103"></script>
+-    <script src="horizon_rpidle.js?v=1.99.119"></script>
+-    <script src="horizon_watch.js?v=1.99.119"></script>
+-    <script src="horizon_unit.js?v=1.99.103"></script>
+-    <script src="horizon_onair.js?v=1.99.103"></script>
++    <script src="horizon_rpidle.js?v=1.99.120"></script>
++    <script src="horizon_watch.js?v=1.99.120"></script>
++    <script src="horizon_unit.js?v=1.99.120"></script>
++    <script src="horizon_onair.js?v=1.99.120"></script>
+     <script src="horizon_rpalive.js?v=1.99.104"></script>
+-    <script src="horizon_swirl.js?v=1.99.119"></script>
++    <script src="horizon_swirl.js?v=1.99.120"></script>
+     <script src="horizon_viz.js?v=1.99.104"></script>
+     <script src="horizon_header.js?v=1.97.2"></script>
+     <script src="horizon_htmlview.js?v=1.97.2"></script>

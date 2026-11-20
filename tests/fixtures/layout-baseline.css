@@ -1,0 +1,408 @@
+/* HORIZON V1.99.100 · layout migration.
+   LEFT panel = Widgets only (weather/clock/device, the media unit with music + radio on one flat screen, the apps dock).
+   RIGHT panel = Menu: Chats, Prompt & Memories, Archive and every settings row, each opening as its own page (no drop-downs).
+   Part 1: the right-panel media and dock rules, repeated for the left panel (they used to be scoped to #rightPanel). */
+#leftPanel .hz-dock { padding: 14px 12px max(12px, env(safe-area-inset-bottom))}
+#leftPanel .hz-dock-title { margin: 2px 2px 6px; }
+#leftPanel .hz-app .ic { width: 17px; height: 17px; }
+#leftPanel .hz-app .hzt-logo { width: 19px; height: 19px; }
+#leftPanel .hz-app { min-width: 0; min-height: 44px; padding: 6px 1px; gap: 3px; border-radius: 9px; }
+#leftPanel .hz-app .ic, #leftPanel .hz-app .hzt-logo { width: 16px; height: 16px; }
+#leftPanel .hz-app span { max-width: 100%; font-size: 9.5px; letter-spacing: -0.1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#leftPanel .hz-dock { position: static; margin-top: 0; flex: 0 0 auto; }
+#leftPanel .hz-app[data-addon="github"] span { font-size: 8.8px; letter-spacing: -.3px; }
+#leftPanel .hz-dock-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+#leftPanel #hzRpMedia { flex:1 0 auto; padding:10px 12px; gap:10px; }
+#leftPanel .hz-rpm-wavecard .hz-wavebar { height:42px; }
+#leftPanel .hz-rpm-lyr { min-height:112px; }
+#leftPanel .hz-rpm-empty { min-height:108px; }
+#leftPanel .hz-rpm-lyr .hzly-box { --hzly-h:160px; }
+#leftPanel #hzDock { margin-top:auto; position:sticky; bottom:0; padding:8px 10px max(8px,env(safe-area-inset-bottom)); background:var(--panel-bg); z-index:6; }
+#leftPanel #hzDock .hz-dock-grid { display:grid!important; grid-template-columns:repeat(6,minmax(0,1fr)); gap:5px; overflow:visible; padding:3px 0; }
+#leftPanel #hzDock .hz-dock-grid > .hz-app { min-width:0!important; width:100%; height:auto; min-height:62px; padding:7px 2px; gap:5px; box-sizing:border-box; border-radius:12px; }
+#leftPanel #hzDock .hz-dock-grid > .hz-app > span { font-size:10px; line-height:1.15; overflow-wrap:anywhere; white-space:normal; text-align:center; }
+#leftPanel #hzDock .hz-app svg { width:22px; height:22px; }
+#leftPanel #hzDock .hz-dock-grid > .hz-app[data-addon="music"] { display:none!important; }
+#leftPanel #hzRpMedia { flex:0 0 auto; margin-top:auto; padding:10px 12px; gap:10px; border-top:1px solid var(--border-color); }
+#leftPanel .hz-rpm-lyr { min-height:112px; flex:0 0 auto; }
+#leftPanel .hz-rpm-player { flex:0 0 auto; }
+#leftPanel .hz-rpm-wavecard .hz-wavebar { height:42px; }
+#leftPanel #hzDock { flex:0 0 auto; }
+#leftPanel .hz-rpm-wavecard.has-viz { padding: 0 8px 10px; }
+#leftPanel #hzDock { padding-left:6px; padding-right:6px; }
+#leftPanel #hzDock .hz-dock-grid { gap:4px; }
+#leftPanel #hzDock .hz-dock-grid > .hz-app { padding-left:1px; padding-right:1px; }
+#leftPanel #hzDock .hz-dock-grid > .hz-app > span { font-size:9px; letter-spacing:-.2px; overflow-wrap:normal; word-break:normal; }
+#leftPanel #hzDock .hz-dock-grid > .hz-app > span { font-size:8px; letter-spacing:-.3px; }
+#leftPanel #hzDock .hz-dock-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+#leftPanel #hzDock .hz-dock-grid > .hz-app { min-height: 64px; }
+#leftPanel #hzDock .hz-dock-grid > .hz-app > span { font-size: 11.5px; overflow-wrap: normal; word-break: normal; }
+#leftPanel #hzDock .hz-dock-grid > .hz-app-term { display: none !important; }
+#leftPanel #hzDock .hz-dock-grid > .hz-app[data-addon="maps"] { order: 1; }
+#leftPanel #hzDock .hz-dock-grid > .hz-app[data-addon="stats"] { order: 2; }
+#leftPanel #hzDock .hz-dock-grid > .hz-app[data-addon="rss"] { order: 3; }
+#leftPanel #hzDock .hz-dock-grid > .hz-app[data-addon="lens"] { order: 4; }
+#leftPanel #hzDock .hz-dock-grid > .hz-app[data-addon="youtube"] { order: 5; }
+#leftPanel #hzDock .hz-dock-grid > .hz-app[data-addon="downloads"] { order: 6; }
+#leftPanel #hzRpMedia { flex: 0 1 auto; min-height: 0; overflow: hidden; padding: 8px 12px; gap: 8px; }
+#leftPanel #hzDock { flex: 0 0 auto; margin-top: 0; position: static; }
+/* Part 2: left panel as a widget stack */
+#leftPanel{display:flex;flex-direction:column;overflow:hidden}
+#leftPanel .hzw{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:12px;padding:12px 12px max(14px,env(safe-area-inset-bottom));-webkit-overflow-scrolling:touch}
+#leftPanel .hzd-foot{position:static;margin:0;padding:0;border:0;background:none;flex:0 0 auto}
+#leftPanel #hzDock{position:static;margin:0;flex:0 0 auto;padding:0;border:0;background:none}
+#leftPanel #hzDock .hz-dock-title{margin:2px 2px 8px}
+#leftPanel #hzDock .hz-dock-grid{display:grid!important;grid-template-columns:repeat(6,minmax(0,1fr));gap:5px;overflow:visible;padding:0}
+#leftPanel #hzDock .hz-dock-grid>.hz-app{min-width:0!important;width:100%;min-height:56px;padding:8px 0 6px;gap:4px;border-radius:11px;box-sizing:border-box}
+#leftPanel #hzDock .hz-dock-grid>.hz-app>span{font-size:8.5px;letter-spacing:-.1px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;text-align:center}
+#leftPanel #hzDock .hz-app svg,#leftPanel #hzDock .hz-app .ic{width:20px;height:20px}
+#leftPanel #hzDock .hz-app .hzt-logo{width:20px;height:20px}
+
+/* Part 3: the media unit, one flat screen for music and radio */
+.hz-unit{position:relative;flex:0 0 auto;border:1px solid rgba(var(--accent-rgb,0,229,255),.45);border-radius:18px;padding:8px;background:#070d14;box-shadow:0 0 22px rgba(var(--accent-rgb,0,229,255),.14);overflow:hidden}
+html[data-theme="grey"] .hz-unit{background:#e6eaef;box-shadow:none}
+.hz-unit::after{content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;background:repeating-linear-gradient(0deg,rgba(255,255,255,.022) 0 1px,transparent 1px 3px)}
+html[data-theme="grey"] .hz-unit::after{display:none}
+.hz-unit-bar{display:flex;align-items:center;gap:8px;padding:0 2px 8px}
+.hz-unit-seg{display:flex;border:1px solid var(--border-highlight,rgba(34,211,238,.3));border-radius:8px;padding:2px;background:rgba(0,0,0,.35)}
+.hz-unit-seg button{border:0;background:transparent;color:var(--text-muted,#8aa3b3);font:800 11px/1 inherit;letter-spacing:1px;padding:6px 11px;border-radius:6px;cursor:pointer}
+.hz-unit-seg button.on{background:var(--accent-cyan,#00e5ff);color:#001318}
+.hz-unit-link{font-size:10px;font-weight:800;letter-spacing:1px;color:var(--accent-cyan,#00e5ff);border:1px solid rgba(var(--accent-rgb,0,229,255),.5);border-radius:6px;padding:3px 6px}
+.hz-unit-led{margin-left:auto;display:flex;align-items:center;gap:6px;min-width:0;font-size:10.5px;letter-spacing:1.1px;color:var(--text-muted,#8aa3b3)}
+.hz-unit-led b{font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px}
+.hz-unit-led i{flex:0 0 8px;width:8px;height:8px;border-radius:50%;background:#2a3846}
+.hz-unit-led.on i{background:var(--accent-cyan,#00e5ff);box-shadow:0 0 9px var(--accent-cyan,#00e5ff)}
+.hz-unit-face[hidden]{display:none!important}
+.hz-unit-face{position:relative;z-index:1}
+/* flat screens inside the unit */
+.hz-unit .hz-rpm{padding:0;border:0;margin:0;gap:8px}
+.hz-unit .hz-rpm-card,.hz-unit .hz-radio{border-radius:12px;border:1px solid rgba(var(--accent-rgb,0,229,255),.3);background:#02070b;box-shadow:inset 0 0 0 1px rgba(255,255,255,.02)}
+html[data-theme="grey"] .hz-unit .hz-rpm-card,html[data-theme="grey"] .hz-unit .hz-radio{background:#f4f6f8}
+.hz-unit .hz-radio{margin:0}
+#leftPanel .hz-unit #hzRpMedia{flex:0 0 auto;margin:0;padding:0;border:0;overflow:visible}
+.hz-unit-ai{position:relative;z-index:1;margin-top:8px;border:1px solid rgba(var(--accent-rgb,0,229,255),.3);border-radius:10px;background:rgba(0,0,0,.35);padding:7px 9px}
+html[data-theme="grey"] .hz-unit-ai{background:#f4f6f8}
+.hz-unit-log{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:var(--accent-cyan,#00e5ff);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hz-unit-log.flash{animation:hzUnitFlash .9s}
+@keyframes hzUnitFlash{0%{background:rgba(var(--accent-rgb,0,229,255),.35)}100%{background:transparent}}
+
+/* Part 4: the new Menu rows on the right look like the settings rows around them */
+.settings-home .set-row.set-chats .set-text h3{color:#00e5ff}
+.settings-home .set-row.set-promptmem .set-text h3{color:#ff9f1c}
+.settings-home .set-row.set-archive .set-text h3{color:#2bff88}
+.tab-body[data-tab="chats"],.tab-body[data-tab="promptmem"],.tab-body[data-tab="archive"]{flex:0 0 auto;min-height:0}
+.tab-body[data-tab="promptmem"] .provider-card{margin:12px 14px}
+
+/* V1.99.101 · radio on the shared screen (see horizon_onair.js) */
+#hzRpWave { position: relative; }
+.hz-onair-tag { position: absolute; left: 8px; right: 8px; top: 6px; z-index: 3; display: flex; align-items: center; gap: 7px; padding: 3px 7px; border-radius: 8px; background: rgba(0,0,0,.42); backdrop-filter: blur(4px); font-size: 10px; letter-spacing: .6px; color: #fff; min-width: 0; }
+.hz-onair-tag[hidden], .hz-onair-card[hidden] { display: none !important; }
+.hz-onair-tag b { font-weight: 850; letter-spacing: 1.4px; color: #ff4d6d; }
+.hz-onair-tag span { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; opacity: .92; }
+.hz-onair-dot { width: 7px; height: 7px; border-radius: 50%; background: #ff4d6d; box-shadow: 0 0 8px #ff4d6d; flex: 0 0 auto; animation: hzOnAirPulse 1.4s ease-in-out infinite; }
+.hz-onair-stop { flex: 0 0 auto; border: 1px solid rgba(255,255,255,.35); background: transparent; color: #fff; font-size: 9px; font-weight: 800; letter-spacing: 1px; padding: 2px 7px; border-radius: 6px; min-height: 22px; }
+.hz-onair-card { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-height: 108px; padding: 10px 14px; text-align: center; }
+.hz-onair-k { font-size: 11px; font-weight: 850; letter-spacing: 1.6px; color: #ff4d6d; }
+.hz-onair-t { font-size: 15px; font-weight: 750; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hz-onair-m { font-size: 12px; color: var(--text-muted); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hz-onair-n { font-size: 11px; color: var(--text-muted); opacity: .8; }
+.hz-rpm-lyr:has(.hz-onair-card:not([hidden])) .hz-rpm-empty { display: none; }
+.hz-rpm-lyr:has(.hzly-box:not([hidden])) .hz-onair-card { display: none !important; }
+@keyframes hzOnAirPulse { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+@media (prefers-reduced-motion: reduce) { .hz-onair-dot { animation: none; } }
+
+/* V1.99.101 · no void in Widgets: the 6 tiles sit at the very bottom, the media screen takes the spare height.
+   (The earlier #leftPanel #hzDock margin-top:auto lost to a later rule, so the tiles floated under the media unit.) */
+#leftPanel #hzWidgets { display: flex; flex-direction: column; min-height: 0; }
+#leftPanel #hzWidgets > #hzUnit { flex: 1 0 auto; display: flex; flex-direction: column; }
+#leftPanel #hzWidgets > #hzUnit > .hz-unit-face:not([hidden]) { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; }
+#leftPanel #hzWidgets > #hzUnit > .hz-unit-face > #hzRpMedia { flex: 1 1 auto; margin-top: 0; display: flex; flex-direction: column; }
+#leftPanel #hzWidgets > #hzUnit #hzRpIdle { flex: 1 1 auto; min-height: 150px; }
+#leftPanel #hzWidgets > #hzUnit #hzRpMedia > .hz-rpm-card:not(.hz-rpm-idle) { flex: 0 0 auto; }
+#leftPanel #hzWidgets > #hzUnit #hzRadio { flex: 1 1 auto; }
+#leftPanel #hzWidgets > #hzDock { margin-top: auto !important; flex: 0 0 auto; position: static; }
+
+/* V1.99.102: Gemini ears on the shared media unit + the ON AIR tag */
+.hz-unit-ear{flex:0 0 auto;width:28px;height:28px;display:inline-grid;place-items:center;border-radius:8px;border:1px solid rgba(138,180,255,.55);background:linear-gradient(135deg,rgba(66,133,244,.2),rgba(217,101,112,.2));color:#8ab4ff;cursor:pointer;padding:0}
+.hz-unit-ear .ic{width:16px;height:16px}
+.hz-unit-ear:active{filter:brightness(1.3)}
+html[data-theme="grey"] .hz-unit-ear{color:#2a5db0;border-color:#2a5db0}
+.hz-onair-ear{flex:0 0 auto;width:24px;height:24px;display:inline-grid;place-items:center;border-radius:7px;border:1px solid rgba(138,180,255,.6);background:rgba(0,0,0,.35);color:#8ab4ff;cursor:pointer;padding:0;pointer-events:auto}
+.hz-onair-ear .ic{width:14px;height:14px}
+
+/* ===== V1.99.103 · Widgets fit the screen, no RADIO toggle, cyber lyrics standby, idle dashboard =====
+   The unit takes whatever height is left between the weather card and the apps dock and shares it between the player and the lyrics tile,
+   so the dock is never cut off. If a very small screen cannot fit it, the panel still scrolls as before. */
+.hz-unit-seg { display: none !important; }
+#leftPanel #hzWidgets { gap: 10px; padding: 10px 12px max(10px, env(safe-area-inset-bottom)); }
+#leftPanel #hzWidgets > #hzUnit { flex: 1 1 0 !important; min-height: 270px; padding: 8px; }
+#leftPanel #hzWidgets > #hzUnit > .hz-unit-bar { flex: 0 0 auto; padding-bottom: 6px; }
+#leftPanel #hzWidgets > #hzUnit > .hz-unit-face:not([hidden]) { flex: 1 1 0 !important; min-height: 0; }
+#leftPanel #hzWidgets > #hzUnit > .hz-unit-ai { flex: 0 0 auto; margin-top: 6px; padding: 5px 9px; }
+#leftPanel #hzWidgets > #hzUnit > .hz-unit-face > #hzRpMedia { flex: 1 1 0 !important; min-height: 0 !important; display: flex; flex-direction: column; gap: 8px; overflow: hidden !important; }
+#leftPanel #hzWidgets > #hzUnit #hzRpPlayer { flex: 1.25 1 0 !important; min-height: 106px; display: flex; flex-direction: column; }
+#leftPanel #hzWidgets > #hzUnit #hzRpPlayer .mp-mini { flex: 0 0 auto; padding: 8px 10px 4px; }
+#leftPanel #hzWidgets > #hzUnit #hzRpWave { flex: 1 1 0; min-height: 56px; position: relative; padding: 0 !important; }
+#leftPanel #hzWidgets > #hzUnit #hzRpWave .hz-viz { position: absolute; inset: 0; width: 100%; height: 100% !important; margin: 0; }
+#leftPanel #hzWidgets > #hzUnit #hzRpLyrics { flex: 1 1 0 !important; min-height: 72px !important; display: flex; flex-direction: column; }
+#leftPanel #hzWidgets > #hzUnit #hzRpLyrics .hzly-box { flex: 1 1 auto; height: auto !important; min-height: 0 !important; max-height: none !important; }
+#leftPanel #hzWidgets > #hzUnit #hzRpLyrics .hz-rpm-empty { flex: 1 1 auto; min-height: 0 !important; }
+#leftPanel #hzWidgets > #hzUnit #hzRpLyrics .hz-onair-card { flex: 1 1 auto; min-height: 0; }
+#leftPanel #hzWidgets > #hzDock { flex: 0 0 auto; }
+#leftPanel #hzWidgets > #hzDock .hz-dock-grid > .hz-app { min-height: 52px; padding: 6px 0 5px; }
+#leftPanel .hz-dash { padding-top: 8px; padding-bottom: 8px; }
+
+/* idle (nothing playing): the screensaver on top, the lyrics standby tile under it, one dashboard */
+#leftPanel #hzRpMedia.is-idle > #hzRpPlayer { display: none !important; }
+#leftPanel #hzRpMedia.is-idle > #hzRpLyrics { display: flex !important; }
+#leftPanel #hzWidgets > #hzUnit #hzRpMedia.is-idle > #hzRpIdle { flex: 1.25 1 0 !important; min-height: 100px; height: auto; }
+#leftPanel #hzWidgets > #hzUnit #hzRpMedia.is-idle > #hzRpLyrics { flex: 1 1 0 !important; }
+
+/* the lyrics standby tile (shown whenever no lyrics box and no ON AIR card is open) */
+.hzle { position: relative; display: flex; flex-direction: column; align-items: stretch; justify-content: space-between; gap: 4px; padding: 8px 14px 8px !important; overflow: hidden; isolation: isolate; text-align: left;
+  background: radial-gradient(120% 90% at 20% 0%, rgba(var(--accent-rgb,0,229,255),.14), transparent 60%), radial-gradient(90% 80% at 100% 100%, rgba(255,43,214,.13), transparent 60%), #040810; }
+html[data-theme="grey"] .hzle { background: radial-gradient(120% 90% at 20% 0%, rgba(var(--accent-rgb,0,150,200),.14), transparent 60%), radial-gradient(90% 80% at 100% 100%, rgba(255,43,214,.1), transparent 60%), #e9edf2; }
+.hzle > i, .hzle > div, .hzle > span { position: relative; z-index: 1; }
+.hzle-grid { position: absolute !important; inset: 0; z-index: 0 !important; opacity: .55;
+  background-image: linear-gradient(rgba(var(--accent-rgb,0,229,255),.12) 1px, transparent 1px), linear-gradient(90deg, rgba(var(--accent-rgb,0,229,255),.1) 1px, transparent 1px); background-size: 100% 18px, 22px 100%;
+  -webkit-mask-image: linear-gradient(180deg, transparent, #000 40%, #000 80%, transparent); mask-image: linear-gradient(180deg, transparent, #000 40%, #000 80%, transparent); animation: hzleGrid 6s linear infinite; }
+.hzle-scan { position: absolute !important; left: 0; right: 0; top: 0; height: 36%; z-index: 0 !important; pointer-events: none;
+  background: linear-gradient(180deg, transparent, rgba(var(--accent-rgb,0,229,255),.16) 55%, rgba(var(--accent-rgb,0,229,255),.5) 98%, transparent 100%); animation: hzleScan 3.4s ease-in-out infinite; }
+.hzle-c { position: absolute !important; width: 12px; height: 12px; z-index: 2 !important; border: 0 solid var(--accent-cyan,#00e5ff); filter: drop-shadow(0 0 4px rgba(var(--accent-rgb,0,229,255),.8)); }
+.hzle-c.c1 { left: 6px; top: 6px; border-left-width: 2px; border-top-width: 2px; }
+.hzle-c.c2 { right: 6px; top: 6px; border-right-width: 2px; border-top-width: 2px; }
+.hzle-c.c3 { left: 6px; bottom: 6px; border-left-width: 2px; border-bottom-width: 2px; }
+.hzle-c.c4 { right: 6px; bottom: 6px; border-right-width: 2px; border-bottom-width: 2px; }
+.hzle-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.hzle-head b { font-size: 12px !important; font-weight: 900; letter-spacing: 3px !important; color: var(--accent-cyan,#00e5ff) !important; text-shadow: 0 0 10px rgba(var(--accent-rgb,0,229,255),.7); }
+.hzle-st { display: inline-flex; align-items: center; gap: 6px; font-size: 9.5px !important; font-weight: 800; letter-spacing: 1.6px; color: rgba(255,255,255,.7) !important; }
+html[data-theme="grey"] .hzle-st { color: #3d454e !important; }
+.hzle-st i { width: 7px; height: 7px; border-radius: 50%; background: #ff2bd6; box-shadow: 0 0 8px #ff2bd6; animation: hzleBlink 1.6s ease-in-out infinite; }
+.hzle-lines { display: flex; flex-direction: column; justify-content: center; gap: 6px; flex: 1 1 auto; min-height: 0; }
+.hzle-lines u { display: block; height: 5px; border-radius: 3px; text-decoration: none; background: linear-gradient(90deg, rgba(var(--accent-rgb,0,229,255),.05), rgba(var(--accent-rgb,0,229,255),.5), rgba(255,43,214,.45), rgba(var(--accent-rgb,0,229,255),.05)); background-size: 220% 100%; box-shadow: 0 0 8px rgba(var(--accent-rgb,0,229,255),.25); animation: hzleLine 2.8s ease-in-out infinite; }
+.hzle-lines u:nth-child(1) { width: 78%; } .hzle-lines u:nth-child(2) { width: 92%; animation-delay: -.5s; } .hzle-lines u:nth-child(3) { width: 64%; animation-delay: -1s; } .hzle-lines u:nth-child(4) { width: 84%; animation-delay: -1.5s; }
+@media (max-height: 760px) { .hzle-lines u:nth-child(n+4) { display: none; } }
+.hzle-msg { font-size: 10.5px !important; letter-spacing: .6px; color: rgba(255,255,255,.62) !important; text-align: center; }
+html[data-theme="grey"] .hzle-msg { color: #3d454e !important; }
+@keyframes hzleScan { 0% { transform: translateY(-110%); } 100% { transform: translateY(300%); } }
+@keyframes hzleGrid { 0% { background-position: 0 0, 0 0; } 100% { background-position: 0 18px, 22px 0; } }
+@keyframes hzleLine { 0%, 100% { background-position: 0% 0; opacity: .55; } 50% { background-position: 100% 0; opacity: 1; } }
+@keyframes hzleBlink { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
+@media (prefers-reduced-motion: reduce) { .hzle-grid, .hzle-scan, .hzle-lines u, .hzle-st i { animation: none; } }
+
+/* ===== V1.99.106 · ONE SCREEN: player + waveform + lyrics + AI line read as a single interface =====
+   Widgets panel only (#leftPanel #hzUnit). The unit keeps its one outer frame; the inner cards lose their own borders, boxes,
+   shadows and blur, so waveform and lyrics flow into each other on one continuous background. CSS only, no engine touched. */
+#leftPanel #hzWidgets > #hzUnit {
+  background:
+    radial-gradient(120% 55% at 12% 0%, rgba(var(--accent-rgb,0,229,255),.16), transparent 62%),
+    radial-gradient(110% 60% at 92% 100%, rgba(255,43,214,.15), transparent 64%),
+    #050a11;
+}
+html[data-theme="grey"] #leftPanel #hzWidgets > #hzUnit { background: #e6eaef; }
+#leftPanel #hzWidgets > #hzUnit #hzRpMedia { gap: 0 !important; }
+#leftPanel #hzWidgets > #hzUnit #hzRpMedia .hz-rpm-card,
+#leftPanel #hzWidgets > #hzUnit #hzRpMedia.is-live .hz-rpm-card,
+#leftPanel #hzWidgets > #hzUnit .hz-rpm.is-live .hz-rpm-card,
+#leftPanel #hzWidgets > #hzUnit .hz-rpm.is-live .hz-rpm-lyr {
+  border: 0 !important; border-radius: 0 !important; background: transparent !important; box-shadow: none !important;
+}
+/* waveform sits in the same space as the title; lyrics start inside the waveform's lower glow, no seam */
+#leftPanel #hzWidgets > #hzUnit #hzRpPlayer .mp-mini { background: transparent !important; border: 0 !important; box-shadow: none !important; }
+#leftPanel #hzWidgets > #hzUnit #hzRpWave { background: transparent !important; border: 0 !important; box-shadow: none !important; }
+#leftPanel #hzWidgets > #hzUnit #hzRpLyrics { margin-top: -18px; position: relative; z-index: 1; }
+/* lyrics: no glass box, no bottom edge line, soft fade top and bottom instead of a frame */
+#leftPanel #hzWidgets > #hzUnit #hzRpLyrics .hzly-box {
+  background: transparent !important; border: 0 !important; box-shadow: none !important; border-radius: 0 !important;
+  -webkit-backdrop-filter: none !important; backdrop-filter: none !important;
+  -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 16%, #000 84%, transparent 100%);
+  mask-image: linear-gradient(180deg, transparent 0, #000 16%, #000 84%, transparent 100%);
+}
+#leftPanel #hzWidgets > #hzUnit #hzRpLyrics .hzly-box::after { display: none !important; }
+html[data-theme="grey"] #leftPanel #hzWidgets > #hzUnit #hzRpLyrics .hzly-box { color: #0b1620; }
+/* standby / ON AIR tiles: same, no frame, no corner brackets */
+#leftPanel #hzWidgets > #hzUnit #hzRpLyrics .hzle,
+#leftPanel #hzWidgets > #hzUnit #hzRpLyrics .hz-onair-card,
+#leftPanel #hzWidgets > #hzUnit #hzRpLyrics .hz-rpm-empty { background: transparent !important; border: 0 !important; box-shadow: none !important; border-radius: 0 !important; }
+#leftPanel #hzWidgets > #hzUnit #hzRpLyrics .hzle-c { display: none !important; }
+/* AI line: part of the screen, a fading hairline above it instead of a box */
+#leftPanel #hzWidgets > #hzUnit > .hz-unit-ai {
+  border: 0 !important; background: transparent !important; border-radius: 0; box-shadow: none !important;
+  margin-top: 2px; padding: 8px 6px 3px; position: relative;
+}
+#leftPanel #hzWidgets > #hzUnit > .hz-unit-ai::before {
+  content: ""; position: absolute; left: 6%; right: 6%; top: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(var(--accent-rgb,0,229,255),.55), rgba(255,43,214,.45), transparent);
+}
+/* the idle screensaver above the standby tile: also frameless so idle reads as one screen too */
+#leftPanel #hzWidgets > #hzUnit #hzRpMedia.is-idle > #hzRpIdle { border: 0 !important; box-shadow: none !important; background: transparent !important; border-radius: 0 !important; }
+/* the lyrics light show fades out toward every side so it has no rectangular edge */
+#leftPanel #hzWidgets > #hzUnit #hzRpLyrics .hzly-lights {
+  -webkit-mask-image: radial-gradient(ellipse 62% 58% at 50% 50%, #000 30%, transparent 100%);
+  mask-image: radial-gradient(ellipse 62% 58% at 50% 50%, #000 30%, transparent 100%);
+}
+
+/* ===== V1.99.112 · PLAYER + LYRICS = ONE UNIT =====
+   While a song plays, the lyrics box used to carry its own title bar (the song name a second time, equaliser, S.O.I tag), its own
+   second waveform and overlapped the player by 18px. That read as a separate window stuck under the player. Inside the unit the
+   player, the single shared waveform and the lyrics are now one stack: the title lives only in the player, the lyrics box keeps just
+   its two small controls (S = size, X = close) floating in its corner, and there is no second waveform and no overlap. CSS only. */
+#leftPanel #hzWidgets > #hzUnit #hzRpLyrics { margin-top: 0; }
+#leftPanel #hzWidgets > #hzUnit #hzRpLyrics .hzly-wave { display: none !important; }
+#leftPanel #hzWidgets > #hzUnit #hzRpLyrics .hzly-top {
+  position: absolute; top: 2px; right: 2px; left: auto; z-index: 3; padding: 0; gap: 6px; background: none !important; border: 0 !important;
+}
+#leftPanel #hzWidgets > #hzUnit #hzRpLyrics .hzly-eq,
+#leftPanel #hzWidgets > #hzUnit #hzRpLyrics .hzly-titles,
+#leftPanel #hzWidgets > #hzUnit #hzRpLyrics .hzly-tag { display: none !important; }
+#leftPanel #hzWidgets > #hzUnit #hzRpLyrics .hzly-sz,
+#leftPanel #hzWidgets > #hzUnit #hzRpLyrics .hzly-x { min-width: 28px; width: auto; height: 28px; border-radius: 9px; opacity: .72; background: rgba(0,0,0,.28); }
+#leftPanel #hzWidgets > #hzUnit #hzRpLyrics .hzly-x { width: 28px; }
+#leftPanel #hzWidgets > #hzUnit #hzRpLyrics .hzly-sz:active,
+#leftPanel #hzWidgets > #hzUnit #hzRpLyrics .hzly-x:active { opacity: 1; }
+html[data-theme="grey"] #leftPanel #hzWidgets > #hzUnit #hzRpLyrics .hzly-sz,
+html[data-theme="grey"] #leftPanel #hzWidgets > #hzUnit #hzRpLyrics .hzly-x { color: #0b1620; background: rgba(255,255,255,.55); border-color: rgba(0,0,0,.2); }
+/* a thin glowing seam-free join: the lyrics area starts right under the waveform with the same background */
+#leftPanel #hzWidgets > #hzUnit #hzRpWave { margin-bottom: 0; }
+
+/* ===== V1.99.112 · COCKPIT LOOK for the media unit (CSS only) =====
+   Neon cyan-to-magenta frame, HUD corner brackets, a perspective grid floor under the lyrics, glowing title and AI LINK chip. */
+#leftPanel #hzWidgets > #hzUnit {
+  border: 1px solid transparent; border-radius: 20px;
+  background:
+    linear-gradient(#050a11, #050a11) padding-box,
+    linear-gradient(135deg, rgba(0,229,255,.9), rgba(139,92,255,.55) 45%, rgba(255,43,214,.9)) border-box;
+  box-shadow: 0 0 22px rgba(0,229,255,.22), 0 0 34px rgba(255,43,214,.16), inset 0 0 40px rgba(0,229,255,.06);
+}
+#leftPanel #hzWidgets > #hzUnit::before {
+  content: ""; position: absolute; inset: 5px; z-index: 2; pointer-events: none; border-radius: 15px;
+  background:
+    linear-gradient(#00e5ff,#00e5ff) top left/16px 2px no-repeat, linear-gradient(#00e5ff,#00e5ff) top left/2px 16px no-repeat,
+    linear-gradient(#ff2bd6,#ff2bd6) top right/16px 2px no-repeat, linear-gradient(#ff2bd6,#ff2bd6) top right/2px 16px no-repeat,
+    linear-gradient(#ff2bd6,#ff2bd6) bottom left/16px 2px no-repeat, linear-gradient(#ff2bd6,#ff2bd6) bottom left/2px 16px no-repeat,
+    linear-gradient(#00e5ff,#00e5ff) bottom right/16px 2px no-repeat, linear-gradient(#00e5ff,#00e5ff) bottom right/2px 16px no-repeat;
+  filter: drop-shadow(0 0 4px rgba(0,229,255,.8));
+}
+/* perspective grid floor behind the lyrics */
+#leftPanel #hzWidgets > #hzUnit #hzRpLyrics::before {
+  content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 70%; z-index: 0; pointer-events: none; opacity: .55;
+  background-image: linear-gradient(rgba(255,43,214,.35) 1px, transparent 1px), linear-gradient(90deg, rgba(0,229,255,.3) 1px, transparent 1px);
+  background-size: 100% 16px, 26px 100%;
+  -webkit-mask-image: linear-gradient(180deg, transparent, #000 90%); mask-image: linear-gradient(180deg, transparent, #000 90%);
+}
+#leftPanel #hzWidgets > #hzUnit #hzRpLyrics > * { position: relative; z-index: 1; }
+#leftPanel #hzWidgets > #hzUnit #hzRpLyrics > .hzly-box { position: relative; }
+/* horizon line between wave and lyrics */
+#leftPanel #hzWidgets > #hzUnit #hzRpLyrics::after {
+  content: ""; position: absolute; left: 4%; right: 4%; top: 0; height: 1px; z-index: 2; pointer-events: none;
+  background: linear-gradient(90deg, transparent, #00e5ff, #ff2bd6, transparent); box-shadow: 0 0 10px rgba(0,229,255,.7);
+}
+/* glowing title and chips */
+#leftPanel #hzWidgets > #hzUnit .mp-mini-t b, #leftPanel #hzWidgets > #hzUnit .mp-mini-t strong { text-shadow: 0 0 12px rgba(0,229,255,.55); letter-spacing: .3px; }
+#leftPanel #hzWidgets > #hzUnit .hz-unit-link { background: rgba(0,229,255,.1); box-shadow: 0 0 10px rgba(0,229,255,.35), inset 0 0 6px rgba(0,229,255,.2); text-shadow: 0 0 6px rgba(0,229,255,.8); }
+#leftPanel #hzWidgets > #hzUnit .hz-unit-led.on b { color: #fff; text-shadow: 0 0 8px rgba(255,43,214,.9); }
+#leftPanel #hzWidgets > #hzUnit .hz-unit-led.on i { background: #ff2bd6; box-shadow: 0 0 10px #ff2bd6; }
+#leftPanel #hzWidgets > #hzUnit .hz-unit-ear { box-shadow: 0 0 10px rgba(138,180,255,.35); }
+#leftPanel #hzWidgets > #hzUnit .hz-unit-log { text-shadow: 0 0 6px rgba(0,229,255,.6); }
+/* the current lyric line glows */
+#leftPanel #hzWidgets > #hzUnit #hzRpLyrics .hzly-lines .on, #leftPanel #hzWidgets > #hzUnit #hzRpLyrics .hzly-lines .is-on, #leftPanel #hzWidgets > #hzUnit #hzRpLyrics .hzly-lines .cur { text-shadow: 0 0 14px rgba(255,43,214,.85), 0 0 4px rgba(0,229,255,.8); }
+html[data-theme="grey"] #leftPanel #hzWidgets > #hzUnit { background: linear-gradient(#e6eaef,#e6eaef) padding-box, linear-gradient(135deg,#2a5db0,#b0307f) border-box; box-shadow: none; }
+html[data-theme="grey"] #leftPanel #hzWidgets > #hzUnit::before, html[data-theme="grey"] #leftPanel #hzWidgets > #hzUnit #hzRpLyrics::before { display: none; }
+@media (prefers-reduced-motion: reduce) { #leftPanel #hzWidgets > #hzUnit::before { filter: none; } }
+
+/* ===== V1.99.117 · visual fixes =====
+   1. Grey theme: synced lyrics were white on a light screen (invisible). Dark ink for every lyric line state.
+   2. Weather widget stays expanded: its fold chevron is hidden.
+   3. Lyrics standby tile: its own look (karaoke ghost lines, spinning record, floating notes) instead of bars. */
+html[data-theme="grey"] #leftPanel #hzUnit #hzRpLyrics .hzly-line,
+html[data-theme="grey"] #leftPanel #hzUnit #hzRpLyrics .hzly-view.is-plain .hzly-line { color: rgba(11,22,32,.50); text-shadow: none; }
+html[data-theme="grey"] #leftPanel #hzUnit #hzRpLyrics .hzly-line.is-near { color: rgba(11,22,32,.72); }
+html[data-theme="grey"] #leftPanel #hzUnit #hzRpLyrics .hzly-line.is-on,
+html[data-theme="grey"] #leftPanel #hzUnit #hzRpLyrics .hzly-view.is-plain .hzly-line.is-on { color: #06101a; text-shadow: 0 0 10px rgba(0,150,200,.35); }
+html[data-theme="grey"] #leftPanel #hzUnit #hzRpLyrics .hzly-line.is-tag { color: #5b3fb0; }
+html[data-theme="grey"] #leftPanel #hzUnit #hzRpLyrics .hzly-sub,
+html[data-theme="grey"] #leftPanel #hzUnit #hzRpLyrics .hzly-note { color: rgba(11,22,32,.72); }
+html[data-theme="grey"] #leftPanel #hzUnit #hzRpLyrics .hzly-note button { color: #0b1620; background: rgba(255,255,255,.6); border-color: rgba(0,0,0,.25); }
+
+.hz-dash .hzd-chev { display: none !important; }
+
+.hzle { --hzle-hi: var(--accent-cyan,#00e5ff); --hzle-lo: rgba(255,255,255,.26); }
+html[data-theme="grey"] .hzle { --hzle-hi: #0e7490; --hzle-lo: rgba(11,22,32,.28); }
+.hzle .hzle-grid, .hzle .hzle-scan { display: none !important; }
+.hzle-lines { padding-right: 58px; gap: 3px !important; }
+.hzle-lines p { margin: 0; font-size: 13px; font-weight: 800; line-height: 1.3; letter-spacing: .2px; color: transparent;
+  background: linear-gradient(90deg, var(--hzle-hi) 0 50%, var(--hzle-lo) 50% 100%); background-size: 200% 100%; background-position: 100% 0;
+  -webkit-background-clip: text; background-clip: text; animation: hzleKara 9s ease-in-out infinite; }
+.hzle-lines p:nth-child(2) { animation-delay: 2.2s; } .hzle-lines p:nth-child(3) { animation-delay: 4.4s; }
+@keyframes hzleKara { 0% { background-position: 100% 0; } 22% { background-position: 0 0; } 78% { background-position: 0 0; opacity: 1; } 92% { background-position: 0 0; opacity: .35; } 100% { background-position: 100% 0; opacity: 1; } }
+.hzle .hzle-disc { position: absolute !important; right: 14px; top: 50%; width: 46px; height: 46px; margin-top: -23px; border-radius: 50%; z-index: 1 !important;
+  background: radial-gradient(circle, #05080f 0 7%, var(--hzle-hi) 8% 14%, #0a0f1a 15% 100%), repeating-radial-gradient(circle, rgba(255,255,255,.10) 0 1px, transparent 1px 3px), conic-gradient(from 0deg, #0b1020, #1a2440, #0b1020, #2a1840, #0b1020);
+  background-blend-mode: normal, screen, normal; box-shadow: 0 0 14px rgba(var(--accent-rgb,0,229,255),.45), inset 0 0 0 1px rgba(255,255,255,.12); animation: hzleSpin 7s linear infinite; }
+html[data-theme="grey"] .hzle .hzle-disc { box-shadow: 0 0 10px rgba(14,116,144,.35), inset 0 0 0 1px rgba(0,0,0,.25); }
+.hzle .hzle-n { position: absolute !important; right: 22px; bottom: 26px; z-index: 1 !important; font-style: normal; font-size: 13px; font-weight: 900; color: #ff2bd6; opacity: 0; animation: hzleNote 5.4s ease-in infinite; }
+.hzle .hzle-n.n2 { right: 40px; color: var(--hzle-hi); animation-delay: 1.8s; } .hzle .hzle-n.n3 { right: 12px; animation-delay: 3.6s; }
+@keyframes hzleSpin { to { transform: rotate(360deg); } }
+@keyframes hzleNote { 0% { transform: translateY(0) rotate(-8deg); opacity: 0; } 15% { opacity: .9; } 100% { transform: translateY(-46px) rotate(14deg); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .hzle-lines p, .hzle .hzle-disc, .hzle .hzle-n { animation: none; } .hzle-lines p { background-position: 0 0; } }
+
+/* ===== V1.99.117 · WATCH: video + subtitles inside the media unit (view only) ===== */
+#leftPanel #hzWidgets > #hzUnit #hzRpMedia.is-watch > #hzRpIdle,
+#leftPanel #hzWidgets > #hzUnit #hzRpMedia.is-watch > #hzRpPlayer,
+#leftPanel #hzWidgets > #hzUnit #hzRpMedia.is-watch > #hzRpLyrics { display: none !important; }
+#hzRpVideo[hidden], #hzRpSubs[hidden] { display: none !important; }
+#hzRpVideo { position: relative; flex: 0 0 auto; width: 100%; aspect-ratio: 16 / 9; max-height: 50%; background: #000; border-radius: 12px; overflow: hidden; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+#hzRpVideo video { width: 100%; height: 100%; object-fit: contain; display: block; background: #000; pointer-events: none; }
+#hzRpVideo .hzw-ti { position: absolute; left: 0; right: 34px; top: 0; padding: 6px 10px 14px; font-size: 11.5px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background: linear-gradient(180deg, rgba(0,0,0,.7), transparent); }
+#hzRpVideo .hzw-x { position: absolute; right: 4px; top: 4px; width: 26px; height: 26px; display: grid; place-items: center; padding: 0; border-radius: 9px; border: 1px solid rgba(255,255,255,.3); background: rgba(0,0,0,.55); color: #fff; font-size: 12px; cursor: pointer; }
+#hzRpVideo .hzw-bar { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: rgba(255,255,255,.18); }
+#hzRpVideo .hzw-bar b { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #00e5ff, #ff2bd6); }
+#hzRpVideo .hzw-st { position: absolute; inset: 0; display: grid; place-items: center; font-size: 12.5px; font-weight: 800; letter-spacing: 1px; color: #fff; background: rgba(0,0,0,.38); pointer-events: none; }
+#hzRpVideo .hzw-st[hidden] { display: none; }
+#hzRpVideo .hzw-st.is-fail { white-space: pre-line; text-align: center; padding: 28px 12px 40px; font-size: 11px; line-height: 1.4; letter-spacing: .4px; background: rgba(0,0,0,.82); color: #ffb4b4; overflow: hidden; align-content: center; }
+#hzRpVideo .hzw-retry { position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); padding: 5px 16px; border-radius: 999px; border: 1px solid #00e5ff; background: rgba(0,0,0,.7); color: #00e5ff; font-size: 11px; font-weight: 800; letter-spacing: 1px; cursor: pointer; }
+#hzRpVideo .hzw-retry[hidden] { display: none; }
+#hzRpSubs { position: relative; flex: 1 1 0; min-height: 84px; display: flex; flex-direction: column; overflow: hidden; padding: 6px 12px 8px; color: #fff; background: transparent; }
+#hzRpSubs .hzw-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 9.5px; font-weight: 800; letter-spacing: 2px; color: var(--accent-cyan,#00e5ff); }
+#hzRpSubs .hzw-lang { color: rgba(255,255,255,.6); letter-spacing: 1.2px; }
+#hzRpSubs .hzw-lines { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; justify-content: center; text-align: center; overflow: hidden; }
+#hzRpSubs .hzly-line { margin: 0; padding: 3px 0; font-size: 14px; line-height: 1.3; font-weight: 600; color: rgba(255,255,255,.45); transform: scale(.96); transition: color .2s, transform .2s; overflow-wrap: anywhere; }
+#hzRpSubs .hzly-line.is-near { color: rgba(255,255,255,.62); }
+#hzRpSubs .hzly-line.is-on { color: #fff; font-size: 15.5px; transform: scale(1.04); text-shadow: 0 0 12px rgba(0,229,255,.8), 0 0 24px rgba(255,43,214,.45); }
+html[data-theme="grey"] #hzRpSubs { color: #0b1620; }
+html[data-theme="grey"] #hzRpSubs .hzw-head { color: #0e7490; } html[data-theme="grey"] #hzRpSubs .hzw-lang { color: rgba(11,22,32,.6); }
+html[data-theme="grey"] #hzRpSubs .hzly-line { color: rgba(11,22,32,.5); }
+html[data-theme="grey"] #hzRpSubs .hzly-line.is-near { color: rgba(11,22,32,.72); }
+html[data-theme="grey"] #hzRpSubs .hzly-line.is-on { color: #06101a; text-shadow: 0 0 10px rgba(0,150,200,.35); }
+
+/* Scoped media repair: native video and official YouTube fallback + subtitle switch. */
+#hzRpVideo video[hidden] { display:none !important; }
+#hzRpVideo .hzw-embed { position:absolute;inset:0;width:100%;height:100%;border:0; }
+#hzRpVideo .hzw-cc { position:absolute;right:36px;top:5px;z-index:4;padding:4px 7px;border:1px solid #4ade80;border-radius:7px;background:rgba(0,0,0,.8);color:#4ade80;font-size:10px;cursor:pointer; }
+#hzRpVideo .hzw-cc[aria-pressed="false"] {color:#ddd;border-color:#888;}
+#hzRpVideo .hzw-ti {right:100px;pointer-events:none;}
+#hzRpMedia.is-watch {min-height:200px;}
+#hzRpMedia.is-watch > #hzRpIdle {display:none !important;}
+
+/* V1.99.121: radio tuner removed from the widget (radio still plays on the shared music screen, started by the AI).
+   Video owns the WHOLE media screen; captions stay inside the picture. */
+#hzUnit > [data-face="radio"], #hzUnit #hzRadio { display:none !important; }
+#leftPanel #hzWidgets > #hzUnit #hzRpMedia.is-watch > #hzRpPlayer,
+#leftPanel #hzWidgets > #hzUnit #hzRpMedia.is-watch > #hzRpLyrics,
+#leftPanel #hzWidgets > #hzUnit #hzRpMedia.is-watch > #hzRpSubs,
+#leftPanel #hzWidgets > #hzUnit #hzRpMedia.is-watch > #hzRpIdle { display:none !important; }
+#leftPanel #hzWidgets > #hzUnit #hzRpMedia.is-watch { min-height:240px; height:clamp(240px,52dvh,520px); display:flex; }
+#leftPanel #hzWidgets > #hzUnit #hzRpMedia.is-watch > #hzRpVideo { flex:1 1 auto; max-height:none !important; height:100%; min-height:200px; aspect-ratio:auto; margin:0; padding:0; }
+#hzRpVideo video { object-fit:cover; width:100%; height:100%; pointer-events:auto; }
+#hzRpVideo, #hzRpVideo .hzw-embed { background:#000; }
+#hzRpVideo .hzw-x { z-index:5; }
+#hzRpVideo .hzw-bar { pointer-events:none; }
+#hzRpMedia.is-radio #mpMini { display:none !important; }
+#hzRpMedia.is-radio .hzly-box, #hzRpMedia.is-radio #hzRpLyrEmpty { display:none !important; }
+#hzRpMedia.is-radio .hz-onair-card { display:block !important; }
+.hzt-out { overflow:auto; }
+.hzt-l { white-space:pre-wrap; overflow-wrap:anywhere; min-height:1em; }
+
+#leftPanel #hzWidgets > #hzUnit #hzRpMedia.is-watch { min-height:240px !important; }
+
+.hzt-input { resize:vertical; min-height:30px; max-height:160px; line-height:1.4; }
+.hzt-input.hzt-secret-input { -webkit-text-security:disc; }

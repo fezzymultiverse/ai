@@ -1,0 +1,8 @@
+Original ZIP: 313 tests, 308 pass, 5 fail.
+Patched source: 313 tests, 308 pass, 5 fail.
+Failure names identical:
+restore into an empty folder is byte-identical to the repo copies and never overwrites without --force
+paid APIs and paid-only providers are gone from the app while daily Aion allowance stays explicit
+native check-ins reject router aliases, paid-only providers and model substitution
+index.html OpenRouter seed matches and starts on Llama 3.3 70B free
+V120: viewer uses full area, native controls and honest in-picture captions

@@ -1,0 +1,22 @@
+PASS native RSS discovers website, YouTube, Reddit and GitHub by name
+PASS invalid advertised feed cannot discard a valid alternate
+PASS HTTP 200 HTML at /feed continues probing instead of rejecting the search
+PASS JSON Feed native object responses and relative item URLs work
+PASS independent website directory is used when Feedly has no results
+PASS invalid protocols are rejected and feed text cannot execute
+PASS browser RSS fallback omits native User-Agent and private credentials
+PASS notification context defaults off
+PASS notification snapshot includes every exposed app and treats content as data
+PASS People chats make no native reads and retain no private notification context
+PASS disable and turn cleanup immediately clear transient notification text
+PASS large notification snapshots report context truncation honestly
+PASS revoked notification permission clears an existing AI snapshot
+PASS a delayed native read cannot restore context after turn cancellation
+PASS RSS and notification JavaScript create no idle polling interval
+PASS lag diagnostics register no expensive observers until explicitly opened
+PASS full app boots without script errors and notification permission row is wired
+PASS layout CSS cleanup preserves every computed dock/media property in both themes
+PASS IME composition preserves text and does not resize mid-composition
+PASS rapid typing/backspace retains focus, spelling support and exact text
+PASS native notification files, registration and consent/permission gates are present
+Completed 21 focused browser checks.

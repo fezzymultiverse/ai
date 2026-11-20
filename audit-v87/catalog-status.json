@@ -1,0 +1,198 @@
+[
+  {
+    "provider": "gemini",
+    "status": "CATALOG_OK",
+    "models": 64,
+    "shape": [
+      "models"
+    ]
+  },
+  {
+    "provider": "groq",
+    "status": "CATALOG_OK",
+    "models": 11,
+    "shape": [
+      "object",
+      "data"
+    ]
+  },
+  {
+    "provider": "cohere",
+    "status": "CATALOG_OK",
+    "models": 17,
+    "shape": [
+      "models"
+    ]
+  },
+  {
+    "provider": "mistral",
+    "status": "CATALOG_OK",
+    "models": 53,
+    "shape": [
+      "object",
+      "data"
+    ]
+  },
+  {
+    "provider": "openrouter",
+    "status": "CATALOG_OK",
+    "models": 434,
+    "shape": [
+      "data",
+      "total_count",
+      "links"
+    ]
+  },
+  {
+    "provider": "pollinations",
+    "status": "CATALOG_OK",
+    "models": 1,
+    "shape": [
+      "array"
+    ]
+  },
+  {
+    "provider": "anyapi",
+    "status": "CATALOG_OK",
+    "models": 10,
+    "shape": [
+      "data",
+      "object"
+    ]
+  },
+  {
+    "provider": "gonka",
+    "status": "CATALOG_OK",
+    "models": 3,
+    "shape": [
+      "data",
+      "object"
+    ]
+  },
+  {
+    "provider": "routeway",
+    "status": "CATALOG_OK",
+    "models": 287,
+    "shape": [
+      "object",
+      "data"
+    ]
+  },
+  {
+    "provider": "requesty",
+    "status": "CATALOG_OK",
+    "models": 755,
+    "shape": [
+      "object",
+      "data"
+    ]
+  },
+  {
+    "provider": "kilo",
+    "status": "CATALOG_OK",
+    "models": 468,
+    "shape": [
+      "data"
+    ]
+  },
+  {
+    "provider": "ovh",
+    "status": "CATALOG_OK",
+    "models": 21,
+    "shape": [
+      "object",
+      "data"
+    ]
+  },
+  {
+    "provider": "chatat",
+    "status": "CATALOG_ERROR",
+    "note": "JSONDecodeError: Expecting value: line 1 column 1 (char 0)"
+  },
+  {
+    "provider": "blockrun",
+    "status": "CATALOG_OK",
+    "models": 122,
+    "shape": [
+      "object",
+      "data",
+      "network",
+      "networkName"
+    ]
+  },
+  {
+    "provider": "aihorde",
+    "status": "CATALOG_OK",
+    "models": 18,
+    "shape": [
+      "object",
+      "data"
+    ]
+  },
+  {
+    "provider": "g4flocal",
+    "status": "SKIPPED_PAID_OR_DEVICE_LOCAL"
+  },
+  {
+    "provider": "zai",
+    "status": "CATALOG_OK",
+    "models": 12,
+    "shape": [
+      "object",
+      "data"
+    ]
+  },
+  {
+    "provider": "aionlabs",
+    "status": "CATALOG_OK",
+    "models": 6,
+    "shape": [
+      "object",
+      "data",
+      "models"
+    ]
+  },
+  {
+    "provider": "llm7",
+    "status": "CATALOG_OK",
+    "models": 72,
+    "shape": [
+      "object",
+      "data"
+    ]
+  },
+  {
+    "provider": "cloudflare",
+    "status": "CATALOG_OK",
+    "models": 40,
+    "shape": [
+      "success",
+      "result",
+      "errors",
+      "messages",
+      "result_info"
+    ]
+  },
+  {
+    "provider": "claude",
+    "status": "SKIPPED_PAID_OR_DEVICE_LOCAL"
+  },
+  {
+    "provider": "openai",
+    "status": "SKIPPED_PAID_OR_DEVICE_LOCAL"
+  },
+  {
+    "provider": "deepseek",
+    "status": "SKIPPED_PAID_OR_DEVICE_LOCAL"
+  },
+  {
+    "provider": "xai",
+    "status": "SKIPPED_PAID_OR_DEVICE_LOCAL"
+  },
+  {
+    "provider": "mlvoca",
+    "status": "HTTP_403",
+    "note": "<html>\r\n<head><title>403 Forbidden</title></head>\r\n<body>\r\n<center><h1>403 Forbidden</h1></center>\r\n<hr><center>nginx</center>\r\n</body>\r\n</html>\r\n",
+    "pages": 1
+  }
+]

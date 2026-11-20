@@ -1,0 +1,107 @@
+HORIZON V1.99.129 — REQUESTED SCOPE & VERIFICATION
+
+DELIVERY
+Updated source project, not a compiled or signed APK. Use the existing Android
+build workflow to build and install this version. No native plugin, permission,
+logo asset, signing setup or existing provider module was changed.
+
+ABOUT
+The old changelog array and release-history UI have been removed. In their place
+are eight readable capability cards. Original logo, tagline and developer
+name/disclosure are preserved. Version/release checking and backups remain.
+The About navigation subtitle now describes capabilities rather than a changelog.
+Open About & Updates > Open Keyless Studio & Playlists for the new tools.
+
+PLAYLISTS
+- Save named, ordered lists on this device: up to 40 playlists, 1–30 tracks each.
+- AI tool: playlist.create saves the entire ordered list in ONE call.
+- Lists use native YouTube search references or real local music-library IDs.
+- Play first confirmed track, clear unrelated queued items, then append the rest
+  in order. Existing named playlists are not silently overwritten.
+- Fixed a real bug where queuing song WORDS entered ytAutoPlay without carrying
+  the queue flag, causing a new track to interrupt current playback.
+- Local queue calls append instead of reversing tracks through insert-next.
+- An ambiguous/failed track reports partial preparation, never complete success.
+- Export the references as .playlist.json; this is NOT a downloaded song bundle
+  or an externally playable M3U manifest.
+- Online tracks still depend on the existing YouTube extractor, network,
+  availability and content restrictions. Live extraction was not certified here.
+
+KEYLESS CREATIVE TOOLS — EXACT LIMITS
+Local instrumental studio:
+- Generates actual mono 44.1 kHz PCM WAV files using a background Web Worker.
+- Ambient, lo-fi and electronic procedural synthesis, 5–120 seconds, 50–180 BPM.
+- Preview and explicitly save to Downloads using the existing native saver.
+- This is not a generative music model, not vocals, not a Suno-quality service,
+  and not an unlimited high-end cloud API. No API account/key is added.
+Podcast scripts/playback:
+- AI can open an original script for review using the selected chat provider.
+- Edit, read using installed OFFLINE device voices, stop and export .txt.
+- It does not record/export podcast speech as MP3/WAV. No such file is claimed.
+- Offline voice data must already be installed. Network-only voices are refused.
+- AI writing and track suggestions use the user's EXISTING selected provider;
+  the local studio does not itself supply an offline conversational model.
+- No AI audio, music, images or speech automatically generates/plays on a tool
+  draft: the user taps Compose / Read / Save. Playlist play is a separate action.
+
+KEYLESS RESEARCH
+Added ddg.answer to the existing grounding module using DuckDuckGo Instant
+Answers. Bounded/cached HTTPS requests, native CapacitorHttp on Android and
+browser fetch otherwise, no credentials, safe text/source formatting.
+This returns instant definitions/summaries, not full search results and not
+proof of accuracy. Empty/failed lookups say no fact was verified. Existing
+Wikipedia/Wikidata/Open Library/MusicBrainz lookups remain.
+
+PROVIDER RESEARCH — NO FALSE KEYLESS PROMISE
+Pollinations' current official API/README requires a key for generation:
+https://gen.pollinations.ai/docs
+https://github.com/pollinations/pollinations
+The existing authenticated image integration remains untouched. It has NOT been
+relabelled anonymous. A wrapper using the same backend would not remove its
+account/balance requirements. No shared secret or scraped private service was
+added. No dependable no-account high-end AI music/podcast API was verified.
+Rembg is a local Python/model workflow, not a ready-to-use anonymous Android API:
+https://github.com/danielgatis/rembg
+No runtime/model downloader was silently added to this small-scope patch.
+
+KEYBOARD / FREEZING MITIGATIONS
+- Active waveform RAF now stops while any editor is focused, while typing,
+  during keyboard movement and while hidden; it resumes after editing.
+- Stops continuous hidden-card frames; avoids some redundant idle-canvas size
+  measurements.
+- Lyrics animation/position work yields while editing instead of competing
+  with the keyboard.
+- HTML/Markdown/diagram viewer observers now inspect inserted element nodes
+  rather than scanning the whole page for every clock/streaming text change.
+- People option-button discovery ignores irrelevant text updates and yields
+  while typing, without changing persona, contacts or chat behaviour.
+- Existing IME composition/text/focus handling is preserved.
+These remove identified competing workloads. They do not certify that every
+possible Android freeze is fixed. Real-phone keyboard/voice/playback testing is
+still required; no physical device or compiled APK was tested here.
+
+VERIFICATION
+- All changed JS modules passed node --check.
+- All four inline index.html scripts passed the existing syntax checker.
+- 12 new unit checks pass, including valid deterministic WAV bytes and playlist
+  persistence, order, validation, cancellation and honest failure handling.
+- 16 studio/full-app browser checks pass.
+- 2 focused performance browser checks pass: waveform frame scheduling stopped
+  during editor focus and resumed after blur; 20 clock text updates triggered
+  zero additional global code-block scans, while inserted blocks still worked.
+- Existing requested-scope browser test: 1 pass.
+- Existing RSS/notifications/keyboard checks: 21 passes.
+- Existing contacts/navigation browser test: 1 pass.
+- Full suite and original baseline comparison: see tests/results-v129/.
+  There are 10 inherited unit failures, so this is NOT an all-green suite.
+- Four obsolete assertions about historical changelog entries were updated to
+  reflect the explicitly requested capabilities design; provider/map behaviour
+  assertions were retained.
+- Network/voice/extractor edges were mocked where deterministic tests require
+  it. Successful mock tests do not certify third-party uptime or phone audio.
+
+PRESERVATION
+All original files remain. Only the scoped web files, two obsolete test files
+and package version metadata changed. New studio scripts/styles, tests and this
+report were added. Native source, assets/icon, original chat/persona rules,
+provider selection logic, keys and build/signing workflow are unchanged.

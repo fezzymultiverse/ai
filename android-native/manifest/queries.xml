@@ -1,0 +1,12 @@
+    <queries>
+        <package android:name="com.whatsapp" />
+        <package android:name="com.whatsapp.w4b" />
+        <package android:name="com.termux" />
+        <intent><action android:name="android.intent.action.TTS_SERVICE" /></intent>
+        <intent><action android:name="android.intent.action.VIEW" /><data android:scheme="https" /></intent>
+        <intent><action android:name="android.intent.action.VIEW" /><data android:scheme="magnet" /></intent>
+        <intent><action android:name="android.intent.action.SET_ALARM" /></intent>
+        <intent><action android:name="android.speech.tts.engine.INSTALL_TTS_DATA" /></intent>
+        <intent><action android:name="android.intent.action.VIEW" /><data android:mimeType="vnd.android.document/directory" /></intent>
+        <intent><action android:name="android.intent.action.VIEW" /><data android:mimeType="resource/folder" /></intent>
+    </queries>
