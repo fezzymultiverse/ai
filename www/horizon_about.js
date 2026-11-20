@@ -381,5 +381,8 @@
         notice('Reminder: your messages go to ' + name + '. Its own terms decide whether they are kept or used for training.');
     }
 
-    window.HzAbout = { open: render, openSecurity: renderSecurity, warn: warn, allow: allow, version: VERSION };
+    // V1.99.162: the Auto router must never pop a question in the middle of a failover. approved() only looks; approve() records a yes.
+    function approved(id) { return !noTrain() || !!okSent[id]; }
+    function approve(id) { okSent[id] = 1; }
+    window.HzAbout = { open: render, openSecurity: renderSecurity, warn: warn, allow: allow, approved: approved, approve: approve, noTrain: noTrain, version: VERSION };
 })();

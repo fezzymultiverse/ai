@@ -22,7 +22,7 @@
     }
     const query = clean(t.query || t.title,200);
     if (!query) throw new Error('A playlist track is empty.');
-    return {source:'youtube',query,id:/^[\w-]{11}$/.test(t.id || '') ? t.id : '',title:clean(t.title),artist:clean(t.artist)};
+    return {source:'youtube',query};
   }
   // V1.99.139: the AI often sends curly quotes, trailing commas, a code fence or a plain list instead of strict JSON. Read all of them.
   function lenient(arg) {
@@ -39,31 +39,6 @@
     if (pipe) return { name: pipe[1], play: true, tracks: [pipe[2]].concat(lines.slice(1)) };
     if (lines.length >= 2) return { name: lines[0], play: true, tracks: lines.slice(1) };
     return null;
-  }
-  async function resolveTracks(raw, active) {
-    if (!Array.isArray(raw) || !raw.length) throw new Error('Provide at least one track.');
-    const tracks = [], misses = [], seen = new Set();
-    for (const entry of raw.slice(0, MAX_TRACKS)) {
-      if (active) active();
-      let t;
-      try {
-        t = track(entry);
-        // IDs and display names proposed by the AI are not trusted.
-        t = t.source === 'local' ? await host.resolveLocal(t.id) : await host.resolveYouTube(t.query);
-      } catch (e) {
-        if (e && e.stopped) throw e;
-        misses.push(clean(typeof entry === 'string' ? entry : (entry && (entry.query || entry.id)) || 'Invalid track')); continue;
-      }
-      if (!t) { misses.push(clean(typeof entry === 'string' ? entry : (entry && (entry.query || entry.id)) || 'Invalid track')); continue; }
-      const key = t.source + ':' + t.id;
-      if (!seen.has(key)) { seen.add(key); tracks.push(t); }
-    }
-    if (active) active();
-    if (!tracks.length) throw new Error('No tracks could be verified. Nothing was added or played.');
-    return {tracks, misses};
-  }
-  function omissions(misses) {
-    return misses.length ? '\nSkipped ' + misses.length + ' unverified suggestion(s): ' + misses.slice(0, 5).join(' · ') + '.' : '';
   }
   function uniqueName(name, all) {
     const taken = n => all.some(x => x.name.toLowerCase() === n.toLowerCase());
@@ -88,7 +63,7 @@
     const all = load(), i = all.findIndex(x => x.name.toLowerCase() === clean(name,80).toLowerCase());
     if (i < 0) throw new Error('Playlist not found. Use playlist.list first.');
     if (!Array.isArray(list) || !list.length) throw new Error('Give a tracks array to add.');
-    const keyOf = t => t.source + ':' + (t.id || String(t.query).toLowerCase());
+    const keyOf = t => t.source === 'local' ? 'l:' + t.id : 'y:' + String(t.query).toLowerCase();
     const have = new Set(all[i].tracks.map(keyOf));
     let added = 0;
     for (const raw of list) {
@@ -105,25 +80,22 @@
     if (i < 0) throw new Error('Playlist not found. Use playlist.list first.');
     const gone = all.splice(i, 1)[0]; localStorage.setItem(KEY, JSON.stringify(all)); return gone;
   }
-  async function play(name, active) {
+  async function play(name) {
     if (playingList) throw new Error('A playlist is already being prepared. Wait for its result.');
     const item = get(name); if (!host.track) throw new Error('Music player is not ready. Reopen Horizon.');
     playingList = true; let done = 0; const skipped = []; const token = ++playlistSeq;
     try {
       for (const t of item.tracks) {
-        if (active) active();
         if (token !== playlistSeq) return {text:'CANCELLED: playlist preparation stopped after ' + done + ' tracks. Already-started playback was not stopped.'};
         let r = null;
         try { r = await host.track(t, done > 0); } catch (e) { r = {text: 'ERROR: ' + ((e && e.message) || e)}; }
-        if (active) active();
         // V1.99.139: one song that cannot be found no longer throws the whole playlist away: it is skipped and reported.
-        if (r && r.why === 'tap') return {text:'Playback has not started. '+r.text+' The rest of the playlist was not queued.'};
         if (!r || /^(?:ERROR|NEEDS CHOICE|NOT FOUND)/i.test(r.text || '') || !/^(?:Started|Playing|Queued|Added|Up next)/i.test(r.text || '')) { skipped.push((t.source === 'local' ? (t.title || t.id) : t.query) + ' (' + String((r && r.text) || 'not confirmed').slice(0, 70) + ')'); continue; }
         if (!done && host.isolatePlaylist) host.isolatePlaylist();
         done++;
       }
       if (!done) return {text:'ERROR: Playlist \"' + item.name + '\": none of the ' + item.tracks.length + ' tracks could be played. ' + skipped.slice(0, 3).join(' | ')};
-      return {text:'Started playlist "' + item.name + '": first track playing; ' + (done - 1) + ' queued in order.' + (skipped.length ? ' Skipped ' + skipped.length + ' that could not be played or queued: ' + skipped.slice(0, 4).join(' | ') + '.' : '') + ' Streaming is not a file download.'};
+      return {text:'Started playlist "' + item.name + '": first track playing; ' + (done - 1) + ' queued in order.' + (skipped.length ? ' Skipped ' + skipped.length + ' that could not be found: ' + skipped.slice(0, 4).join(' | ') + '.' : '') + ' Streaming is not a file download.'};
     } finally { playingList = false; }
   }
   function stopPlaylist() { ++playlistSeq; }
@@ -216,7 +188,7 @@
   function parse(text) {const out=[],re=new RegExp(SRC,'gi');let m;const plain=String(text||'').replace(/```[\s\S]*?(?:```|$)|~~~[\s\S]*?(?:~~~|$)/g,'');while((m=re.exec(plain))&&out.length<3)out.push({br:true,kind:m[1].toLowerCase(),arg:m[2].trim()});return out;}
   let downloading = false;
   // V1.99.130: really save a playlist's songs through the app's own verified saver (yt.get), one at a time, then rescan Music.
-  async function download(name, active) {
+  async function download(name) {
     if (downloading) throw new Error('A playlist download is already running. Wait for its result.');
     const item = get(name); if (!host.get) throw new Error('The song saver is not ready. Reopen Horizon.');
     // V1.99.133: every playlist saves into its own folder, Download/Horizon/<playlist name>/, files numbered in playlist order.
@@ -224,10 +196,9 @@
     downloading = true; const lines = []; let saved = 0;
     try {
       for (let i = 0; i < item.tracks.length; i++) {
-        if (active) active();
         const t = item.tracks[i], label = t.source === 'local' ? (t.title || t.id) : t.query;
         if (t.source === 'local') { lines.push((i + 1) + '. ' + label + ' - already on the phone (local library)'); saved++; continue; }
-        const r = await host.get(t.id ? 'https://www.youtube.com/watch?v=' + t.id + ' | ' + t.title.replace(/\|/g,' ') : t.query, {folder, prefix: String(i + 1).padStart(2, '0') + ' - '}), txt = (r && r.text) || '';
+        const r = await host.get(t.query, {folder, prefix: String(i + 1).padStart(2, '0') + ' - '}), txt = (r && r.text) || '';
         const ok = /^SAVED/i.test(txt); if (ok) saved++;
         lines.push((i + 1) + '. ' + label + ' - ' + (ok ? 'SAVED' : /^STILL DOWNLOADING/i.test(txt) ? 'STILL DOWNLOADING (finishes in the Downloads box)' : /^NEEDS CHOICE/i.test(txt) ? 'NOT SAVED: no confident match, ask which version' : 'FAILED: ' + txt.slice(0, 120)));
       }
@@ -257,34 +228,28 @@
     const blob = await renderMusic({title: data.title, style, seconds, bpm});
     return await save(blob, (clean(data.title, 80) || 'Horizon track') + '.wav');
   }
-  async function run(kind,arg,options = {}) {
+  async function run(kind,arg) {
     try {
-      if(kind==='playlist.create' || kind==='playlist.add'){
-        const def = lenient(arg);
-        if (!def || typeof def !== 'object') throw new Error('A playlist name and a tracks array are required.');
-        const checked = await resolveTracks(def.tracks, options.active);
-        const adding = kind === 'playlist.add';
-        const result = adding ? addTracks(def.name, checked.tracks) : {item:create({name:def.name, tracks:checked.tracks},true),added:checked.tracks.length};
-        const item = result.item;
-        let text = (adding ? 'Added ' : 'Saved ') + result.added + ' matched track(s) ' + (adding ? 'to' : 'in') + ' “' + item.name + '”.' + omissions(checked.misses);
-        if (!adding && def.play === true && options.play) {
-          try { text += '\n' + (await play(item.name, options.active)).text; } catch(e) { if(e.stopped) throw e; text += '\nPlayback: ' + e.message; }
-        }
-        if(def.download===true && options.download){try{text += '\n'+(await download(item.name, options.active)).text;}catch(e){if(e.stopped) throw e; text+='\nDownload failed: '+e.message;}}
-        return {text, item};
-      }
+      if(kind==='playlist.create'){const def=lenient(arg);if(!def||typeof def!=='object')throw new Error('Use [[playlist.create: {"name":"...","play":true,"tracks":["Artist - Song"]}]].');const p=create(def,true);let pl='',dl='';
+        // Listening comes first so music starts within seconds; the slower saving into the folder follows.
+        if(def&&def.play===true){try{pl=' '+(await play(p.name)).text;}catch(e){pl=' Play failed: '+(e.message||e);}}
+        if(def&&def.download===true){try{dl=' '+(await download(p.name)).text;}catch(e){dl=' Download failed: '+(e.message||e);}}
+        if(dl)return{text:'Saved playlist "'+p.name+'".'+pl+dl};
+        if(pl)return{text:'Saved playlist "'+p.name+'" ('+p.tracks.length+' tracks, nothing downloaded).'+pl+' Send the user the tracklist. If they want the songs on the phone, call [[playlist.download: '+p.name+']].'};
+        return{text:'Saved playlist "'+p.name+'" with '+p.tracks.length+' tracks on this device (references only, nothing downloaded yet). Send the user the tracklist. To listen call [[playlist.play: '+p.name+']]; to keep the songs call [[playlist.download: '+p.name+']].'};}
+      if(kind==='playlist.add'){const def=lenient(arg);if(!def||typeof def!=='object')throw new Error('Use [[playlist.add: {"name":"...","tracks":["Artist - Song"]}]].');const r=addTracks(def.name,def.tracks);let pl='';if(def.download===true){try{pl=' '+(await download(r.item.name)).text;}catch(e){pl=' Download failed: '+(e.message||e);}}return{text:'Added '+r.added+' track(s) to "'+r.item.name+'", now '+r.item.tracks.length+' tracks.'+pl};}
       if(kind==='playlist.delete'){const g=removeList(arg);return{text:'Deleted playlist "'+g.name+'" from Horizon. Songs already saved to the phone were NOT deleted.'};}
-      if(kind==='playlist.download')return await download(arg,options.active);
+      if(kind==='playlist.download')return await download(arg);
       if(kind==='playlist.list')return{text:load().map(x=>x.name+' ('+x.tracks.length+' tracks)').join('\n')||'No saved playlists.'};
-      if(kind==='playlist.show'){ const item=get(arg); return {text:'Saved playlist: '+item.name, item}; }
-      if(kind==='playlist.play')return {item:get(arg), ...(await play(arg, options.active))};
+      if(kind==='playlist.show')return{text:JSON.stringify(get(arg))};
+      if(kind==='playlist.play')return await play(arg);
       if(kind==='playlist.export'){open();return{text:'Opened Keyless Studio. The user must tap Export track list beside the saved playlist; no download has started.'};}
       if(kind==='studio.music'||kind==='studio.podcast'){const data=lenient(arg);if(!data||Array.isArray(data)||typeof data!=='object')throw new Error('Use a JSON object.');
         if(data.save===true){if(kind==='studio.music'){return{text:'SAVED instrumental: '+await makeMusic(data)+'. Procedural synthesis, no vocals.'};}return{text:'SAVED podcast audio (MP3): '+await makePodcast(data)};}
         open(kind.slice(7),data);return{text:'Opened '+kind.slice(7)+' draft for review. Nothing is saved yet. Add "save":true to make and save the audio file at once.'};}
       if(kind==='studio.open'){open();return{text:'Opened Keyless Studio. No audio created or played.'};}
       return{text:'ERROR: Unknown studio tool.'};
-    } catch(e) {if(e && e.stopped) throw e; return{text:'ERROR: '+(e.message||e)};}
+    } catch(e) {return{text:'ERROR: '+(e.message||e)};}
   }
   // V1.99.134: SMALL-MODEL SCAFFOLD. The app reads the request, asks the model ONLY for song names, builds the playlist call itself and runs it.
   // So a model that cannot follow tool tags still makes, plays and saves a playlist correctly.
@@ -293,21 +258,14 @@
     if (!t || t.length > 400 || !/\bplay-?lists?\b/i.test(t)) return null;
     if (/\b(?:delete|remove|rename|show|list|export)\b.*\bplay-?lists?\b/i.test(t) && !/\b(?:make|create|build|put together)\b/i.test(t)) return null;
     if (!/\b(?:make|create|build|put together|queue up|give me|generate|compile|start|set up|need|want|play|download|save)\b/i.test(t)) return null;
-    const download = /\b(?:download|offline|save (?:the )?(?:songs|tracks|files)|into (?:a |the )?folder)\b/i.test(t) && !/\b(?:no|do not|don.t|without)\s+(?:any\s+)?(?:(?:play|save)(?:ing)?(?:\s+it)?\s+(?:or|and)\s+)?download/i.test(t);
-    const play = /\b(?:play|listen|queue|put on|stream)\b/i.test(t) && !/\b(?:no|do not|don.t|without)\s+play/i.test(t);
+    const download = /\b(?:download|save|keep|offline|on my phone|in (?:my )?music|folder|into folders?)\b/i.test(t);
+    const play = /\b(?:play|listen|queue|put on|stream)\b/i.test(t) || !download;
     const n = (/\b(\d{1,2})\s*(?:songs?|tracks?|tunes?)\b/i.exec(t) || [])[1];
-    return {play, download, count: Math.max(1, Math.min(20, Number(n) || 10)), text: t};
-  }
-  function savedPlaylistIntent(raw) {
-    const m = /^(?:(?:please|can you|could you)\s+)*(play|show|open)\s+(?:(?:my|the|saved)\s+)*play-?list\s+(.{1,92})$/i.exec(String(raw || '').trim());
-    if (!m) return null;
-    const name = m[2].replace(/^[“"']|[”"'](?=[.!?]*$)|[.!?]+$/g,'').trim();
-    if (!name) return null;
-    return {kind:m[1].toLowerCase() === 'play' ? 'playlist.play' : 'playlist.show', name};
+    return {play, download, count: Math.max(4, Math.min(20, Number(n) || 10)), text: t};
   }
   function libraryIntent(raw) {
     const text = String(raw || '').trim().replace(/\s+/g, ' ');
-    if (!/^(?:(?:horizon|please|can you|could you|i want you to|i want to)[:,]?\s+)*(?:make|create|build|put together|generate|compile|give me)\b/i.test(text) || !/\bplay-?list\b/i.test(text)) return null;
+    if (!/^(?:(?:horizon|please|can you|could you)[:,]?\s+)*(?:make|create|build|put together|generate|compile)\b/i.test(text) || !/\bplay-?list\b/i.test(text)) return null;
     const source = /\b(?:from|using|with|of)\s+(?:only\s+)?(?:songs?\s+(?:from|in)\s+)?(?:my |the )?(?:local (?:music )?library|music library|library|local (?:music|tracks|songs)|(?:music|songs) (?:on my phone|on this device)|(?:liked|recent|favorite|favourite) (?:songs|tracks))\b/i.exec(text);
     if (!source) return null;
     const tail = text.slice(source.index + source[0].length);
@@ -315,7 +273,7 @@
     const n = /\b(\d{1,2})\s*(?:songs?|tracks?)\b/i.exec(text);
     const filters = /\b(?:matching|filtered by|by)\s+(.+?)(?=\s+(?:called|named|and play)\b|[.!?]?$)/i.exec(tail);
     const term = filters ? clean(filters[1], 100).replace(/^["“']|["”']$/g, '') : /\b(?:liked|favorite|favourite)\b/i.test(source[0]) ? 'liked' : /\brecent\b/i.test(source[0]) ? 'recent' : '';
-    return { name: named ? clean(named[1],80).replace(/[.!?]+$/, '') || 'Library mix' : term ? 'Library · ' + term.slice(0, 40) : 'Library mix', count: Math.max(1, Math.min(30, n ? Number(n[1]) : 12)), term, play: /\b(?:and (?:then )?play|start playing)\b/i.test(text) && !/\b(?:do not|don.t|without)\s+play/i.test(text) };
+    return { name: named ? clean(named[1],80).replace(/[.!?]+$/, '') || 'Library mix' : term ? 'Library · ' + term.slice(0, 40) : 'Library mix', count: Math.max(1, Math.min(30, n ? Number(n[1]) : 12)), term, play: /\b(?:and (?:then )?play|start playing)\b/i.test(text) };
   }
   async function libraryPlaylist(intent) {
     if (!W.HorizonMusic || !W.HorizonMusic.playlistLibrary) throw new Error('Music is not ready. Reopen Horizon.');
@@ -334,12 +292,9 @@
   }
   function playlistCard(item) {
     const card = node('section', null, 'provider-card');
-    card.setAttribute('aria-label', 'Playlist');
-    const local = item.tracks.filter(t => t.source === 'local').length;
-    const parts = [local && local + ' library', item.tracks.length - local && (item.tracks.length - local) + ' YouTube'].filter(Boolean);
-    card.classList.add('hz-playlist-card');
-    card.append(node('h3', item.name), node('p', parts.join(' · '), 'hint'));
-    const tracks = node('ol'); item.tracks.forEach(t => tracks.appendChild(node('li', t.artist ? t.title + ' — ' + t.artist : t.title || t.query || t.id))); card.append(tracks);
+    card.setAttribute('aria-label', 'Library playlist');
+    card.append(node('h3', item.name), node('p', item.tracks.length + ' local tracks · no streaming or downloads', 'hint'));
+    const tracks = node('ol'); item.tracks.forEach(t => tracks.appendChild(node('li', t.title || t.id))); card.append(tracks);
     const status = node('p', '', 'hint'); status.setAttribute('role','status');
     const playButton = node('button', 'Play playlist', 'use-btn'); playButton.type = 'button';
     playButton.addEventListener('click', async () => {
@@ -369,24 +324,23 @@
     return name;
   }
   // ask(msgs) -> {text, via}. Returns null when the scaffold cannot help (the normal chat flow then runs).
-  async function scaffold(text, ask, active) {
+  async function scaffold(text, ask) {
     const it = playlistIntent(text); if (!it) return null;
     const prompts = [
       'Reply with ONLY a list of ' + it.count + ' real, well-known songs for this request, one per line, exactly in the form: Artist - Song Title. No numbering, no commentary, no invented songs.\nRequest: ' + it.text,
       'Give exactly ' + it.count + ' lines. Every line is: Artist - Song Title. Real songs only. Nothing else.\nTopic: ' + it.text
     ];
     let songs = [], via = '';
-    for (let i = 0; i < prompts.length && songs.length < Math.min(4, it.count); i++) {
+    for (let i = 0; i < prompts.length && songs.length < 4; i++) {
       const r = await ask([{role: 'user', text: prompts[i]}], songs); via = (r && r.via) || via;
       songs = parseSongs(r && r.text, it.count);
     }
-    if (active) active();
-    if (!songs.length) return {kind:'playlist.create',text:'No usable song suggestions were returned. No playlist was created.'};
+    if (songs.length < 4) return null;
     const name = nameFor(it.text);
-    const res = await run('playlist.create', JSON.stringify({name, play: it.play, download: it.download, tracks: songs}), {active, play:it.play, download:it.download});
-    return {kind: 'playlist.create', arg: name, text: res.text, item:res.item, via};
+    const res = await run('playlist.create', JSON.stringify({name, play: it.play, download: it.download, tracks: songs}));
+    return {kind: 'playlist.create', arg: name, text: res.text + (via ? '\nThe song list came from ' + via + '.' : ''), via};
   }
-  const PROMPT='KEYLESS STUDIO (playlists, instrumentals, podcasts). The users request IS the permission: act at once, never ask which songs, never ask them to confirm, never explain steps instead of doing them. PLAYLISTS: when he asks for a playlist (any artist, mood, era, activity, make me, put together, queue up) YOU choose 8-15 real, well-known tracks that fit (strict "Artist - Song" form, real songs only, no invented titles, a mix of hits and deep cuts, no duplicates), pick a short distinct name, and make ONE call: [[playlist.create: {"name":"Night drive","play":true,"tracks":["Artist - Song",{"source":"local","id":"REAL_ID","title":"Title"}]}]]. "play":true only if he asked to listen: track 1 starts at once and the rest queue in order (streaming, no download). "download":true = he wants the songs kept on the phone: every song is saved one by one and verified into its OWN folder, Download/Horizon/<playlist name>/, files numbered 01 - , 02 - in order. Use BOTH when he says play and download/save/keep/have them; when he only says make a playlist do not start playback. The words save, keep, download, offline, on my phone, in Music or folder mean download:true. The result is a tracklist with SAVED / FAILED per song and the folder: pass it on as it is and say saved ONLY for lines marked SAVED. For his own phone music use music.search first and "source":"local" with the real ids. After a playlist exists: [[playlist.play: name]] listens again; [[playlist.download: name]] saves its songs to the folder; [[playlist.add: {"name":"Night drive","tracks":["Artist - Song"],"download":false}]] adds songs (only when the user explicitly asks to add songs); [[playlist.delete: name]] removes the list only, never his saved files; [[playlist.list]]; [[playlist.show: name]]; [[playlist.export: name]]. Never rebuild a playlist with repeated yt.play/yt.queue calls. If the name exists, add a number to it. MUSIC: [[studio.music: {"title":"Name","style":"ambient","bpm":90,"seconds":30,"save":true}]] makes and saves a WAV instrumental (ambient/lofi/electronic, 5-120s, procedural, no vocals). PODCAST: write the FULL original script yourself, then [[studio.podcast: {"title":"Episode 1","script":"full script","voice":"optional Edge voice id","save":true}]] records it with the Microsoft Edge voice and saves an MP3 (needs internet; up to 30000 characters). If the result says the APK lacks render support, say so plainly. Without "save":true the tool only opens an editable draft. [[studio.open]] opens the UI. Say saved ONLY when the result says SAVED. No automatic Termux.';
+  const PROMPT='KEYLESS STUDIO (playlists, instrumentals, podcasts). The users request IS the permission: act at once, never ask which songs, never ask them to confirm, never explain steps instead of doing them. PLAYLISTS: when he asks for a playlist (any artist, mood, era, activity, make me, put together, queue up) YOU choose 8-15 real, well-known tracks that fit (strict "Artist - Song" form, real songs only, no invented titles, a mix of hits and deep cuts, no duplicates), pick a short distinct name, and make ONE call: [[playlist.create: {"name":"Night drive","play":true,"tracks":["Artist - Song",{"source":"local","id":"REAL_ID","title":"Title"}]}]]. "play":true = he wants to listen: track 1 starts at once and the rest queue in order (streaming, no download). "download":true = he wants the songs kept on the phone: every song is saved one by one and verified into its OWN folder, Download/Horizon/<playlist name>/, files numbered 01 - , 02 - in order. Use BOTH when he says play and download/save/keep/have them; when he only says make a playlist use play:true. The words save, keep, download, offline, on my phone, in Music or folder mean download:true. The result is a tracklist with SAVED / FAILED per song and the folder: pass it on as it is and say saved ONLY for lines marked SAVED. For his own phone music use music.search first and "source":"local" with the real ids. After a playlist exists: [[playlist.play: name]] listens again; [[playlist.download: name]] saves its songs to the folder; [[playlist.add: {"name":"Night drive","tracks":["Artist - Song"],"download":false}]] adds songs (when he says add more, or you see a gap, just do it); [[playlist.delete: name]] removes the list only, never his saved files; [[playlist.list]]; [[playlist.show: name]]; [[playlist.export: name]]. Never rebuild a playlist with repeated yt.play/yt.queue calls. If the name exists, add a number to it. MUSIC: [[studio.music: {"title":"Name","style":"ambient","bpm":90,"seconds":30,"save":true}]] makes and saves a WAV instrumental (ambient/lofi/electronic, 5-120s, procedural, no vocals). PODCAST: write the FULL original script yourself, then [[studio.podcast: {"title":"Episode 1","script":"full script","voice":"optional Edge voice id","save":true}]] records it with the Microsoft Edge voice and saves an MP3 (needs internet; up to 30000 characters). If the result says the APK lacks render support, say so plainly. Without "save":true the tool only opens an editable draft. [[studio.open]] opens the UI. Say saved ONLY when the result says SAVED. No automatic Termux.';
   function installBridge() {
     const b=W.HorizonBridges;if(!b||b.__studio)return;
     const parseOld=b.parse,runOld=b.run,blockOld=b.block;b.__studio=true;b.SRC='(?:'+b.SRC+')|(?:'+SRC+')';
@@ -394,6 +348,6 @@
     b.run=function(kind,arg){return /^(playlist|studio)\./.test(kind)?run(kind,arg):runOld.apply(this,arguments);};
     b.block=function(){return blockOld.apply(this,arguments)+'\n\n'+PROMPT;};
   }
-  W.HorizonStudio={savedPlaylistIntent,libraryIntent,libraryPlaylist,playlistCard,playlistIntent,parseSongs,scaffold,addTracks,removeList,download,makePodcast,makeMusic,init:h=>{host=h||{};installBridge();},open,create,list:load,get,play,stopPlaylist,exportList,parse,run,renderMusic,speak,stopSpeech,prompt:()=>PROMPT,SRC,installBridge};
+  W.HorizonStudio={libraryIntent,libraryPlaylist,playlistCard,playlistIntent,parseSongs,scaffold,addTracks,removeList,download,makePodcast,makeMusic,init:h=>{host=h||{};installBridge();},open,create,list:load,get,play,stopPlaylist,exportList,parse,run,renderMusic,speak,stopSpeech,prompt:()=>PROMPT,SRC,installBridge};
   installBridge();
 })();

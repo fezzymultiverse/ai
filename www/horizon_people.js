@@ -1293,7 +1293,7 @@
     }
     async function pingChannel(plugin) {
         if (channelMade) return; channelMade = true;
-        try { await plugin.createChannel({ id: 'horizon_pings', name: 'Horizon pings', description: 'Name + PING alerts', importance: 5, visibility: 1, vibration: true, lights: true, lightColor: '#FF2D3D' }); } catch (_) {}
+        try { await plugin.createChannel({ id: 'horizon_pings_v2', name: 'Horizon pings', description: 'Name + PING alerts', importance: 5, visibility: 1, vibration: true, lights: true, lightColor: '#FF2D3D' }); } catch (_) {}
     }
     async function alertUser(ev) {
         var who = ev.senderName || 'A contact', ping = ev.kind === 'ping';
@@ -1303,11 +1303,12 @@
         if (window.HzToast) HzToast.show({ icon: ping ? 'hzp-i-ping' : 'i-check', title: ping ? who + ' \u00B7 PING' : who, sub: line, kind: ping ? 'bad' : '', cls: ping ? 'hzp-ping' : '', ms: ping ? 10000 : 5000, onTap: go });
         else host.notice(who + ' \u00B7 ' + line);
         try { if (ping && navigator.vibrate) navigator.vibrate([200, 100, 200]); } catch (_) {}
+        try { if (window.HzChime) HzChime(ping); } catch (_) {}
         try {
             if (native()) {
                 var plugin = Capacitor.Plugins && Capacitor.Plugins.LocalNotifications;
                 if (!plugin && Capacitor.registerPlugin) plugin = Capacitor.registerPlugin('LocalNotifications');
-                if (plugin && (await plugin.checkPermissions()).display === 'granted') { await pingChannel(plugin); await plugin.schedule({ notifications: [{ id: Math.floor(ev.ts % 2000000000), title: ping ? '\u2757 ' + who + ' \u00B7 PING' : who, body: ping ? 'PING from ' + who + ' \u2757' : line, channelId: 'horizon_pings', extra: { people: true } }] }); }
+                if (plugin && (await plugin.checkPermissions()).display === 'granted') { await pingChannel(plugin); await plugin.schedule({ notifications: [{ id: Math.floor(ev.ts % 2000000000), title: ping ? '\u2757 ' + who + ' \u00B7 PING' : who, body: ping ? 'PING from ' + who + ' \u2757' : line, channelId: 'horizon_pings_v2', extra: { people: true } }] }); }
             } else if ('Notification' in window && Notification.permission === 'granted') { var note = new Notification(ping ? '\u2757 ' + who + ' \u00B7 PING' : who, { body: line, tag: ev.id }); note.onclick = function () { window.focus(); go(); }; }
         } catch (_) { /* In-app alert still works when OS permission is denied. */ }
     }

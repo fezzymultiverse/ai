@@ -47,7 +47,18 @@
     const updateVideo = () => {
         if (!videoBox) return;
         // FIX: hide the stream box for audio-only streams; show only for yt.watch-style video
-        videoBox.hidden = !(cur && cur.remote && !cur.audioOnly);
+        // V1.99.161: the YouTube video box no longer pops up by itself. Audio still plays; the video shows only if the user taps "Show video".
+        const want = !!(cur && cur.remote && !cur.audioOnly);
+        let showVid = false; try { showVid = localStorage.getItem('horizon_ytbox') === '1'; } catch (_) { /* default hidden */ }
+        let tg = document.getElementById('mpStreamToggle');
+        if (!tg) {
+            tg = document.createElement('button'); tg.type = 'button'; tg.id = 'mpStreamToggle'; tg.className = 'use-btn';
+            tg.style.cssText = 'margin:4px auto;display:block';
+            tg.onclick = () => { let on = false; try { on = localStorage.getItem('horizon_ytbox') === '1'; localStorage.setItem('horizon_ytbox', on ? '0' : '1'); } catch (_) { /* ignore */ } updateVideo(); };
+            videoBox.parentNode.insertBefore(tg, videoBox);
+        }
+        tg.hidden = !want; tg.textContent = showVid ? 'Hide video' : 'Show video';
+        videoBox.hidden = !(want && showVid);
         if (videoBox.hidden) return;
         const note = videoBox.querySelector('[role=status]'); note.textContent = videoMessage; note.hidden = !videoMessage;
         video.setAttribute('aria-label', cur.title + ' · YouTube video');

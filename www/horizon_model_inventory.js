@@ -4,6 +4,12 @@ window.HorizonModelInventory = {
   "date": "2026-11-16",
   "source": "horizon-V1_99_76-cfedge.zip",
   "verified": {
+    "groq": [
+      "openai/gpt-oss-120b",
+      "openai/gpt-oss-20b",
+      "llama-3.3-70b-versatile",
+      "llama-3.1-8b-instant"
+    ],
     "typhoon": [
       "typhoon-v2.5-30b-a3b-instruct"
     ],
