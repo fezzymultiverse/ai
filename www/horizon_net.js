@@ -46,7 +46,7 @@
     } catch (_) { return false; }
   }
   // V1.99.105: slow shared hosts get longer than 18 seconds. mlvoca runs on shared hardware and a thinking model (deepseek-r1:1.5b) needs well over 18s.
-  var slowPost = { 'mlvoca.com': 110000, 'api.free.ai': 60000 };
+  var slowPost = { 'mlvoca.com': 110000, 'api.groq.com': 90000, 'api.free.ai': 60000 };
   function deadlineFor(url, method) {
     var host = ''; try { host = new URL(url).hostname; } catch (_) { host = ''; }
     if (/^(GET|HEAD)$/i.test(method || 'GET')) return slowPost[host] ? 15000 : isWorkerHost(host) ? 10000 : 6000;

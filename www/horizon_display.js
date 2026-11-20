@@ -1,8 +1,8 @@
-/* V1.93.9 · Personalisation: Screen size (Normal / Bigger) and Refresh rate (Auto / 30 / 60 / 90 Hz).
-   Both need Android itself, so the work is done by the HorizonDisplay plugin; this file is only the two cards. */
+/* V1.93.9 · Personalisation: Android display settings: native size/rate requests plus app text-size presets. */
 (function () {
   'use strict';
-  var KEY_HZ = 'hz_refresh';
+  var KEY_HZ = 'hz_refresh', KEY_UI = 'hz_ui_preset';
+  function applyPreset() { document.documentElement.dataset.hzUi = lsg(KEY_UI) || ''; }
   var info = null, sizeCard = null, rateCard = null, busy = false;
   function plugin() {
     var c = window.Capacitor;
@@ -43,12 +43,13 @@
     var p = plugin();
     if (sizeCard) {
       var big = info && info.pct > 100;
-      mark(sizeCard, 'size:' + (big ? 'big' : 'normal'));
+      mark(sizeCard, 'size:' + (lsg(KEY_UI) || (big ? 'big' : 'normal')));
       var bb = sizeCard.list.querySelector('[data-hz-display-opt="size:big"]');
       var nb = sizeCard.list.querySelector('[data-hz-display-opt="size:normal"]');
       if (!p) {
         sizeCard.status.textContent = 'Needs the Android app. A browser keeps its own zoom.';
         setDisabled(bb, true); setDisabled(nb, true);
+        sizeCard.list.querySelectorAll('button').forEach(function(b){setDisabled(b,true);});
       } else if (info) {
         sizeCard.status.textContent = 'Your screen is ' + info.pxWide + ' px wide. Bigger makes everything larger and still fits.';
         nb.querySelector('small').textContent = info.normalDp + ' dp wide · the usual size';
@@ -66,11 +67,13 @@
         rateCard.status.textContent = 'Needs the Android app.';
         rateCard.list.querySelectorAll('button').forEach(function (b) { setDisabled(b, true); });
       } else if (info) {
-        rateCard.status.textContent = 'Running at ' + info.current + ' Hz now. This screen offers ' + info.supported.join(', ') + ' Hz.';
+        var modes = Array.isArray(info.supported) ? info.supported.map(Number) : [];
+        rateCard.status.textContent = 'Running at ' + info.current + ' Hz now.' + (modes.length ? ' Screen modes: ' + modes.join(', ') + ' Hz.' : ' Display modes unavailable.');
         rateCard.list.querySelectorAll('button').forEach(function (b) {
           var hz = Number(b.dataset.hzDisplayOpt.split(':')[1]);
           if (!hz) return;
-          var ok = info.supported.indexOf(hz) !== -1;
+          var ok = modes.some(function(rate){return Math.abs(rate-hz)<1;});
+          if (hz === 120) setDisabled(b, !ok);
           b.querySelector('small').textContent = ok ? 'Offered by this screen' : 'Not a mode on this screen, Android picks the closest';
         });
       }
@@ -85,17 +88,20 @@
     var p = plugin();
     if (!p) throw new Error('Open Horizon in the Android app to change the size.');
     if (busy) return;
+    if (val === 'compact' || val === 'comfort') { lss(KEY_UI,val); applyPreset(); paint(); return; }
     var big = val === 'big';
-    if (big === !!(info && info.pct > 100)) return;
+    if (!info) throw new Error('Display information is not available on this build.');
+    if (big === (info.pct > 100)) { lss(KEY_UI,''); applyPreset(); paint(); return; }
     if (big && (!info || info.bigPct <= 100)) throw new Error('Your screen is already at the narrowest width that fits.');
     if (!window.confirm('Horizon will redraw its screen to apply the ' + (big ? 'bigger' : 'normal') + ' size. Your chats and settings are kept. Continue?')) return;
     busy = true;
-    try { await p.setUiSize({ big: big }); } finally { busy = false; }
+    try { await p.setUiSize({ big: big }); lss(KEY_UI,''); applyPreset(); await refresh(); } finally { busy = false; }
   }
   async function applyRate(hz, quiet) {
     var p = plugin();
     if (!p) throw new Error('Open Horizon in the Android app to change the refresh rate.');
     var r = await p.setRate({ hz: hz });
+    if (hz === 120 && !(r && r.exact)) throw new Error('The Android display bridge did not accept 120 Hz. Your previous preference was kept.');
     if (!quiet) {
       if (!hz) say('Auto: Android chooses the rate.');
       else if (r && r.exact) say('Asked for ' + hz + ' Hz.');
@@ -105,6 +111,7 @@
   }
   async function pickRate(val) {
     var hz = Number(val) || 0;
+    if (hz === 120 && !(info && Array.isArray(info.supported) && info.supported.some(function(rate){return Math.abs(Number(rate)-120)<1;}))) throw new Error('120 Hz is not available on this display.');
     await applyRate(hz, false);
     lss(KEY_HZ, String(hz));
     await refresh();
@@ -112,8 +119,10 @@
   function mount() {
     var panel = document.querySelector('.tab-body[data-tab="personalisation"]');
     if (!panel || document.getElementById('hzSizeCard')) return;
-    sizeCard = card('hzSizeCard', 'Screen size', 'Make everything bigger so it is easier to read and tap.');
+    sizeCard = card('hzSizeCard', 'Screen size', 'Choose an app text preset or a native display size.');
     sizeCard.list.append(
+      option('size', 'compact', 'Compact', 'Smaller chat and settings text', pickSize),
+      option('size', 'comfort', 'Comfort', 'Larger chat and settings text', pickSize),
       option('size', 'normal', 'Normal', 'The usual size', pickSize),
       option('size', 'big', 'Bigger', 'Larger, and it still fits your screen', pickSize)
     );
@@ -122,7 +131,8 @@
       option('rate', '0', 'Auto', 'Android chooses, and saves battery', pickRate),
       option('rate', '30', '30 Hz', 'Easiest on battery and heat', pickRate),
       option('rate', '60', '60 Hz', 'Smooth and balanced', pickRate),
-      option('rate', '90', '90 Hz', 'Smoothest, uses the most battery', pickRate)
+      option('rate', '90', '90 Hz', 'High refresh rate', pickRate),
+      option('rate', '120', '120 Hz', 'Requires a compatible display and Android bridge', pickRate)
     );
     var anchor = document.getElementById('themeCard');
     if (anchor && anchor.parentNode === panel) {
@@ -138,6 +148,7 @@
     var hz = Number(lsg(KEY_HZ) || 0);
     if (hz > 0 && plugin()) applyRate(hz, true).catch(function () { /* the screen keeps its own rate */ });
   }
+  if (plugin()) applyPreset();
   window.HorizonDisplay = { refresh: refresh, mount: mount };
   window.addEventListener('horizon-resume', reapply);
   document.addEventListener('visibilitychange', function () { if (!document.hidden) reapply(); });

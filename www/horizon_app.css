@@ -5108,3 +5108,19 @@ html[data-theme="grey"] .hz-wabot-row { background: #f6f7f9; border-color: rgba(
 html[data-theme="grey"] .hzs-count { background: #cfe3ea; }
 html[data-theme="grey"] .hz-wabot-row.st-ok { border-left-color: #16a34a; }
 html[data-theme="grey"] .hz-wabot-row.st-bad { border-left-color: #dc2626; }
+
+/* Chat-only contrast, centered add control and compact archive/playlist cards. */
+#webToggle { display:inline-grid; place-items:center; padding:0; line-height:1; }
+#webToggle .ic { display:block; margin:0; transform-origin:50% 50%; }
+#webToggle[aria-expanded="true"] .ic { transform:none; }
+.chat-input-area.is-rec #webToggle { display:none; }
+html[data-theme="grey"] .composer > .chat-input-area { background:#c3cbd5; border-color:#758394; }
+html[data-theme="grey"] .composer > .chat-input-area > textarea { color:#101923; background:transparent; }
+html[data-theme="grey"] .composer > .chat-input-area > textarea::placeholder { color:#435160; }
+html[data-theme="grey"] .message.user .bubble { background:#ccd5df; color:#101923; }
+.hz-playlist-card { margin-top:10px; min-width:0; overflow-wrap:anywhere; }
+.hz-playlist-card ol { padding-inline-start:1.5rem; }
+html[data-hz-ui="compact"] :is(.bubble, .chat-input-area textarea, .settings-row-content p) { font-size:0.9rem; }
+html[data-hz-ui="comfort"] :is(.bubble, .chat-input-area textarea, .settings-row-content p) { font-size:1.18rem; }
+html[data-theme="grey"] #chatMessages .message.user .bubble :is(a,strong,h3,h4) { color:#142639; }
+html[data-theme="grey"] #chatInput { -webkit-text-fill-color:#101923; }

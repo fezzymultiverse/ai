@@ -46,7 +46,8 @@
     let playVersion = 0, pendingVideo = null, videoMessage = '';
     const updateVideo = () => {
         if (!videoBox) return;
-        videoBox.hidden = !(cur && cur.remote);
+        // FIX: hide the stream box for audio-only streams; show only for yt.watch-style video
+        videoBox.hidden = !(cur && cur.remote && !cur.audioOnly);
         if (videoBox.hidden) return;
         const note = videoBox.querySelector('[role=status]'); note.textContent = videoMessage; note.hidden = !videoMessage;
         video.setAttribute('aria-label', cur.title + ' · YouTube video');
@@ -1053,9 +1054,11 @@
     // V1.78.0: streams a song that is not in the library (a YouTube audio link). Resolves { ok, title } once sound really starts or fails.
     function registerRemote(o) {
         const id = 'yt:' + String(o.id || Date.now());
-        const rec = { id, title: o.title || String(o.id || 'Song'), artist: o.artist || 'YouTube', album: 'YouTube', dur: o.dur || 0, path: '', size: 0, added: Date.now() / 1000, music: true, tmp: true, remote: true, videoId: String(o.id), src: '' };
+        const rec = { id, title: o.title || String(o.id || 'Song'), artist: o.artist || 'YouTube', album: 'YouTube', dur: o.dur || 0, path: '', size: 0, added: Date.now() / 1000, music: true, tmp: true, remote: true, videoId: String(o.id), src: '', audioOnly: !o.watchMode };
         const old = byId.get(id);
         if (old) Object.assign(old, rec); else setLib(lib.concat([rec]));
+        // FIX: load the YouTube thumbnail into artCache so the music player shows it
+        if (o.id && !artCache.has(id)) artCache.set(id, 'https://i.ytimg.com/vi/' + String(o.id) + '/mqdefault.jpg');
         return byId.get(id);
     }
     // V1.99.139: put a song right after the current one (after any songs already queued with "play next", so they keep their order).

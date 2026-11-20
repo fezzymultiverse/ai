@@ -15,7 +15,7 @@
     if (!view) return;
 
     var KEY = 'horizon_rss_v1', CKEY = 'horizon_rss_cache_v1';
-    var STALE_MS = 15 * 60 * 1000, MAX_BODY = 2000000, MAX_FEEDS = 60, POOL = 3;
+    var STALE_MS = 15 * 60 * 1000, MAX_BODY = 2000000, MAX_FEEDS = 60, POOL = 5;
     var COLORS = ['#00e5ff', '#bf5fff', '#ff9f1c', '#2ec4b6', '#ff4d6d', '#8ac926', '#ffd166', '#4d96ff'];
     var COUNTS = [5, 10, 20, 30];
     var PROBES = ['/feed', '/feed/', '/rss', '/rss.xml', '/feed.xml', '/atom.xml', '/index.xml'];
@@ -466,7 +466,7 @@
         return inflight[f.id];
     }
     function refreshAll(force) {
-        var todo = S.feeds.filter(function (f) { return f.on && (force || !cache[f.id] || Date.now() - cache[f.id].t > STALE_MS); });
+        var todo = S.feeds.filter(function (f) { return f.on && (force || errs[f.id] || !cache[f.id] || Date.now() - cache[f.id].t > STALE_MS); });
         var idx = 0;
         function worker() {
             if (idx >= todo.length) return Promise.resolve();

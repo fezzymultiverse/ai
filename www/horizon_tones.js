@@ -81,8 +81,27 @@
     }
     var ob = t.closest ? t.closest('.hzt-opt') : null;
     if (ob) { pick(ob.getAttribute('data-tone')); return; }
+    var preview = t.closest ? t.closest('#hztPreview') : null;
+    if (preview) {
+      var p0 = plugin(), tone = state[openCat || 'alert'];
+      if (tone === 'silent') { say('This notification category is set to Silent. Select Phone default or a tone first.'); return; }
+      if (!p0 || !p0.tonePreview) { say('Tone previews require the Android sound bridge.'); return; }
+      preview.disabled = true;
+      p0.tonePreview({tone:tone}).then(function(r){say(r && r.playing === true ? 'Android started the tone preview. This does not test the notification channel.' : 'No tone playback was confirmed. Check notification volume or try Phone default.');}).catch(function(e){say(e.message || 'Could not preview the tone.');}).finally(function(){preview.disabled=false;});
+      return;
+    }
     var settings = t.closest ? t.closest('#hztAndroid') : null;
     if (settings) { plugin().notifyOpenChannel({}).catch(function(e) { say(e.message || 'Could not open Android settings.'); }); return; }
+    var volFix = t.closest ? t.closest('#hztVolFix') : null;
+    if (volFix) {
+      var pv = plugin();
+      if (!pv) return;
+      var open = pv.openSystemSettings ? pv.openSystemSettings({ action: 'android.settings.SOUND_SETTINGS' }) : Promise.reject();
+      Promise.resolve(open).catch(function(){return pv.notifyOpenChannel({});}).then(function(){
+        say('Check Notification volume and whether the Horizon channel is set to Alerting.');
+      }).catch(function(){say('Open Android Settings → Sound & vibration and check Notification volume.');});
+      return;
+    }
     var reset = t.closest ? t.closest('#hztReset') : null;
     if (reset) {
       if (!window.confirm('Reset Horizon notification channels? Any Android sound overrides on the active Horizon channels will not carry over.')) return;
@@ -95,7 +114,7 @@
       if (!p) return;
       p.notifyTest({}).then(function (r) {
         if (!(r && r.shown)) { say('Android blocked the test. Enable Post notifications in Horizon Settings → Permissions and allow Horizon notifications in Android.'); return; }
-        say('Test posted. It can sound while Horizon is open.');
+        say('Test posted. Android did not confirm whether it was audible.');
         // V1.99.151: say why a pop-up would be silent, when the phone itself is the reason.
         if (typeof p.notifyStatus !== 'function') return;
         p.notifyStatus({}).then(function (s) {
@@ -103,9 +122,9 @@
           if (s.ringer === 'silent') why.push('the phone is on silent');
           else if (s.ringer === 'vibrate') why.push('the phone is on vibrate');
           if (s.dnd) why.push('Do Not Disturb is on');
-          if (typeof s.volume === 'number' && s.volume === 0) why.push('the notification volume is at zero');
-          if (!s.sound) why.push('the selected tone or Android channel is silent');
-          if (why.length) say('Test sent, but it will be quiet: ' + why.join(', ') + '.');
+          if (typeof s.volume === 'number' && s.volume === 0) why.push('the notification volume is at zero — tap Fix notification volume to open Android sound settings');
+          if (s.sound === false || s.sound === 'silent') why.push('the selected tone or Android channel is silent');
+          if (why.length) say('Test posted. Possible sound blockers: ' + why.join(', ') + '.');
         }).catch(function () { /* the test itself already worked */ });
       }).catch(function (x) { say((x && x.message) || 'The test did not work.'); });
     }
@@ -140,8 +159,17 @@
     listEl = el('div', 'hzt-list'); listEl.setAttribute('role', 'radiogroup'); listEl.hidden = true;
     card.appendChild(catsEl); card.appendChild(listEl);
     card.appendChild(el('p', 'hint', 'Tap a sound to hear it. Silent still shows the notification, it just makes no noise. Sounds come from your phone.'));
-    var row = el('div', 'hzo-row'), tb = el('button', 'use-btn', 'Send a test pop-up');
-    tb.type = 'button'; tb.id = 'hztTest'; row.appendChild(tb);
+    var testRow = el('div', 'hzo-row');
+    testRow.style.cssText = 'flex-wrap:wrap;gap:6px;margin-bottom:4px';
+    var tb = el('button', 'use-btn', 'Send a test pop-up');
+    tb.type = 'button'; tb.id = 'hztTest'; testRow.appendChild(tb);
+    var preview = el('button','use-btn','Preview selected tone'); preview.type='button'; preview.id='hztPreview'; testRow.appendChild(preview);
+    var volBtn = el('button', 'use-btn', 'Fix notification volume');
+    volBtn.type = 'button'; volBtn.id = 'hztVolFix'; volBtn.title = 'Open Android sound settings to raise notification volume';
+    testRow.appendChild(volBtn);
+    card.appendChild(testRow);
+    var row = el('div', 'hzo-row');
+    row.style.cssText = 'flex-wrap:wrap;gap:6px';
     [['hztAndroid','Android sound settings'],['hztReset','Reset sound channels']].forEach(function(x) { var b = el('button','use-btn',x[1]); b.type='button'; b.id=x[0]; row.appendChild(b); });
     card.appendChild(row);
     card.addEventListener('click', onClick);

@@ -18,6 +18,7 @@ function select(pid,data){
  const a=Array.isArray(data)?data:data&&(data.data||data.models||data.result)||[];
  if(!Array.isArray(a))return [];
  return Array.from(new Set(a.filter(m=>{
+  if(!m || m.active === false || m.deprecated === true || /^(?:deprecated|retired|inactive|disabled)$/i.test(m.status || ''))return false;
   const id=idOf(pid,m);if(!id||(nonchat.test(id)&&!chatAllowed.has(id))||routers.test(id))return false;
   if(pid==='gemini')return inventory.documentedGemini.includes(id)&&(!m.supportedGenerationMethods||m.supportedGenerationMethods.includes('generateContent'));
    if(pid==='mistral')return inventory.documentedMistral.includes(id);
@@ -66,6 +67,7 @@ function bodyFor(pid,model){
  if(pid==='gemini')return {contents:[{role:'user',parts:[{text:'Reply exactly OK.'}]}],generationConfig:{maxOutputTokens:256}};
  if(pid==='mlvoca')return {model,prompt:'Reply exactly OK.',stream:false,options:{num_predict:128}};
  const b={model,messages:[{role:'user',content:'Reply exactly OK.'}],max_tokens:256,stream:false};
+ if(pid==='groq'){delete b.max_tokens;b.max_completion_tokens=512;if(/gpt-oss/i.test(model))b.reasoning_effort='low';}
  if(pid==='openrouter')b.provider={allow_fallbacks:false,max_price:{prompt:0,completion:0}};
  if(pid==='zai')b.thinking={type:'disabled'};
  if(pid==='gonka')b.max_tokens=1024; // V1.99.111: MiniMax writes its thinking first
@@ -180,8 +182,9 @@ async function discover(pid,p,key,fetcher,onProgress,options){
   }catch(ce){
    // V1.99.105: a failed model LIST is not a failed key. Providers flagged modelsOptional (Agnes, Ollama, Gonka) and any list that is only slow or rate-limited fall back to the documented models, and the real chat probe below decides.
    const k=classify(ce);
-   if(p.modelsOptional||ce.status===404||ce.status===405||k==='slow'||k==='limit'||k==='down'){all=all.concat((inventory.verified[pid]||[]).concat(p.fallbackModels||[]));url='';break;}
-   if(k==='auth')ce.hard=true;
+   if(k==='auth'){ce.hard=true;throw ce;}
+   if(p.modelsOptional && (ce.status===404||ce.status===405)){all=all.concat((inventory.verified[pid]||[]).concat(p.fallbackModels||[]));url='';break;}
+   if(['slow','limit','down'].includes(k)){ce.soft=true;ce.why='catalogue '+k;}
    throw ce;
   }
   all=all.concat(select(pid,d));
@@ -191,8 +194,7 @@ async function discover(pid,p,key,fetcher,onProgress,options){
   else if(d.links&&d.links.next){const next=new URL(d.links.next,url),base=new URL(url);if(next.origin!==base.origin||next.pathname!==base.pathname)throw new Error('Unsafe catalogue pagination refused.');url=next.href;}
   else url='';
  }
- if(!all.length&&['zai','mlvoca','freeai'].includes(pid))all=(inventory.candidates[pid]||[]).slice();
- if(!all.length&&p.modelsOptional)all=(inventory.verified[pid]||p.fallbackModels||[]).slice();
+
  all=Array.from(new Set(all));
  { // verified seeds first, so a capped or interrupted audit still checks the models you actually use
   const seed=(inventory.verified[pid]||[]).concat(p.defaultModel?[p.defaultModel]:[]);
@@ -222,7 +224,6 @@ async function discover(pid,p,key,fetcher,onProgress,options){
   const e=new Error(p.name+': key not rejected, but no model answered ('+why+'). Wait and refresh, or pick a model by hand.');
   e.soft=true;e.why=why;e.status=tally.limit?429:504;throw e;
  }
- if(cheap)return all.slice(); // V1.99.141: key proven by one reply; keep the full free catalogue so the model list does not shrink to one entry
  return passed;
 }
 root.HorizonModelPolicy={configure,select,zeroPrice,textOf,assertModel,bodyFor,probe,discover,checkKey,classify,disabled,inventory};
