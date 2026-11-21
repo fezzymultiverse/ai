@@ -141,6 +141,19 @@ window.HorizonModelInventory = {
     "iteracompute": [
       "qwen/qwen3.8-27b"
     ],
+    "merkium": [
+      "ganymede-1.1"
+    ],
+    "cheapllm": [
+      "deepseek-v4.1-flash-1017"
+    ],
+    "runcrate": [
+      "Qwen/Qwen3.8-Flash",
+      "deepseek-ai/DeepSeek-V4.1-Flash",
+      "zai-org/GLM-5.3-Flash",
+      "zai-org/GLM-5.3",
+      "openai/gpt-oss-120b"
+    ],
     "agnes": [
       "agnes-3.0-flash",
       "agnes-2.5-flash"

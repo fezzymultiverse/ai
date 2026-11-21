@@ -12,13 +12,13 @@
     const aliases = {
         gemini: 'gemini', google: 'gemini', groq: 'groq', cohere: 'cohere', mistral: 'mistral',
         routeway: 'routeway', unorouter: 'unorouter', 'uno router': 'unorouter', 'uno-router': 'unorouter', uno: 'unorouter', requesty: 'requesty',
-        llm7: 'llm7', zai: 'zai', 'z.ai': 'zai', aionlabs: 'aionlabs', aion: 'aionlabs', iteracompute: 'iteracompute', 'itera compute': 'iteracompute', itera: 'iteracompute', typhoon: 'typhoon', opentyphoon: 'typhoon', tokenharbor: 'tokenharbor', 'token harbor': 'tokenharbor', zro: 'zro', moonmath: 'zro', 'zro moonmath': 'zro', agnes: 'agnes', gonkabroker: 'gonkabroker', 'gonka broker': 'gonkabroker', gonkarouter: 'gonka', 'gonka router': 'gonka',
+        llm7: 'llm7', zai: 'zai', 'z.ai': 'zai', aionlabs: 'aionlabs', aion: 'aionlabs', merkium: 'merkium', cheapllm: 'cheapllm', runcrate: 'runcrate', iteracompute: 'iteracompute', 'itera compute': 'iteracompute', itera: 'iteracompute', typhoon: 'typhoon', opentyphoon: 'typhoon', tokenharbor: 'tokenharbor', 'token harbor': 'tokenharbor', zro: 'zro', moonmath: 'zro', 'zro moonmath': 'zro', agnes: 'agnes', gonkabroker: 'gonkabroker', 'gonka broker': 'gonkabroker', gonkarouter: 'gonka', 'gonka router': 'gonka',
         cloudflare: 'cloudflare', cloudfare: 'cloudflare', cloudfair: 'cloudflare', cloudflair: 'cloudflare',
         'cloudflare worker': 'hzworker', 'cloudfare worker': 'hzworker', 'cloudfair worker': 'hzworker', 'cloudflair worker': 'hzworker', 'cf worker': 'hzworker', 'horizon worker': 'hzworker',
         kilo: 'kilo', ovh: 'ovh', ovhcloud: 'ovh',
         serpapi: 'serpapi', firecrawl: 'firecrawl', scrapingbee: 'scrapingbee', scraperbee: 'scrapingbee', browserless: 'browserless'
     };
-    const LABELS = 'gemini|google|groq|cohere|mistral|routeway|uno router|uno-router|unorouter|uno|requesty|llm7|aionlabs|aion|iteracompute|itera compute|itera|opentyphoon|typhoon|token harbor|tokenharbor|zro moonmath|moonmath|zro|agnes|gonkabroker|gonka broker|gonkarouter|gonka router|z\\.ai|zai|cloudflare worker(?!s? ai)|cloudfare worker|cloudfair worker|cloudflair worker|cf worker|horizon worker|cloudflare|cloudfare|cloudfair|cloudflair|kilo|ovhcloud|ovh|serpapi|firecrawl|scrapingbee|scraperbee|browserless';
+    const LABELS = 'gemini|google|groq|cohere|mistral|routeway|uno router|uno-router|unorouter|uno|requesty|llm7|aionlabs|aion|merkium|cheapllm|runcrate|iteracompute|itera compute|itera|opentyphoon|typhoon|token harbor|tokenharbor|zro moonmath|moonmath|zro|agnes|gonkabroker|gonka broker|gonkarouter|gonka router|z\\.ai|zai|cloudflare worker(?!s? ai)|cloudfare worker|cloudfair worker|cloudflair worker|cf worker|horizon worker|cloudflare|cloudfare|cloudfair|cloudflair|kilo|ovhcloud|ovh|serpapi|firecrawl|scrapingbee|scraperbee|browserless';
     const KEYWORD = '(?:[_ -]*(?:(?:api[_ -]*)?key|token|secret))?';
     // The label must end at a real boundary. "mistral-small-latest" is a model name, not the label "mistral".
     const LABEL_RE = new RegExp('(?:^|[^a-z0-9_.-])(' + LABELS + ')' + KEYWORD + '(?:[\\s:="\'|>]|$)', 'i');

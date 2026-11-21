@@ -9,7 +9,7 @@
     var items = [], itemsAt = 0, timer = 0, last = '', lastAt = 0, tail = Promise.resolve();
     var toggle, modeSel, contactsBox, prefixBox, statusEl, listEl, logCount, usedName = '';
     // Providers HorizonWaBotPlugin.kt can call with the screen off (same list as HorizonCheckins.endpoints + Gemini).
-    var NATIVE = ['gemini', 'hzworker', 'hzworker2', 'hzworker3', 'llm7', 'freeai', 'cloudflare', 'zai', 'aionlabs', 'iteracompute', 'typhoon', 'tokenharbor', 'zro', 'gonka', 'agnes', 'cohere', 'pollinations', 'routeway', 'unorouter', 'requesty', 'kilo', 'ovh', 'chatat', 'blockrun', 'aihorde'];   // mistral and vlmrun are refused by the native side
+    var NATIVE = ['gemini', 'hzworker', 'hzworker2', 'hzworker3', 'llm7', 'freeai', 'cloudflare', 'zai', 'aionlabs', 'iteracompute', 'runcrate', 'cheapllm', 'merkium', 'typhoon', 'tokenharbor', 'zro', 'gonka', 'agnes', 'cohere', 'pollinations', 'routeway', 'unorouter', 'requesty', 'kilo', 'ovh', 'chatat', 'blockrun', 'aihorde'];   // mistral and vlmrun are refused by the native side
 
     function plugin() {
         var c = window.Capacitor;

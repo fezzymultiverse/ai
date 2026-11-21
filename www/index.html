@@ -55,6 +55,9 @@
             <symbol id="i-b-zai" viewBox="0 0 24 24"><rect width="24" height="24" rx="6" fill="#0a1020" stroke="none"/><g fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5h11L6.5 17.5h11"/></g></symbol>
             <symbol id="i-b-aionlabs" viewBox="0 0 24 24"><rect width="24" height="24" rx="6" fill="#0b1a14" stroke="none"/><g fill="none" stroke="#34d399" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4.5 19 19.5M12 4.5 5 19.5M8 14.5h8"/></g></symbol>
             <symbol id="i-b-iteracompute" viewBox="0 0 24 24"><rect width="24" height="24" rx="6" fill="#1a0f06" stroke="none"/><g fill="none" stroke="#fb923c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v4M12 16v4M4 12h4M16 12h4"/><circle cx="12" cy="12" r="3.5"/></g></symbol>
+            <symbol id="i-b-runcrate" viewBox="0 0 24 24"><rect width="24" height="24" rx="6" fill="#0b1220" stroke="none"/><g fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5l7.5 4v9l-7.5 4-7.5-4v-9z"/><path d="M4.5 7.5l7.5 4 7.5-4M12 11.5v9"/></g></symbol>
+            <symbol id="i-b-cheapllm" viewBox="0 0 24 24"><rect width="24" height="24" rx="6" fill="#0d1a12" stroke="none"/><g fill="none" stroke="#4ade80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="7.5"/><path d="M14.5 9.5c-.6-.8-1.5-1.2-2.6-1.2-1.7 0-2.9 1.6-2.9 3.7s1.2 3.7 2.9 3.7c1.1 0 2-.4 2.6-1.2"/></g></symbol>
+            <symbol id="i-b-merkium" viewBox="0 0 24 24"><rect width="24" height="24" rx="6" fill="#140d24" stroke="none"/><g fill="none" stroke="#c084fc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 18V6.5l6.5 7 6.5-7V18"/></g></symbol>
             <symbol id="i-b-typhoon" viewBox="0 0 24 24"><rect width="24" height="24" rx="6" fill="#06141c" stroke="none"/><g fill="none" stroke="#22d3ee" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14M7 12h10M9 16h6"/></g></symbol>
             <symbol id="i-b-tokenharbor" viewBox="0 0 24 24"><rect width="24" height="24" rx="6" fill="#0a1220" stroke="none"/><g fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v10M8 7h8M5 13a7 7 0 0 0 14 0M5 13H3M19 13h2"/></g></symbol>
             <symbol id="i-b-zro" viewBox="0 0 24 24"><rect width="24" height="24" rx="6" fill="#120a1f" stroke="none"/><g fill="none" stroke="#af5fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10L7 17h10"/><circle cx="18.5" cy="5.5" r="1" fill="#af5fff"/></g></symbol>
@@ -297,7 +300,7 @@
             </div>
             <div class="settings-home" id="settingsHome" data-home role="tablist" aria-label="Settings sections">
                 <button class="set-row set-chats" role="tab" data-tab="chats" aria-selected="false" type="button">
-                    <span class="set-text"><h3>CHATS</h3><p>New chat, Artifacts, search and your recent chats.</p></span>
+                    <span class="set-text"><h3>CHATS</h3><p>New chat, search and your recent chats.</p></span>
                     <svg class="ic set-chev" aria-hidden="true"><use href="#i-chev-r"/></svg>
                 </button>
                 <button class="set-row set-promptmem" role="tab" data-tab="promptmem" aria-selected="false" type="button">
@@ -305,7 +308,7 @@
                     <svg class="ic set-chev" aria-hidden="true"><use href="#i-chev-r"/></svg>
                 </button>
                 <button class="set-row set-archive" role="tab" data-tab="archive" aria-selected="false" type="button">
-                    <span class="set-text"><h3>ARCHIVE</h3><p>Upload PDFs, notes, links and pictures for Horizon to read.</p></span>
+                    <span class="set-text"><h3>ARCHIVE</h3><p>Artifacts Horizon made, plus PDFs, notes, links and pictures for it to read.</p></span>
                     <svg class="ic set-chev" aria-hidden="true"><use href="#i-chev-r"/></svg>
                 </button>
                 <button class="set-row" role="tab" data-tab="providers" aria-selected="false" type="button">
@@ -355,14 +358,6 @@
                             <h3>New chat</h3>
                             <p>Start with a clean slate</p>
                         </div>
-                    </button>
-                    <button class="menu-item" id="bArtOpen" type="button">
-                        <div class="menu-icon"><svg class="pdf-ic" viewBox="0 0 24 24" aria-hidden="true"><rect width="24" height="24" rx="5.5" fill="#FA0F00"/><path d="M12.2 4.8c-.95 0-1.25 1.05-1 2.1.35 1.75 1.4 4 2.9 6.15 1.6 2.25 3.5 3.95 4.95 4.15 1.1.15 1.3-.9.4-1.45-1.5-.95-4.55-.85-8.2.15-3.1.85-5.3 2.2-5.6 3.3-.2.7.6 1.05 1.4.45 1.6-1.2 3.2-4.55 4.1-7.7.5-1.8.5-3.6-.1-3.9" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-                        <div class="menu-text">
-                            <h3 id="artTitle">Artifacts (0)</h3>
-                            <p>PDFs Horizon has made</p>
-                        </div>
-                        <i class="art-newdot hidden" id="artDot" aria-hidden="true"></i>
                     </button>
                     <div class="menu-heading">Recent chats</div>
                     <div class="chat-search" id="chatSearchBox">
@@ -423,7 +418,18 @@
                 <div class="mem-list" id="memList"></div>
             </div>
 
-            <div class="tab-body" role="tabpanel" data-tab="archive" hidden>                <div id="hzArchive"></div>
+            <div class="tab-body" role="tabpanel" data-tab="archive" hidden>
+                <div class="menu-heading">Artifacts</div>
+                    <button class="menu-item" id="bArtOpen" type="button">
+                        <div class="menu-icon"><svg class="pdf-ic" viewBox="0 0 24 24" aria-hidden="true"><rect width="24" height="24" rx="5.5" fill="#FA0F00"/><path d="M12.2 4.8c-.95 0-1.25 1.05-1 2.1.35 1.75 1.4 4 2.9 6.15 1.6 2.25 3.5 3.95 4.95 4.15 1.1.15 1.3-.9.4-1.45-1.5-.95-4.55-.85-8.2.15-3.1.85-5.3 2.2-5.6 3.3-.2.7.6 1.05 1.4.45 1.6-1.2 3.2-4.55 4.1-7.7.5-1.8.5-3.6-.1-3.9" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                        <div class="menu-text">
+                            <h3 id="artTitle">Artifacts (0)</h3>
+                            <p>PDFs Horizon has made</p>
+                        </div>
+                        <i class="art-newdot hidden" id="artDot" aria-hidden="true"></i>
+                    </button>
+                <div class="menu-heading">Library</div>
+                <div id="hzArchive"></div>
             </div>
 
             <div class="tab-body" role="tabpanel" data-tab="permissions" hidden>
@@ -1470,6 +1476,15 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         // V1.99.163: IteraCompute (OpenAI-compatible). Only qwen/qwen3.8-27b is documented free; its other catalogue ids (GLM, Kimi, DeepSeek, MiniMax) are usage-based and never listed.
         PROVIDERS.iteracompute = oaiGateway({name:'IteraCompute',icon:'i-b-iteracompute',placeholder:'IteraCompute API key',keyUrl:'https://platform.iteracompute.com',base:'https://api.iteracompute.com/v1',defaultModel:'qwen/qwen3.8-27b',fallbackModels:['qwen/qwen3.8-27b'],allow:/^qwen\/qwen3\.8-27b$/i,modelsOptional:true});
         PROVIDERS.iteracompute.billingNote = 'Free monthly allowance on qwen/qwen3.8-27b only, shared across the account\'s API keys · promotion documented to end 00:00 Pacific Time, 24 Nov 2026. Other IteraCompute models are usage-based and are never listed here.';
+        // V1.99.168: Runcrate (OpenAI-compatible, https://api.runcrate.ai/v1). Only the five models Runcrate documents as free are offered; every other catalogue id is paid per token and is never listed.
+        PROVIDERS.runcrate = oaiGateway({name:'Runcrate',icon:'i-b-runcrate',placeholder:'Runcrate API key',keyUrl:'https://runcrate.ai',base:'https://api.runcrate.ai/v1',defaultModel:'Qwen/Qwen3.8-Flash',fallbackModels:['Qwen/Qwen3.8-Flash','deepseek-ai/DeepSeek-V4.1-Flash','zai-org/GLM-5.3-Flash','zai-org/GLM-5.3','openai/gpt-oss-120b'],allow:/^(?:deepseek-ai\/DeepSeek-V4\.1-Flash|zai-org\/GLM-5\.3(?:-Flash)?|openai\/gpt-oss-120b|Qwen\/Qwen3\.8-Flash)$/i,modelsOptional:true});
+        PROVIDERS.runcrate.billingNote = 'Free weekly allowance on 5 open models (resets every Monday), shared across the workspace\'s API keys. GitHub sign-up needs an account at least 30 days old; Google sign-up needs a card on file. When the allowance is used up requests stop until Monday unless the workspace has credit. Free requests run on third-party providers. Every other Runcrate model is paid and is never listed here.';
+        // V1.99.169: cheapllm (OpenAI-compatible, https://cheapllm.shop/v1). The key was tested: one model, deepseek-v4.1-flash-1017. Free tier: nothing is billed.
+        PROVIDERS.cheapllm = oaiGateway({name:'cheapllm',icon:'i-b-cheapllm',placeholder:'cheapllm API key',keyUrl:'https://cheapllm.shop',base:'https://cheapllm.shop/v1',defaultModel:'deepseek-v4.1-flash-1017',fallbackModels:['deepseek-v4.1-flash-1017'],allow:/^deepseek-v4\.1-flash(?:-\d{4})?$/i,modelsOptional:true});
+        PROVIDERS.cheapllm.billingNote = 'Free tier. Nothing is billed. Only DeepSeek V4.1 Flash is offered here.';
+        // V1.99.171: Merkium (OpenAI-compatible, https://chat.merkium.nl/api/v1). One model, ganymede-1.1 (reasoning, 1M context). Free tier as claimed by its listing; model origin is not independently verified.
+        PROVIDERS.merkium = oaiGateway({name:'Merkium',icon:'i-b-merkium',placeholder:'Merkium API key',keyUrl:'https://chat.merkium.nl',base:'https://chat.merkium.nl/api/v1',defaultModel:'ganymede-1.1',fallbackModels:['ganymede-1.1'],allow:/^ganymede-1\.1$/i,modelsOptional:true});
+        PROVIDERS.merkium.billingNote = 'Free tier, no card (as stated by Merkium\'s listing): about 30 requests a minute per key. A small independent team; the model\'s origin is not independently verified, so keep private data out of it.';
         // V1.99.107: Typhoon (OpenTyphoon, SCB 10X). OpenAI-style. One chat model on this key; its OCR and speech models are not chat and are never listed.
         PROVIDERS.typhoon = oaiGateway({name:'Typhoon',icon:'i-b-typhoon',placeholder:'Typhoon API key',keyUrl:'https://playground.opentyphoon.ai/api-key',base:'https://api.opentyphoon.ai/v1',defaultModel:'typhoon-v2.5-30b-a3b-instruct',fallbackModels:['typhoon-v2.5-30b-a3b-instruct'],allow:/^typhoon-v\d+(?:\.\d+)?-[\w.-]*instruct$/i,modelsOptional:true});
         PROVIDERS.typhoon.billingNote = 'Free tier per Typhoon\'s docs: 5 requests a second, 200 a minute, no daily cap published. Thai-first model that also answers in English. Third-party listings say usage data is collected to improve the models.';
@@ -3897,10 +3912,10 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         }
 
         const ACC_DESC = {
-            chats: 'Start a new chat, open your PDFs and reopen recent chats.',
+            chats: 'Start a new chat, search and reopen recent chats.',
             prompt: 'Edit who Horizon is and how you want replies to go.',
             memories: 'Facts Horizon carries into every chat.',
-            archive: 'Upload PDFs, notes, links and pictures. Horizon reads the parts that match your message.',
+            archive: 'Open the Artifacts Horizon made, and upload PDFs, notes, links and pictures for it to read.',
             music: 'Full music player. Scan your storage, queue songs, like them. The red eye lets the AI see what plays.'
         };
         // V1.11.0: only the real menu rows. The music player's Songs / Artists / Albums tabs also have role="tab" and used to break startup here.
@@ -4140,6 +4155,9 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             if (prov === 'typhoon') return 'Typhoon 2.5 30B (SCB 10X). Best Thai model here, also good in English, with tool use and a long context window. Free tier.';
             if (prov === 'aionlabs') return 'Aion model from AionLabs. General chat and long-form writing. Free provider.';
             if (prov === 'iteracompute') return 'Qwen3.8 27B through IteraCompute. General chat, long 128K context. Free monthly allowance, documented as a promotion ending 24 Nov 2026.';
+            if (prov === 'runcrate') return has(/gpt-oss/) ? 'gpt-oss 120B through Runcrate. Strong open reasoning and code model. Free weekly allowance.' : has(/deepseek/) ? 'DeepSeek V4.1 Flash through Runcrate. Fast general chat, code and long context. Free weekly allowance.' : has(/glm/) ? 'GLM 5.3 through Runcrate. General chat, code and tool use. Free weekly allowance.' : 'Qwen3.8 Flash through Runcrate. Fast general chat. Free weekly allowance.';
+            if (prov === 'cheapllm') return 'DeepSeek V4.1 Flash through cheapllm. Fast general chat, code and long context. Free tier.';
+            if (prov === 'merkium') return 'Ganymede 1.1 through Merkium. Reasoning model with a 1M-token context and tool calling. Free tier. It thinks first, so the first words can take a few seconds.';
             if (prov === 'agnes') return 'Agnes Flash chat model. Fast general chat with a long context window. Free provider, limits depend on your account.';
             if (prov === 'gonka') {
                 if (has(/deepseek/i)) return 'DeepSeek V4 Flash through GonkaRouter. Strong, fast all-rounder for chat and code.';
@@ -6590,7 +6608,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         }
         function providerFetch(url, options) { return window.HorizonNet && HorizonNet.accepts(url) ? HorizonNet.request(url, options) : fetch(url, options); }
         async function aiFetch(url, options) {
-            if (window.HorizonNet && HorizonNet.accepts(url) && /^(?:api\.groq\.com|ai-gateway\.kilo\.ai|oai\.endpoints\.kepler\.ai\.cloud\.ovh\.net|ch\.at|blockrun\.ai|oai\.aihorde\.net|mlvoca\.com|api\.llm7\.io|api\.free\.ai|api\.cloudflare\.com|text\.pollinations\.ai|[a-z0-9-]+(?:\.[a-z0-9-]+)?\.workers\.dev)$/.test(new URL(url).hostname) && !(options && options.hzStream)) return HorizonNet.request(url, options);
+            if (window.HorizonNet && HorizonNet.accepts(url) && /^(?:api\.groq\.com|ai-gateway\.kilo\.ai|oai\.endpoints\.kepler\.ai\.cloud\.ovh\.net|ch\.at|blockrun\.ai|oai\.aihorde\.net|mlvoca\.com|api\.llm7\.io|api\.free\.ai|api\.iteracompute\.com|api\.runcrate\.ai|cheapllm\.shop|chat\.merkium\.nl|api\.cloudflare\.com|text\.pollinations\.ai|[a-z0-9-]+(?:\.[a-z0-9-]+)?\.workers\.dev)$/.test(new URL(url).hostname) && !(options && options.hzStream)) return HorizonNet.request(url, options);
             if (options && options.hzStream) return aiStream(url, options, options.hzStream);
             if (!NATIVE || lsGet(LS.bg) === '0') return fetch(url, options);
             const native = plug('HorizonAI');
@@ -9065,6 +9083,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
     <script src="horizon_operator.js?v=1.97.2"></script>
     <script src="horizon_vis.js?v=1.97.2"></script>
     <script src="horizon_lock.js?v=1.97.2"></script>
+    <script src="horizon_shield.js?v=1.99.171"></script>
     <script src="horizon_hdr2.js?v=1.97.2"></script>
     <script src="horizon_fold.js?v=rss-notify-perf-1"></script>
     <script src="horizon_autoread.js?v=1.99.24"></script>

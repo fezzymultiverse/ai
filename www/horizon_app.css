@@ -5120,3 +5120,22 @@ html[data-theme="grey"] .hz-wabot-row.st-bad { border-left-color: #dc2626; }
 .kh-row.bad .kh-st, .kh-row.warn .kh-st { white-space: normal; word-break: break-word; flex: 1 1 100%; order: 5; }
 .xk-slot.bad .kh-st, .xk-slot.warn .kh-st { white-space: normal; word-break: break-word; }
 
+
+/* V1.99.167 · "+ Add" in the Tools dock: the drawn plus was an inline span (0 x 0), so the icon vanished and the label sat low. Block box + centred flex fixes it. */
+html body #hzgDock button.hzp-quick-add { display: inline-flex !important; flex-direction: row !important; align-items: center !important; justify-content: center !important; gap: 7px; height: 100%; min-height: 36px; line-height: 1; vertical-align: middle; }
+#hzgDock button.hzp-quick-add .hzp-qplus { display: block; position: relative; flex: 0 0 16px; width: 16px; height: 16px; margin: 0; transform: none; }
+#hzgDock button.hzp-quick-add .hzp-qplus::before { left: 0; right: 0; top: 7px; height: 2px; }
+#hzgDock button.hzp-quick-add .hzp-qplus::after { top: 0; bottom: 0; left: 7px; width: 2px; }
+#hzgDock button.hzp-quick-add .hzp-qlbl { display: block; line-height: 16px; margin: 0; padding: 0; }
+
+/* V1.99.167 · Shield (horizon_shield.js) */
+.hzs-back { position: fixed; inset: 0; z-index: 100000; display: flex; align-items: flex-end; justify-content: center; padding: 16px; background: rgba(0, 0, 0, 0.7); }
+.hzs-box { width: 100%; max-width: 420px; box-sizing: border-box; padding: 18px; border-radius: 20px; border: 1px solid var(--neon, #00e5ff); background: #0a1620; color: #fff; box-shadow: 0 0 24px rgba(0, 229, 255, 0.25); }
+.hzs-box h3 { margin: 0 0 10px; font-size: 17px; }
+.hzs-p { margin: 0 0 8px; font-size: 14px; line-height: 1.45; overflow-wrap: anywhere; }
+.hzs-why { color: #ffcf6b; }
+.hzs-btns { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.hzs-b { flex: 1 1 auto; min-height: 44px; padding: 0 14px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.35); background: transparent; color: #fff; font: 700 14px system-ui; cursor: pointer; }
+.hzs-b.go { background: var(--neon, #00e5ff); border-color: var(--neon, #00e5ff); color: #000; }
+.hzs-cover { position: fixed; inset: 0; z-index: 2147483000; display: flex; align-items: center; justify-content: center; background: #05080d; }
+.hzs-mark { font: 800 22px system-ui; letter-spacing: 8px; color: var(--neon, #00e5ff); opacity: 0.8; }

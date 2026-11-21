@@ -1,4 +1,4 @@
-/* V1.93.9 · Personalisation: Screen size (Normal / Bigger) and Refresh rate (Auto / 30 / 60 / 90 Hz).
+/* V1.93.9 · Personalisation: Screen size (Normal / Bigger) and Refresh rate (Auto / 30 / 60 / 90 / 120 Hz).
    Both need Android itself, so the work is done by the HorizonDisplay plugin; this file is only the two cards. */
 (function () {
   'use strict';
@@ -122,7 +122,8 @@
       option('rate', '0', 'Auto', 'Android chooses, and saves battery', pickRate),
       option('rate', '30', '30 Hz', 'Easiest on battery and heat', pickRate),
       option('rate', '60', '60 Hz', 'Smooth and balanced', pickRate),
-      option('rate', '90', '90 Hz', 'Smoothest, uses the most battery', pickRate)
+      option('rate', '90', '90 Hz', 'Very smooth, uses more battery', pickRate),
+      option('rate', '120', '120 Hz', 'Smoothest, uses the most battery', pickRate)
     );
     var anchor = document.getElementById('themeCard');
     if (anchor && anchor.parentNode === panel) {

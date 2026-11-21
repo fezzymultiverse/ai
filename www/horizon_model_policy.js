@@ -34,6 +34,9 @@ function select(pid,data){
   if(pid==='cohere')return (inventory.documentedCohere||[]).includes(id); // V1.99.91: exactly the 10 chat models the user verified
   if(pid==='aionlabs')return /^(?:aion-labs\/)?aion-/.test(id);
   if(pid==='iteracompute')return /^qwen\/qwen3\.8-27b$/i.test(id); // V1.99.163: only the one model IteraCompute documents as free; its other listed ids are usage-based
+  if(pid==='merkium')return /^ganymede-1\.1$/i.test(id); // V1.99.171: the one documented model
+  if(pid==='cheapllm')return /^deepseek-v4\.1-flash(?:-\d{4})?$/i.test(id); // V1.99.169: the one model this key lists
+  if(pid==='runcrate')return /^(?:deepseek-ai\/DeepSeek-V4\.1-Flash|zai-org\/GLM-5\.3(?:-Flash)?|openai\/gpt-oss-120b|Qwen\/Qwen3\.8-Flash)$/i.test(id); // V1.99.168: the five documented free models only; every other Runcrate id is paid per token
   if(pid==='tokenharbor')return /:free$/i.test(id); // V1.99.109: free routes only, a paid id would spend the prepaid wallet
   if(pid==='zro')return /^(?:deepseek-v4(?:\.1)?-flash(?:-\d{4})?|glm-5\.3-flash)$/i.test(id); // V1.99.110: the two free Flash families only; the zro/ aliases are duplicates and are not listed
   if(pid==='typhoon')return /^typhoon-v\d+(?:\.\d+)?-[\w.-]*instruct$/i.test(id); // V1.99.107: chat models only, the OCR and ASR ones are not chat
