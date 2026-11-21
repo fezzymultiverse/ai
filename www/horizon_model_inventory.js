@@ -138,6 +138,9 @@ window.HorizonModelInventory = {
       "aion-labs/aion-3.5-mini",
       "aion-labs/aion-rp-llama-3.1-8b"
     ],
+    "iteracompute": [
+      "qwen/qwen3.8-27b"
+    ],
     "agnes": [
       "agnes-3.0-flash",
       "agnes-2.5-flash"

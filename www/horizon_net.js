@@ -14,6 +14,7 @@
     'router.requesty.ai': /^\/v1\/(?:models|chat\/completions)\/?$/,
     'api.z.ai': /^\/api\/paas\/v4\/(?:models|chat\/completions)\/?$/,
     'api.aionlabs.ai': /^\/v1\/(?:models|chat\/completions)\/?$/,
+    'api.iteracompute.com': /^\/v1\/(?:models|chat\/completions)\/?$/,
     'api.opentyphoon.ai': /^\/v1\/(?:models|chat\/completions)\/?$/,
     'tokenharbor.ai': /^\/v1\/(?:models|chat\/completions)\/?$/,
     'zro.moonmath.ai': /^\/v1\/(?:models|chat\/completions)\/?$/,

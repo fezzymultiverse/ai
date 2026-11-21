@@ -5,7 +5,7 @@
   const W = window, D = document, ROOT = new URL('.', D.currentScript ? D.currentScript.src : location.href);
   const KEY = 'horizon_studio_v1', MAX_LISTS = 40, MAX_TRACKS = 30;
   const SRC = '\\[\\[((?:playlist\\.(?:create|list|show|play|export|download|add|delete))|(?:studio\\.(?:open|music|podcast))):?\\s*((?:(?!\\]\\])[\\s\\S])*?)\\s*\\]\\]';
-  let host = {}, dialog = null, worker = null, cancelRender = null, audio = null, audioUrl = '', speechSeq = 0, playingList = false, playlistSeq = 0, releaseSpeech = null;
+  let made = null, host = {}, dialog = null, worker = null, cancelRender = null, audio = null, audioUrl = '', speechSeq = 0, playingList = false, playlistSeq = 0, releaseSpeech = null;
   const node = (tag, text, cls) => { const n = D.createElement(tag); if (text != null) n.textContent = text; if (cls) n.className = cls; return n; };
   const clean = (s, n = 200) => String(s == null ? '' : s).replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, '').trim().slice(0, n);
   const safeName = s => clean(s, 140).replace(/[\\/:*?"<>|]/g, '_') || 'Horizon';
@@ -82,7 +82,7 @@
   }
   async function play(name) {
     if (playingList) throw new Error('A playlist is already being prepared. Wait for its result.');
-    const item = get(name); if (!host.track) throw new Error('Music player is not ready. Reopen Horizon.');
+    const item = (name && typeof name === 'object') ? name : get(name); if (!host.track) throw new Error('Music player is not ready. Reopen Horizon.');
     playingList = true; let done = 0; const skipped = []; const token = ++playlistSeq;
     try {
       for (const t of item.tracks) {
@@ -228,16 +228,20 @@
     const blob = await renderMusic({title: data.title, style, seconds, bpm});
     return await save(blob, (clean(data.title, 80) || 'Horizon track') + '.wav');
   }
+  // V1.99.166: the playlist the AI really made this turn is handed to the chat so a card (tracks + Play) is drawn under its reply.
+  function snap(item) { return {name: item.name, tracks: item.tracks.map(t => Object.assign({}, t)), made: Date.now()}; }
+  function takeMade() { const m = made; made = null; return m; }
+  function clearMade() { made = null; }
   async function run(kind,arg) {
     try {
-      if(kind==='playlist.create'){const def=lenient(arg);if(!def||typeof def!=='object')throw new Error('Use [[playlist.create: {"name":"...","play":true,"tracks":["Artist - Song"]}]].');const p=create(def,true);let pl='',dl='';
+      if(kind==='playlist.create'){const def=lenient(arg);if(!def||typeof def!=='object')throw new Error('Use [[playlist.create: {"name":"...","play":true,"tracks":["Artist - Song"]}]].');const p=create(def,true);made=snap(p);let pl='',dl='';
         // Listening comes first so music starts within seconds; the slower saving into the folder follows.
-        if(def&&def.play===true){try{pl=' '+(await play(p.name)).text;}catch(e){pl=' Play failed: '+(e.message||e);}}
+        if(def&&def.play!==false){try{pl=' '+(await play(p.name)).text;}catch(e){pl=' Play failed: '+(e.message||e);}}
         if(def&&def.download===true){try{dl=' '+(await download(p.name)).text;}catch(e){dl=' Download failed: '+(e.message||e);}}
         if(dl)return{text:'Saved playlist "'+p.name+'".'+pl+dl};
-        if(pl)return{text:'Saved playlist "'+p.name+'" ('+p.tracks.length+' tracks, nothing downloaded).'+pl+' Send the user the tracklist. If they want the songs on the phone, call [[playlist.download: '+p.name+']].'};
-        return{text:'Saved playlist "'+p.name+'" with '+p.tracks.length+' tracks on this device (references only, nothing downloaded yet). Send the user the tracklist. To listen call [[playlist.play: '+p.name+']]; to keep the songs call [[playlist.download: '+p.name+']].'};}
-      if(kind==='playlist.add'){const def=lenient(arg);if(!def||typeof def!=='object')throw new Error('Use [[playlist.add: {"name":"...","tracks":["Artist - Song"]}]].');const r=addTracks(def.name,def.tracks);let pl='';if(def.download===true){try{pl=' '+(await download(r.item.name)).text;}catch(e){pl=' Download failed: '+(e.message||e);}}return{text:'Added '+r.added+' track(s) to "'+r.item.name+'", now '+r.item.tracks.length+' tracks.'+pl};}
+        if(pl)return{text:'Saved playlist "'+p.name+'" ('+p.tracks.length+' tracks, nothing downloaded).'+pl+' A playlist card with every track and a Play button is shown in the chat by the app, so do not paste the tracklist. Say it is made and say playing ONLY if the result above says Started. If they want the songs on the phone, call [[playlist.download: '+p.name+']].'};
+        return{text:'Saved playlist "'+p.name+'" with '+p.tracks.length+' tracks on this device (references only, nothing downloaded yet). A playlist card with every track and a Play button is shown in the chat by the app, so do not paste the tracklist. To listen call [[playlist.play: '+p.name+']]; to keep the songs call [[playlist.download: '+p.name+']].'};}
+      if(kind==='playlist.add'){const def=lenient(arg);if(!def||typeof def!=='object')throw new Error('Use [[playlist.add: {"name":"...","tracks":["Artist - Song"]}]].');const r=addTracks(def.name,def.tracks);made=snap(r.item);let pl='';if(def.download===true){try{pl=' '+(await download(r.item.name)).text;}catch(e){pl=' Download failed: '+(e.message||e);}}return{text:'Added '+r.added+' track(s) to "'+r.item.name+'", now '+r.item.tracks.length+' tracks.'+pl};}
       if(kind==='playlist.delete'){const g=removeList(arg);return{text:'Deleted playlist "'+g.name+'" from Horizon. Songs already saved to the phone were NOT deleted.'};}
       if(kind==='playlist.download')return await download(arg);
       if(kind==='playlist.list')return{text:load().map(x=>x.name+' ('+x.tracks.length+' tracks)').join('\n')||'No saved playlists.'};
@@ -290,16 +294,22 @@
     if (intent.play) { try { text += '\n' + (await play(item.name)).text; } catch(e) { text += '\nPlayback: ' + e.message; } }
     return { item, text };
   }
+  // V1.99.166: one card for every playlist the AI makes (YouTube songs, library songs or a mix): name, every track, and a Play button.
   function playlistCard(item) {
     const card = node('section', null, 'provider-card');
-    card.setAttribute('aria-label', 'Library playlist');
-    card.append(node('h3', item.name), node('p', item.tracks.length + ' local tracks · no streaming or downloads', 'hint'));
-    const tracks = node('ol'); item.tracks.forEach(t => tracks.appendChild(node('li', t.title || t.id))); card.append(tracks);
+    card.setAttribute('aria-label', 'AI-made playlist');
+    const nLocal = item.tracks.filter(t => t.source === 'local').length, nYt = item.tracks.length - nLocal, parts = [];
+    if (nYt) parts.push(nYt + ' from YouTube (streams)'); if (nLocal) parts.push(nLocal + ' from your library');
+    card.append(node('h3', '\uD83C\uDFB5 ' + item.name), node('p', item.tracks.length + (item.tracks.length === 1 ? ' track' : ' tracks') + ' \u00B7 ' + parts.join(' + '), 'hint'));
+    const tracks = node('ol'); tracks.style.maxHeight = '220px'; tracks.style.overflowY = 'auto'; tracks.style.paddingLeft = '22px';
+    item.tracks.forEach(t => tracks.appendChild(node('li', t.source === 'local' ? (t.title || t.id) : t.query))); card.append(tracks);
     const status = node('p', '', 'hint'); status.setAttribute('role','status');
     const playButton = node('button', 'Play playlist', 'use-btn'); playButton.type = 'button';
     playButton.addEventListener('click', async () => {
-      playButton.disabled = true; status.textContent = 'Preparing playlist…';
-      try { status.textContent = (await play(item.name)).text; } catch(e) { status.textContent = e.message; }
+      playButton.disabled = true; status.textContent = 'Preparing playlist\u2026';
+      // Use the saved copy when it still exists (it keeps songs added later), else the copy this card holds.
+      let target = item; try { target = get(item.name); } catch (_) { /* deleted since: play the card's own copy */ }
+      try { status.textContent = (await play(target)).text; } catch(e) { status.textContent = e.message; }
       finally { playButton.disabled = false; }
     });
     card.append(playButton,status); return card;
@@ -348,6 +358,6 @@
     b.run=function(kind,arg){return /^(playlist|studio)\./.test(kind)?run(kind,arg):runOld.apply(this,arguments);};
     b.block=function(){return blockOld.apply(this,arguments)+'\n\n'+PROMPT;};
   }
-  W.HorizonStudio={libraryIntent,libraryPlaylist,playlistCard,playlistIntent,parseSongs,scaffold,addTracks,removeList,download,makePodcast,makeMusic,init:h=>{host=h||{};installBridge();},open,create,list:load,get,play,stopPlaylist,exportList,parse,run,renderMusic,speak,stopSpeech,prompt:()=>PROMPT,SRC,installBridge};
+  W.HorizonStudio={takeMade,clearMade,libraryIntent,libraryPlaylist,playlistCard,playlistIntent,parseSongs,scaffold,addTracks,removeList,download,makePodcast,makeMusic,init:h=>{host=h||{};installBridge();},open,create,list:load,get,play,stopPlaylist,exportList,parse,run,renderMusic,speak,stopSpeech,prompt:()=>PROMPT,SRC,installBridge};
   installBridge();
 })();

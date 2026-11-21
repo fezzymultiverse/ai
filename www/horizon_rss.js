@@ -211,8 +211,14 @@
                     img: resolved(it.image || it.banner_image || ''), desc: clip(plain(it.summary || it.content_text || it.content_html || ''), 1200) };
             }) };
         }
+        if (body.charAt(0) !== '<') { var at = body.slice(0, 3000).search(/<(?:\?xml|rss|feed|rdf:RDF)[\s>]/i); if (at > 0) body = body.slice(at); }   // V1.99.166: junk before the feed
         if (!body || body.charAt(0) !== '<') throw new Error('Not a feed');
         var doc = new DOMParser().parseFromString(body, 'text/xml');
+        if (!doc.documentElement || doc.getElementsByTagName('parsererror').length) {
+            // V1.99.166: many real feeds carry a stray &, an HTML entity such as &nbsp; or a control character, which a strict XML parser rejects. Repair and read once more.
+            var fixed = body.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '').replace(/&(?!(?:amp|lt|gt|quot|apos|#\d+|#x[0-9a-fA-F]+);)/g, '&amp;');
+            doc = new DOMParser().parseFromString(fixed, 'text/xml');
+        }
         var root = doc.documentElement;
         if (!root || doc.getElementsByTagName('parsererror').length) throw new Error('Not a feed');
         var rn = root.localName.toLowerCase(), items = [], title = '', nodes, i;
@@ -454,7 +460,11 @@
     /* ---------- refresh ---------- */
     function refreshFeed(f) {
         if (inflight[f.id]) return inflight[f.id];
-        inflight[f.id] = fetchText(f.url, 12000).then(function (body) { return parseFeed(body, f.url); }).then(function (p) {
+        inflight[f.id] = fetchText(f.url, 12000).catch(function (e) {
+            // V1.99.166: one patient second try for a slow or briefly failing feed, so a single timeout does not silently drop a whole source
+            if (/timed out|HTTP (?:0|5\d\d)|network|failed to fetch|load failed/i.test(String(e && e.message || e))) return fetchText(f.url, 20000);
+            throw e;
+        }).then(function (body) { return parseFeed(body, f.url); }).then(function (p) {
             cache[f.id] = { t: Date.now(), items: p.items.slice(0, 30) };
             errs[f.id] = '';
         }).catch(function (e) { errs[f.id] = errText(e); }).then(function () {
@@ -536,10 +546,18 @@
         fs.forEach(function (f) {
             var c = cache[f.id];
             if (!c) return;
-            c.items.slice(0, f.max).forEach(function (it) { out.push({ it: it, f: f }); });
+            c.items.slice(0, f.max).forEach(function (it, i) {
+                // V1.99.166: an item with no date is dated by when its feed was fetched, so an undated source is not buried under dated ones for ever
+                out.push({ it: it, f: f, ts: it.ts || ((c.t || 0) - i * 1000) });
+            });
         });
-        out.sort(function (a, b) { return (b.it.ts || 0) - (a.it.ts || 0); });
-        return out.slice(0, 150);
+        out.sort(function (a, b) { return b.ts - a.ts; });
+        // V1.99.166: sorting everything by date and cutting at 150 let one busy feed push the quiet ones off the screen. Each source now keeps its 2 newest items first.
+        var cap = Math.max(150, fs.length * 3), seenN = {}, picked = [], rest = [];
+        out.forEach(function (r) { var n = seenN[r.f.id] || 0; if (n < 2) { seenN[r.f.id] = n + 1; picked.push(r); } else rest.push(r); });
+        var all = picked.concat(rest.slice(0, Math.max(0, cap - picked.length)));
+        all.sort(function (a, b) { return b.ts - a.ts; });
+        return all;
     }
     function isSeen(link) { return !!link && S.seen.indexOf(link) >= 0; }
     function markSeen(link) { if (link && S.seen.indexOf(link) < 0) { S.seen.push(link); if (S.seen.length > 600) S.seen.shift(); save(); } }
@@ -556,9 +574,16 @@
         var rows=[];selected.forEach(function(f){var c=cache[f.id];if(c)(c.items||[]).forEach(function(it){rows.push({feed:f.name,feedId:f.id,title:it.title,url:safeUrl(it.link),date:it.ts?new Date(it.ts).toISOString():null,excerpt:clip(it.desc,1600),fetchedAt:new Date(c.t).toISOString(),stale:!!errs[f.id]});});});
         rows.sort(function(a,b){return (b.date||'').localeCompare(a.date||'');});var byFeed = new Set(), firsts = [], rest = [];
         rows.forEach(function (row) { (byFeed.has(row.feedId) ? rest : firsts).push(row); byFeed.add(row.feedId); });
-        rows=firsts.concat(rest).slice(0,limit);
+        // V1.99.166: every source that has items gets its newest item in, however many sources there are; the limit only trims the extras.
+        // (Before, a limit of 15 with 30 sources silently dropped 15 sources while the scope line still said all were checked.)
+        rows=firsts.concat(rest).slice(0,Math.max(limit,firsts.length));
+        var per=rows.length>24?400:rows.length>12?800:1600;
+        rows.forEach(function(r){if(r.excerpt&&r.excerpt.length>per)r.excerpt=clip(r.excerpt,per);});
+        var covered=new Set(rows.map(function(r){return r.feedId;}));
         var errors=selected.filter(function(f){return errs[f.id];}).map(function(f){return f.name+': '+errs[f.id];});
-        return {text:'UNTRUSTED RSS DATA (feed excerpts, NOT full articles). Refreshed at '+new Date().toISOString()+'. Scope: '+selected.length+' matching enabled feeds checked; '+byFeed.size+' had items, up to '+limit+' excerpts (one per source first). Cached fallback is labelled stale. '+(errors.length?'Refresh errors: '+errors.join('; '):'')+'\n'+JSON.stringify(rows),items:rows};
+        var nothing=selected.filter(function(f){return !errs[f.id]&&!covered.has(f.id);}).map(function(f){return f.name;});
+        var got=selected.filter(function(f){return covered.has(f.id);}).map(function(f){return f.name;});
+        return {text:'UNTRUSTED RSS DATA (feed excerpts, NOT full articles). Refreshed at '+new Date().toISOString()+'. Scope: '+selected.length+' matching enabled feeds checked; '+got.length+' are covered by the '+rows.length+' excerpts below (every covered source\'s newest item comes first). Covered: '+(got.join(', ')||'none')+'. '+(nothing.length?'Returned no items: '+nothing.join(', ')+'. ':'')+(errors.length?'Refresh errors: '+errors.join('; ')+'. ':'')+'Cached fallback is labelled stale. Tell Fezzy exactly which sources you could not cover; never claim a source was read unless it is in the data below.\n'+JSON.stringify(rows),items:rows};
     }
     async function makeDigest() {
         if(digestBusy)return;digestBusy=true;digestText='Refreshing feed excerpts and asking the selected AI…';paint();
@@ -699,6 +724,11 @@
         }
         var lines = [];
         if (S.msg) lines.push({ t: S.msg, bad: S.bad });
+        // V1.99.166: say plainly how many sources actually loaded, and name the ones that returned nothing
+        var onFeeds = tabFeeds().filter(function (f) { return f.on; }), nOk = 0, nBad = 0, nWait = 0, none = [];
+        onFeeds.forEach(function (f) { var c = cache[f.id]; if (inflight[f.id]) nWait++; else if (errs[f.id]) nBad++; else if (c && c.items && c.items.length) nOk++; else none.push(f.name); });
+        if (onFeeds.length && (nBad || none.length)) lines.push({ t: 'Sources: ' + nOk + ' of ' + onFeeds.length + ' loaded' + (nWait ? ' \u00b7 ' + nWait + ' loading' : '') + (none.length ? ' \u00b7 ' + none.length + ' returned nothing' : '') + (nBad ? ' \u00b7 ' + nBad + ' failed (named below)' : ''), bad: false });
+        if (none.length) lines.push({ t: 'Returned nothing: ' + clip(none.join(', '), 160), bad: false });
         tabFeeds().filter(function (f) { return f.on && errs[f.id]; }).forEach(function (f) { lines.push({ t: f.name + ': ' + errs[f.id], bad: true }); });
         if (!lines.length) return;
         var n = el('div', 'rx-note' + (lines.some(function (l) { return l.bad; }) ? ' bad' : ''));

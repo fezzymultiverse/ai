@@ -672,6 +672,7 @@
         [/blockrun|block run/, '#7c3aed', '#4338ca', '<rect x="8.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13" width="7" height="7" rx="1.5"/><rect x="13.5" y="13" width="7" height="7" rx="1.5"/>'],
         [/\bzai\b|z\.ai/, '#2563eb', '#1e3a8a', '<path d="M5 5h14L5 19h14"/>'],
         [/aionlabs|aion/, '#06b6d4', '#0e7490', '<path d="M12 3L4 20M12 3l8 17M7.5 14h9"/>'],
+        [/iteracompute|itera compute|itera/, '#fb923c', '#c2410c', '<path d="M12 4v4M12 16v4M4 12h4M16 12h4"/><circle cx="12" cy="12" r="3.5"/>'],
         [/agnes/, '#f472b6', '#9d174d', '<path d="M6 19 12 5l6 14M8.8 14.5h6.4"/>'],
         [/gonka/, '#d9f20a', '#4d5a00', '<path d="M16.5 8A5.5 5.5 0 1 0 17 14.5V12h-4.5"/>'],
         [/llm7/, '#ef4444', '#b91c1c', '<path d="M5 5h14L10 20"/>'],

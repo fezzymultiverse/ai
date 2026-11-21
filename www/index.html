@@ -54,6 +54,7 @@
             <symbol id="i-b-cloudflare" viewBox="0 0 24 24"><rect width="24" height="24" rx="6" fill="#170d05" stroke="none"/><g fill="none" stroke="#f6821f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17h10.2a3.2 3.2 0 0 0 .5-6.36A5 5 0 0 0 8.1 9.9 3.6 3.6 0 0 0 7 17z"/></g></symbol>
             <symbol id="i-b-zai" viewBox="0 0 24 24"><rect width="24" height="24" rx="6" fill="#0a1020" stroke="none"/><g fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5h11L6.5 17.5h11"/></g></symbol>
             <symbol id="i-b-aionlabs" viewBox="0 0 24 24"><rect width="24" height="24" rx="6" fill="#0b1a14" stroke="none"/><g fill="none" stroke="#34d399" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4.5 19 19.5M12 4.5 5 19.5M8 14.5h8"/></g></symbol>
+            <symbol id="i-b-iteracompute" viewBox="0 0 24 24"><rect width="24" height="24" rx="6" fill="#1a0f06" stroke="none"/><g fill="none" stroke="#fb923c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v4M12 16v4M4 12h4M16 12h4"/><circle cx="12" cy="12" r="3.5"/></g></symbol>
             <symbol id="i-b-typhoon" viewBox="0 0 24 24"><rect width="24" height="24" rx="6" fill="#06141c" stroke="none"/><g fill="none" stroke="#22d3ee" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14M7 12h10M9 16h6"/></g></symbol>
             <symbol id="i-b-tokenharbor" viewBox="0 0 24 24"><rect width="24" height="24" rx="6" fill="#0a1220" stroke="none"/><g fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v10M8 7h8M5 13a7 7 0 0 0 14 0M5 13H3M19 13h2"/></g></symbol>
             <symbol id="i-b-zro" viewBox="0 0 24 24"><rect width="24" height="24" rx="6" fill="#120a1f" stroke="none"/><g fill="none" stroke="#af5fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10L7 17h10"/><circle cx="18.5" cy="5.5" r="1" fill="#af5fff"/></g></symbol>
@@ -311,10 +312,6 @@
                     <span class="set-text"><h3>API PROVIDERS PLUS KEYS</h3><p>Gemini, Cohere, Mistral, Routeway, Uno Router, Requesty, Kilo Gateway, OVHcloud AI, Z.ai, AionLabs, Typhoon, Token Harbor, Zro (MoonMath), Agnes AI, Gonka Broker, GonkaRouter, Ollama Cloud, LLM7.io, free.ai and Cloudflare Workers AI. Free access depends on the provider. Pick the model and choose which engine answers.</p></span>
                     <svg class="ic set-chev" aria-hidden="true"><use href="#i-chev-r"/></svg>
                 </button>
-                <button class="set-row" role="tab" data-tab="router" aria-selected="false" type="button">
-                    <span class="set-text"><h3>AUTO ROUTER</h3><p>Picks the AI and key for you, switches when one fails, shows every key and its cooldown.</p></span>
-                    <svg class="ic set-chev" aria-hidden="true"><use href="#i-chev-r"/></svg>
-                </button>
                 <button class="set-row" role="tab" data-tab="web" aria-selected="false" type="button">
                     <span class="set-text"><h3>WEB SCRAPING</h3><p>SerpAPI, Firecrawl, ScraperBee and Browserless keys, switches and tests.</p></span>
                     <svg class="ic set-chev" aria-hidden="true"><use href="#i-chev-r"/></svg>
@@ -465,10 +462,6 @@
 
             <div class="tab-body" role="tabpanel" data-tab="about" hidden>
                 <div id="hzAbout"></div>
-            </div>
-
-            <div class="tab-body" role="tabpanel" data-tab="router" hidden>
-                <div id="hzRouter"></div>
             </div>
 
             <div class="tab-body" role="tabpanel" data-tab="providers" hidden>
@@ -736,8 +729,7 @@
     <script src="horizon_native_audio.js?v=1.99.159"></script>
     <script src="horizon_tagfix.js?v=1.99.139"></script>
     <script src="horizon_chime.js?v=1.99.161"></script>
-    <script src="horizon_router.js?v=1.99.162"></script>
-    <script src="horizon_music.js?v=1.99.161"></script>
+    <script src="horizon_music.js?v=1.99.166"></script>
     <script src="horizon_lyrics.js?v=1.99.139"></script>
     <script src="horizon_runlog.js?v=1.99.47"></script>
     <script src="horizon_display.js?v=1.97.2"></script>
@@ -769,7 +761,7 @@
     <script src="horizon_sight.js?v=1.99.147"></script>
     <script src="horizon_eyes.js?v=1.99.147"></script>
     <link rel="stylesheet" href="horizon_studio.css?v=1.99.139">
-    <script src="horizon_studio.js?v=1.99.159"></script>
+    <script src="horizon_studio.js?v=1.99.166"></script>
     <script src="horizon_dash.js?v=1.99.120"></script>
     <script src="horizon_browser.js?v=1.99.139"></script>
     <script>
@@ -1475,6 +1467,9 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         PROVIDERS.zai.billingNote = 'GLM Flash tier · free models, one request at a time on the free plan. Busy periods can return a limit message.';
         PROVIDERS.aionlabs = oaiGateway({name:'AionLabs',icon:'i-b-aionlabs',placeholder:'AionLabs API key',keyUrl:'https://aionlabs.ai',base:'https://api.aionlabs.ai/v1',defaultModel:'aion-labs/aion-2.0',fallbackModels:['aion-labs/aion-2.0','aion-labs/aion-2.5','aion-labs/aion-3.0','aion-labs/aion-3.5'],allow:/^(?:aion-labs\/)?aion-(?:2\.0|2\.5|3\.0|3\.5)$/i,modelsOptional:true});
         PROVIDERS.aionlabs.billingNote = 'Free provider · limits depend on your AionLabs account. Check your dashboard if replies stop.';
+        // V1.99.163: IteraCompute (OpenAI-compatible). Only qwen/qwen3.8-27b is documented free; its other catalogue ids (GLM, Kimi, DeepSeek, MiniMax) are usage-based and never listed.
+        PROVIDERS.iteracompute = oaiGateway({name:'IteraCompute',icon:'i-b-iteracompute',placeholder:'IteraCompute API key',keyUrl:'https://platform.iteracompute.com',base:'https://api.iteracompute.com/v1',defaultModel:'qwen/qwen3.8-27b',fallbackModels:['qwen/qwen3.8-27b'],allow:/^qwen\/qwen3\.8-27b$/i,modelsOptional:true});
+        PROVIDERS.iteracompute.billingNote = 'Free monthly allowance on qwen/qwen3.8-27b only, shared across the account\'s API keys · promotion documented to end 00:00 Pacific Time, 24 Nov 2026. Other IteraCompute models are usage-based and are never listed here.';
         // V1.99.107: Typhoon (OpenTyphoon, SCB 10X). OpenAI-style. One chat model on this key; its OCR and speech models are not chat and are never listed.
         PROVIDERS.typhoon = oaiGateway({name:'Typhoon',icon:'i-b-typhoon',placeholder:'Typhoon API key',keyUrl:'https://playground.opentyphoon.ai/api-key',base:'https://api.opentyphoon.ai/v1',defaultModel:'typhoon-v2.5-30b-a3b-instruct',fallbackModels:['typhoon-v2.5-30b-a3b-instruct'],allow:/^typhoon-v\d+(?:\.\d+)?-[\w.-]*instruct$/i,modelsOptional:true});
         PROVIDERS.typhoon.billingNote = 'Free tier per Typhoon\'s docs: 5 requests a second, 200 a minute, no daily cap published. Thai-first model that also answers in English. Third-party listings say usage data is collected to improve the models.';
@@ -3860,7 +3855,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
         }
 
         // --- V1.5.1: right panel = a list; each row opens its own page (with Back). Settings inside a page are dropdowns. ---
-        const SUB_TITLES = { chats: 'CHATS', promptmem: 'PROMPT & MEMORIES', archive: 'ARCHIVE', usage: 'USAGE & ENGINE', about: 'ABOUT & UPDATES', providers: 'API Providers + Keys', router: 'AUTO ROUTER', web: 'Web Scraping', vault: 'HORIZON VAULT', security: 'SECURITY', permissions: 'Permissions', personalisation: 'Personalisation' };
+        const SUB_TITLES = { chats: 'CHATS', promptmem: 'PROMPT & MEMORIES', archive: 'ARCHIVE', usage: 'USAGE & ENGINE', about: 'ABOUT & UPDATES', providers: 'API Providers + Keys', web: 'Web Scraping', vault: 'HORIZON VAULT', security: 'SECURITY', permissions: 'Permissions', personalisation: 'Personalisation' };
         let rightSub = '';
         function rightPage(name, fromPop) {
             name = (name === 'home' || !SUB_TITLES[name]) ? '' : name;
@@ -3879,7 +3874,6 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             if (name === 'permissions') { refreshAllPerms(); if (window.HorizonBridges) HorizonBridges.refresh(); }
             if (name === 'personalisation') { paintVoice(); if (window.HorizonDisplay) HorizonDisplay.refresh(); }
             if (name === 'providers' && window.HzUsage && HzUsage.cards) HzUsage.cards();
-            if (name === 'router' && window.HorizonRouter) HorizonRouter.render($('#hzRouter'), { providers: () => (window.__hzRouterPool ? window.__hzRouterPool() : []), notice: t => notice(t) });
             if (name === 'about' && window.HzAbout) HzAbout.open();
             if (name === 'security' && window.HzAbout && HzAbout.openSecurity) HzAbout.openSecurity();
             if (fromPop) return;
@@ -4145,6 +4139,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             if (prov === 'zro') return has(/glm/) ? 'GLM Flash through Zro. Fast general chat and code. Free tier.' : 'DeepSeek Flash through Zro (MoonMath). Reasoning model with a very long context window, so it thinks briefly before it answers. Free tier.';
             if (prov === 'typhoon') return 'Typhoon 2.5 30B (SCB 10X). Best Thai model here, also good in English, with tool use and a long context window. Free tier.';
             if (prov === 'aionlabs') return 'Aion model from AionLabs. General chat and long-form writing. Free provider.';
+            if (prov === 'iteracompute') return 'Qwen3.8 27B through IteraCompute. General chat, long 128K context. Free monthly allowance, documented as a promotion ending 24 Nov 2026.';
             if (prov === 'agnes') return 'Agnes Flash chat model. Fast general chat with a long context window. Free provider, limits depend on your account.';
             if (prov === 'gonka') {
                 if (has(/deepseek/i)) return 'DeepSeek V4 Flash through GonkaRouter. Strong, fast all-rounder for chat and code.';
@@ -5508,6 +5503,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             const found = [];
             const titles = {};
             const push = (arr, urls) => urls.forEach(u => { if (arr.indexOf(u) === -1) arr.push(u); });
+            if (window.HorizonStudio && HorizonStudio.clearMade) HorizonStudio.clearMade();   // V1.99.166: a playlist card only ever shows what THIS turn really made
             // V1.99.54: NATIVE FIRST. A plain "play X" / "download X song" is run by the app itself before any model is asked, so a model that
             // never emits a tool tag (or emits the wrong one) still plays and saves the right song. The model only reports the real result.
             if (!turnPrompt && !isPeopleChat(chat) && !(chat.group || chat.multi) && chat.messages.length && chat.messages[chat.messages.length - 1].role === 'user') {
@@ -5985,7 +5981,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
             // V1.60.0: group chats and @mentions pick who answers; otherwise it is the active AI as always.
             const route = window.HorizonGroup ? HorizonGroup.route(text, currentChat()) : null;
             const okT = [];
-            for (const t of (route ? route.targets : [{ id: state.active, auto: true }])) {
+            for (const t of (route ? route.targets : [{ id: state.active }])) {
                 const tp = PROVIDERS[t.id];
                 if (!keyOf(t.id)) {
                     notice(`Add a ${tp.name} key in API PROVIDERS PLUS KEYS to chat.`, 'error');
@@ -6047,68 +6043,6 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 }
             }
         }
-        // ===== V1.99.162: AUTO ROUTER (see horizon_router.js) =====
-        // The pool: every provider that is ready (key saved and validated), with its main key plus its backup keys, and the model it will use.
-        function routerPool() {
-            const R = window.HorizonRouter, out = [];
-            PROVIDER_IDS.forEach(id => {
-                const p = PROVIDERS[id]; if (!p || !pkReady(id)) return;
-                const noKey = !!(p.keyless || p.optionalKey) && !state.keys[id];
-                if (noKey && !R.freeOn()) return;
-                const keys = [], add = k => { k = String(k || '').trim(); if (k && keys.indexOf(k) < 0) keys.push(k); };
-                add(state.keys[id]);
-                try { JSON.parse(lsGet(XKEY(id)) || '[]').forEach(add); } catch (_) { /* no backups */ }
-                if (!keys.length && noKey) keys.push('free');
-                const model = state.models[id] || p.defaultModel || '';
-                if (keys.length && model) out.push({ id, name: p.name, keys, model });
-            });
-            return out;
-        }
-        window.__hzRouterPool = routerPool;
-        async function autoRun(chat, t, text, dm, restore) {
-            const R = window.HorizonRouter;
-            let hard = false; try { const m = lastUserMsg(); hard = wantsDeepThought(text, !!(m && m.att && m.att.length)); } catch (_) { hard = false; }
-            // Privacy: with "Don't send my data for training" ON, Horizon asks before sending to each provider. Auto asks ONCE per session for the whole pool, never mid-failover.
-            let pool = routerPool();
-            if (window.HzAbout && HzAbout.approved) {
-                const need = pool.filter(r => !HzAbout.approved(r.id));
-                if (need.length) {
-                    let yes = false;
-                    try { yes = window.confirm('Let Auto send your messages to these AIs this session?\n\n' + need.map(r => r.name).join(', ') + '\n\n"Don\u2019t send my data for training" is ON. Horizon never trains on your data, but each of them has its own terms and may keep prompts. Choose Cancel to let Auto use only the AIs you already approved.'); } catch (_) { yes = false; }
-                    if (yes) need.forEach(r => HzAbout.approve(r.id)); else pool = pool.filter(r => HzAbout.approved(r.id));
-                }
-            }
-            const cands = R.plan({ providers: pool, hard, activeId: t.id, chatId: chat.id, max: 4 });
-            if (!cands.length) { docMode = dm || ''; return runAiTurn(chat, t.id, PROVIDERS[t.id], keyOf(t.id), text, restore); }   // nothing in the pool: the chosen AI, as before
-            for (let i = 0; i < cands.length; i++) {
-                if (groupAbort) return false;
-                const c = cands[i], cp = PROVIDERS[c.id], last = i === cands.length - 1;
-                const prevModel = state.models[c.id];
-                state.models[c.id] = c.model;
-                docMode = dm || '';
-                if (window.HzAbout && HzAbout.warn) HzAbout.warn(c.id, cp.name, notice);
-                const t0 = Date.now();
-                let ok = false;
-                try { ok = await runAiTurn(chat, c.id, cp, c.key, text, last ? restore : undefined); }   // the old reply is only put back if the LAST try fails
-                finally { state.models[c.id] = prevModel; }
-                const err = lastTurnErr;
-                if (ok !== false) {
-                    R.report(c.id, c.key, true, Date.now() - t0, null, chat.id);
-                    if (i > 0 || c.id !== t.id) { try { window.HzToast ? HzToast.show({ icon: 'i-zap', title: 'Auto: answered by ' + cp.name, sub: c.model, kind: 'ok', ms: 3500 }) : notice('Auto: answered by ' + cp.name); } catch (_) { /* label only */ } }
-                    return true;
-                }
-                if (!err || err.stopped || groupAbort) return false;   // stopped by you: never retried elsewhere
-                const rest = R.report(c.id, c.key, false, 0, err, chat.id);
-                if (last) {
-                    if (rest) notice(`${cp.name} ${rest.why}. Resting ${R.cooldownText(rest.ms)}. Nothing else in the pool answered; add another key or try again soon.`, 'error');
-                    return false;
-                }
-                const nx = PROVIDERS[cands[i + 1].id];
-                notice(`${cp.name}: ${rest ? rest.why : 'failed'}${rest ? ' (rests ' + R.cooldownText(rest.ms) + ')' : ''}. Trying ${nx.name}\u2026`);
-                chatMessages.querySelectorAll('.retry-bar').forEach(n => n.remove());   // the failed try's Retry bar must not stay while the next one runs
-            }
-            return false;
-        }
         async function runTargetsRound(chat, targets, text, dm, restore) {
             groupAbort = false;
             const mySeq = ++roundSeq;
@@ -6122,12 +6056,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 if (t.model) state.models[t.id] = t.model;
                 let ok = true;
                 if (window.HzRound) HzRound.set(t.id, 'think');
-                try {
-                    docMode = dm || '';
-                    // V1.99.162: AUTO ROUTER. A normal one-AI message (no @tag, no group) is routed; everything else runs exactly as before.
-                    if (t.auto && targets.length === 1 && window.HorizonRouter && HorizonRouter.enabled() && !isPeopleChat(chat) && !(chat.group || chat.multi)) ok = await autoRun(chat, t, text, dm, i === 0 ? restore : undefined);
-                    else ok = await runAiTurn(chat, t.id, tp, keyOf(t.id), text, i === 0 ? restore : undefined);
-                }
+                try { docMode = dm || ''; ok = await runAiTurn(chat, t.id, tp, keyOf(t.id), text, i === 0 ? restore : undefined); }
                 finally { state.models[t.id] = prev; }
                 if (window.HzRound) HzRound.set(t.id, ok !== false ? 'done' : (lastTurnErr && lastTurnErr.skipped ? 'skip' : (groupAbort ? 'stop' : 'fail')));
                 if (ok === false && !groupAbort && mySeq === roundSeq) failed.push({ t, err: lastTurnErr });
@@ -6229,6 +6158,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
                 const stripped = (String(turn.raw).match(new RegExp(TOOL_SRC + '|' + YT_SRC, 'gi')) || []).length;
                 const { text: reply, saved, vaulted } = turn.office ? { text: turn.raw, saved: [], vaulted: [] } : cleanReply(turn.raw);
                 const info = { prov: id, model };
+                { const madePl = window.HorizonStudio && HorizonStudio.takeMade && HorizonStudio.takeMade(); if (madePl) info.libraryPlaylist = madePl; }   // V1.99.166: playlist the AI really made -> card with tracks + Play under its reply
                 if (turnCut && !docMode) info.cut = true;
                 if (turnUsage.calls) info.usage = { i: turnUsage.i, o: turnUsage.o };
                 if (turn.sources.length) { info.sources = turn.sources; const tt = {}; turn.sources.forEach(u => { if (turn.titles && turn.titles[u]) tt[u] = turn.titles[u]; }); if (Object.keys(tt).length) info.srcTitles = tt; }
@@ -9106,7 +9036,7 @@ Markdown when it helps: code blocks, short lists, bold for the key point. No tab
     })();
     </script>
     <script src="horizon_downloads.js?v=1.99.139"></script>
-    <script src="horizon_rss.js?v=1.99.159"></script>
+    <script src="horizon_rss.js?v=1.99.166"></script>
     <script src="horizon_ytdirect.js?v=1.99.120"></script>
     <script src="horizon_youtube.js?v=1.97.2"></script>
     <script src="horizon_stats.js?v=1.99.46"></script>
